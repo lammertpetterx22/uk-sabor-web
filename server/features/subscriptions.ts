@@ -407,15 +407,25 @@ export async function processSubscriptionWebhook(
   // Determine plan from price metadata or price ID
   const priceId = stripeSub.items.data[0]?.price?.id ?? "";
   const planMeta = (stripeSub.metadata?.planKey || stripeSub.metadata?.plan_key) as PlanKey | undefined;
+  
+  console.log(`[SubscriptionWebhook] Processing ${eventType} for sub ${stripeSub.id}. Price: ${priceId}, PlanMeta: ${planMeta}`);
+
   let planKey: PlanKey = planMeta ?? "starter";
 
-  // Try to match by price ID against known plans (check both monthly and yearly prices)
+  // Try to match by price ID against known plans if metadata is missing
   if (!planMeta) {
     for (const [key, plan] of Object.entries(PLANS)) {
-      const matchesMonthly = plan.stripePriceIds.monthly && plan.stripePriceIds.monthly === priceId;
-      const matchesYearly = plan.stripePriceIds.yearly && plan.stripePriceIds.yearly === priceId;
+      // Check env vars directly since PLANS object might have stale nulls
+      const prefix = key.toUpperCase().replace("_PLAN", "");
+      const envMonthly = process.env[`STRIPE_PRICE_${prefix}_MONTHLY`] || process.env[`STRIPE_PRICE_${prefix}`];
+      const envYearly = process.env[`STRIPE_PRICE_${prefix}_YEARLY`];
+
+      const matchesMonthly = (plan.stripePriceIds.monthly && plan.stripePriceIds.monthly === priceId) || (envMonthly === priceId);
+      const matchesYearly = (plan.stripePriceIds.yearly && plan.stripePriceIds.yearly === priceId) || (envYearly === priceId);
+      
       if (matchesMonthly || matchesYearly) {
         planKey = key as PlanKey;
+        console.log(`[SubscriptionWebhook] Identified plan ${planKey} from price ID ${priceId}`);
         break;
       }
     }
@@ -424,9 +434,17 @@ export async function processSubscriptionWebhook(
   // Stripe uses 'canceled' (US spelling), our DB uses 'cancelled' (UK spelling)
   const rawStatus = stripeSub.status;
   const status = (rawStatus === "canceled" ? "cancelled" : rawStatus) as "active" | "cancelled" | "past_due" | "trialing" | "incomplete";
-  const currentPeriodStart = new Date((stripeSub as any).current_period_start * 1000);
-  const currentPeriodEnd = new Date((stripeSub as any).current_period_end * 1000);
-  const cancelAtPeriodEnd = stripeSub.cancel_at_period_end;
+  
+  // Defensive property access for dates (Stripe SDK v14+ might use camelCase)
+  const startTime = (stripeSub as any).current_period_start || (stripeSub as any).currentPeriodStart;
+  const endTime = (stripeSub as any).current_period_end || (stripeSub as any).currentPeriodEnd;
+  
+  const currentPeriodStart = startTime ? new Date(startTime * 1000) : new Date();
+  const currentPeriodEnd = endTime ? new Date(endTime * 1000) : new Date();
+  const cancelAtPeriodEnd = stripeSub.cancel_at_period_end ?? false;
+
+  console.log(`[SubscriptionWebhook] Status: ${status}, Plan: ${planKey}, Period: ${currentPeriodStart.toISOString()} - ${currentPeriodEnd.toISOString()}`);
+
 
   if (eventType === "customer.subscription.deleted") {
     // Downgrade to free starter plan
@@ -480,13 +498,14 @@ export async function processSubscriptionWebhook(
       newRole = "promoter";
     }
 
-    await db.update(users)
+    const updateRes = await db.update(users)
       .set({
         subscriptionPlan: planKey,
         role: newRole as any,
       })
       .where(eq(users.id, user.id));
-    console.log(`[SubscriptionWebhook] User ${user.id} plan updated to ${planKey}, role upgraded to ${newRole}`);
+    
+    console.log(`[SubscriptionWebhook] User ${user.id} plan updated to ${planKey}, role upgraded to ${newRole}. Update result:`, updateRes);
   } else if (status === "past_due" || status === "incomplete") {
     // Downgrade to starter on payment failure
     await db.update(users)
