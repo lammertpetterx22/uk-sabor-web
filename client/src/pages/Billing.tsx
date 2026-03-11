@@ -32,29 +32,39 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 function UsageBar({ label, used, limit }: { label: string; used: number; limit: number | null }) {
-  const unlimited = limit === null;
-  const pct = unlimited ? 0 : Math.min(100, Math.round((used / limit) * 100));
+  const unlimited = limit === null || limit === -1;
+  const pct = unlimited ? 100 : Math.min(100, Math.round((used / limit) * 100));
   const nearLimit = !unlimited && pct >= 80;
 
   return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-sm">
-        <span className="text-zinc-400">{label}</span>
-        <span className={`font-medium ${nearLimit ? "text-orange-400" : "text-zinc-200"}`}>
-          {unlimited ? `${used} / Unlimited` : `${used} / ${limit}`}
-        </span>
+    <div className="space-y-2">
+      <div className="flex justify-between items-end text-sm">
+        <span className="text-zinc-400 font-medium">{label}</span>
+        <div className="text-right">
+          <span className={`text-lg font-bold ${unlimited ? "text-pink-400" : nearLimit ? "text-orange-400" : "text-zinc-100"}`}>
+            {used}
+          </span>
+          <span className="text-zinc-500 mx-1.5 prose-sm">/</span>
+          <span className={`text-base font-semibold ${unlimited ? "text-pink-400/80" : "text-zinc-400"}`}>
+            {unlimited ? "∞" : limit}
+          </span>
+        </div>
       </div>
-      {!unlimited && (
+      <div className="relative group">
         <Progress
           value={pct}
-          className={`h-2 ${nearLimit ? "[&>div]:bg-orange-500" : "[&>div]:bg-pink-500"}`}
+          className={`h-1.5 transition-all duration-500 rounded-full bg-zinc-800 ${
+            unlimited 
+              ? "[&>div]:bg-gradient-to-r [&>div]:from-pink-500 [&>div]:to-purple-600 [&>div]:shadow-[0_0_8px_rgba(219,39,119,0.5)]" 
+              : nearLimit 
+                ? "[&>div]:bg-orange-500" 
+                : "[&>div]:bg-zinc-600"
+          }`}
         />
-      )}
-      {unlimited && (
-        <div className="h-2 rounded-full bg-green-600/30 flex items-center px-2">
-          <span className="text-green-400 text-xs">Unlimited</span>
-        </div>
-      )}
+        {unlimited && (
+          <div className="absolute -inset-1 bg-pink-500/10 blur-md rounded-full -z-10 group-hover:bg-pink-500/20 transition-all" />
+        )}
+      </div>
     </div>
   );
 }
