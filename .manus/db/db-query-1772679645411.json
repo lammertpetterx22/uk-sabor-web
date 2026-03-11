@@ -1,0 +1,30 @@
+{
+  "query": "SELECT id, name, specialties FROM instructors WHERE name IN ('Chan', 'Sara', 'Yersin', 'Dahi');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user yiAzcdr6RpTDdTC.root --database DGihaPaJvnMFHruoq9jmVQ --execute SELECT id, name, specialties FROM instructors WHERE name IN ('Chan', 'Sara', 'Yersin', 'Dahi');",
+  "rows": [
+    {
+      "id": "30001",
+      "name": "Chan",
+      "specialties": "Salsa"
+    },
+    {
+      "id": "30002",
+      "name": "Sara",
+      "specialties": "Salsa"
+    },
+    {
+      "id": "30003",
+      "name": "Yersin",
+      "specialties": "Salsa"
+    },
+    {
+      "id": "30004",
+      "name": "Dahi",
+      "specialties": "Salsa"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tspecialties\n30001\tChan\tSalsa\n30002\tSara\tSalsa\n30003\tYersin\tSalsa\n30004\tDahi\tSalsa\n",
+  "stderr": "",
+  "execution_time_ms": 353
+}

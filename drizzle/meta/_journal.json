@@ -1,0 +1,160 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1772562375928,
+      "tag": "0000_aberrant_jack_power",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1772563856783,
+      "tag": "0001_known_harry_osborn",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1772570059958,
+      "tag": "0002_bouncy_dreadnoughts",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1772586197514,
+      "tag": "0003_fantastic_madripoor",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1772587867258,
+      "tag": "0004_volatile_mad_thinker",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1772589175334,
+      "tag": "0005_medical_karnak",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1772633369583,
+      "tag": "0006_sudden_stick",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1772680877932,
+      "tag": "0007_slippery_stryfe",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1772683998013,
+      "tag": "0008_overrated_nightmare",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1772684401346,
+      "tag": "0009_white_valeria_richards",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1772688399795,
+      "tag": "0010_deep_george_stacy",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1772755860659,
+      "tag": "0011_careful_donald_blake",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1772758691757,
+      "tag": "0012_ancient_the_initiative",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "5",
+      "when": 1772765405975,
+      "tag": "0013_cuddly_silver_surfer",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "5",
+      "when": 1772796568726,
+      "tag": "0014_handy_doorman",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "5",
+      "when": 1772801640676,
+      "tag": "0015_absent_doctor_faustus",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "5",
+      "when": 1772809349804,
+      "tag": "0016_polite_ultimatum",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "5",
+      "when": 1772813549275,
+      "tag": "0017_bent_eternity",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1772813613187,
+      "tag": "0018_unique_wrecking_crew",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "5",
+      "when": 1772999919629,
+      "tag": "0019_bumpy_solo",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "5",
+      "when": 1773003499033,
+      "tag": "0020_tense_spyke",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "5",
+      "when": 1773193014941,
+      "tag": "0021_whole_cammi",
+      "breakpoints": true
+    }
+  ]
+}

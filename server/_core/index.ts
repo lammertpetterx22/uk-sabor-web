@@ -1,0 +1,128 @@
+import "dotenv/config";
+import express from "express";
+import { createServer } from "http";
+import net from "net";
+import helmet from "helmet";
+import { createExpressMiddleware } from "@trpc/server/adapters/express";
+import { registerOAuthRoutes } from "./oauth";
+import { appRouter } from "../routers";
+import { createContext } from "./context";
+import { serveStatic, setupVite } from "./vite";
+import { registerEmailTrackingRoutes } from "../features/emailTracking";
+
+function isPortAvailable(port: number): Promise<boolean> {
+  return new Promise(resolve => {
+    const server = net.createServer();
+    server.listen(port, () => {
+      server.close(() => resolve(true));
+    });
+    server.on("error", () => resolve(false));
+  });
+}
+
+async function findAvailablePort(startPort: number = 3000): Promise<number> {
+  for (let port = startPort; port < startPort + 20; port++) {
+    if (await isPortAvailable(port)) {
+      return port;
+    }
+  }
+  throw new Error(`No available port found starting from ${startPort}`);
+}
+
+async function startServer() {
+  const app = express();
+  const server = createServer(app);
+
+  // Security headers
+  app.use(helmet({
+    contentSecurityPolicy: false, // Disabled to allow Vite HMR and inline scripts
+    crossOriginEmbedderPolicy: false, // Disabled for media loading
+  }));
+
+  // Stripe webhook MUST be registered BEFORE body parsers
+  const { handleStripeWebhook } = await import("../features/stripe-webhook");
+  app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), handleStripeWebhook);
+  // Configure body parser with larger size limit for file uploads
+  app.use(express.json({ limit: "50mb" }));
+  app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  // Email open/click tracking endpoints (public, no auth required)
+  registerEmailTrackingRoutes(app);
+  // OAuth callback under /api/oauth/callback
+  registerOAuthRoutes(app);
+  // tRPC API
+  app.use(
+    "/api/trpc",
+    createExpressMiddleware({
+      router: appRouter,
+      createContext,
+    })
+  );
+
+  app.get("/api/migrate-schema", async (req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const { sql } = await import("drizzle-orm");
+      const db = await getDb();
+      if (!db) return res.send("DB not available");
+
+      const queries = [
+        "ALTER TABLE users ADD COLUMN roles TEXT",
+        "ALTER TABLE users ADD COLUMN stripeCustomerId VARCHAR(255)",
+        "ALTER TABLE users ADD COLUMN stripeAccountId VARCHAR(255)"
+      ];
+
+      let results = [];
+      for (const q of queries) {
+        try {
+          await db.execute(sql.raw(q));
+          results.push(`Success: ${q}`);
+        } catch (e: any) {
+          console.error("MIGRATION ERROR details:", e);
+          results.push(`Skipped/Failed: ${q} - ${e.message}`);
+        }
+      }
+      res.json({ results });
+    } catch (e: any) {
+      res.send("Error migrating schema: " + e.message);
+    }
+  });
+
+  // development mode uses Vite, production mode uses static files
+  if (process.env.NODE_ENV === "development") {
+    await setupVite(app, server);
+  } else {
+    serveStatic(app);
+  }
+
+  const preferredPort = parseInt(process.env.PORT || "3000");
+  const port = await findAvailablePort(preferredPort);
+
+  if (port !== preferredPort) {
+    console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
+  }
+
+  server.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}/`);
+  });
+
+  // Auto-seed default email templates and start scheduled campaign processor after server starts
+  server.once("listening", () => {
+    setTimeout(async () => {
+      try {
+        const { seedDefaultEmailTemplates } = await import("../features/emailMarketing");
+        await seedDefaultEmailTemplates();
+      } catch (err) {
+        console.error("[EmailMarketing] Failed to auto-seed templates:", err);
+      }
+
+      try {
+        const { startScheduledCampaignProcessor } = await import("../features/scheduledCampaigns");
+        startScheduledCampaignProcessor();
+      } catch (err) {
+        console.error("[ScheduledCampaigns] Failed to start processor:", err);
+      }
+    }, 2000); // small delay to ensure DB is ready
+  });
+}
+
+startServer().catch(console.error);

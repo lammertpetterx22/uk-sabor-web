@@ -1,0 +1,335 @@
+import { Resend } from "resend";
+
+let resendClient: Resend | null = null;
+
+function getResendClient(): Resend | null {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return null;
+  if (!resendClient) {
+    resendClient = new Resend(apiKey);
+  }
+  return resendClient;
+}
+
+interface EmailOptions {
+  to: string;
+  subject: string;
+  htmlContent: string;
+  textContent?: string;
+  from?: string;
+  attachments?: Array<{
+    filename: string;
+    content: Buffer;
+    contentType: string;
+  }>;
+}
+
+/**
+ * Send email using Resend (real email delivery).
+ * Falls back to console logging if RESEND_API_KEY is not configured.
+ */
+export async function sendEmail(options: EmailOptions): Promise<boolean> {
+  const client = getResendClient();
+  const fromAddress = options.from || process.env.RESEND_FROM_EMAIL || "UK Sabor <noreply@consabor.uk>";
+
+  if (!client) {
+    // Fallback: log email for debugging when no API key is set
+    console.log("[EMAIL] No RESEND_API_KEY configured - logging email instead:");
+    console.log(`[EMAIL] To: ${options.to}`);
+    console.log(`[EMAIL] From: ${fromAddress}`);
+    console.log(`[EMAIL] Subject: ${options.subject}`);
+    console.log(`[EMAIL] Content preview: ${options.htmlContent.substring(0, 200)}...`);
+    return true; // Return true so the flow doesn't break
+  }
+
+  try {
+    const emailPayload: Parameters<typeof client.emails.send>[0] = {
+      from: fromAddress,
+      to: options.to,
+      subject: options.subject,
+      html: options.htmlContent,
+      text: options.textContent,
+    };
+
+    if (options.attachments && options.attachments.length > 0) {
+      (emailPayload as any).attachments = options.attachments.map((a) => ({
+        filename: a.filename,
+        content: a.content.toString("base64"),
+        type: a.contentType,
+        disposition: "attachment",
+      }));
+    }
+
+    const { error } = await client.emails.send(emailPayload);
+
+    if (error) {
+      console.error("[EMAIL] Resend error:", error);
+      return false;
+    }
+
+    console.log(`[EMAIL] Sent successfully to ${options.to}: ${options.subject}`);
+    return true;
+  } catch (error) {
+    console.error("[EMAIL] Failed to send email:", error);
+    return false;
+  }
+}
+
+/**
+ * Send QR code email to ticket buyer after successful payment
+ */
+export async function sendQRCodeEmail(options: {
+  to: string;
+  userName: string;
+  itemType: "event" | "class";
+  itemName: string;
+  qrCodeImage: string;
+  ticketCode?: string;
+  accessCode?: string;
+  eventDate?: string;
+  eventTime?: string;
+}): Promise<boolean> {
+  try {
+    const code = options.ticketCode || options.accessCode || "NO-CODE";
+    const htmlContent = generateQRCodeEmailTemplate(
+      options.userName,
+      options.itemType,
+      options.itemName,
+      options.qrCodeImage,
+      code,
+      options.eventDate,
+      options.eventTime
+    );
+
+    const textContent = generateQRCodeEmailText(
+      options.userName,
+      options.itemType,
+      options.itemName,
+      code,
+      options.eventDate,
+      options.eventTime
+    );
+
+    return await sendEmail({
+      to: options.to,
+      subject: `Your ${options.itemType === "event" ? "Event Ticket" : "Class Booking"} - ${options.itemName}`,
+      htmlContent,
+      textContent,
+    });
+  } catch (error) {
+    console.error("[EMAIL] Failed to send QR code email:", error);
+    return false;
+  }
+}
+
+/**
+ * Send order confirmation email after successful payment
+ */
+export async function sendOrderConfirmationEmail(options: {
+  to: string;
+  userName: string;
+  orderId: number;
+  itemType: "event" | "class" | "course";
+  itemName: string;
+  amount: number;
+  currency?: string;
+  invoicePdf?: Buffer;
+}): Promise<boolean> {
+  const currency = options.currency || "GBP";
+  const currencySymbol = currency === "GBP" ? "£" : "$";
+  const itemTypeLabel = options.itemType === "event" ? "Event Ticket" : options.itemType === "class" ? "Class Booking" : "Course Access";
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background-color: #f5f5f5; margin: 0; padding: 0; }
+          .container { max-width: 600px; margin: 0 auto; background-color: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+          .header { background: linear-gradient(135deg, #ff1493 0%, #ff8c00 100%); color: white; padding: 30px 20px; text-align: center; }
+          .header h1 { margin: 0; font-size: 26px; }
+          .content { padding: 30px 20px; }
+          .order-box { background: #f9f9f9; border: 1px solid #eee; border-radius: 8px; padding: 20px; margin: 20px 0; }
+          .order-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+          .order-row:last-child { border-bottom: none; font-weight: bold; font-size: 16px; }
+          .label { color: #666; }
+          .value { color: #333; font-weight: 500; }
+          .total { color: #ff1493; font-size: 18px; font-weight: bold; }
+          .footer { background-color: #f5f5f5; padding: 20px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd; }
+          .badge { display: inline-block; background: #22c55e; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>✅ Payment Confirmed!</h1>
+          </div>
+          <div class="content">
+            <p>Hi ${options.userName},</p>
+            <p>Your payment has been confirmed. Here are your order details:</p>
+            <div class="order-box">
+              <div class="order-row">
+                <span class="label">Order ID</span>
+                <span class="value">#${options.orderId}</span>
+              </div>
+              <div class="order-row">
+                <span class="label">Item</span>
+                <span class="value">${options.itemName}</span>
+              </div>
+              <div class="order-row">
+                <span class="label">Type</span>
+                <span class="value">${itemTypeLabel}</span>
+              </div>
+              <div class="order-row">
+                <span class="label">Status</span>
+                <span class="value"><span class="badge">Confirmed</span></span>
+              </div>
+              <div class="order-row">
+                <span class="label">Total Paid</span>
+                <span class="total">${currencySymbol}${(options.amount / 100).toFixed(2)}</span>
+              </div>
+            </div>
+            <p style="font-size: 14px; color: #666;">You will receive a separate email with your check-in QR code shortly.</p>
+            <p style="font-size: 14px; color: #666;">If you have any questions, please contact us at <a href="mailto:info@consabor.uk">info@consabor.uk</a></p>
+          </div>
+          <div class="footer">
+            <p>© 2026 UK Sabor. All rights reserved.</p>
+            <p>This is an automated message. Please do not reply directly to this email.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const attachments: EmailOptions["attachments"] = [];
+  if (options.invoicePdf) {
+    attachments.push({
+      filename: `invoice-${options.orderId}.pdf`,
+      content: options.invoicePdf,
+      contentType: "application/pdf",
+    });
+  }
+
+  return await sendEmail({
+    to: options.to,
+    subject: `Order Confirmed - ${options.itemName} | UK Sabor`,
+    htmlContent,
+    attachments,
+  });
+}
+
+export function generateQRCodeEmailTemplate(
+  recipientName: string,
+  itemType: "event" | "class",
+  itemTitle: string,
+  qrCodeImage: string,
+  qrCode: string,
+  eventDate?: string,
+  eventTime?: string
+): string {
+  const itemTypeLabel = itemType === "event" ? "Event" : "Class";
+
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f5f5f5; margin: 0; padding: 0; }
+          .container { max-width: 600px; margin: 0 auto; background-color: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+          .header { background: linear-gradient(135deg, #ff1493 0%, #ff8c00 100%); color: white; padding: 30px 20px; text-align: center; }
+          .header h1 { margin: 0; font-size: 28px; font-weight: bold; }
+          .content { padding: 30px 20px; }
+          .item-details { background-color: #f9f9f9; border-left: 4px solid #ff1493; padding: 15px; margin: 20px 0; border-radius: 4px; }
+          .item-details h3 { margin: 0 0 10px 0; color: #ff1493; }
+          .item-details p { margin: 5px 0; font-size: 14px; }
+          .qr-section { text-align: center; margin: 30px 0; padding: 20px; background-color: #f9f9f9; border-radius: 8px; }
+          .qr-section h3 { margin-top: 0; color: #333; }
+          .qr-image { max-width: 250px; height: auto; margin: 15px 0; border: 2px solid #ddd; padding: 10px; background-color: white; border-radius: 4px; }
+          .qr-code-text { font-family: monospace; font-size: 14px; background-color: white; padding: 12px 16px; border-radius: 4px; border: 1px solid #ddd; word-break: break-all; margin-top: 10px; letter-spacing: 2px; font-weight: bold; color: #ff1493; }
+          .instructions { background-color: #e8f4f8; border-left: 4px solid #0099cc; padding: 15px; margin: 20px 0; border-radius: 4px; font-size: 14px; }
+          .instructions h4 { margin-top: 0; color: #0099cc; }
+          .instructions ol { margin: 10px 0; padding-left: 20px; }
+          .instructions li { margin: 8px 0; }
+          .footer { background-color: #f5f5f5; padding: 20px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🎉 Your ${itemTypeLabel} Check-In Code</h1>
+          </div>
+          <div class="content">
+            <p>Hi ${recipientName},</p>
+            <p>Thank you for booking! Here's your check-in code for the upcoming ${itemTypeLabel.toLowerCase()}.</p>
+            <div class="item-details">
+              <h3>${itemTitle}</h3>
+              <p><strong>Type:</strong> ${itemTypeLabel}</p>
+              ${eventDate ? `<p><strong>Date:</strong> ${eventDate}</p>` : ""}
+              ${eventTime ? `<p><strong>Time:</strong> ${eventTime}</p>` : ""}
+            </div>
+            <div class="qr-section">
+              <h3>📱 Your Check-In QR Code</h3>
+              <p>Show this at the entrance to check in:</p>
+              <img src="${qrCodeImage}" alt="Check-in QR Code" class="qr-image">
+              <div class="qr-code-text">${qrCode}</div>
+            </div>
+            <div class="instructions">
+              <h4>How to Use Your Check-In Code:</h4>
+              <ol>
+                <li><strong>Show the QR code</strong> on your phone screen to the staff at the entrance</li>
+                <li><strong>Or scan it</strong> with your phone camera if needed</li>
+                <li><strong>Or give the code</strong> (${qrCode}) to staff if scanning doesn't work</li>
+              </ol>
+            </div>
+            <p style="margin-top: 30px; font-size: 14px; color: #666;">
+              Questions? Contact us at <a href="mailto:info@consabor.uk">info@consabor.uk</a>
+            </p>
+          </div>
+          <div class="footer">
+            <p>© 2026 UK Sabor. All rights reserved.</p>
+            <p>This is an automated message. Please do not reply directly to this email.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
+/**
+ * Generate plain text version of QR code email
+ */
+export function generateQRCodeEmailText(
+  recipientName: string,
+  itemType: "event" | "class",
+  itemTitle: string,
+  qrCode: string,
+  eventDate?: string,
+  eventTime?: string
+): string {
+  const itemTypeLabel = itemType === "event" ? "Event" : "Class";
+
+  return `
+Hi ${recipientName},
+
+Thank you for booking! Here's your check-in code for the upcoming ${itemTypeLabel.toLowerCase()}.
+
+${itemTypeLabel}: ${itemTitle}
+${eventDate ? `Date: ${eventDate}` : ""}
+${eventTime ? `Time: ${eventTime}` : ""}
+
+YOUR CHECK-IN CODE:
+${qrCode}
+
+HOW TO USE:
+1. Show the QR code on your phone to the staff at the entrance
+2. Or give the code above to staff if scanning doesn't work
+
+Questions? Contact us at info@consabor.uk
+
+© 2026 UK Sabor. All rights reserved.
+  `.trim();
+}

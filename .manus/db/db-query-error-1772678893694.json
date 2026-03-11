@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO instructors (name, bio, specialties, instagram) VALUES \n('Chan', 'Expert Salsa instructor', 'Salsa', '@chan_salsa'),\n('Sara', 'Professional dancer and instructor', 'Salsa', '@sara_dance'),\n('Yersin', 'Passionate Salsa teacher', 'Salsa', '@yersin_salsa'),\n('Dahi', 'Energetic dance instructor', 'Salsa', '@dahi_dance');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user yiAzcdr6RpTDdTC.root --database DGihaPaJvnMFHruoq9jmVQ --execute INSERT INTO instructors (name, bio, specialties, instagram) VALUES \n('Chan', 'Expert Salsa instructor', 'Salsa', '@chan_salsa'),\n('Sara', 'Professional dancer and instructor', 'Salsa', '@sara_dance'),\n('Yersin', 'Passionate Salsa teacher', 'Salsa', '@yersin_salsa'),\n('Dahi', 'Energetic dance instructor', 'Salsa', '@dahi_dance');",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'instagram' in 'field list'"
+  ]
+}

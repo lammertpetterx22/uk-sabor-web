@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE users SET role = 'admin' WHERE email = 'petterlammert@gmail.com';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user yiAzcdr6RpTDdTC.root --database DGihaPaJvnMFHruoq9jmVQ --execute UPDATE users SET role = 'admin' WHERE email = 'petterlammert@gmail.com';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 220
+}
