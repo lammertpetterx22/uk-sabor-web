@@ -42,7 +42,16 @@ const PUBLIC_NAV = [
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [drawerOpen, setDrawerOpen] = useState(() => {
+        const saved = localStorage.getItem("sidebar-state");
+        return saved ? saved === "true" : false;
+    });
+
+    const handleSetDrawerOpen = (open: boolean) => {
+        setDrawerOpen(open);
+        localStorage.setItem("sidebar-state", String(open));
+    };
+
     const [location] = useLocation();
     const { user, isAuthenticated, logout } = useAuth();
 
@@ -54,7 +63,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
     const handleLogout = async () => {
         await logout();
-        setDrawerOpen(false);
+        handleSetDrawerOpen(false);
         window.location.href = "/";
     };
 
@@ -243,35 +252,30 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
     return (
         <div className="min-h-screen bg-black flex">
-            {/* ── DESKTOP: Fixed left sidebar (hidden on mobile) ───────────────────── */}
-            <aside className="hidden lg:flex flex-col w-64 xl:w-72 fixed inset-y-0 left-0 z-40 bg-[#0a0a0a] border-r border-white/5">
-                <SidebarContent />
-            </aside>
-
-            {/* ── MOBILE: Slide-in drawer overlay ────────────────────────────────── */}
+            {/* ── UNIFIED SIDEBAR: Slide-in drawer overlay for Desktop & Mobile ── */}
             {drawerOpen && (
                 <div
-                    className="lg:hidden fixed inset-0 z-50 flex"
-                    onClick={() => setDrawerOpen(false)}
+                    className="fixed inset-0 z-50 flex"
+                    onClick={() => handleSetDrawerOpen(false)}
                 >
                     {/* Backdrop */}
                     <div className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-fade-in" />
                     {/* Drawer panel */}
                     <aside
-                        className="relative w-72 max-w-[85vw] h-full bg-[#0a0a0a] border-r border-white/10 animate-slide-in-left"
+                        className="relative w-64 xl:w-72 max-w-[85vw] h-full bg-[#0a0a0a] border-r border-white/10 animate-slide-in-left shadow-2xl"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <SidebarContent onClose={() => setDrawerOpen(false)} />
+                        <SidebarContent onClose={() => handleSetDrawerOpen(false)} />
                     </aside>
                 </div>
             )}
 
             {/* ── MAIN CONTENT AREA ───────────────────────────────────────────────── */}
-            <div className="flex-1 flex flex-col lg:ml-64 xl:ml-72">
-                {/* Mobile top bar */}
-                <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 h-14 bg-black/90 backdrop-blur-md border-b border-white/5">
+            <div className="flex-1 flex flex-col w-full min-w-0">
+                {/* Global top bar */}
+                <header className="sticky top-0 z-30 flex items-center justify-between px-4 h-14 bg-black/90 backdrop-blur-md border-b border-white/5">
                     <button
-                        onClick={() => setDrawerOpen(true)}
+                        onClick={() => handleSetDrawerOpen(true)}
                         className="p-2 -ml-2 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-all"
                         aria-label="Abrir menú"
                     >
