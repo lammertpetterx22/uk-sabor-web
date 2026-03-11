@@ -1,37 +1,41 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, User, Mail, Phone, MapPin } from "lucide-react";
+import { Loader2, User, Mail, Upload, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
 
 export default function UserProfile() {
   const [, setLocation] = useLocation();
-  const { user, isAuthenticated, loading } = useAuth();
+  const { user, isAuthenticated, loading, refresh } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
-    phone: "",
-    location: "",
     bio: "",
+    avatarUrl: "",
   });
 
+  const updateProfileMutation = trpc.auth.updateProfile.useMutation();
+  const uploadFileMutation = trpc.uploads.uploadFile.useMutation();
+
   // Sync form data when user loads
-  useState(() => {
+  useEffect(() => {
     if (user) {
-      setFormData((prev) => ({
-        ...prev,
+      setFormData({
         name: user.name || "",
-        email: user.email || "",
-      }));
+        bio: user.bio || "",
+        avatarUrl: user.avatarUrl || "",
+      });
     }
-  });
+  }, [user]);
 
   if (loading) {
     return (
@@ -41,155 +45,205 @@ export default function UserProfile() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user) {
     setLocation("/login");
     return null;
   }
 
+  const handleImageUpload = async (file: File) => {
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La imagen debe pesar menos de 5MB');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      // Convert file to base64
+      const reader = new FileReader();
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const result = await uploadFileMutation.mutateAsync({
+        fileBase64: base64Data,
+        fileName: file.name,
+      });
+
+      setFormData(prev => ({ ...prev, avatarUrl: result.url }));
+      toast.success('Foto de perfil subida correctamente');
+    } catch (err: any) {
+      console.error(err);
+      toast.error('Error al subir: ' + err.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleSaveProfile = async () => {
     setIsSaving(true);
     try {
-      // TODO: Add tRPC mutation to update profile on server
-      toast.success("Profile actualizado correctamente!");
+      await updateProfileMutation.mutateAsync({
+        name: formData.name,
+        bio: formData.bio,
+        avatarUrl: formData.avatarUrl,
+      });
+      await refresh();
+      toast.success("¡Perfil actualizado correctamente!");
       setIsEditing(false);
-    } catch (error) {
-      toast.error("Error al actualizar el perfil");
+    } catch (error: any) {
+      toast.error("Error al actualizar el perfil: " + error.message);
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container max-w-2xl py-8 pt-24">
+    <div className="min-h-screen bg-background pt-24 pb-12">
+      <div className="container max-w-2xl">
         {/* Profile Header */}
-        <Card className="mb-8">
+        <Card className="mb-8 border-none bg-card/60 backdrop-blur-xl shadow-xl">
           <CardHeader>
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-accent to-primary flex items-center justify-center">
-                <User size={32} className="text-white" />
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <div className="relative group">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden bg-gradient-to-br from-accent to-primary flex items-center justify-center border-4 border-background shadow-lg">
+                  {formData.avatarUrl ? (
+                    <img src={formData.avatarUrl} alt={user.name || "Avatar"} className="w-full h-full object-cover" />
+                  ) : (
+                    <User size={48} className="text-white opacity-80" />
+                  )}
+                </div>
+
+                {isEditing && (
+                  <label
+                    className="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 rounded-full cursor-pointer transition-opacity"
+                    onClick={() => imageInputRef.current?.click()}
+                  >
+                    {isUploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Upload className="w-6 h-6" />}
+                  </label>
+                )}
+
+                <input
+                  type="file"
+                  ref={imageInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) handleImageUpload(e.target.files[0]);
+                  }}
+                />
               </div>
-              <div>
-                <CardTitle className="text-2xl">{user?.name || "Mi Profile"}</CardTitle>
-                <CardDescription>{user?.email}</CardDescription>
+
+              <div className="text-center sm:text-left">
+                <CardTitle className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
+                  {user.name || "Mi Perfil"}
+                </CardTitle>
+                <CardDescription className="text-lg mt-1 flex items-center justify-center sm:justify-start gap-2">
+                  <Mail className="w-4 h-4" /> {user.email}
+                </CardDescription>
+                <div className="mt-3 inline-flex items-center px-3 py-1 rounded-full bg-accent/20 text-accent text-sm font-medium border border-accent/20">
+                  Plan: {user.subscriptionPlan.charAt(0).toUpperCase() + user.subscriptionPlan.slice(1)}
+                </div>
               </div>
             </div>
           </CardHeader>
         </Card>
 
         {/* Profile Edit Form */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+        <Card className="border-border/40 shadow-lg">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-border/40 pb-6 mb-6">
             <div>
-              <CardTitle>Information del Profile</CardTitle>
+              <CardTitle className="text-xl">Información del Perfil</CardTitle>
               <CardDescription>
-                {isEditing ? "Edita tus datos" : "Tus datos de perfil"}
+                {isEditing ? "Actualiza tus datos públicos" : "Tus datos actuales"}
               </CardDescription>
             </div>
             {!isEditing && (
-              <Button onClick={() => setIsEditing(true)} variant="outline">
-                Edit
+              <Button onClick={() => setIsEditing(true)} variant="outline" className="h-9 px-4">
+                Editar Perfil
               </Button>
             )}
           </CardHeader>
 
           <CardContent className="space-y-6">
             {/* Name */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium flex items-center gap-2">
-                <User size={16} />
-                Name Completo
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-foreground/80 flex items-center gap-2">
+                <User size={16} className="text-accent" />
+                Nombre Completo
               </label>
               {isEditing ? (
                 <Input
-                  value={formData.name || user?.name || ""}
+                  value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Tu nombre"
-                  className="bg-card/50 border-border/50"
+                  placeholder="Tu nombre y apellido"
+                  className="bg-background border-border/50 h-11"
                 />
               ) : (
-                <p className="text-foreground/80">{user?.name || "No proporcionado"}</p>
+                <div className="p-3 bg-card/30 rounded-lg border border-border/20">
+                  <p className="text-foreground">{formData.name || "No proporcionado"}</p>
+                </div>
               )}
             </div>
 
-            {/* Email */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium flex items-center gap-2">
-                <Mail size={16} />
-                Email
+            {/* Email (Read Only) */}
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-foreground/80 flex items-center gap-2">
+                <Mail size={16} className="text-muted-foreground" />
+                Correo Electrónico (Solo Lectura)
               </label>
-              {isEditing ? (
-                <Input
-                  type="email"
-                  value={formData.email || user?.email || ""}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="tu@email.com"
-                  className="bg-card/50 border-border/50"
-                />
-              ) : (
-                <p className="text-foreground/80">{user?.email || "Not provided"}</p>
-              )}
-            </div>
-
-            {/* Phone */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium flex items-center gap-2">
-                <Phone size={16} />
-                Phone
-              </label>
-              {isEditing ? (
-                <Input
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="+44 123 456 7890"
-                  className="bg-card/50 border-border/50"
-                />
-              ) : (
-                <p className="text-foreground/80">{formData.phone || "Not provided"}</p>
-              )}
-            </div>
-
-            {/* Location */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium flex items-center gap-2">
-                <MapPin size={16} />
-                Location
-              </label>
-              {isEditing ? (
-                <Input
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  placeholder="City, Country"
-                  className="bg-card/50 border-border/50"
-                />
-              ) : (
-                <p className="text-foreground/80">{formData.location || "Not provided"}</p>
-              )}
+              <div className="p-3 bg-background/50 rounded-lg border border-border/20">
+                <p className="text-foreground/70">{user.email}</p>
+              </div>
             </div>
 
             {/* Bio */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Bio</label>
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-foreground/80 flex items-center gap-2">
+                <CheckCircle size={16} className="text-accent" />
+                Biografía
+              </label>
               {isEditing ? (
                 <Textarea
                   value={formData.bio}
                   onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                  placeholder="Tell us about yourself..."
-                  rows={4}
-                  className="bg-card/50 border-border/50"
+                  placeholder="Cuéntanos un poco sobre ti y tu experiencia con el baile..."
+                  rows={5}
+                  className="bg-background border-border/50 resize-none"
                 />
               ) : (
-                <p className="text-foreground/80">{formData.bio || "Not provided"}</p>
+                <div className="p-4 bg-card/30 rounded-lg border border-border/20 min-h-[100px]">
+                  <p className="text-foreground whitespace-pre-wrap leading-relaxed">
+                    {formData.bio || "Aún no has escrito una biografía."}
+                  </p>
+                </div>
               )}
             </div>
 
             {/* Action Buttons */}
             {isEditing && (
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-4 pt-6 border-t border-border/40 mt-8">
+                <Button
+                  onClick={() => {
+                    setIsEditing(false);
+                    // Reset to initial
+                    setFormData({
+                      name: user.name || "",
+                      bio: user.bio || "",
+                      avatarUrl: user.avatarUrl || "",
+                    });
+                  }}
+                  variant="ghost"
+                  disabled={isSaving || isUploading}
+                  className="w-1/3 h-11"
+                >
+                  Cancelar
+                </Button>
                 <Button
                   onClick={handleSaveProfile}
-                  disabled={isSaving}
-                  className="btn-vibrant flex-1"
+                  disabled={isSaving || isUploading}
+                  className="btn-vibrant flex-1 h-11"
                 >
                   {isSaving ? (
                     <>
@@ -197,16 +251,8 @@ export default function UserProfile() {
                       Guardando...
                     </>
                   ) : (
-                    "Save Cambios"
+                    "Guardar Cambios"
                   )}
-                </Button>
-                <Button
-                  onClick={() => setIsEditing(false)}
-                  variant="outline"
-                  disabled={isSaving}
-                  className="flex-1"
-                >
-                  Cancel
                 </Button>
               </div>
             )}

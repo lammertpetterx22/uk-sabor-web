@@ -17,6 +17,8 @@ export const users = pgTable("users", {
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   passwordHash: varchar("passwordHash", { length: 512 }),
+  avatarUrl: text("avatarUrl"),
+  bio: text("bio"),
   role: varchar("role", { length: 255 }).default("user").notNull(),
   roles: text("roles"), // JSON array of all roles for multi-role support
   // Subscription plan (denormalised for fast access)
