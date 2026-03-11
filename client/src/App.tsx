@@ -30,7 +30,6 @@ const AttendanceDashboard = lazy(() => import("./pages/AttendanceDashboard"));
 const EmailMarketing = lazy(() => import("./pages/EmailMarketing"));
 const CampaignDetail = lazy(() => import("./pages/CampaignDetail"));
 const Pricing = lazy(() => import("./pages/Pricing"));
-const Billing = lazy(() => import("./pages/Billing"));
 const Earnings = lazy(() => import("./pages/Earnings"));
 const AdminWithdrawals = lazy(() => import("./pages/AdminWithdrawals"));
 const PromoterProfile = lazy(() => import("./pages/PromoterProfile"));

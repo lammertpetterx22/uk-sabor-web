@@ -79,11 +79,6 @@ export default function Header() {
                   Plans
                 </Link>
               )}
-              {(user?.role === "admin" || user?.role === "instructor" || user?.role === "promoter") && (
-                <Link href="/billing" className="text-foreground/80 hover:text-accent transition-smooth font-medium text-sm hover-lift">
-                  Billing
-                </Link>
-              )}
               <Button onClick={handleLogout} variant="outline" size="sm" className="btn-modern hover-lift">
                 Sign Out
               </Button>
@@ -152,11 +147,6 @@ export default function Header() {
                   {(user?.role === "admin" || user?.role === "instructor" || user?.role === "promoter") && (
                     <Link href="/pricing" className="text-accent font-bold hover:text-accent/80 transition-smooth py-1.5 text-sm hover-glow px-2 rounded-lg">
                       Plans
-                    </Link>
-                  )}
-                  {(user?.role === "admin" || user?.role === "instructor" || user?.role === "promoter") && (
-                    <Link href="/billing" className="text-foreground/80 hover:text-accent transition-smooth font-medium py-1.5 text-sm hover-lift px-2 rounded-lg">
-                      Billing
                     </Link>
                   )}
                   <Button onClick={handleLogout} variant="outline" className="w-full mt-2 h-9 text-sm btn-modern hover-lift">
