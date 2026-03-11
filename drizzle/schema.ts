@@ -1,30 +1,30 @@
-import { decimal, int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, json } from "drizzle-orm/mysql-core";
+import { serial, decimal, integer, pgTable, text, timestamp, varchar, boolean, json } from "drizzle-orm/pg-core";
 
 /**
  * Core user table backing auth flow.
  * Extend this file with additional tables as your product grows.
  * Columns use camelCase to match both database fields and generated types.
  */
-export const users = mysqlTable("users", {
+export const users = pgTable("users", {
   /**
    * Surrogate primary key. Auto-incremented numeric value managed by the database.
    * Use this for relations between tables.
    */
-  id: int("id").autoincrement().primaryKey(),
+  id: serial("id").primaryKey(),
   /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   passwordHash: varchar("passwordHash", { length: 512 }),
-  role: mysqlEnum("role", ["user", "instructor", "promoter", "admin"]).default("user").notNull(),
+  role: varchar("role", { length: 255 }).default("user").notNull(),
   roles: text("roles"), // JSON array of all roles for multi-role support
   // Subscription plan (denormalised for fast access)
-  subscriptionPlan: mysqlEnum("subscriptionPlan", ["starter", "creator", "promoter_plan", "academy"]).default("starter").notNull(),
+  subscriptionPlan: varchar("subscriptionPlan", { length: 255 }).default("starter").notNull(),
   stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
   stripeAccountId: varchar("stripeAccountId", { length: 255 }), // Stripe Connect ID for receiving split payments
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
 
@@ -55,9 +55,9 @@ export function getAllRoles(user: User): string[] {
 }
 
 // Instructors table
-export const instructors = mysqlTable("instructors", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId"), // Links to users.id for self-service profile editing
+export const instructors = pgTable("instructors", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId"), // Links to users.id for self-service profile editing
   name: varchar("name", { length: 255 }).notNull(),
   bio: text("bio"),
   photoUrl: text("photoUrl"),
@@ -65,12 +65,12 @@ export const instructors = mysqlTable("instructors", {
   websiteUrl: text("websiteUrl"),
   specialties: text("specialties"), // JSON array as string
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 // Events table
-export const events = mysqlTable("events", {
-  id: int("id").autoincrement().primaryKey(),
+export const events = pgTable("events", {
+  id: serial("id").primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   imageUrl: text("imageUrl"),
@@ -79,105 +79,105 @@ export const events = mysqlTable("events", {
   eventDate: timestamp("eventDate").notNull(),
   eventEndDate: timestamp("eventEndDate"),
   ticketPrice: decimal("ticketPrice", { precision: 10, scale: 2 }).notNull(),
-  maxTickets: int("maxTickets"),
-  ticketsSold: int("ticketsSold").default(0),
-  status: mysqlEnum("status", ["draft", "published", "cancelled", "completed"]).default("draft"),
-  paymentMethod: mysqlEnum("paymentMethod", ["online", "cash", "both"]).default("online"), // Payment method: Stripe online, cash, or both
-  creatorId: int("creatorId"), // User ID of the event creator (instructor/promoter/admin)
+  maxTickets: integer("maxTickets"),
+  ticketsSold: integer("ticketsSold").default(0),
+  status: varchar("status", { length: 255 }).default("draft"),
+  paymentMethod: varchar("paymentMethod", { length: 255 }).default("online"), // Payment method: Stripe online, cash, or both
+  creatorId: integer("creatorId"), // User ID of the event creator (instructor/promoter/admin)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 // Courses table
-export const courses = mysqlTable("courses", {
-  id: int("id").autoincrement().primaryKey(),
+export const courses = pgTable("courses", {
+  id: serial("id").primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   imageUrl: text("imageUrl"),
   videoUrl: text("videoUrl"), // URL to course video on S3
-  instructorId: int("instructorId").notNull(),
+  instructorId: integer("instructorId").notNull(),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
-  level: mysqlEnum("level", ["beginner", "intermediate", "advanced", "all-levels"]).default("all-levels"),
+  level: varchar("level", { length: 255 }).default("all-levels"),
   danceStyle: varchar("danceStyle", { length: 255 }), // e.g., "Salsa", "Bachata", "Reggaeton"
   duration: varchar("duration", { length: 255 }), // e.g., "4 weeks", "8 hours"
-  lessonsCount: int("lessonsCount"),
-  status: mysqlEnum("status", ["draft", "published", "archived"]).default("draft"),
+  lessonsCount: integer("lessonsCount"),
+  status: varchar("status", { length: 255 }).default("draft"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 // Classes table
-export const classes = mysqlTable("classes", {
-  id: int("id").autoincrement().primaryKey(),
+export const classes = pgTable("classes", {
+  id: serial("id").primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
-  instructorId: int("instructorId").notNull(),
+  instructorId: integer("instructorId").notNull(),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   danceStyle: varchar("danceStyle", { length: 255 }),
-  level: mysqlEnum("level", ["beginner", "intermediate", "advanced", "all-levels"]).default("all-levels"),
+  level: varchar("level", { length: 255 }).default("all-levels"),
   classDate: timestamp("classDate").notNull(),
-  duration: int("duration"), // in minutes
-  maxParticipants: int("maxParticipants"),
-  currentParticipants: int("currentParticipants").default(0),
+  duration: integer("duration"), // in minutes
+  maxParticipants: integer("maxParticipants"),
+  currentParticipants: integer("currentParticipants").default(0),
   imageUrl: text("imageUrl"), // Cover image for the class
   videoUrl: text("videoUrl"), // For recorded classes
-  status: mysqlEnum("status", ["draft", "published", "cancelled", "completed"]).default("draft"),
+  status: varchar("status", { length: 255 }).default("draft"),
   hasSocial: boolean("hasSocial").default(false), // Whether there's a social event after the class
   socialTime: varchar("socialTime", { length: 255 }), // Time of the social event (e.g., "22:00")
   socialLocation: varchar("socialLocation", { length: 255 }), // Location of the social event
   socialDescription: text("socialDescription"), // Description of the social event
-  paymentMethod: mysqlEnum("paymentMethod", ["online", "cash", "both"]).default("online"), // Payment method: Stripe online, cash, or both
+  paymentMethod: varchar("paymentMethod", { length: 255 }).default("online"), // Payment method: Stripe online, cash, or both
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 // Orders table (for payment tracking)
-export const orders = mysqlTable("orders", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
+export const orders = pgTable("orders", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
   stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   currency: varchar("currency", { length: 3 }).default("GBP"),
-  status: mysqlEnum("status", ["pending", "completed", "failed", "cancelled"]).default("pending"),
-  itemType: mysqlEnum("itemType", ["event", "course", "class"]).notNull(),
-  itemId: int("itemId").notNull(),
+  status: varchar("status", { length: 255 }).default("pending"),
+  itemType: varchar("itemType", { length: 255 }).notNull(),
+  itemId: integer("itemId").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 // Event Tickets table (user purchases for events)
-export const eventTickets = mysqlTable("eventTickets", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  eventId: int("eventId").notNull(),
-  orderId: int("orderId"),
-  quantity: int("quantity").default(1),
+export const eventTickets = pgTable("eventTickets", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  eventId: integer("eventId").notNull(),
+  orderId: integer("orderId"),
+  quantity: integer("quantity").default(1),
   ticketCode: varchar("ticketCode", { length: 255 }).unique(),
-  status: mysqlEnum("status", ["valid", "used", "cancelled"]).default("valid"),
+  status: varchar("status", { length: 255 }).default("valid"),
   purchasedAt: timestamp("purchasedAt").defaultNow().notNull(),
   usedAt: timestamp("usedAt"),
 });
 
 // Course Purchases table
-export const coursePurchases = mysqlTable("coursePurchases", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  courseId: int("courseId").notNull(),
-  orderId: int("orderId"),
-  progress: int("progress").default(0), // percentage 0-100
+export const coursePurchases = pgTable("coursePurchases", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  courseId: integer("courseId").notNull(),
+  orderId: integer("orderId"),
+  progress: integer("progress").default(0), // percentage 0-100
   completed: boolean("completed").default(false),
   purchasedAt: timestamp("purchasedAt").defaultNow().notNull(),
   completedAt: timestamp("completedAt"),
 });
 
 // Class Purchases table
-export const classPurchases = mysqlTable("classPurchases", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  classId: int("classId").notNull(),
-  orderId: int("orderId"),
+export const classPurchases = pgTable("classPurchases", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  classId: integer("classId").notNull(),
+  orderId: integer("orderId"),
   accessCode: varchar("accessCode", { length: 255 }).unique(),
-  status: mysqlEnum("status", ["active", "expired", "cancelled"]).default("active"),
+  status: varchar("status", { length: 255 }).default("active"),
   purchasedAt: timestamp("purchasedAt").defaultNow().notNull(),
   expiresAt: timestamp("expiresAt"),
 });
@@ -208,8 +208,8 @@ export type ClassPurchase = typeof classPurchases.$inferSelect;
 export type InsertClassPurchase = typeof classPurchases.$inferInsert;
 
 // CRM Contacts table
-export const crmContacts = mysqlTable("crmContacts", {
-  id: int("id").autoincrement().primaryKey(),
+export const crmContacts = pgTable("crmContacts", {
+  id: serial("id").primaryKey(),
   email: varchar("email", { length: 320 }).notNull().unique(),
   firstName: varchar("firstName", { length: 255 }),
   lastName: varchar("lastName", { length: 255 }),
@@ -218,42 +218,42 @@ export const crmContacts = mysqlTable("crmContacts", {
   city: varchar("city", { length: 255 }),
   country: varchar("country", { length: 255 }),
   postalCode: varchar("postalCode", { length: 20 }),
-  segment: mysqlEnum("segment", ["lead", "customer", "vip", "inactive"]).default("lead"),
-  status: mysqlEnum("status", ["active", "inactive", "unsubscribed"]).default("active"),
+  segment: varchar("segment", { length: 255 }).default("lead"),
+  status: varchar("status", { length: 255 }).default("active"),
   source: varchar("source", { length: 255 }), // e.g., "website", "instagram", "event"
   lastContactDate: timestamp("lastContactDate"),
   totalPurchases: decimal("totalPurchases", { precision: 10, scale: 2 }).default("0"),
   notes: text("notes"),
   // Engagement scoring (0-100, computed from opens + clicks + purchases)
-  engagementScore: int("engagementScore").default(0),
-  engagementTier: mysqlEnum("engagementTier", ["cold", "warm", "hot", "champion"]).default("cold"),
+  engagementScore: integer("engagementScore").default(0),
+  engagementTier: varchar("engagementTier", { length: 255 }).default("cold"),
   scoreUpdatedAt: timestamp("scoreUpdatedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 // CRM Interactions table (emails, calls, messages)
-export const crmInteractions = mysqlTable("crmInteractions", {
-  id: int("id").autoincrement().primaryKey(),
-  contactId: int("contactId").notNull(),
-  type: mysqlEnum("type", ["email", "call", "message", "meeting", "note"]).notNull(),
+export const crmInteractions = pgTable("crmInteractions", {
+  id: serial("id").primaryKey(),
+  contactId: integer("contactId").notNull(),
+  type: varchar("type", { length: 255 }).notNull(),
   subject: varchar("subject", { length: 255 }),
   content: text("content"),
-  status: mysqlEnum("status", ["pending", "completed", "follow_up"]).default("pending"),
+  status: varchar("status", { length: 255 }).default("pending"),
   scheduledDate: timestamp("scheduledDate"),
   completedDate: timestamp("completedDate"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 // CRM Notes table
-export const crmNotes = mysqlTable("crmNotes", {
-  id: int("id").autoincrement().primaryKey(),
-  contactId: int("contactId").notNull(),
+export const crmNotes = pgTable("crmNotes", {
+  id: serial("id").primaryKey(),
+  contactId: integer("contactId").notNull(),
   content: text("content").notNull(),
-  priority: mysqlEnum("priority", ["low", "medium", "high"]).default("medium"),
+  priority: varchar("priority", { length: 255 }).default("medium"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 // Type exports for CRM
@@ -266,38 +266,38 @@ export type InsertCRMInteraction = typeof crmInteractions.$inferInsert;
 export type CRMNote = typeof crmNotes.$inferSelect;
 export type InsertCRMNote = typeof crmNotes.$inferInsert;
 // QR Codes table (for check-in system)
-export const qrCodes = mysqlTable("qrCodes", {
-  id: int("id").autoincrement().primaryKey(),
+export const qrCodes = pgTable("qrCodes", {
+  id: serial("id").primaryKey(),
   code: varchar("code", { length: 255 }).notNull().unique(),
-  itemType: mysqlEnum("itemType", ["event", "class"]).notNull(),
-  itemId: int("itemId").notNull(),
-  userId: int("userId"), // null = venue QR (for instructor), set = personal QR (for attendee)
-  orderId: int("orderId"), // link to the purchase order
+  itemType: varchar("itemType", { length: 255 }).notNull(),
+  itemId: integer("itemId").notNull(),
+  userId: integer("userId"), // null = venue QR (for instructor), set = personal QR (for attendee)
+  orderId: integer("orderId"), // link to the purchase order
   qrData: text("qrData").notNull(),
   isUsed: boolean("isUsed").default(false).notNull(), // true after first scan - QR is single-use
   usedAt: timestamp("usedAt"), // when the QR was scanned
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 // Attendance table (check-in records)
-export const attendance = mysqlTable("attendance", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  itemType: mysqlEnum("itemType", ["event", "class"]).notNull(),
-  itemId: int("itemId").notNull(),
-  qrCodeId: int("qrCodeId"),
+export const attendance = pgTable("attendance", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  itemType: varchar("itemType", { length: 255 }).notNull(),
+  itemId: integer("itemId").notNull(),
+  qrCodeId: integer("qrCodeId"),
   checkedInAt: timestamp("checkedInAt").defaultNow().notNull(),
-  checkedInBy: int("checkedInBy"),
+  checkedInBy: integer("checkedInBy"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
 // Class Instructors junction table (many-to-many: classes <-> instructors)
-export const classInstructors = mysqlTable("classInstructors", {
-  id: int("id").autoincrement().primaryKey(),
-  classId: int("classId").notNull(),
-  instructorId: int("instructorId").notNull(),
-  role: mysqlEnum("role", ["lead", "assistant"]).default("lead"), // lead = primary, assistant = co-instructor
+export const classInstructors = pgTable("classInstructors", {
+  id: serial("id").primaryKey(),
+  classId: integer("classId").notNull(),
+  instructorId: integer("instructorId").notNull(),
+  role: varchar("role", { length: 255 }).default("lead"), // lead = primary, assistant = co-instructor
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -314,53 +314,53 @@ export type InsertAttendance = typeof attendance.$inferInsert;
 // ─── Email Marketing Tables ───────────────────────────────────────────────────
 
 // Email Templates table (reusable templates for campaigns)
-export const emailTemplates = mysqlTable("emailTemplates", {
-  id: int("id").autoincrement().primaryKey(),
+export const emailTemplates = pgTable("emailTemplates", {
+  id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
-  category: mysqlEnum("category", ["event", "course", "class", "promotion", "newsletter", "custom"]).default("custom"),
+  category: varchar("category", { length: 255 }).default("custom"),
   subject: varchar("subject", { length: 500 }).notNull(),
   htmlContent: text("htmlContent").notNull(),
   isDefault: boolean("isDefault").default(false), // system-provided default templates
-  createdBy: int("createdBy"), // admin user id
+  createdBy: integer("createdBy"), // admin user id
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 // Email Campaigns table (sent or scheduled bulk emails)
-export const emailCampaigns = mysqlTable("emailCampaigns", {
-  id: int("id").autoincrement().primaryKey(),
+export const emailCampaigns = pgTable("emailCampaigns", {
+  id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   subject: varchar("subject", { length: 500 }).notNull(),
   htmlContent: text("htmlContent").notNull(),
-  templateId: int("templateId"), // optional link to template used
-  status: mysqlEnum("status", ["draft", "scheduled", "sending", "sent", "failed"]).default("draft"),
+  templateId: integer("templateId"), // optional link to template used
+  status: varchar("status", { length: 255 }).default("draft"),
   scheduledAt: timestamp("scheduledAt"), // null = send immediately
   sentAt: timestamp("sentAt"),
-  totalRecipients: int("totalRecipients").default(0),
-  totalSent: int("totalSent").default(0),
-  totalOpened: int("totalOpened").default(0),
-  totalClicked: int("totalClicked").default(0),
-  segment: mysqlEnum("segment", ["all", "lead", "customer", "vip", "inactive"]).default("all"),
-  createdBy: int("createdBy"),
+  totalRecipients: integer("totalRecipients").default(0),
+  totalSent: integer("totalSent").default(0),
+  totalOpened: integer("totalOpened").default(0),
+  totalClicked: integer("totalClicked").default(0),
+  segment: varchar("segment", { length: 255 }).default("all"),
+  createdBy: integer("createdBy"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 // Email Opens tracking (one row per contact open)
-export const emailOpens = mysqlTable("emailOpens", {
-  id: int("id").autoincrement().primaryKey(),
-  campaignId: int("campaignId").notNull(),
-  contactId: int("contactId").notNull(),
+export const emailOpens = pgTable("emailOpens", {
+  id: serial("id").primaryKey(),
+  campaignId: integer("campaignId").notNull(),
+  contactId: integer("contactId").notNull(),
   openedAt: timestamp("openedAt").defaultNow().notNull(),
   ipAddress: varchar("ipAddress", { length: 45 }),
   userAgent: varchar("userAgent", { length: 512 }),
 });
 
 // Email Clicks tracking (one row per link click)
-export const emailClicks = mysqlTable("emailClicks", {
-  id: int("id").autoincrement().primaryKey(),
-  campaignId: int("campaignId").notNull(),
-  contactId: int("contactId").notNull(),
+export const emailClicks = pgTable("emailClicks", {
+  id: serial("id").primaryKey(),
+  campaignId: integer("campaignId").notNull(),
+  contactId: integer("contactId").notNull(),
   url: text("url").notNull(),
   clickedAt: timestamp("clickedAt").defaultNow().notNull(),
   ipAddress: varchar("ipAddress", { length: 45 }),
@@ -379,31 +379,31 @@ export type EmailClick = typeof emailClicks.$inferSelect;
 // ─── Subscription Tables ──────────────────────────────────────────────────────
 
 // Subscriptions table — one active subscription per user
-export const subscriptions = mysqlTable("subscriptions", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  plan: mysqlEnum("plan", ["starter", "creator", "promoter_plan", "academy"]).notNull().default("starter"),
-  status: mysqlEnum("status", ["active", "cancelled", "past_due", "trialing", "incomplete"]).notNull().default("active"),
+export const subscriptions = pgTable("subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  plan: varchar("plan", { length: 255 }).notNull().default("starter"),
+  status: varchar("status", { length: 255 }).notNull().default("active"),
   stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 255 }),
   stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
   currentPeriodStart: timestamp("currentPeriodStart"),
   currentPeriodEnd: timestamp("currentPeriodEnd"),
   cancelAtPeriodEnd: boolean("cancelAtPeriodEnd").default(false),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 // Usage tracking — monthly counters per user
-export const usageTracking = mysqlTable("usageTracking", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  periodYear: int("periodYear").notNull(),   // e.g. 2026
-  periodMonth: int("periodMonth").notNull(), // 1–12
-  eventsCreated: int("eventsCreated").default(0).notNull(),
-  classesCreated: int("classesCreated").default(0).notNull(),
-  coursesCreated: int("coursesCreated").default(0).notNull(),
+export const usageTracking = pgTable("usageTracking", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  periodYear: integer("periodYear").notNull(),   // e.g. 2026
+  periodMonth: integer("periodMonth").notNull(), // 1–12
+  eventsCreated: integer("eventsCreated").default(0).notNull(),
+  classesCreated: integer("classesCreated").default(0).notNull(),
+  coursesCreated: integer("coursesCreated").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 // Type exports for Subscriptions
@@ -417,17 +417,17 @@ export type UsageTracking = typeof usageTracking.$inferSelect;
  * Lessons table — individual video lessons within a course.
  * Sequential position enforces the unlock order: lesson N+1 locked until N completes.
  */
-export const lessons = mysqlTable("lessons", {
-  id: int("id").autoincrement().primaryKey(),
-  courseId: int("courseId").notNull(),           // FK → courses.id
+export const lessons = pgTable("lessons", {
+  id: serial("id").primaryKey(),
+  courseId: integer("courseId").notNull(),           // FK → courses.id
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   videoUrl: text("videoUrl"),                    // S3 / CDN URL (protected stream)
-  position: int("position").notNull(),           // 1-based sequential order
-  durationSeconds: int("durationSeconds"),       // Used for auto-complete threshold
+  position: integer("position").notNull(),           // 1-based sequential order
+  durationSeconds: integer("durationSeconds"),       // Used for auto-complete threshold
   isPreview: boolean("isPreview").default(false).notNull(), // Free preview without purchase
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type Lesson = typeof lessons.$inferSelect;
@@ -438,15 +438,15 @@ export type InsertLesson = typeof lessons.$inferInsert;
  * watchPercent is updated continuously; completed flips to true at ≥95 %.
  * The UNIQUE constraint (userId, lessonId) prevents duplicate rows.
  */
-export const lessonProgress = mysqlTable("lessonProgress", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),               // FK → users.id
-  lessonId: int("lessonId").notNull(),           // FK → lessons.id
-  watchPercent: int("watchPercent").default(0).notNull(), // 0-100
+export const lessonProgress = pgTable("lessonProgress", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),               // FK → users.id
+  lessonId: integer("lessonId").notNull(),           // FK → lessons.id
+  watchPercent: integer("watchPercent").default(0).notNull(), // 0-100
   completed: boolean("completed").default(false).notNull(),
   completedAt: timestamp("completedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type LessonProgress = typeof lessonProgress.$inferSelect;

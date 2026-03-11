@@ -1,1 +1,0 @@
-ALTER TABLE `courses` ADD `videoUrl` text;

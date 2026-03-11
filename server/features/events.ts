@@ -154,7 +154,7 @@ export const eventsRouter = router({
           )
           .limit(1);
         const eventsThisMonth = usage?.eventsCreated ?? 0;
-        const entitlement = canCreateEvent(ctx.user.subscriptionPlan, eventsThisMonth);
+        const entitlement = canCreateEvent(ctx.user.subscriptionPlan as any, eventsThisMonth);
         if (!entitlement.allowed) {
           throw new Error(entitlement.reason ?? "Plan limit reached");
         }
@@ -192,18 +192,26 @@ export const eventsRouter = router({
       // Record usage for non-admin creators
       if (!userRoles.includes("admin")) {
         const now = new Date();
-        const { sql } = await import("drizzle-orm");
-        await db
-          .insert(usageTracking)
-          .values({
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1;
+
+        const existingUsage = await db.select().from(usageTracking)
+          .where(and(eq(usageTracking.userId, ctx.user.id), eq(usageTracking.periodYear, year), eq(usageTracking.periodMonth, month)))
+          .limit(1);
+
+        if (existingUsage.length > 0) {
+          const { sql } = await import("drizzle-orm");
+          await db.update(usageTracking)
+            .set({ eventsCreated: sql`eventsCreated + 1` })
+            .where(eq(usageTracking.id, existingUsage[0].id));
+        } else {
+          await db.insert(usageTracking).values({
             userId: ctx.user.id,
-            periodYear: now.getFullYear(),
-            periodMonth: now.getMonth() + 1,
+            periodYear: year,
+            periodMonth: month,
             eventsCreated: 1,
-          })
-          .onDuplicateKeyUpdate({
-            set: { eventsCreated: sql`eventsCreated + 1` },
           });
+        }
       }
 
       return result;

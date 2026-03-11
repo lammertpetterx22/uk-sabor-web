@@ -64,7 +64,7 @@ export const paymentsRouter = router({
       const [creatorRow] = await db.select({ subscriptionPlan: users.subscriptionPlan, stripeAccountId: users.stripeAccountId })
         .from(users).where(eq(users.id, creatorId)).limit(1);
 
-      const fees = calculateCheckoutAmounts(unitPrice, creatorRow?.subscriptionPlan ?? "starter");
+      const fees = calculateCheckoutAmounts(unitPrice, (creatorRow?.subscriptionPlan as any) ?? "starter");
 
       const eventDateStr = new Date(event.eventDate).toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 
@@ -167,7 +167,7 @@ export const paymentsRouter = router({
       const [creatorRow] = await db.select({ subscriptionPlan: users.subscriptionPlan, stripeAccountId: users.stripeAccountId })
         .from(users).where(eq(users.id, creatorId)).limit(1);
 
-      const fees = calculateCheckoutAmounts(price, creatorRow?.subscriptionPlan ?? "starter");
+      const fees = calculateCheckoutAmounts(price, (creatorRow?.subscriptionPlan as any) ?? "starter");
 
       const payment_intent_data = creatorRow?.stripeAccountId ? {
         application_fee_amount: fees.platformFeePence + fees.stripeFeePence,
@@ -272,7 +272,7 @@ export const paymentsRouter = router({
       const [creatorRow] = await db.select({ subscriptionPlan: users.subscriptionPlan, stripeAccountId: users.stripeAccountId })
         .from(users).where(eq(users.id, creatorId)).limit(1);
 
-      const fees = calculateCheckoutAmounts(price, creatorRow?.subscriptionPlan ?? "starter");
+      const fees = calculateCheckoutAmounts(price, (creatorRow?.subscriptionPlan as any) ?? "starter");
 
       const classDateStr = new Date(classItem.classDate).toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 
@@ -620,7 +620,7 @@ export async function processCompletedCheckout(session: Stripe.Checkout.Session)
     status: "completed",
     itemType,
     itemId,
-  }).$returningId();
+  }).returning({ id: orders.id });
 
   const orderId = order.id;
 
