@@ -2,6 +2,7 @@ services:
   - type: web
     name: uk-sabor-web
     env: node
+    plan: free
     buildCommand: pnpm install && npm run build
     startCommand: npm run start
     envVars:
