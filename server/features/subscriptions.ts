@@ -486,7 +486,7 @@ export async function processSubscriptionWebhook(
         role: newRole as any,
       })
       .where(eq(users.id, user.id));
-    console.log(`[SubscriptionWebhook] User ${user.id} plan updated to ${planKey}, role set to ${newRole}`);
+    console.log(`[SubscriptionWebhook] User ${user.id} plan updated to ${planKey}, role upgraded to ${newRole}`);
   } else if (status === "past_due" || status === "incomplete") {
     // Downgrade to starter on payment failure
     await db.update(users)
@@ -495,6 +495,6 @@ export async function processSubscriptionWebhook(
         role: "user" as any,
       })
       .where(eq(users.id, user.id));
-    console.log(`[SubscriptionWebhook] User ${user.id} downgraded to starter`);
+    console.log(`[SubscriptionWebhook] User ${user.id} downgraded to starter (payment failed: ${status})`);
   }
 }

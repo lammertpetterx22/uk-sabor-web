@@ -21,12 +21,6 @@ export async function handleStripeWebhook(req: Request, res: Response) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // Handle test events
-  if (event.id.startsWith("evt_test_")) {
-    console.log("[Webhook] Test event detected, returning verification response");
-    return res.json({ verified: true });
-  }
-
   console.log(`[Webhook] Received event: ${event.type} (${event.id})`);
 
   try {
