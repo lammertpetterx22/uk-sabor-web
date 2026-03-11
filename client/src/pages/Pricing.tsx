@@ -248,7 +248,7 @@ export default function Pricing() {
                         <span>Events per month</span>
                         <span className="font-semibold text-foreground">
                           {plan.limits.eventsPerMonth === null
-                            ? "Unlimited"
+                            ? "∞"
                             : plan.limits.eventsPerMonth === 0
                               ? "None"
                               : plan.limits.eventsPerMonth}
@@ -258,7 +258,7 @@ export default function Pricing() {
                         <span>Weekly classes</span>
                         <span className="font-semibold text-foreground">
                           {plan.limits.weeklyClasses === null
-                            ? "Unlimited"
+                            ? "∞"
                             : plan.limits.weeklyClasses === 0
                               ? "None"
                               : plan.limits.weeklyClasses}
