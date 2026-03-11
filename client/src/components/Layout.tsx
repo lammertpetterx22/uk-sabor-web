@@ -157,14 +157,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             label="Mi Perfil"
                             onClick={onClose}
                         />
-                        {isCreator && (
-                            <NavLink
-                                href="/billing"
-                                icon={CreditCard}
-                                label="Facturación"
-                                onClick={onClose}
-                            />
-                        )}
                     </>
                 )}
 

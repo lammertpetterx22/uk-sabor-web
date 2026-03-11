@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import BillingSection from "@/components/profile/BillingSection";
 
 export default function UserProfile() {
   const [, setLocation] = useLocation();
@@ -102,162 +104,180 @@ export default function UserProfile() {
   return (
     <div className="min-h-screen bg-background pt-24 pb-12">
       <div className="container max-w-2xl">
-        {/* Profile Header */}
-        <Card className="mb-8 border-none bg-card/60 backdrop-blur-xl shadow-xl">
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row items-center gap-6">
-              <div className="relative group">
-                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden bg-gradient-to-br from-accent to-primary flex items-center justify-center border-4 border-background shadow-lg">
-                  {formData.avatarUrl ? (
-                    <img src={formData.avatarUrl} alt={user.name || "Avatar"} className="w-full h-full object-cover" />
-                  ) : (
-                    <User size={48} className="text-white opacity-80" />
-                  )}
-                </div>
+        {/* Tabs for Profile and Billing */}
+        <Tabs defaultValue="perfil" className="w-full">
+          <TabsList className="w-full grid grid-cols-2 bg-card/60 backdrop-blur-xl border border-border/40 mb-8 p-1 h-12 rounded-xl">
+            <TabsTrigger value="perfil" className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-white">
+              Mi Perfil
+            </TabsTrigger>
+            <TabsTrigger value="billing" className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-white">
+              Facturación
+            </TabsTrigger>
+          </TabsList>
 
-                {isEditing && (
-                  <label
-                    className="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 rounded-full cursor-pointer transition-opacity"
-                    onClick={() => imageInputRef.current?.click()}
-                  >
-                    {isUploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Upload className="w-6 h-6" />}
-                  </label>
+          <TabsContent value="perfil" className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300 outline-none">
+            {/* Profile Header */}
+            <Card className="border-none bg-card/60 backdrop-blur-xl shadow-xl">
+              <CardHeader>
+                <div className="flex flex-col sm:flex-row items-center gap-6">
+                  <div className="relative group">
+                    <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden bg-gradient-to-br from-accent to-primary flex items-center justify-center border-4 border-background shadow-lg">
+                      {formData.avatarUrl ? (
+                        <img src={formData.avatarUrl} alt={user.name || "Avatar"} className="w-full h-full object-cover" />
+                      ) : (
+                        <User size={48} className="text-white opacity-80" />
+                      )}
+                    </div>
+
+                    {isEditing && (
+                      <label
+                        className="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 rounded-full cursor-pointer transition-opacity"
+                        onClick={() => imageInputRef.current?.click()}
+                      >
+                        {isUploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Upload className="w-6 h-6" />}
+                      </label>
+                    )}
+
+                    <input
+                      type="file"
+                      ref={imageInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) handleImageUpload(e.target.files[0]);
+                      }}
+                    />
+                  </div>
+
+                  <div className="text-center sm:text-left">
+                    <CardTitle className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
+                      {user.name || "Mi Perfil"}
+                    </CardTitle>
+                    <CardDescription className="text-lg mt-1 flex items-center justify-center sm:justify-start gap-2">
+                      <Mail className="w-4 h-4" /> {user.email}
+                    </CardDescription>
+                    <div className="mt-3 inline-flex items-center px-3 py-1 rounded-full bg-accent/20 text-accent text-sm font-medium border border-accent/20">
+                      Plan: {user.subscriptionPlan.charAt(0).toUpperCase() + user.subscriptionPlan.slice(1)}
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+            </Card>
+
+            {/* Profile Edit Form */}
+            <Card className="border-border/40 shadow-lg">
+              <CardHeader className="flex flex-row items-center justify-between border-b border-border/40 pb-6 mb-6">
+                <div>
+                  <CardTitle className="text-xl">Información del Perfil</CardTitle>
+                  <CardDescription>
+                    {isEditing ? "Actualiza tus datos públicos" : "Tus datos actuales"}
+                  </CardDescription>
+                </div>
+                {!isEditing && (
+                  <Button onClick={() => setIsEditing(true)} variant="outline" className="h-9 px-4">
+                    Editar Perfil
+                  </Button>
                 )}
+              </CardHeader>
 
-                <input
-                  type="file"
-                  ref={imageInputRef}
-                  className="hidden"
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files?.[0]) handleImageUpload(e.target.files[0]);
-                  }}
-                />
-              </div>
-
-              <div className="text-center sm:text-left">
-                <CardTitle className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
-                  {user.name || "Mi Perfil"}
-                </CardTitle>
-                <CardDescription className="text-lg mt-1 flex items-center justify-center sm:justify-start gap-2">
-                  <Mail className="w-4 h-4" /> {user.email}
-                </CardDescription>
-                <div className="mt-3 inline-flex items-center px-3 py-1 rounded-full bg-accent/20 text-accent text-sm font-medium border border-accent/20">
-                  Plan: {user.subscriptionPlan.charAt(0).toUpperCase() + user.subscriptionPlan.slice(1)}
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
-        {/* Profile Edit Form */}
-        <Card className="border-border/40 shadow-lg">
-          <CardHeader className="flex flex-row items-center justify-between border-b border-border/40 pb-6 mb-6">
-            <div>
-              <CardTitle className="text-xl">Información del Perfil</CardTitle>
-              <CardDescription>
-                {isEditing ? "Actualiza tus datos públicos" : "Tus datos actuales"}
-              </CardDescription>
-            </div>
-            {!isEditing && (
-              <Button onClick={() => setIsEditing(true)} variant="outline" className="h-9 px-4">
-                Editar Perfil
-              </Button>
-            )}
-          </CardHeader>
-
-          <CardContent className="space-y-6">
-            {/* Name */}
-            <div className="space-y-3">
-              <label className="text-sm font-medium text-foreground/80 flex items-center gap-2">
-                <User size={16} className="text-accent" />
-                Nombre Completo
-              </label>
-              {isEditing ? (
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Tu nombre y apellido"
-                  className="bg-background border-border/50 h-11"
-                />
-              ) : (
-                <div className="p-3 bg-card/30 rounded-lg border border-border/20">
-                  <p className="text-foreground">{formData.name || "No proporcionado"}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Email (Read Only) */}
-            <div className="space-y-3">
-              <label className="text-sm font-medium text-foreground/80 flex items-center gap-2">
-                <Mail size={16} className="text-muted-foreground" />
-                Correo Electrónico (Solo Lectura)
-              </label>
-              <div className="p-3 bg-background/50 rounded-lg border border-border/20">
-                <p className="text-foreground/70">{user.email}</p>
-              </div>
-            </div>
-
-            {/* Bio */}
-            <div className="space-y-3">
-              <label className="text-sm font-medium text-foreground/80 flex items-center gap-2">
-                <CheckCircle size={16} className="text-accent" />
-                Biografía
-              </label>
-              {isEditing ? (
-                <Textarea
-                  value={formData.bio}
-                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                  placeholder="Cuéntanos un poco sobre ti y tu experiencia con el baile..."
-                  rows={5}
-                  className="bg-background border-border/50 resize-none"
-                />
-              ) : (
-                <div className="p-4 bg-card/30 rounded-lg border border-border/20 min-h-[100px]">
-                  <p className="text-foreground whitespace-pre-wrap leading-relaxed">
-                    {formData.bio || "Aún no has escrito una biografía."}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Action Buttons */}
-            {isEditing && (
-              <div className="flex gap-4 pt-6 border-t border-border/40 mt-8">
-                <Button
-                  onClick={() => {
-                    setIsEditing(false);
-                    // Reset to initial
-                    setFormData({
-                      name: user.name || "",
-                      bio: user.bio || "",
-                      avatarUrl: user.avatarUrl || "",
-                    });
-                  }}
-                  variant="ghost"
-                  disabled={isSaving || isUploading}
-                  className="w-1/3 h-11"
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={handleSaveProfile}
-                  disabled={isSaving || isUploading}
-                  className="btn-vibrant flex-1 h-11"
-                >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Guardando...
-                    </>
+              <CardContent className="space-y-6">
+                {/* Name */}
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-foreground/80 flex items-center gap-2">
+                    <User size={16} className="text-accent" />
+                    Nombre Completo
+                  </label>
+                  {isEditing ? (
+                    <Input
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Tu nombre y apellido"
+                      className="bg-background border-border/50 h-11"
+                    />
                   ) : (
-                    "Guardar Cambios"
+                    <div className="p-3 bg-card/30 rounded-lg border border-border/20">
+                      <p className="text-foreground">{formData.name || "No proporcionado"}</p>
+                    </div>
                   )}
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                </div>
+
+                {/* Email (Read Only) */}
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-foreground/80 flex items-center gap-2">
+                    <Mail size={16} className="text-muted-foreground" />
+                    Correo Electrónico (Solo Lectura)
+                  </label>
+                  <div className="p-3 bg-background/50 rounded-lg border border-border/20">
+                    <p className="text-foreground/70">{user.email}</p>
+                  </div>
+                </div>
+
+                {/* Bio */}
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-foreground/80 flex items-center gap-2">
+                    <CheckCircle size={16} className="text-accent" />
+                    Biografía
+                  </label>
+                  {isEditing ? (
+                    <Textarea
+                      value={formData.bio}
+                      onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                      placeholder="Cuéntanos un poco sobre ti y tu experiencia con el baile..."
+                      rows={5}
+                      className="bg-background border-border/50 resize-none"
+                    />
+                  ) : (
+                    <div className="p-4 bg-card/30 rounded-lg border border-border/20 min-h-[100px]">
+                      <p className="text-foreground whitespace-pre-wrap leading-relaxed">
+                        {formData.bio || "Aún no has escrito una biografía."}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                {isEditing && (
+                  <div className="flex gap-4 pt-6 border-t border-border/40 mt-8">
+                    <Button
+                      onClick={() => {
+                        setIsEditing(false);
+                        // Reset to initial
+                        setFormData({
+                          name: user.name || "",
+                          bio: user.bio || "",
+                          avatarUrl: user.avatarUrl || "",
+                        });
+                      }}
+                      variant="ghost"
+                      disabled={isSaving || isUploading}
+                      className="w-1/3 h-11"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      onClick={handleSaveProfile}
+                      disabled={isSaving || isUploading}
+                      className="btn-vibrant flex-1 h-11"
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Guardando...
+                        </>
+                      ) : (
+                        "Guardar Cambios"
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="billing" className="animate-in fade-in slide-in-from-bottom-2 duration-300 outline-none">
+            <BillingSection />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

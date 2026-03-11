@@ -87,11 +87,6 @@ function Router() {
               <UserDashboard />
             </ProtectedRoute>
           </Route>
-          <Route path="/billing">
-            <ProtectedRoute>
-              <Billing />
-            </ProtectedRoute>
-          </Route>
 
           {/* ── Admin / Instructor / Promoter ─────────────────── */}
           <Route path="/admin">
