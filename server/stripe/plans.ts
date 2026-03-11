@@ -34,6 +34,8 @@ export interface PlanDefinition {
   stripeProductName: string;
   /** Commission taken from ticket sales as a decimal (e.g. 0.08 = 8%) */
   commissionRate: number;
+  /** Commission taken from course sales as a decimal (e.g. 0.15 = 15%) */
+  courseCommissionRate: number;
   limits: {
     eventsPerMonth: number | null;   // null = unlimited
     weeklyClasses: number | null;    // null = unlimited
@@ -64,15 +66,17 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
     stripePriceId: null,
     stripeProductName: "UK Sabor Starter",
     commissionRate: 0.08,
+    courseCommissionRate: 0.15,
     limits: {
       eventsPerMonth: 1,
       weeklyClasses: 0,   // No weekly classes on free plan
-      courses: 0,
+      courses: null,
       instructors: 1,
     },
     features: [
       "1 active event per month",
       "No weekly class listings",
+      "Unlimited courses (15% fee)",
       "Ticket sales",
       "QR check-in",
       "Public creator profile",
@@ -95,15 +99,17 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
     stripePriceId: process.env.STRIPE_PRICE_CREATOR_MONTHLY || process.env.STRIPE_PRICE_CREATOR || null,
     stripeProductName: "UK Sabor Creator",
     commissionRate: 0.04,
+    courseCommissionRate: 0.10,
     limits: {
       eventsPerMonth: 1,   // 1 event per month
       weeklyClasses: 1,    // 1 weekly class
-      courses: 0,
+      courses: null,
       instructors: 1,
     },
     features: [
       "1 event per month",
       "1 weekly class listing",
+      "Unlimited courses (10% fee)",
       "Ticket sales",
       "QR check-in",
       "Creator profile page",
@@ -126,15 +132,17 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
     stripePriceId: process.env.STRIPE_PRICE_PROMOTER_MONTHLY || process.env.STRIPE_PRICE_PROMOTER || null,
     stripeProductName: "UK Sabor Promoter",
     commissionRate: 0.025,
+    courseCommissionRate: 0.05,
     limits: {
       eventsPerMonth: null,   // unlimited
       weeklyClasses: 10,
-      courses: 0,
+      courses: null,
       instructors: 1,
     },
     features: [
       "Unlimited events per month",
       "Up to 10 weekly classes",
+      "Unlimited courses (5% fee)",
       "Ticket sales",
       "QR check-in",
       "CSV attendee export",
@@ -157,6 +165,7 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
     stripePriceId: process.env.STRIPE_PRICE_ACADEMY_MONTHLY || process.env.STRIPE_PRICE_ACADEMY || null,
     stripeProductName: "UK Sabor Academy",
     commissionRate: 0.02,
+    courseCommissionRate: 0.00,
     limits: {
       eventsPerMonth: null,   // unlimited
       weeklyClasses: null,    // unlimited
@@ -166,8 +175,8 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
     features: [
       "Unlimited events per month",
       "Unlimited weekly classes",
+      "Unlimited courses (0% fee)",
       "Multiple instructors",
-      "Unlimited courses",
       "Student management",
       "Advanced analytics",
       "2% ticket commission",
@@ -251,24 +260,7 @@ export function canCreateClass(plan: string, totalClasses: number): EntitlementR
  * Check whether a user's plan allows creating courses.
  */
 export function canCreateCourse(plan: string, totalCourses: number): EntitlementResult {
-  const planDef = PLANS[plan as PlanKey] ?? PLANS.starter;
-  const limit = planDef.limits.courses;
-  if (limit === null || limit === -1) return { allowed: true };
-  if (limit === 0) {
-    return {
-      allowed: false,
-      reason: `Your ${planDef.name} plan does not include courses. Upgrade to create courses.`,
-      limit: 0,
-      current: totalCourses,
-    };
-  }
-  if (totalCourses < limit) return { allowed: true, limit, current: totalCourses };
-  return {
-    allowed: false,
-    reason: `Your ${planDef.name} plan does not include courses. Upgrade to create courses.`,
-    limit,
-    current: totalCourses,
-  };
+  return { allowed: true };
 }
 
 /**
@@ -278,8 +270,9 @@ export function canCreateCourse(plan: string, totalCourses: number): Entitlement
  *
  * Returns all amounts in pence (integer).
  */
-export function calculateCheckoutAmounts(ticketPricePence: number, plan: PlanKey) {
-  const commissionRate = (PLANS[plan] ?? PLANS.starter).commissionRate;
+export function calculateCheckoutAmounts(ticketPricePence: number, plan: PlanKey, isCourse: boolean = false) {
+  const planDef = PLANS[plan] ?? PLANS.starter;
+  const commissionRate = isCourse ? planDef.courseCommissionRate : planDef.commissionRate;
   const platformFeePence = Math.round(ticketPricePence * commissionRate);
   // Stripe UK processing: 1.5% + 20p (European cards) — we pass this to buyer
   const subtotalPence = ticketPricePence + platformFeePence;

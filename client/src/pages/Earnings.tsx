@@ -12,7 +12,11 @@ import {
   History,
   TrendingUp,
   AlertCircle,
-  Banknote
+  Banknote,
+  GraduationCap,
+  Sparkles,
+  Ticket,
+  Users
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -34,6 +38,9 @@ export default function Earnings() {
   const { data: wallet, isLoading: walletLoading, refetch: refetchWallet } = trpc.financials.getWallet.useQuery();
   const { data: ledger, isLoading: ledgerLoading, refetch: refetchLedger } = trpc.financials.getLedger.useQuery({ limit: 50 });
   const { data: withdrawals } = trpc.financials.getMyWithdrawals.useQuery();
+  const { data: courseSales, isLoading: salesLoading } = trpc.financials.getCourseSales.useQuery();
+  const { data: eventSales, isLoading: eventSalesLoading } = trpc.financials.getEventSales.useQuery();
+  const { data: classSales, isLoading: classSalesLoading } = trpc.financials.getClassSales.useQuery();
 
   const requestWithdrawal = trpc.financials.requestWithdrawal.useMutation({
     onSuccess: () => {
@@ -135,77 +142,261 @@ export default function Earnings() {
           <h2 className="text-4xl font-bold text-white tracking-tight">{formatCurrency(wallet?.totalEarned)}</h2>
           <p className="mt-4 text-white/30 text-[11px] uppercase tracking-wider font-bold">Histórico total</p>
         </div>
+
+        {/* Dynamic Plan Commission Info */}
+        <div className="md:col-span-3 relative group overflow-hidden bg-accent/5 border border-accent/20 rounded-2xl p-6 transition-all">
+           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+              <div className="flex items-center gap-4">
+                 <div className="p-3 rounded-2xl bg-accent/10">
+                    <Sparkles className="text-accent h-8 w-8" />
+                 </div>
+                 <div>
+                    <h3 className="text-xl font-bold text-white">Tu Plan: <span className="text-accent uppercase">{user?.subscriptionPlan || 'Starter'}</span></h3>
+                    <p className="text-white/40 text-sm">Comisión por curso vendido: <span className="text-white font-bold">{
+                      user?.subscriptionPlan === 'academy' ? '0%' :
+                      user?.subscriptionPlan === 'promoter_plan' ? '5%' :
+                      user?.subscriptionPlan === 'creator' ? '10%' : '15%'
+                    }</span></p>
+                 </div>
+              </div>
+              <div className="flex flex-wrap gap-2 justify-center">
+                 {['Starter (15%)', 'Creator (10%)', 'Promoter (5%)', 'Academy (0%)'].map((p, i) => (
+                   <div key={i} className={`px-4 py-2 rounded-xl text-xs font-bold border ${
+                     p.toLowerCase().includes(user?.subscriptionPlan || 'starter') 
+                     ? 'bg-accent/20 border-accent text-accent' 
+                     : 'bg-white/5 border-white/10 text-white/30'
+                   }`}>
+                     {p}
+                   </div>
+                 ))}
+              </div>
+           </div>
+        </div>
       </div>
 
       {/* Main Content Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Ledger - Transaction History */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center gap-2 px-2">
-            <History size={20} className="text-[#FA3698]" />
-            <h3 className="text-xl font-bold text-white">Historial de Transacciones</h3>
-          </div>
-          
-          <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="bg-white/5 text-white/40 border-b border-white/10">
-                    <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Fecha</th>
-                    <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Descripción</th>
-                    <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Monto</th>
-                    <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-right">Estado</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {ledger?.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="px-6 py-12 text-center text-white/20 italic">
-                        No hay transacciones registradas todavía.
-                      </td>
+        <div className="lg:col-span-2 space-y-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 px-2">
+              <GraduationCap size={20} className="text-blue-400" />
+              <h3 className="text-xl font-bold text-white">Ventas de Cursos</h3>
+            </div>
+            
+            <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="bg-white/5 text-white/40 border-b border-white/10">
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Fecha</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Curso</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Precio</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Comisión</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-right">Ganancia</th>
                     </tr>
-                  ) : (
-                    ledger?.map((tx) => (
-                      <tr key={tx.id} className="group hover:bg-white/[0.02] transition-colors">
-                        <td className="px-6 py-4 text-white/50 whitespace-nowrap">
-                          {formatDate(tx.createdAt)}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            {tx.type === "earning" ? (
-                              <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">
-                                <ArrowDownLeft size={16} />
-                              </div>
-                            ) : (
-                              <div className="p-2 rounded-lg bg-[#FD4D43]/10 text-[#FD4D43]">
-                                <ArrowUpRight size={16} />
-                              </div>
-                            )}
-                            <span className="text-white font-medium">{tx.description}</span>
-                          </div>
-                        </td>
-                        <td className={`px-6 py-4 font-bold ${parseFloat(String(tx.amount)) > 0 ? "text-emerald-400" : "text-[#FD4D43]"}`}>
-                          {parseFloat(String(tx.amount)) > 0 ? "+" : ""}{formatCurrency(tx.amount)}
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
-                            tx.status === "completed" 
-                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
-                              : tx.status === "pending"
-                              ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
-                              : "bg-red-500/10 text-red-400 border-red-500/20"
-                          }`}>
-                            {tx.status === "completed" && <CheckCircle2 size={10} />}
-                            {tx.status === "pending" && <Clock size={10} />}
-                            {tx.status === "cancelled" && <XCircle size={10} />}
-                            {tx.status === "completed" ? "Completado" : tx.status === "pending" ? "Pendiente" : "Cancelado"}
-                          </span>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {courseSales?.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-12 text-center text-white/20 italic">
+                          No has vendido ningún curso todavía.
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      courseSales?.map((sale) => (
+                        <tr key={sale.id} className="group hover:bg-white/[0.02] transition-colors">
+                          <td className="px-6 py-4 text-white/50 whitespace-nowrap">
+                            {formatDate(sale.purchasedAt)}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-white font-medium">{sale.courseTitle}</span>
+                          </td>
+                          <td className="px-6 py-4 text-white/60">
+                            {formatCurrency(sale.pricePaid)}
+                          </td>
+                          <td className="px-6 py-4 text-red-400/60 text-xs">
+                            -{formatCurrency(sale.platformFee)}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                             <span className="text-emerald-400 font-bold">{formatCurrency(sale.instructorEarnings)}</span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 px-2">
+              <Ticket size={20} className="text-orange-400" />
+              <h3 className="text-xl font-bold text-white">Ventas de Entradas</h3>
+            </div>
+            
+            <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="bg-white/5 text-white/40 border-b border-white/10">
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Fecha</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Evento</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-center">Cant.</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Precio</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-right">Ganancia</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {eventSales?.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-12 text-center text-white/20 italic">
+                          No hay ventas de entradas registradas.
+                        </td>
+                      </tr>
+                    ) : (
+                      eventSales?.map((sale) => (
+                        <tr key={sale.id} className="group hover:bg-white/[0.02] transition-colors">
+                          <td className="px-6 py-4 text-white/50 whitespace-nowrap">
+                            {formatDate(sale.purchasedAt)}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-white font-medium">{sale.eventTitle}</span>
+                          </td>
+                          <td className="px-6 py-4 text-center text-white/60">
+                            {sale.quantity}
+                          </td>
+                          <td className="px-6 py-4 text-white/60">
+                            {formatCurrency(sale.pricePaid)}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                             <span className="text-emerald-400 font-bold">{formatCurrency(sale.instructorEarnings)}</span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 px-2">
+              <Users size={20} className="text-purple-400" />
+              <h3 className="text-xl font-bold text-white">Ventas de Clases</h3>
+            </div>
+            
+            <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="bg-white/5 text-white/40 border-b border-white/10">
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Fecha</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Clase</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Precio</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-right">Ganancia</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {classSales?.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-12 text-center text-white/20 italic">
+                          No hay ventas de clases registradas.
+                        </td>
+                      </tr>
+                    ) : (
+                      classSales?.map((sale) => (
+                        <tr key={sale.id} className="group hover:bg-white/[0.02] transition-colors">
+                          <td className="px-6 py-4 text-white/50 whitespace-nowrap">
+                            {formatDate(sale.purchasedAt)}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-white font-medium">{sale.classTitle}</span>
+                          </td>
+                          <td className="px-6 py-4 text-white/60">
+                            {formatCurrency(sale.pricePaid)}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                             <span className="text-emerald-400 font-bold">{formatCurrency(sale.instructorEarnings)}</span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 px-2">
+              <History size={20} className="text-[#FA3698]" />
+              <h3 className="text-xl font-bold text-white">Historial de Transacciones (Billetera)</h3>
+            </div>
+            
+            <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="bg-white/5 text-white/40 border-b border-white/10">
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Fecha</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Descripción</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Monto</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-right">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {ledger?.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-12 text-center text-white/20 italic">
+                          No hay transacciones registradas todavía.
+                        </td>
+                      </tr>
+                    ) : (
+                      ledger?.map((tx) => (
+                        <tr key={tx.id} className="group hover:bg-white/[0.02] transition-colors">
+                          <td className="px-6 py-4 text-white/50 whitespace-nowrap">
+                            {formatDate(tx.createdAt)}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              {tx.type === "earning" ? (
+                                <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">
+                                  <ArrowDownLeft size={16} />
+                                </div>
+                              ) : (
+                                <div className="p-2 rounded-lg bg-[#FD4D43]/10 text-[#FD4D43]">
+                                  <ArrowUpRight size={16} />
+                                </div>
+                              )}
+                              <span className="text-white font-medium">{tx.description}</span>
+                            </div>
+                          </td>
+                          <td className={`px-6 py-4 font-bold ${parseFloat(String(tx.amount)) > 0 ? "text-emerald-400" : "text-[#FD4D43]"}`}>
+                            {parseFloat(String(tx.amount)) > 0 ? "+" : ""}{formatCurrency(tx.amount)}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
+                              tx.status === "completed" 
+                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
+                                : tx.status === "pending"
+                                ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
+                                : "bg-red-500/10 text-red-400 border-red-500/20"
+                            }`}>
+                              {tx.status === "completed" && <CheckCircle2 size={10} />}
+                              {tx.status === "pending" && <Clock size={10} />}
+                              {tx.status === "cancelled" && <XCircle size={10} />}
+                              {tx.status === "completed" ? "Completado" : tx.status === "pending" ? "Pendiente" : "Cancelado"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>

@@ -17,7 +17,7 @@ import {
 import { PRODUCT_METADATA } from "./products";
 import { sendQRCodeEmail } from "../features/email";
 import { addEarnings } from "../features/financials";
-import { PLANS } from "./plans";
+import { PLANS, PlanKey } from "./plans";
 import QRCode from "qrcode";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
@@ -113,10 +113,15 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     try {
       let creatorUserId: number | null = null;
       let netEarningsPence = 0;
+      let sellerPlan: string = "starter";
 
       if (itemType === "event") {
         const [event] = await db.select({ creatorId: events.creatorId }).from(events).where(eq(events.id, itemId)).limit(1);
         creatorUserId = event?.creatorId || null;
+        if (creatorUserId) {
+          const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan }).from(users).where(eq(users.id, creatorUserId)).limit(1);
+          sellerPlan = u?.subscriptionPlan || "starter";
+        }
         const ticketPricePence = parseInt(metadata.ticket_price_pence || "0");
         const quantity = metadata.quantity ? parseInt(metadata.quantity) : 1;
         netEarningsPence = ticketPricePence * quantity;
@@ -125,6 +130,10 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         if (course) {
           const [instr] = await db.select({ userId: instructors.userId }).from(instructors).where(eq(instructors.id, course.instructorId)).limit(1);
           creatorUserId = instr?.userId || null;
+          if (creatorUserId) {
+            const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan }).from(users).where(eq(users.id, creatorUserId)).limit(1);
+            sellerPlan = u?.subscriptionPlan || "starter";
+          }
           netEarningsPence = parseInt(metadata.ticket_price_pence || "0");
         }
       } else if (itemType === "class") {
@@ -132,18 +141,40 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         if (classItem) {
           const [instr] = await db.select({ userId: instructors.userId }).from(instructors).where(eq(instructors.id, classItem.instructorId)).limit(1);
           creatorUserId = instr?.userId || null;
+          if (creatorUserId) {
+            const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan }).from(users).where(eq(users.id, creatorUserId)).limit(1);
+            sellerPlan = u?.subscriptionPlan || "starter";
+          }
           netEarningsPence = parseInt(metadata.ticket_price_pence || "0");
         }
       }
 
       if (creatorUserId && netEarningsPence > 0) {
+        let platformFeeGBP = 0;
+        let instructorEarningsGBP = netEarningsPence / 100;
+
+        // For courses, calculate tiered commission
+        if (itemType === "course") {
+          const planDef = PLANS[sellerPlan as PlanKey] || PLANS.starter;
+          const commissionRate = planDef.courseCommissionRate;
+          const commissionPence = Math.round(netEarningsPence * commissionRate);
+          platformFeeGBP = commissionPence / 100;
+          instructorEarningsGBP = (netEarningsPence - commissionPence) / 100;
+        }
+
         await addEarnings({
           userId: creatorUserId,
-          amount: netEarningsPence / 100,
+          amount: instructorEarningsGBP,
           description: `Sale: ${metadata.item_name || itemType} (#${orderId})`,
           orderId: orderId,
         });
-        console.log(`[Webhook] Allocated £${(netEarningsPence / 100).toFixed(2)} to creator ${creatorUserId}`);
+
+        // Store financial details in purchase record later (sharing scope)
+        (metadata as any)._calculated_platform_fee = platformFeeGBP;
+        (metadata as any)._calculated_instructor_earnings = instructorEarningsGBP;
+        (metadata as any)._creator_user_id = creatorUserId;
+
+        console.log(`[Webhook] Allocated £${instructorEarningsGBP.toFixed(2)} to creator ${creatorUserId} (Fee: £${platformFeeGBP.toFixed(2)})`);
       }
     } catch (finError) {
       console.error("[Webhook] Error allocating earnings:", finError);
@@ -163,7 +194,11 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
           userId,
           eventId: itemId,
           orderId,
-          quantity: 1,
+          quantity: metadata.quantity ? parseInt(metadata.quantity) : 1,
+          instructorId: (metadata as any)._creator_user_id,
+          pricePaid: (parseInt(metadata.ticket_price_pence || "0") * (metadata.quantity ? parseInt(metadata.quantity) : 1) / 100).toFixed(2) as any,
+          platformFee: ((metadata as any)._calculated_platform_fee || 0).toFixed(2) as any,
+          instructorEarnings: ((metadata as any)._calculated_instructor_earnings || 0).toFixed(2) as any,
           ticketCode,
           status: "valid",
         });
@@ -174,7 +209,11 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         await db.insert(coursePurchases).values({
           userId,
           courseId: itemId,
+          instructorId: (metadata as any)._creator_user_id,
           orderId,
+          pricePaid: (parseInt(metadata.ticket_price_pence || "0") / 100).toFixed(2) as any,
+          platformFee: ((metadata as any)._calculated_platform_fee || 0).toFixed(2) as any,
+          instructorEarnings: ((metadata as any)._calculated_instructor_earnings || 0).toFixed(2) as any,
           progress: 0,
           completed: false,
         });
@@ -186,7 +225,11 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         await db.insert(classPurchases).values({
           userId,
           classId: itemId,
+          instructorId: (metadata as any)._creator_user_id,
           orderId,
+          pricePaid: (parseInt(metadata.ticket_price_pence || "0") / 100).toFixed(2) as any,
+          platformFee: ((metadata as any)._calculated_platform_fee || 0).toFixed(2) as any,
+          instructorEarnings: ((metadata as any)._calculated_instructor_earnings || 0).toFixed(2) as any,
           accessCode,
           status: "active",
         });

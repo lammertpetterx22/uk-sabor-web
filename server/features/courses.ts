@@ -10,10 +10,10 @@ function isAdminRole(user: { role: string; roles?: string | null }): boolean {
   return getAllRoles(user as any).includes("admin");
 }
 
-// Courses are instructor-only (not promoters) — instructors/academies create course content
+// Courses are creator-centered — instructors, promoters, and admins can create courses
 function isInstructorOrAdmin(user: { role: string; roles?: string | null }): boolean {
   const all = getAllRoles(user as any);
-  return all.some(r => r === "admin" || r === "instructor");
+  return all.some(r => r === "admin" || r === "instructor" || r === "promoter");
 }
 
 // Resolve the instructor profile linked to a user (by userId, robust lookup)

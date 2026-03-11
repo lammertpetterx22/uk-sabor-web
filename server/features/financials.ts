@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { protectedProcedure, adminProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { balances, ledgerTransactions, withdrawalRequests, users } from "../../drizzle/schema";
+import { balances, ledgerTransactions, withdrawalRequests, users, coursePurchases, courses, eventTickets, events, classPurchases, classes } from "../../drizzle/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
@@ -146,6 +146,67 @@ export const financialsRouter = router({
       .from(withdrawalRequests)
       .where(eq(withdrawalRequests.userId, ctx.user.id))
       .orderBy(desc(withdrawalRequests.requestedAt));
+  }),
+
+  /** Get course sales detailed data */
+  getCourseSales: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+
+    return await db
+      .select({
+        id: coursePurchases.id,
+        courseTitle: courses.title,
+        pricePaid: coursePurchases.pricePaid,
+        platformFee: coursePurchases.platformFee,
+        instructorEarnings: coursePurchases.instructorEarnings,
+        purchasedAt: coursePurchases.purchasedAt,
+      })
+      .from(coursePurchases)
+      .leftJoin(courses, eq(coursePurchases.courseId, courses.id))
+      .where(eq(coursePurchases.instructorId, ctx.user.id))
+      .orderBy(desc(coursePurchases.purchasedAt));
+  }),
+
+  /** Get event ticket sales detailed data */
+  getEventSales: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+
+    return await db
+      .select({
+        id: eventTickets.id,
+        eventTitle: events.title,
+        pricePaid: eventTickets.pricePaid,
+        platformFee: eventTickets.platformFee,
+        instructorEarnings: eventTickets.instructorEarnings,
+        quantity: eventTickets.quantity,
+        purchasedAt: eventTickets.purchasedAt,
+      })
+      .from(eventTickets)
+      .leftJoin(events, eq(eventTickets.eventId, events.id))
+      .where(eq(eventTickets.instructorId, ctx.user.id))
+      .orderBy(desc(eventTickets.purchasedAt));
+  }),
+
+  /** Get class sales detailed data */
+  getClassSales: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+
+    return await db
+      .select({
+        id: classPurchases.id,
+        classTitle: classes.title,
+        pricePaid: classPurchases.pricePaid,
+        platformFee: classPurchases.platformFee,
+        instructorEarnings: classPurchases.instructorEarnings,
+        purchasedAt: classPurchases.purchasedAt,
+      })
+      .from(classPurchases)
+      .leftJoin(classes, eq(classPurchases.classId, classes.id))
+      .where(eq(classPurchases.instructorId, ctx.user.id))
+      .orderBy(desc(classPurchases.purchasedAt));
   }),
 
   // ─── Admin Procedures ──────────────────────────────────────────────────────

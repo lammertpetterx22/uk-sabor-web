@@ -167,7 +167,7 @@ export const paymentsRouter = router({
       const [creatorRow] = await db.select({ subscriptionPlan: users.subscriptionPlan, stripeAccountId: users.stripeAccountId })
         .from(users).where(eq(users.id, creatorId)).limit(1);
 
-      const fees = calculateCheckoutAmounts(price, (creatorRow?.subscriptionPlan as any) ?? "starter");
+      const fees = calculateCheckoutAmounts(price, (creatorRow?.subscriptionPlan as any) ?? "starter", true);
 
       const payment_intent_data = creatorRow?.stripeAccountId ? {
         application_fee_amount: fees.platformFeePence + fees.stripeFeePence,
