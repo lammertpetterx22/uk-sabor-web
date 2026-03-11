@@ -91,17 +91,29 @@ export default function DashboardLayout({
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const [location, setLocation] = useLocation();
-  const { toggleSidebar } = useSidebar();
+  const { open, setOpen, toggleSidebar, isMobile } = useSidebar();
   const activeMenuItem = menuItems.find((item) => item.path === location);
 
   return (
     <>
-      <Sidebar className="border-r-0 shadow-lg" side="left">
+      {/* Desktop Overlay: Only renders on desktop when the sidebar is open */}
+      <div
+        className={`fixed inset-0 bg-black/50 transition-opacity z-[9] md:block hidden ${
+          open ? "opacity-100 pointer-events-auto animate-in fade-in" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setOpen(false)}
+      />
+
+      {/* The Sidebar wrapper */}
+      <Sidebar 
+        className="border-r-0 shadow-[4px_0_24px_rgba(0,0,0,0.05)] [&_[data-slot=sidebar-gap]]:hidden" 
+        side="left"
+      >
         <SidebarHeader className="h-16 justify-center">
           <div className="flex items-center gap-3 px-2 transition-all w-full">
             <button
               onClick={toggleSidebar}
-              className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0"
+              className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0 md:hidden"
               aria-label="Toggle navigation"
             >
               <PanelLeft className="h-4 w-4 text-muted-foreground" />
