@@ -105,10 +105,15 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
       />
 
       {/* The Sidebar wrapper */}
-      <Sidebar 
-        className="border-r-0 shadow-[4px_0_24px_rgba(0,0,0,0.05)] [&_[data-slot=sidebar-gap]]:hidden" 
-        side="left"
+      <div
+        className={`fixed inset-y-0 left-0 z-[50] w-[280px] md:w-[280px] bg-sidebar transform transition-transform duration-300 ease-in-out md:block hidden ${
+          open ? "translate-x-0" : "-translate-x-full"
+        }`}
       >
+        <Sidebar 
+          className="border-r-0 shadow-[4px_0_24px_rgba(0,0,0,0.05)] w-full h-full [&_[data-slot=sidebar-gap]]:hidden" 
+          collapsible="none"
+        >
         <SidebarHeader className="h-16 justify-center">
           <div className="flex items-center gap-3 px-2 transition-all w-full">
             <button
@@ -189,6 +194,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
           </DropdownMenu>
         </SidebarFooter>
       </Sidebar>
+      </div>
 
       <SidebarInset className="bg-background relative flex w-full flex-1 flex-col">
         {/* El Header superior visible en todo momento (mobile y desktop) */}
