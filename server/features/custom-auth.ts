@@ -6,6 +6,10 @@ import { getDb } from "../db";
 import { users, crmContacts } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 
+import { COOKIE_NAME, ONE_DAY_MS } from "@shared/const";
+import { sdk } from "../_core/sdk";
+import { getSessionCookieOptions } from "../_core/cookies";
+
 const SALT_ROUNDS = 10;
 
 export const customAuthRouter = router({
@@ -18,7 +22,7 @@ export const customAuthRouter = router({
         name: z.string().min(2, "Name must be at least 2 characters"),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
@@ -36,15 +40,17 @@ export const customAuthRouter = router({
       // Hash password
       const hashedPassword = await bcrypt.hash(input.password, SALT_ROUNDS);
 
+      const openId = `custom-${Date.now()}-${Math.random()}`;
       // Create user with custom password field
-      const newUser = await db.insert(users).values({
+      const [userRecord] = await db.insert(users).values({
         email: input.email,
         name: input.name,
-        openId: `custom-${Date.now()}-${Math.random()}`,
+        passwordHash: hashedPassword,
+        openId,
         loginMethod: "custom",
         role: "user",
         lastSignedIn: new Date(),
-      });
+      }).returning();
 
       // Auto-add to CRM contacts
       try {
@@ -67,9 +73,24 @@ export const customAuthRouter = router({
         console.error("Error adding contact:", error);
       }
 
+      // Create session token
+      const sessionToken = await sdk.createSessionToken(openId, {
+        name: input.name,
+        expiresInMs: ONE_DAY_MS,
+      });
+
+      // Set session cookie
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_DAY_MS });
+
       return {
         success: true,
-        message: "Registration successful. Please login.",
+        user: {
+          id: userRecord.id,
+          email: userRecord.email,
+          name: userRecord.name,
+          role: userRecord.role,
+        },
       };
     }),
 
@@ -144,6 +165,16 @@ export const customAuthRouter = router({
         }
       }
 
+      // Create session token
+      const sessionToken = await sdk.createSessionToken(user.openId, {
+        name: user.name || "",
+        expiresInMs: ONE_DAY_MS,
+      });
+
+      // Set session cookie
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_DAY_MS });
+
       return {
         success: true,
         user: {
@@ -162,13 +193,8 @@ export const customAuthRouter = router({
 
   // Logout
   logout: protectedProcedure.mutation(({ ctx }) => {
-    const cookieOptions = {
-      secure: true,
-      sameSite: "none" as const,
-      httpOnly: true,
-      path: "/",
-    };
-    ctx.res.clearCookie("auth_token", { ...cookieOptions, maxAge: -1 });
+    const cookieOptions = getSessionCookieOptions(ctx.req);
+    ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
     return { success: true };
   }),
 
