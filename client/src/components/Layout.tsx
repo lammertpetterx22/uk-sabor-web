@@ -16,6 +16,8 @@ import {
     CreditCard,
     QrCode,
     BarChart3,
+    Banknote,
+    Wallet,
 } from "lucide-react";
 
 const SABOR_LOGO =
@@ -184,6 +186,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             label="Asistencia"
                             onClick={onClose}
                         />
+                        <NavLink
+                            href="/earnings"
+                            icon={Wallet}
+                            label="Ganancias"
+                            onClick={onClose}
+                        />
                         {isCreator && (
                             <NavLink
                                 href="/pricing"
@@ -202,6 +210,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             Administración
                         </p>
                         <NavLink href="/crm" icon={Users} label="CRM" onClick={onClose} />
+                        <NavLink
+                            href="/admin/withdrawals"
+                            icon={Banknote}
+                            label="Retiros"
+                            onClick={onClose}
+                        />
                         <NavLink
                             href="/email-marketing"
                             icon={Mail}

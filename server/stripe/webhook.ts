@@ -12,9 +12,12 @@ import {
   events,
   courses,
   classes,
+  instructors,
 } from "../../drizzle/schema";
 import { PRODUCT_METADATA } from "./products";
 import { sendQRCodeEmail } from "../features/email";
+import { addEarnings } from "../features/financials";
+import { PLANS } from "./plans";
 import QRCode from "qrcode";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
@@ -94,7 +97,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
   try {
     // Create order record
-    const orderResult = await db.insert(orders).values({
+    const [order] = await db.insert(orders).values({
       userId,
       stripePaymentIntentId: session.payment_intent as string,
       amount: amount as any,
@@ -102,9 +105,51 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       status: "completed",
       itemType: itemType as "event" | "course" | "class",
       itemId,
-    });
+    }).returning({ id: orders.id });
 
-    const orderId = (orderResult as any).insertId;
+    const orderId = order.id;
+
+    // ─── Financial Payout Logic ──────────────────────────────────────────────
+    try {
+      let creatorUserId: number | null = null;
+      let netEarningsPence = 0;
+
+      if (itemType === "event") {
+        const [event] = await db.select({ creatorId: events.creatorId }).from(events).where(eq(events.id, itemId)).limit(1);
+        creatorUserId = event?.creatorId || null;
+        const ticketPricePence = parseInt(metadata.ticket_price_pence || "0");
+        const quantity = metadata.quantity ? parseInt(metadata.quantity) : 1;
+        netEarningsPence = ticketPricePence * quantity;
+      } else if (itemType === "course") {
+        const [course] = await db.select({ instructorId: courses.instructorId }).from(courses).where(eq(courses.id, itemId)).limit(1);
+        if (course) {
+          const [instr] = await db.select({ userId: instructors.userId }).from(instructors).where(eq(instructors.id, course.instructorId)).limit(1);
+          creatorUserId = instr?.userId || null;
+          netEarningsPence = parseInt(metadata.ticket_price_pence || "0");
+        }
+      } else if (itemType === "class") {
+        const [classItem] = await db.select({ instructorId: classes.instructorId }).from(classes).where(eq(classes.id, itemId)).limit(1);
+        if (classItem) {
+          const [instr] = await db.select({ userId: instructors.userId }).from(instructors).where(eq(instructors.id, classItem.instructorId)).limit(1);
+          creatorUserId = instr?.userId || null;
+          netEarningsPence = parseInt(metadata.ticket_price_pence || "0");
+        }
+      }
+
+      if (creatorUserId && netEarningsPence > 0) {
+        await addEarnings({
+          userId: creatorUserId,
+          amount: netEarningsPence / 100,
+          description: `Sale: ${metadata.item_name || itemType} (#${orderId})`,
+          orderId: orderId,
+        });
+        console.log(`[Webhook] Allocated £${(netEarningsPence / 100).toFixed(2)} to creator ${creatorUserId}`);
+      }
+    } catch (finError) {
+      console.error("[Webhook] Error allocating earnings:", finError);
+      // We don't throw here to avoid blocking ticket delivery, but logging is crucial
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     // Variables to hold the ticket/access code for this purchase
     let ticketCode: string | undefined;

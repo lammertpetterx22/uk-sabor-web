@@ -453,3 +453,59 @@ export const lessonProgress = pgTable("lessonProgress", {
 
 export type LessonProgress = typeof lessonProgress.$inferSelect;
 export type InsertLessonProgress = typeof lessonProgress.$inferInsert;
+
+// ─── Financial Tables ───────────────────────────────────────────────────────
+
+/**
+ * Balances table — tracks the current financial state of instructors/promoters.
+ * pendingBalance: money from recent sales not yet cleared for withdrawal (if applicable).
+ * currentBalance: cleared funds available for withdrawal.
+ */
+export const balances = pgTable("balances", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().unique(), // One balance per teacher/promoter
+  currentBalance: decimal("currentBalance", { precision: 12, scale: 2 }).default("0.00").notNull(),
+  pendingBalance: decimal("pendingBalance", { precision: 12, scale: 2 }).default("0.00").notNull(),
+  totalEarned: decimal("totalEarned", { precision: 12, scale: 2 }).default("0.00").notNull(),
+  totalWithdrawn: decimal("totalWithdrawn", { precision: 12, scale: 2 }).default("0.00").notNull(),
+  currency: varchar("currency", { length: 3 }).default("GBP").notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+/**
+ * Ledger Transactions — the immutable history of all financial movements.
+ * Every credit (earning) or debit (withdrawal) is recorded here.
+ */
+export const ledgerTransactions = pgTable("ledgerTransactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(), // Positive for earnings, negative for withdrawals
+  type: varchar("type", { length: 50 }).notNull(), // 'earning', 'withdrawal', 'refund_debit', 'adjustment'
+  description: text("description"),
+  orderId: integer("orderId"), // Link to orders if it's an earning
+  status: varchar("status", { length: 50 }).default("completed").notNull(), // 'pending', 'completed', 'cancelled'
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+/**
+ * Withdrawal Requests — track payout requests from users.
+ */
+export const withdrawalRequests = pgTable("withdrawalRequests", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  status: varchar("status", { length: 50 }).default("pending").notNull(), // 'pending', 'approved', 'paid', 'rejected'
+  adminNotes: text("adminNotes"),
+  requestedAt: timestamp("requestedAt").defaultNow().notNull(),
+  processedAt: timestamp("processedAt"),
+  processedBy: integer("processedBy"), // Admin who handled it
+});
+
+export type Balance = typeof balances.$inferSelect;
+export type InsertBalance = typeof balances.$inferInsert;
+
+export type LedgerTransaction = typeof ledgerTransactions.$inferSelect;
+export type InsertLedgerTransaction = typeof ledgerTransactions.$inferInsert;
+
+export type WithdrawalRequest = typeof withdrawalRequests.$inferSelect;
+export type InsertWithdrawalRequest = typeof withdrawalRequests.$inferInsert;

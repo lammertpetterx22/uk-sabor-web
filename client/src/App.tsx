@@ -31,6 +31,8 @@ const EmailMarketing = lazy(() => import("./pages/EmailMarketing"));
 const CampaignDetail = lazy(() => import("./pages/CampaignDetail"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const Billing = lazy(() => import("./pages/Billing"));
+const Earnings = lazy(() => import("./pages/Earnings"));
+const AdminWithdrawals = lazy(() => import("./pages/AdminWithdrawals"));
 const PromoterProfile = lazy(() => import("./pages/PromoterProfile"));
 const Promoters = lazy(() => import("./pages/Promoters"));
 const StaffScanner = lazy(() => import("./pages/StaffScanner"));
@@ -102,11 +104,21 @@ function Router() {
               <AttendanceDashboard />
             </ProtectedRoute>
           </Route>
+          <Route path="/earnings">
+            <ProtectedRoute allowedRoles={CREATOR_ROLES}>
+              <Earnings />
+            </ProtectedRoute>
+          </Route>
 
           {/* ── Solo Admin ─────────────────────────────────────── */}
           <Route path="/crm">
             <ProtectedRoute allowedRoles={["admin"]}>
               <CRMDashboard />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/admin/withdrawals">
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminWithdrawals />
             </ProtectedRoute>
           </Route>
           <Route path="/email-marketing">
