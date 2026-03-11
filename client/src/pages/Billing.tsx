@@ -265,12 +265,12 @@ export default function Billing() {
               <UsageBar
                 label="Events this month"
                 used={usage?.eventsThisMonth ?? 0}
-                limit={limits?.eventsPerMonth ?? 1}
+                limit={limits?.eventsPerMonth ?? null}
               />
               <UsageBar
                 label="Weekly classes"
                 used={usage?.totalClasses ?? 0}
-                limit={limits?.weeklyClasses ?? 1}
+                limit={limits?.weeklyClasses ?? null}
               />
               {(limits?.courses !== undefined && limits.courses !== null && limits.courses > 0) || limits?.courses === null ? (
                 <UsageBar
