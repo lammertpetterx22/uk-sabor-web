@@ -406,7 +406,7 @@ export async function processSubscriptionWebhook(
 
   // Determine plan from price metadata or price ID
   const priceId = stripeSub.items.data[0]?.price?.id ?? "";
-  const planMeta = stripeSub.metadata?.planKey as PlanKey | undefined;
+  const planMeta = (stripeSub.metadata?.planKey || stripeSub.metadata?.plan_key) as PlanKey | undefined;
   let planKey: PlanKey = planMeta ?? "starter";
 
   // Try to match by price ID against known plans (check both monthly and yearly prices)
