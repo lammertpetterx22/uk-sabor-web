@@ -42,9 +42,9 @@ async function startServer() {
   // Stripe webhook MUST be registered BEFORE body parsers
   const { handleStripeWebhook } = await import("../features/stripe-webhook");
   app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), handleStripeWebhook);
-  // Configure body parser with larger size limit for file uploads
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  // Configure body parser with larger size limit for video uploads (2GB for 20-40 min videos)
+  app.use(express.json({ limit: "2gb" }));
+  app.use(express.urlencoded({ limit: "2gb", extended: true }));
   // Email open/click tracking endpoints (public, no auth required)
   registerEmailTrackingRoutes(app);
   // OAuth callback under /api/oauth/callback
