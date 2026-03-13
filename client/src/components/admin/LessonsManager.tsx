@@ -23,6 +23,7 @@ export default function LessonsManager({ courses, isLoadingCourses }: LessonsMan
     formData,
     setFormData,
     uploading,
+    uploadProgress,
     handleVideoUpload,
     handleCreateLesson,
     resetForm,
@@ -174,24 +175,57 @@ export default function LessonsManager({ courses, isLoadingCourses }: LessonsMan
               </div>
             </div>
 
-            {/* Video Upload */}
-            <div className="border-2 border-dashed border-accent/30 rounded-lg p-6">
-              <p className="text-sm font-medium text-foreground/70 mb-3">Video de la lección *</p>
-              {formData.bunnyVideoId ? (
+            {/* Video Upload - Modern Design */}
+            <div className="relative border-2 border-dashed border-accent/30 rounded-xl p-6 bg-gradient-to-br from-accent/5 to-transparent hover:border-accent/50 transition-colors duration-300">
+              <p className="text-sm font-medium text-foreground/70 mb-4 flex items-center gap-2">
+                <Video className="h-4 w-4 text-accent" />
+                Video de la lección *
+              </p>
+
+              {uploading ? (
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-accent/20 to-accent/10 mb-4">
+                      <Loader2 className="h-8 w-8 text-accent animate-spin" />
+                    </div>
+                    <p className="font-medium text-foreground">Subiendo video...</p>
+                    <p className="text-sm text-foreground/60 mt-1">
+                      {uploadProgress < 100 ? "Por favor espera" : "Finalizando..."}
+                    </p>
+                  </div>
+
+                  {/* Modern Progress Bar */}
+                  <div className="space-y-2">
+                    <div className="h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#FA3698] to-purple-500 transition-all duration-300 ease-out"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-center text-foreground/50">{Math.round(uploadProgress)}%</p>
+                  </div>
+                </div>
+              ) : formData.bunnyVideoId ? (
                 <div className="space-y-3">
-                  <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                  <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/30 rounded-xl p-4 shadow-sm">
                     <div className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="font-medium text-green-600">Video subido exitosamente</p>
-                        <p className="text-sm text-foreground/60 mt-1">
-                          Video ID: {formData.bunnyVideoId.substring(0, 30)}...
+                      <div className="flex-shrink-0">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-500/20">
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-green-600 dark:text-green-400">
+                          ¡Video listo!
                         </p>
                         {formData.videoFile && (
-                          <p className="text-sm text-foreground/60">
-                            Archivo: {formData.videoFile.name}
+                          <p className="text-sm text-foreground/70 mt-1 truncate">
+                            📁 {formData.videoFile.name}
                           </p>
                         )}
+                        <p className="text-xs text-foreground/50 mt-1">
+                          Video cargado correctamente
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -200,13 +234,13 @@ export default function LessonsManager({ courses, isLoadingCourses }: LessonsMan
                       variant="outline"
                       size="sm"
                       onClick={() => videoInputRef.current?.click()}
-                      disabled={uploading}
+                      className="flex-1"
                     >
                       <Video className="h-4 w-4 mr-2" />
                       Cambiar Video
                     </Button>
                     <Button
-                      variant="destructive"
+                      variant="outline"
                       size="sm"
                       onClick={() =>
                         setFormData({
@@ -216,33 +250,29 @@ export default function LessonsManager({ courses, isLoadingCourses }: LessonsMan
                           videoFile: null,
                         })
                       }
+                      className="text-red-600 hover:text-red-700 hover:border-red-300"
                     >
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
               ) : (
-                <div className="text-center">
-                  <Video className="h-12 w-12 mx-auto mb-3 text-accent/40" />
-                  <p className="text-foreground/60 mb-4">
-                    Sube un video (máx. 2GB) para esta lección
+                <div className="text-center py-8">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 mb-4 border border-accent/20">
+                    <Upload className="h-10 w-10 text-accent" />
+                  </div>
+                  <p className="font-medium text-foreground mb-2">
+                    Arrastra un video aquí
+                  </p>
+                  <p className="text-sm text-foreground/60 mb-6">
+                    o haz clic para seleccionar (máx. 2GB)
                   </p>
                   <Button
-                    variant="outline"
                     onClick={() => videoInputRef.current?.click()}
-                    disabled={uploading}
+                    className="bg-gradient-to-r from-[#FA3698] to-purple-600 hover:from-[#FA3698]/90 hover:to-purple-600/90 text-white border-0 shadow-lg shadow-[#FA3698]/25"
                   >
-                    {uploading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Subiendo...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Seleccionar Video
-                      </>
-                    )}
+                    <Upload className="h-4 w-4 mr-2" />
+                    Seleccionar Video
                   </Button>
                 </div>
               )}

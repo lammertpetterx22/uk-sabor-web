@@ -159,6 +159,37 @@ export default function CourseDetail() {
           Volver a Cursos
         </Link>
 
+        {/* Course-level Video Fallback (if no lessons) */}
+        {lessons.length === 0 && ((course as any).videoUrl || (course as any).bunnyVideoId) && (
+          <Card className="overflow-hidden border-border/50 mb-8 max-w-4xl mx-auto shadow-2xl">
+            <div className="relative">
+              {(course as any).bunnyVideoId && (course as any).bunnyLibraryId ? (
+                <BunnyVideoPlayer
+                  bunnyVideoId={(course as any).bunnyVideoId}
+                  bunnyLibraryId={(course as any).bunnyLibraryId}
+                  title={course.title}
+                  locked={!hasPurchased}
+                />
+              ) : course.videoUrl ? (
+                <ProtectedVideoPlayer
+                  src={course.videoUrl}
+                  poster={course.imageUrl || undefined}
+                  title={course.title}
+                  locked={!hasPurchased}
+                  isBunnyVideo={course.videoUrl.includes('iframe.mediadelivery.net')}
+                />
+              ) : null}
+              {/* Course title bar */}
+              <div className="px-4 py-3 bg-card/80 border-t border-border/30 flex items-center gap-3">
+                <Play size={14} className="text-[#FA3698]" />
+                <p className="text-sm font-medium text-foreground/80 truncate">
+                  {course.title} - Video del Curso
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* ── Main: video player + course info ── */}
           <div className="lg:col-span-2 space-y-6">
@@ -226,6 +257,18 @@ export default function CourseDetail() {
                   >
                     Empezar Lección 1
                   </Button>
+                </CardContent>
+              </Card>
+            ) : lessons.length === 0 ? (
+              /* No lessons at all - fallback info card if video played above */
+              <Card className="border-border/30 bg-card/50">
+                <CardContent className="py-8">
+                  <h3 className="text-lg font-semibold mb-2">Acerca de este curso</h3>
+                  <p className="text-foreground/70 mb-4">{course.description}</p>
+                  <div className="flex items-center gap-2 text-sm text-foreground/50">
+                    <BookOpen size={16} />
+                    <span>Pronto añadiremos lecciones detalladas</span>
+                  </div>
                 </CardContent>
               </Card>
             ) : !hasPurchased ? (

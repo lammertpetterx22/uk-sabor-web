@@ -6,6 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Calendar, Clock, Users, MapPin, ArrowLeft, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import BunnyVideoPlayer from "@/components/BunnyVideoPlayer";
+import ProtectedVideoPlayer from "@/components/ProtectedVideoPlayer";
+import { Play, BookOpen } from "lucide-react";
+
 
 export default function ClassDetail() {
   const [, params] = useRoute("/classes/:id");
@@ -65,16 +69,39 @@ export default function ClassDetail() {
           Back to Classes
         </Link>
 
-        {/* Cover image */}
-        {(classItem as any).imageUrl && (
-          <div className="w-full h-56 md:h-72 rounded-xl overflow-hidden mb-8">
-            <img
-              src={(classItem as any).imageUrl}
-              alt={classItem.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
+        {/* Video Player or Cover Image */}
+        <div className="w-full mb-8">
+          {hasAccess && ((classItem as any).bunnyVideoId || (classItem as any).videoUrl) ? (
+            <Card className="overflow-hidden border-border/50 shadow-2xl max-w-4xl mx-auto">
+              {(classItem as any).bunnyVideoId && (classItem as any).bunnyLibraryId ? (
+                <BunnyVideoPlayer
+                  bunnyVideoId={(classItem as any).bunnyVideoId}
+                  bunnyLibraryId={(classItem as any).bunnyLibraryId}
+                  title={classItem.title}
+                />
+              ) : (classItem as any).videoUrl ? (
+                <ProtectedVideoPlayer
+                  src={(classItem as any).videoUrl}
+                  poster={(classItem as any).imageUrl || undefined}
+                  title={classItem.title}
+                  isBunnyVideo={(classItem as any).videoUrl.includes('iframe.mediadelivery.net')}
+                />
+              ) : null}
+              <div className="px-4 py-3 bg-card/80 border-t border-border/30 flex items-center gap-3">
+                <Play size={14} className="text-[#FA3698]" />
+                <p className="text-sm font-medium text-foreground/80">Grabación de la clase</p>
+              </div>
+            </Card>
+          ) : (classItem as any).imageUrl && (
+            <div className="w-full h-56 md:h-72 rounded-xl overflow-hidden shadow-lg">
+              <img
+                src={(classItem as any).imageUrl}
+                alt={classItem.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}

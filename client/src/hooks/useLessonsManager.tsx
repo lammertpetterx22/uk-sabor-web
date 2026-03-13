@@ -28,6 +28,7 @@ export function useLessonsManager(courseId: number | null) {
   });
 
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [editingLessonId, setEditingLessonId] = useState<number | null>(null);
 
   const utils = trpc.useUtils();
@@ -58,6 +59,7 @@ export function useLessonsManager(courseId: number | null) {
       videoFile: null,
     });
     setEditingLessonId(null);
+    setUploadProgress(0);
   };
 
   const handleVideoUpload = async (file: File) => {
@@ -71,18 +73,22 @@ export function useLessonsManager(courseId: number | null) {
 
     if (fileSizeMB > MAX_VIDEO_SIZE_MB) {
       toast.error(
-        `Video demasiado grande: ${fileSizeMB.toFixed(1)}MB. Máximo permitido: ${MAX_VIDEO_SIZE_MB}MB (2GB)`
+        `Video demasiado grande: ${fileSizeMB.toFixed(1)}MB. Máximo: ${MAX_VIDEO_SIZE_MB}MB`
       );
       return;
     }
 
     setUploading(true);
-    toast.info(`📹 Preparando video: ${file.name} (${fileSizeMB.toFixed(1)}MB)`, {
-      duration: 3000,
-    });
+    setUploadProgress(0);
 
     try {
-      const uploadStartTime = Date.now();
+      // Simulate progress for better UX
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 90) return prev;
+          return prev + Math.random() * 10;
+        });
+      }, 500);
 
       // Read file as base64
       const reader = new FileReader();
@@ -96,9 +102,10 @@ export function useLessonsManager(courseId: number | null) {
         reader.readAsDataURL(file);
       });
 
+      setUploadProgress(10);
       const base64 = await base64Promise;
 
-      toast.info("☁️ Subiendo a Bunny.net...", { duration: 3000 });
+      setUploadProgress(30);
 
       // Upload to Bunny.net
       const result = await uploadVideoMutation.mutateAsync({
@@ -107,8 +114,8 @@ export function useLessonsManager(courseId: number | null) {
         title: formData.title || file.name.replace(/\.[^/.]+$/, ""),
       });
 
-      const totalTime = ((Date.now() - uploadStartTime) / 1000).toFixed(1);
-      const uploadSpeed = (fileSizeMB / parseFloat(totalTime)).toFixed(2);
+      clearInterval(progressInterval);
+      setUploadProgress(100);
 
       // Update form with video IDs
       setFormData((prev) => ({
@@ -118,22 +125,20 @@ export function useLessonsManager(courseId: number | null) {
         videoFile: file,
       }));
 
-      toast.success(
-        `✅ ¡Video subido exitosamente a Bunny.net!\n\n` +
-          `📁 ${file.name}\n` +
-          `📦 ${fileSizeMB.toFixed(1)}MB\n` +
-          `⏱️ ${totalTime}s (${uploadSpeed}MB/s)\n` +
-          `🎬 Video ID: ${result.bunnyVideoId.substring(0, 20)}...\n\n` +
-          `⚠️ El video se está procesando en Bunny.net`,
-        { duration: 10000 }
-      );
-
-      console.log(`[Video Upload] ✅ SUCCESS - Bunny Video ID: ${result.bunnyVideoId}`);
+      // Clean success message without technical details
+      toast.success("✅ Video subido exitosamente", {
+        description: "Ahora puedes crear la lección",
+        duration: 3000,
+      });
     } catch (err: any) {
-      console.error("[Video Upload] ❌ Upload failed:", err);
-      toast.error(`Error al subir video: ${err.message}`);
+      toast.error("Error al subir el video", {
+        description: "Por favor, intenta de nuevo",
+        duration: 5000,
+      });
+      console.error("[Video Upload] Error:", err);
     } finally {
       setUploading(false);
+      setTimeout(() => setUploadProgress(0), 1000);
     }
   };
 
@@ -169,6 +174,7 @@ export function useLessonsManager(courseId: number | null) {
     formData,
     setFormData,
     uploading,
+    uploadProgress,
     editingLessonId,
     setEditingLessonId,
     handleVideoUpload,

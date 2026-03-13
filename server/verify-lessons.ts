@@ -21,7 +21,7 @@ async function verifyLessons() {
   try {
     // Get all courses with raw SQL to avoid any schema issues
     const coursesData = await db.execute(sql`
-      SELECT id, title, status, price
+      SELECT id, title, status, price, "videoUrl", "bunnyVideoId", "bunnyLibraryId"
       FROM courses
       ORDER BY id
     `);
@@ -83,7 +83,7 @@ async function verifyLessons() {
       FROM "coursePurchases" cp
       LEFT JOIN users u ON cp."userId" = u.id
       LEFT JOIN courses c ON cp."courseId" = c.id
-      ORDER BY cp."createdAt" DESC
+      ORDER BY cp."purchasedAt" DESC
       LIMIT 10
     `);
 
