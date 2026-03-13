@@ -208,6 +208,46 @@ async function startServer() {
     }
   });
 
+  // Temporary endpoint to create a test lesson (FOR TESTING ONLY)
+  app.post("/api/debug/create-lesson", async (req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const { lessons } = await import("../../drizzle/schema");
+      const db = await getDb();
+      if (!db) return res.json({ error: "DB not available" });
+
+      const { courseId, title, bunnyVideoId, bunnyLibraryId, position, isPreview } = req.body;
+
+      // Validate required fields
+      if (!courseId || !title || !bunnyVideoId || !bunnyLibraryId || !position) {
+        return res.status(400).json({
+          error: "Missing required fields: courseId, title, bunnyVideoId, bunnyLibraryId, position"
+        });
+      }
+
+      // Insert the lesson
+      await db.insert(lessons).values({
+        courseId: parseInt(courseId),
+        title,
+        description: "Lección de prueba creada automáticamente",
+        videoUrl: null, // Deprecated
+        bunnyVideoId,
+        bunnyLibraryId,
+        position: parseInt(position),
+        durationSeconds: null,
+        isPreview: isPreview ?? true, // Make it free by default
+      });
+
+      res.json({
+        success: true,
+        message: "Lesson created successfully!",
+        data: { courseId, title, bunnyVideoId, bunnyLibraryId, position }
+      });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message, stack: e.stack });
+    }
+  });
+
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
