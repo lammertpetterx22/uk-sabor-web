@@ -1063,48 +1063,117 @@ function CoursesTab() {
 
   const handleVideoUpload = async (file: File) => {
     // SECURITY & UX: Validate video file type
+    const validVideoTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm', 'video/x-matroska'];
     if (!file.type.startsWith('video/')) {
-      toast.error('Por favor selecciona un archivo de video válido (.mp4, .mov, .avi)');
+      toast.error('❌ Por favor selecciona un archivo de video válido (.mp4, .mov, .avi, .webm, .mkv)');
       return;
     }
 
-    // SECURITY: Validate file size (max 500MB for videos)
-    const MAX_VIDEO_SIZE = 500 * 1024 * 1024; // 500MB in bytes
+    // Additional MIME type validation for security
+    if (!validVideoTypes.includes(file.type)) {
+      toast.warning(`⚠️ Tipo de video: ${file.type}. Recomendamos .mp4 para mejor compatibilidad.`);
+    }
+
+    // SECURITY: Validate file size (max 1GB for videos)
+    const MAX_VIDEO_SIZE = 1024 * 1024 * 1024; // 1GB in bytes
+    const fileSizeMB = file.size / 1024 / 1024;
+
     if (file.size > MAX_VIDEO_SIZE) {
-      toast.error(`El video es demasiado grande. Tamaño máximo: 500MB. Tu archivo: ${(file.size / 1024 / 1024).toFixed(1)}MB`);
+      toast.error(
+        `❌ El video es demasiado grande.\n\n` +
+        `📦 Tamaño máximo: 1GB (1024MB)\n` +
+        `📁 Tu archivo: ${fileSizeMB.toFixed(1)}MB\n\n` +
+        `💡 Tip: Comprime el video con Handbrake o similar.`,
+        { duration: 8000 }
+      );
       return;
     }
 
-    // UX: Show informative toast for large files
-    if (file.size > 50 * 1024 * 1024) { // 50MB+
-      toast.info(`Subiendo video de ${(file.size / 1024 / 1024).toFixed(1)}MB. Esto puede tardar unos minutos...`, { duration: 5000 });
+    // UX: Show informative toast based on file size
+    if (fileSizeMB > 500) {
+      toast.info(
+        `📤 Subiendo video grande: ${fileSizeMB.toFixed(1)}MB\n` +
+        `⏱️ Tiempo estimado: ${Math.ceil(fileSizeMB / 10)} minutos\n` +
+        `⚠️ No cierres esta ventana hasta que termine.`,
+        { duration: 10000 }
+      );
+    } else if (fileSizeMB > 100) {
+      toast.info(
+        `📤 Subiendo video de ${fileSizeMB.toFixed(1)}MB...\n` +
+        `⏱️ Esto puede tardar unos minutos.`,
+        { duration: 6000 }
+      );
     }
 
     setUploading(true);
+    const uploadStartTime = Date.now();
+
     try {
       const reader = new FileReader();
+
+      reader.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percentLoaded = Math.round((e.loaded / e.total) * 100);
+          console.log(`[Video Upload] Reading file: ${percentLoaded}% (${(e.loaded / 1024 / 1024).toFixed(1)}MB / ${fileSizeMB.toFixed(1)}MB)`);
+        }
+      };
+
       reader.onload = async (e) => {
         const base64 = e.target?.result as string;
+        const readTime = ((Date.now() - uploadStartTime) / 1000).toFixed(1);
+        console.log(`[Video Upload] ✅ File read complete in ${readTime}s. Starting S3 upload...`);
+
         // Show file name as preview indicator
         setFormData(prev => ({ ...prev, videoFile: file, videoPreview: file.name }));
+
         // Upload to S3
         try {
+          toast.info('☁️ Subiendo a servidor...', { duration: 3000 });
+
           const result = await uploadFileMutation.mutateAsync({
             fileBase64: base64,
             fileName: file.name,
             mimeType: file.type,
             folder: "courses/videos",
           });
+
+          const totalTime = ((Date.now() - uploadStartTime) / 1000).toFixed(1);
+          const uploadSpeed = (fileSizeMB / (totalTime as any)).toFixed(2);
+
           setFormData(prev => ({ ...prev, videoUrl: result.url }));
-          toast.success(`✅ Video subido exitosamente: ${file.name}`);
+
+          toast.success(
+            `✅ ¡Video subido exitosamente!\n\n` +
+            `📁 ${file.name}\n` +
+            `📦 ${fileSizeMB.toFixed(1)}MB\n` +
+            `⏱️ ${totalTime}s (${uploadSpeed}MB/s)\n` +
+            `🔗 URL: ${result.url.substring(0, 50)}...`,
+            { duration: 8000 }
+          );
+
+          console.log(`[Video Upload] ✅ SUCCESS - Total time: ${totalTime}s, Speed: ${uploadSpeed}MB/s`);
         } catch (uploadErr: any) {
-          toast.error(`❌ Error al subir: ${uploadErr.message}`);
+          console.error('[Video Upload] ❌ S3 upload failed:', uploadErr);
+          toast.error(
+            `❌ Error al subir el video al servidor:\n\n` +
+            `${uploadErr.message}\n\n` +
+            `💡 Intenta de nuevo o contacta soporte si persiste.`,
+            { duration: 8000 }
+          );
           setFormData(prev => ({ ...prev, videoFile: null, videoPreview: "", videoUrl: "" }));
         }
       };
+
+      reader.onerror = () => {
+        console.error('[Video Upload] ❌ File read error');
+        toast.error('❌ Error al leer el archivo. Por favor intenta de nuevo.');
+        setUploading(false);
+      };
+
       reader.readAsDataURL(file);
     } catch (error) {
-      toast.error('Error al procesar el video. Intenta de nuevo.');
+      console.error('[Video Upload] ❌ Unexpected error:', error);
+      toast.error('❌ Error inesperado al procesar el video. Intenta de nuevo.');
     } finally {
       setUploading(false);
     }

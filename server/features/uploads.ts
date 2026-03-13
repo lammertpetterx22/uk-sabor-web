@@ -33,6 +33,38 @@ export const uploadsRouter = router({
       }
 
       const buffer = Buffer.from(base64Data, "base64");
+      const fileSizeMB = buffer.length / 1024 / 1024;
+
+      // SECURITY: Server-side file size validation
+      const isVideo = input.mimeType.startsWith("video/") || input.folder.includes("videos");
+      const isImage = input.mimeType.startsWith("image/") || input.folder.includes("images");
+
+      if (isVideo) {
+        const MAX_VIDEO_SIZE_MB = 1024; // 1GB
+        if (fileSizeMB > MAX_VIDEO_SIZE_MB) {
+          throw new Error(
+            `Video demasiado grande: ${fileSizeMB.toFixed(1)}MB. Máximo permitido: ${MAX_VIDEO_SIZE_MB}MB (1GB)`
+          );
+        }
+        console.log(`[Upload] ✅ Video validated: ${fileSizeMB.toFixed(1)}MB (${input.fileName})`);
+      } else if (isImage) {
+        const MAX_IMAGE_SIZE_MB = 10; // 10MB
+        if (fileSizeMB > MAX_IMAGE_SIZE_MB) {
+          throw new Error(
+            `Imagen demasiado grande: ${fileSizeMB.toFixed(1)}MB. Máximo permitido: ${MAX_IMAGE_SIZE_MB}MB`
+          );
+        }
+        console.log(`[Upload] ✅ Image validated: ${fileSizeMB.toFixed(1)}MB (${input.fileName})`);
+      } else {
+        // Generic file limit: 50MB
+        const MAX_FILE_SIZE_MB = 50;
+        if (fileSizeMB > MAX_FILE_SIZE_MB) {
+          throw new Error(
+            `Archivo demasiado grande: ${fileSizeMB.toFixed(1)}MB. Máximo permitido: ${MAX_FILE_SIZE_MB}MB`
+          );
+        }
+        console.log(`[Upload] ✅ File validated: ${fileSizeMB.toFixed(1)}MB (${input.fileName})`);
+      }
 
       // Sanitize filename
       const safeName = input.fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -45,7 +77,13 @@ export const uploadsRouter = router({
         if (match) mimeType = match[1];
       }
 
+      console.log(`[Upload] 📤 Uploading to S3: ${fileKey} (${fileSizeMB.toFixed(1)}MB, ${mimeType})`);
+      const uploadStartTime = Date.now();
+
       const { url } = await storagePut(fileKey, buffer, mimeType);
+
+      const uploadTime = ((Date.now() - uploadStartTime) / 1000).toFixed(2);
+      console.log(`[Upload] ✅ Upload complete: ${uploadTime}s (${(fileSizeMB / parseFloat(uploadTime)).toFixed(2)}MB/s)`);
 
       return { success: true, url, fileKey };
     }),
