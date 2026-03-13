@@ -944,6 +944,7 @@ function CoursesTab() {
     },
   });
   const uploadFileMutation = trpc.uploads.uploadFile.useMutation();
+  const uploadVideoMutation = trpc.uploads.uploadVideoToBunny.useMutation();
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
@@ -1145,7 +1146,7 @@ function CoursesTab() {
           toast.info('☁️ Subiendo a Bunny.net...', { duration: 3000 });
 
           // Use uploadVideoToBunny for videos (NOT uploadFile)
-          const result = await trpc.uploads.uploadVideoToBunny.mutate({
+          const result = await uploadVideoMutation.mutateAsync({
             videoBase64: base64,
             fileName: file.name,
             title: formData.title || file.name.replace(/\.[^/.]+$/, ""),
