@@ -74,17 +74,36 @@ async function startServer() {
 
       let results = [];
 
+      // Check current database and schema
+      const currentDbResult = await db.execute(sql.raw(`SELECT current_database(), current_schema()`));
+      results.push({
+        step: "Current database and schema",
+        current: currentDbResult.rows?.[0] || null
+      });
+
+      // List ALL tables regardless of schema
+      const allTablesAnySchemaResult = await db.execute(sql.raw(`
+        SELECT table_schema, table_name
+        FROM information_schema.tables
+        WHERE table_type = 'BASE TABLE'
+        ORDER BY table_schema, table_name
+      `));
+
+      results.push({
+        step: "ALL tables in database (any schema)",
+        tables: allTablesAnySchemaResult.rows || []
+      });
+
       // Check if lessons table exists
       const tableExistsResult = await db.execute(sql.raw(`
         SELECT EXISTS (
           SELECT FROM information_schema.tables
-          WHERE table_schema = 'public'
-          AND table_name = 'lessons'
+          WHERE table_name = 'lessons'
         )
       `));
 
       results.push({
-        step: "Does lessons table exist?",
+        step: "Does lessons table exist (any schema)?",
         exists: tableExistsResult.rows?.[0] || null
       });
 
