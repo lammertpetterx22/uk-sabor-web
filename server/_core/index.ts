@@ -104,6 +104,34 @@ async function startServer() {
     }
   });
 
+  // Debug endpoint to check lessons table structure
+  app.get("/api/debug/lessons/:courseId", async (req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const { sql } = await import("drizzle-orm");
+      const db = await getDb();
+      if (!db) return res.json({ error: "DB not available" });
+
+      const courseId = parseInt(req.params.courseId);
+
+      // Get lessons for this course
+      const result = await db.execute(sql.raw(`
+        SELECT id, courseId, title, bunnyVideoId, bunnyLibraryId, position, isPreview
+        FROM lessons
+        WHERE "courseId" = ${courseId}
+        ORDER BY position ASC
+      `));
+
+      res.json({
+        courseId,
+        lessonsCount: result.rows?.length || 0,
+        lessons: result.rows || [],
+      });
+    } catch (e: any) {
+      res.json({ error: e.message });
+    }
+  });
+
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
