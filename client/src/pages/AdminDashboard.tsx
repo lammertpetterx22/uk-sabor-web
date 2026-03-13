@@ -959,6 +959,8 @@ function CoursesTab() {
     videoFile: null as File | null,
     videoUrl: "" as string,
     videoPreview: "" as string,
+    bunnyVideoId: undefined as string | undefined,
+    bunnyLibraryId: undefined as string | undefined,
     imageUrl: "" as string,
     imagePreview: "" as string,
   });
@@ -987,6 +989,8 @@ function CoursesTab() {
       lessonsCount: "",
       videoFile: null,
       videoPreview: "",
+      bunnyVideoId: undefined,
+      bunnyLibraryId: undefined,
       videoUrl: "",
       imageUrl: "",
       imagePreview: "",
@@ -1066,26 +1070,32 @@ function CoursesTab() {
   };
 
   const handleVideoUpload = async (file: File) => {
-    // SECURITY & UX: Validate video file type
-    const validVideoTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm', 'video/x-matroska'];
-    if (!file.type.startsWith('video/')) {
-      toast.error('❌ Por favor selecciona un archivo de video válido (.mp4, .mov, .avi, .webm, .mkv)');
+    // SECURITY & UX: Validate video file type - support all common formats
+    const validVideoTypes = [
+      'video/mp4',
+      'video/quicktime',      // .mov
+      'video/x-msvideo',      // .avi
+      'video/webm',
+      'video/x-matroska',     // .mkv
+      'video/mpeg',
+      'video/x-flv',          // .flv
+      'video/3gpp',           // .3gp
+      'video/x-ms-wmv',       // .wmv
+    ];
+
+    if (!file.type.startsWith('video/') && !file.name.match(/\.(mp4|mov|avi|webm|mkv|mpeg|flv|3gp|wmv)$/i)) {
+      toast.error('❌ Por favor selecciona un archivo de video válido\n(.mp4, .mov, .avi, .webm, .mkv, etc.)');
       return;
     }
 
-    // Additional MIME type validation for security
-    if (!validVideoTypes.includes(file.type)) {
-      toast.warning(`⚠️ Tipo de video: ${file.type}. Recomendamos .mp4 para mejor compatibilidad.`);
-    }
-
-    // SECURITY: Validate file size (max 1GB for videos)
-    const MAX_VIDEO_SIZE = 1024 * 1024 * 1024; // 1GB in bytes
+    // SECURITY: Validate file size (max 2GB for Bunny.net)
+    const MAX_VIDEO_SIZE = 2 * 1024 * 1024 * 1024; // 2GB
     const fileSizeMB = file.size / 1024 / 1024;
 
     if (file.size > MAX_VIDEO_SIZE) {
       toast.error(
         `❌ El video es demasiado grande.\n\n` +
-        `📦 Tamaño máximo: 1GB (1024MB)\n` +
+        `📦 Tamaño máximo: 2GB (2048MB)\n` +
         `📁 Tu archivo: ${fileSizeMB.toFixed(1)}MB\n\n` +
         `💡 Tip: Comprime el video con Handbrake o similar.`,
         { duration: 8000 }
@@ -1125,46 +1135,53 @@ function CoursesTab() {
       reader.onload = async (e) => {
         const base64 = e.target?.result as string;
         const readTime = ((Date.now() - uploadStartTime) / 1000).toFixed(1);
-        console.log(`[Video Upload] ✅ File read complete in ${readTime}s. Starting S3 upload...`);
+        console.log(`[Video Upload] ✅ File read complete in ${readTime}s. Starting Bunny.net upload...`);
 
         // Show file name as preview indicator
         setFormData(prev => ({ ...prev, videoFile: file, videoPreview: file.name }));
 
-        // Upload to S3
+        // Upload to Bunny.net Stream API (NOT Storage - videos use Stream)
         try {
-          toast.info('☁️ Subiendo a servidor...', { duration: 3000 });
+          toast.info('☁️ Subiendo a Bunny.net...', { duration: 3000 });
 
-          const result = await uploadFileMutation.mutateAsync({
-            fileBase64: base64,
+          // Use uploadVideoToBunny for videos (NOT uploadFile)
+          const result = await trpc.uploads.uploadVideoToBunny.mutate({
+            videoBase64: base64,
             fileName: file.name,
-            mimeType: file.type,
-            folder: "courses/videos",
+            title: formData.title || file.name.replace(/\.[^/.]+$/, ""),
           });
 
           const totalTime = ((Date.now() - uploadStartTime) / 1000).toFixed(1);
           const uploadSpeed = (fileSizeMB / (totalTime as any)).toFixed(2);
 
-          setFormData(prev => ({ ...prev, videoUrl: result.url }));
+          // Save bunnyVideoId to use when creating lessons
+          setFormData(prev => ({
+            ...prev,
+            bunnyVideoId: result.bunnyVideoId,
+            bunnyLibraryId: result.bunnyLibraryId,
+            videoUrl: "", // Clear old videoUrl, we use bunnyVideoId now
+          }));
 
           toast.success(
-            `✅ ¡Video subido exitosamente!\n\n` +
+            `✅ ¡Video subido exitosamente a Bunny.net!\n\n` +
             `📁 ${file.name}\n` +
             `📦 ${fileSizeMB.toFixed(1)}MB\n` +
             `⏱️ ${totalTime}s (${uploadSpeed}MB/s)\n` +
-            `🔗 URL: ${result.url.substring(0, 50)}...`,
-            { duration: 8000 }
+            `🎬 Video ID: ${result.bunnyVideoId.substring(0, 20)}...\n\n` +
+            `⚠️ El video se está procesando en Bunny.net`,
+            { duration: 10000 }
           );
 
-          console.log(`[Video Upload] ✅ SUCCESS - Total time: ${totalTime}s, Speed: ${uploadSpeed}MB/s`);
+          console.log(`[Video Upload] ✅ SUCCESS - Bunny Video ID: ${result.bunnyVideoId}`);
         } catch (uploadErr: any) {
-          console.error('[Video Upload] ❌ S3 upload failed:', uploadErr);
+          console.error('[Video Upload] ❌ Bunny.net upload failed:', uploadErr);
           toast.error(
             `❌ Error al subir el video al servidor:\n\n` +
             `${uploadErr.message}\n\n` +
             `💡 Intenta de nuevo o contacta soporte si persiste.`,
             { duration: 8000 }
           );
-          setFormData(prev => ({ ...prev, videoFile: null, videoPreview: "", videoUrl: "" }));
+          setFormData(prev => ({ ...prev, videoFile: null, videoPreview: "", videoUrl: "", bunnyVideoId: undefined, bunnyLibraryId: undefined }));
         }
       };
 
