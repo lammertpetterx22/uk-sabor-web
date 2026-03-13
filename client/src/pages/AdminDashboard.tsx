@@ -18,8 +18,10 @@ import UpgradePlanDialog from "@/components/UpgradePlanDialog";
 import DashboardOverview from "@/components/admin/DashboardOverview";
 import QuickActions from "@/components/admin/QuickActions";
 import InstructorOverview from "@/components/instructor/InstructorOverview";
+import { useTranslations } from "@/hooks/useTranslations";
 
 export default function AdminDashboard() {
+  const { t } = useTranslations();
   const { user, isAuthenticated, loading } = useAuth();
   const [, setLocation] = useLocation();
   const isAdmin = user?.role === "admin";
@@ -41,7 +43,7 @@ export default function AdminDashboard() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-4 border-accent/30 border-t-accent rounded-full animate-spin" />
-          <p className="text-foreground/50 text-sm">Loading...</p>
+          <p className="text-foreground/50 text-sm">{t("common.loading")}</p>
         </div>
       </div>
     );
@@ -57,11 +59,11 @@ export default function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertCircle className="text-destructive" />
-              Access Denied
+              {t("messages.accessDenied")}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-foreground/80">You do not have permission to access this panel.</p>
+            <p className="text-foreground/80">{t("messages.noPermission")}</p>
           </CardContent>
         </Card>
       </div>
@@ -74,17 +76,17 @@ export default function AdminDashboard() {
       <div className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
         <div className="container h-16 flex items-center justify-between">
           <h1 className="text-2xl font-bold gradient-text">
-            {isAdmin ? "Admin Dashboard" : isPromoter ? "Promoter Panel" : "Instructor Panel"}
+            {isAdmin ? t("dashboard.adminDashboard") : isPromoter ? t("dashboard.promoterPanel") : t("dashboard.instructorPanel")}
           </h1>
           <div className="flex items-center gap-3">
             <a href="/attendance" target="_blank" rel="noopener noreferrer">
               <Button size="sm" className="btn-vibrant gap-2">
                 <QrCode className="h-4 w-4" />
-                <span className="hidden sm:inline">Scan QR</span>
+                <span className="hidden sm:inline">{t("admin.scanQR")}</span>
               </Button>
             </a>
             <Badge className={isAdmin ? "bg-red-500/20 text-red-400 border-red-500/50" : isPromoter ? "bg-accent/20 text-accent border-accent/50" : "bg-purple-500/20 text-purple-400 border-purple-500/50"}>
-              {isAdmin ? "Admin" : isPromoter ? "Promoter" : "Instructor"}
+              {isAdmin ? t("roles.admin") : isPromoter ? t("roles.promoter") : t("roles.instructor")}
             </Badge>
             <span className="text-sm text-foreground/60">{user?.name || user?.email}</span>
           </div>
@@ -96,31 +98,31 @@ export default function AdminDashboard() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {isAdmin ? (
             <TabsList className="grid w-full grid-cols-8 mb-8">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="events">Events</TabsTrigger>
-              <TabsTrigger value="courses">Courses</TabsTrigger>
-              <TabsTrigger value="classes">Classes</TabsTrigger>
-              <TabsTrigger value="instructors">Instructors</TabsTrigger>
-              <TabsTrigger value="users">Users</TabsTrigger>
-              <TabsTrigger value="orders">Orders</TabsTrigger>
-              <TabsTrigger value="settings">Settings</TabsTrigger>
+              <TabsTrigger value="overview">{t("admin.tabs.overview")}</TabsTrigger>
+              <TabsTrigger value="events">{t("admin.tabs.events")}</TabsTrigger>
+              <TabsTrigger value="courses">{t("admin.tabs.courses")}</TabsTrigger>
+              <TabsTrigger value="classes">{t("admin.tabs.classes")}</TabsTrigger>
+              <TabsTrigger value="instructors">{t("admin.tabs.instructors")}</TabsTrigger>
+              <TabsTrigger value="users">{t("admin.tabs.users")}</TabsTrigger>
+              <TabsTrigger value="orders">{t("admin.tabs.orders")}</TabsTrigger>
+              <TabsTrigger value="settings">{t("admin.tabs.settings")}</TabsTrigger>
             </TabsList>
           ) : isInstructor ? (
             // Instructors: Overview + Events + Classes + Courses + Profile
             <TabsList className="grid w-full grid-cols-5 mb-8">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="events">My Events</TabsTrigger>
-              <TabsTrigger value="classes">My Classes</TabsTrigger>
-              <TabsTrigger value="courses">My Courses</TabsTrigger>
-              <TabsTrigger value="profile">My Profile</TabsTrigger>
+              <TabsTrigger value="overview">{t("admin.tabs.overview")}</TabsTrigger>
+              <TabsTrigger value="events">{t("admin.tabs.myEvents")}</TabsTrigger>
+              <TabsTrigger value="classes">{t("admin.tabs.myClasses")}</TabsTrigger>
+              <TabsTrigger value="courses">{t("admin.tabs.myCourses")}</TabsTrigger>
+              <TabsTrigger value="profile">{t("admin.tabs.myProfile")}</TabsTrigger>
             </TabsList>
           ) : (
             // Promoters: Overview + Events + Classes + Profile (no courses)
             <TabsList className="grid w-full grid-cols-4 mb-8">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="events">My Events</TabsTrigger>
-              <TabsTrigger value="classes">My Classes</TabsTrigger>
-              <TabsTrigger value="profile">My Profile</TabsTrigger>
+              <TabsTrigger value="overview">{t("admin.tabs.overview")}</TabsTrigger>
+              <TabsTrigger value="events">{t("admin.tabs.myEvents")}</TabsTrigger>
+              <TabsTrigger value="classes">{t("admin.tabs.myClasses")}</TabsTrigger>
+              <TabsTrigger value="profile">{t("admin.tabs.myProfile")}</TabsTrigger>
             </TabsList>
           )}
 
@@ -202,6 +204,7 @@ export default function AdminDashboard() {
 
 // ===== EVENTS TAB =====
 function EventsTab() {
+  const { t } = useTranslations();
   const utils = trpc.useUtils();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
@@ -214,7 +217,7 @@ function EventsTab() {
   };
   const createMutation = trpc.admin.createEvent.useMutation({
     onSuccess: () => {
-      toast.success("Event created and published!");
+      toast.success(t("admin.events.toastCreated"));
       invalidateEvents();
     },
     onError: (err) => {
@@ -223,7 +226,7 @@ function EventsTab() {
   });
   const updateMutation = trpc.admin.updateEvent.useMutation({
     onSuccess: () => {
-      toast.success("Event updated!");
+      toast.success(t("admin.events.toastUpdated"));
       invalidateEvents();
       setEditingEvent(null);
     },
@@ -231,7 +234,7 @@ function EventsTab() {
   });
   const deleteMutation = trpc.admin.deleteEvent.useMutation({
     onSuccess: () => {
-      toast.success("Event deleted!");
+      toast.success(t("admin.events.toastDeleted"));
       invalidateEvents();
     },
     onError: (err) => toast.error(err.message),
@@ -279,7 +282,7 @@ function EventsTab() {
       if (emailSendNow) {
         sendCampaignMutation.mutate({ campaignId: data.id });
       } else {
-        toast.success("Campaign scheduled!");
+        toast.success(t("admin.events.toastCampaignScheduled"));
         setEmailingEvent(null);
         utils.emailMarketing.listCampaigns.invalidate();
       }
@@ -288,7 +291,7 @@ function EventsTab() {
   });
   const sendCampaignMutation = trpc.emailMarketing.sendCampaign.useMutation({
     onSuccess: (data) => {
-      toast.success(`Email sent to ${data.sent} contacts!`);
+      toast.success(t("admin.events.toastEmailSent", { count: data.sent }));
       setEmailingEvent(null);
       utils.emailMarketing.listCampaigns.invalidate();
     },
@@ -339,14 +342,14 @@ function EventsTab() {
   const handleImageSelect = (file: File) => {
     // SECURITY & UX: Validate image file type
     if (!file.type.startsWith('image/')) {
-      toast.error('Por favor selecciona un archivo de imagen válido (.jpg, .png, .webp)');
+      toast.error(t("admin.events.errorInvalidImage"));
       return;
     }
 
     // SECURITY: Validate file size (max 10MB for images)
     const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
     if (file.size > MAX_IMAGE_SIZE) {
-      toast.error(`La imagen es demasiado grande. Tamaño máximo: 10MB. Tu archivo: ${(file.size / 1024 / 1024).toFixed(1)}MB`);
+      toast.error(t("admin.events.errorImageTooLarge", { size: (file.size / 1024 / 1024).toFixed(1) }));
       return;
     }
 
@@ -368,9 +371,9 @@ function EventsTab() {
         folder: "events",
       });
       setFormData(prev => ({ ...prev, imageUrl: result.url }));
-      toast.success('Image uploaded successfully');
+      toast.success(t("upload.imageUploadedSuccess"));
     } catch (uploadErr: any) {
-      toast.error('Upload error: ' + uploadErr.message);
+      toast.error(t("admin.events.errorUpload", { message: uploadErr.message }));
       setFormData(prev => ({ ...prev, imagePreview: "", imageUrl: "" }));
     } finally {
       setUploading(false);
@@ -382,7 +385,7 @@ function EventsTab() {
 
   const handleCreateEvent = async () => {
     if (!formData.title || !formData.venue || !formData.eventDate || !formData.ticketPrice) {
-      toast.error("Please fill in all required fields");
+      toast.error(t("validation.fillRequiredFields"));
       return;
     }
 
@@ -391,7 +394,7 @@ function EventsTab() {
       const result = await checkEventEntitlement();
       const entitlement = result.data;
       if (entitlement && !entitlement.allowed) {
-        setUpgradeReason(entitlement.reason ?? "You have reached your plan limit.");
+        setUpgradeReason(entitlement.reason ?? t("admin.events.errorPlanLimit"));
         setUpgradeDialogOpen(true);
         return;
       }
@@ -431,28 +434,28 @@ function EventsTab() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Create New Event</CardTitle>
-          <CardDescription>Add a new dance event with flyer/image</CardDescription>
+          <CardTitle>{t("admin.events.createNewEvent")}</CardTitle>
+          <CardDescription>{t("admin.events.createDescription")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              placeholder="Event Title"
+              placeholder={t("admin.events.eventTitle")}
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             />
             <Input
-              placeholder="Venue"
+              placeholder={t("admin.events.venue")}
               value={formData.venue}
               onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
             />
             <Input
-              placeholder="City"
+              placeholder={t("admin.events.city")}
               value={formData.city}
               onChange={(e) => setFormData({ ...formData, city: e.target.value })}
             />
             <div className="space-y-1">
-              <label className="text-xs text-foreground/60 font-medium">Event Date & Time *</label>
+              <label className="text-xs text-foreground/60 font-medium">{t("admin.events.eventDateTime")}</label>
               <Input
                 type="datetime-local"
                 value={formData.eventDate}
@@ -463,20 +466,20 @@ function EventsTab() {
             </div>
             <Input
               type="number"
-              placeholder="Ticket Price (£)"
+              placeholder={t("admin.events.ticketPrice")}
               value={formData.ticketPrice}
               onChange={(e) => setFormData({ ...formData, ticketPrice: e.target.value })}
             />
             <Input
               type="number"
-              placeholder="Max Tickets (optional)"
+              placeholder={t("admin.events.maxTickets")}
               value={formData.maxTickets.toString()}
               onChange={(e) => setFormData({ ...formData, maxTickets: e.target.value })}
             />
           </div>
 
           <Textarea
-            placeholder="Event Description"
+            placeholder={t("admin.events.eventDescription")}
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             rows={4}
@@ -489,13 +492,13 @@ function EventsTab() {
                 <div className="relative">
                   <img
                     src={formData.imagePreview}
-                    alt="Event flyer preview"
+                    alt={t("admin.events.flyerPreview")}
                     className="w-full h-48 object-cover rounded-lg"
                   />
                   {!formData.imageUrl && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-lg">
                       <Loader2 className="h-8 w-8 animate-spin text-white" />
-                      <span className="text-white ml-2">Uploading...</span>
+                      <span className="text-white ml-2">{t("admin.buttons.uploading")}</span>
                     </div>
                   )}
                   {formData.imageUrl && (
@@ -526,7 +529,7 @@ function EventsTab() {
             ) : (
               <div className="text-center">
                 <ImageIcon className="h-8 w-8 mx-auto mb-2 text-accent/40" />
-                <p className="text-foreground/60 mb-4">Upload event flyer or image</p>
+                <p className="text-foreground/60 mb-4">{t("admin.events.uploadFlyer")}</p>
                 <Button
                   variant="outline"
                   onClick={() => imageInputRef.current?.click()}
@@ -564,7 +567,7 @@ function EventsTab() {
           <ImageCropperModal
             imageSrc={cropSrc}
             aspect={16 / 9}
-            label="Recortar imagen del evento (16:9)"
+            label={t("admin.events.cropImage")}
             onCropComplete={handleCropComplete}
             onClose={() => setCropSrc(null)}
           />
@@ -574,12 +577,12 @@ function EventsTab() {
             <p className="text-sm font-medium text-foreground/80 mb-3">Payment Method</p>
             <Select value={formData.paymentMethod} onValueChange={(val: any) => setFormData({ ...formData, paymentMethod: val })}>
               <SelectTrigger>
-                <SelectValue placeholder="Select payment method" />
+                <SelectValue placeholder="t("admin.events.selectPaymentMethod")" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="online">Online (Stripe)</SelectItem>
-                <SelectItem value="cash">Cash Only</SelectItem>
-                <SelectItem value="both">Both (Online & Cash)</SelectItem>
+                <SelectItem value="online">{t("admin.events.paymentOnline")}</SelectItem>
+                <SelectItem value="cash">{t("admin.events.paymentCash")}</SelectItem>
+                <SelectItem value="both">{t("admin.events.paymentBoth")}</SelectItem>
               </SelectContent>
             </Select>
             {formData.paymentMethod === "cash" && (
@@ -598,7 +601,7 @@ function EventsTab() {
             onClick={handleCreateEvent}
             disabled={createMutation.isPending || (!!formData.imagePreview && !formData.imageUrl)}
             className="btn-vibrant w-full"
-            title={formData.imagePreview && !formData.imageUrl ? "Waiting for image upload to finish..." : ""}
+            title={formData.imagePreview && !formData.imageUrl ? t("upload.uploadingToServer") : ""}
           >
             {createMutation.isPending ? (
               <>
@@ -628,18 +631,18 @@ function EventsTab() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input placeholder="Title" value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} />
-              <Input placeholder="Venue" value={editForm.venue} onChange={(e) => setEditForm({ ...editForm, venue: e.target.value })} />
-              <Input placeholder="City" value={editForm.city} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })} />
+              <Input placeholder={t("admin.events.eventTitle")} value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} />
+              <Input placeholder={t("admin.events.venue")} value={editForm.venue} onChange={(e) => setEditForm({ ...editForm, venue: e.target.value })} />
+              <Input placeholder={t("admin.events.city")} value={editForm.city} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })} />
               <div className="space-y-1">
                 <label className="text-xs text-foreground/60 font-medium">Event Date & Time</label>
                 <Input type="datetime-local" value={editForm.eventDate} onChange={(e) => setEditForm({ ...editForm, eventDate: e.target.value })} />
               </div>
-              <Input placeholder="Ticket Price (£)" value={editForm.ticketPrice} onChange={(e) => setEditForm({ ...editForm, ticketPrice: e.target.value })} />
-              <Input type="number" placeholder="Max Tickets" value={editForm.maxTickets} onChange={(e) => setEditForm({ ...editForm, maxTickets: e.target.value })} />
+              <Input placeholder={t("admin.events.ticketPrice")} value={editForm.ticketPrice} onChange={(e) => setEditForm({ ...editForm, ticketPrice: e.target.value })} />
+              <Input type="number" placeholder={t("admin.events.maxTickets")} value={editForm.maxTickets} onChange={(e) => setEditForm({ ...editForm, maxTickets: e.target.value })} />
             </div>
-            <Textarea placeholder="Description" value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} rows={3} />
-            <Input placeholder="Image URL (CDN)" value={editForm.imageUrl} onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.value })} />
+            <Textarea placeholder={t("common.description") || t("admin.events.eventDescription")} value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} rows={3} />
+            <Input placeholder={t("admin.events.imageUrl")} value={editForm.imageUrl} onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.value })} />
             <div className="flex gap-2">
               <select
                 value={editForm.status}
@@ -666,7 +669,7 @@ function EventsTab() {
       <Card>
         <CardHeader>
           <CardTitle>All Events ({events?.length || 0})</CardTitle>
-          <CardDescription>Manage all events — draft and published</CardDescription>
+          <CardDescription>{t("admin.events.manageAllEvents")}</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -762,7 +765,7 @@ function EventsTab() {
               ))}
             </div>
           ) : (
-            <p className="text-foreground/60 text-center py-8">No events yet. Create one above!</p>
+            <p className="text-foreground/60 text-center py-8">{t("admin.events.noEvents")}</p>
           )}
         </CardContent>
       </Card>
@@ -772,7 +775,7 @@ function EventsTab() {
         <Dialog open={!!emailingEvent} onOpenChange={(open) => { if (!open) { setEmailingEvent(null); setEmailSubject(""); setEmailBody(""); setEmailSegment("all"); setEmailSendNow(true); setEmailScheduledAt(""); setEmailPreview(false); } }}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2"><Send className="h-5 w-5 text-accent" />Email Campaign</DialogTitle>
+              <DialogTitle className="flex items-center gap-2"><Send className="h-5 w-5 text-accent" />{t("admin.events.emailCampaign")}</DialogTitle>
               <DialogDescription>Promote "{emailingEvent.title}" — pick a template or write custom HTML</DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -790,19 +793,19 @@ function EventsTab() {
                 </div>
                 <div className="mt-4 space-y-3">
                   <div>
-                    <label className="text-xs font-medium mb-1 block">Audience</label>
+                    <label className="text-xs font-medium mb-1 block">{t("admin.events.audience")}</label>
                     <Select value={emailSegment} onValueChange={setEmailSegment}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Active Contacts</SelectItem>
-                        <SelectItem value="customer">Customers</SelectItem>
-                        <SelectItem value="vip">VIP</SelectItem>
-                        <SelectItem value="lead">Leads</SelectItem>
+                        <SelectItem value="all">{t("admin.events.audienceAll")}</SelectItem>
+                        <SelectItem value="customer">{t("admin.events.audienceCustomers")}</SelectItem>
+                        <SelectItem value="vip">{t("admin.events.audienceVip")}</SelectItem>
+                        <SelectItem value="lead">{t("admin.events.audienceLeads")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <label className="text-xs font-medium mb-1 block">Send</label>
+                    <label className="text-xs font-medium mb-1 block">{t("admin.events.send")}</label>
                     <Select value={emailSendNow ? "now" : "schedule"} onValueChange={(v) => setEmailSendNow(v === "now")}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -822,18 +825,18 @@ function EventsTab() {
               {/* Compose */}
               <div className="md:col-span-2 space-y-3">
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Subject Line</label>
-                  <Input placeholder="Email subject" value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} />
+                  <label className="text-sm font-medium mb-1 block">{t("admin.events.subjectLine")}</label>
+                  <Input placeholder={t("admin.events.subjectPlaceholder")} value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} />
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-sm font-medium">Email Content (HTML)</label>
-                    <Button variant="ghost" size="sm" onClick={() => setEmailPreview(!emailPreview)} className="text-xs h-6"><Eye className="h-3 w-3 mr-1" />{emailPreview ? "Edit" : "Preview"}</Button>
+                    <label className="text-sm font-medium">{t("admin.events.emailContent")}</label>
+                    <Button variant="ghost" size="sm" onClick={() => setEmailPreview(!emailPreview)} className="text-xs h-6"><Eye className="h-3 w-3 mr-1" />{{emailPreview ? t("common.edit") : t("admin.events.preview")}}</Button>
                   </div>
                   {emailPreview ? (
-                    <div className="border border-border/50 rounded-lg overflow-hidden h-56"><iframe srcDoc={emailBody} className="w-full h-full" sandbox="allow-same-origin" title="Preview" /></div>
+                    <div className="border border-border/50 rounded-lg overflow-hidden h-56"><iframe srcDoc={emailBody} className="w-full h-full" sandbox="allow-same-origin" title={t("admin.events.preview") || "Preview"} /></div>
                   ) : (
-                    <Textarea placeholder="HTML email content" value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={10} className="font-mono text-xs" />
+                    <Textarea placeholder={t("admin.events.contentPlaceholder")} value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={10} className="font-mono text-xs" />
                   )}
                 </div>
               </div>
@@ -846,7 +849,7 @@ function EventsTab() {
                 className="btn-vibrant gap-2"
               >
                 {(createCampaignMutation.isPending || sendCampaignMutation.isPending) ? <Loader2 className="h-4 w-4 animate-spin" /> : emailSendNow ? <Send className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
-                {emailSendNow ? "Send Now" : "Schedule"}
+                {emailSendNow ? {emailSendNow ? t("admin.events.sendNow") : t("admin.events.schedule")}}
               </Button>
             </div>
           </DialogContent>
@@ -895,7 +898,7 @@ function CoursesTab() {
       if (emailSendNow) {
         sendCampaignMutation.mutate({ campaignId: data.id });
       } else {
-        toast.success("Campaign scheduled!");
+        toast.success(t("admin.events.toastCampaignScheduled"));
         setEmailingCourse(null);
         utils.emailMarketing.listCampaigns.invalidate();
       }
@@ -904,7 +907,7 @@ function CoursesTab() {
   });
   const sendCampaignMutation = trpc.emailMarketing.sendCampaign.useMutation({
     onSuccess: (data) => {
-      toast.success(`Email sent to ${data.sent} contacts!`);
+      toast.success(t("admin.events.toastEmailSent", { count: data.sent }));
       setEmailingCourse(null);
       utils.emailMarketing.listCampaigns.invalidate();
     },
@@ -912,7 +915,7 @@ function CoursesTab() {
   });
   const createMutation = trpc.courses.create.useMutation({
     onSuccess: () => {
-      toast.success("Curso creado y publicado!");
+      toast.success(t("admin.courses.toastCreated"));
       refetch();
     },
     onError: (err) => {
@@ -921,7 +924,7 @@ function CoursesTab() {
   });
   const updateMutation = trpc.courses.update.useMutation({
     onSuccess: () => {
-      toast.success("Curso actualizado!");
+      toast.success(t("admin.courses.toastUpdated"));
       refetch();
       resetForm();
     },
@@ -931,7 +934,7 @@ function CoursesTab() {
   });
   const deleteMutation = trpc.courses.delete.useMutation({
     onSuccess: () => {
-      toast.success("Curso eliminado!");
+      toast.success(t("admin.courses.toastDeleted"));
       refetch();
       setConfirmDeleteId(null);
     },
@@ -1016,14 +1019,14 @@ function CoursesTab() {
   const handleImageSelect = (file: File) => {
     // SECURITY & UX: Validate image file type
     if (!file.type.startsWith('image/')) {
-      toast.error('Por favor selecciona un archivo de imagen válido (.jpg, .png, .webp)');
+      toast.error(t("admin.events.errorInvalidImage"));
       return;
     }
 
     // SECURITY: Validate file size (max 10MB for images)
     const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
     if (file.size > MAX_IMAGE_SIZE) {
-      toast.error(`La imagen es demasiado grande. Tamaño máximo: 10MB. Tu archivo: ${(file.size / 1024 / 1024).toFixed(1)}MB`);
+      toast.error(t("admin.events.errorImageTooLarge", { size: (file.size / 1024 / 1024).toFixed(1) }));
       return;
     }
 
@@ -1181,7 +1184,7 @@ function CoursesTab() {
 
   const handleCreateCourse = async () => {
     if (!formData.title || !formData.price || !formData.instructorId) {
-      toast.error("Por favor completa todos los campos requeridos");
+      toast.error(t("validation.fillRequiredFields"));
       return;
     }
 
@@ -1191,7 +1194,7 @@ function CoursesTab() {
         const result = await checkCourseEntitlement();
         const entitlement = result.data;
         if (entitlement && !entitlement.allowed) {
-          setUpgradeReason(entitlement.reason ?? "You have reached your plan limit.");
+          setUpgradeReason(entitlement.reason ?? t("admin.events.errorPlanLimit"));
           setUpgradeDialogOpen(true);
           return;
         }
@@ -1247,41 +1250,41 @@ function CoursesTab() {
       )}
       <Card>
         <CardHeader>
-          <CardTitle>{editingId ? "Edit Course" : "Create New Course"}</CardTitle>
+          <CardTitle>{editingId ? {editingId ? t("admin.courses.editCourse") : t("admin.courses.createCourse")}}</CardTitle>
           <CardDescription>Add or edit dance courses with video</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              placeholder="Course Title"
+              placeholder={t("admin.courses.courseTitle")}
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             />
             <Input
-              placeholder="Dance Style (e.g., Salsa)"
+              placeholder={t("admin.courses.danceStyle")}
               value={formData.danceStyle}
               onChange={(e) => setFormData({ ...formData, danceStyle: e.target.value })}
             />
             <Input
               type="number"
-              placeholder="Price (£)"
+              placeholder={t("admin.courses.price")}
               value={formData.price}
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
             />
             <Input
-              placeholder="Duration (e.g., 4 weeks)"
+              placeholder={t("admin.courses.duration")}
               value={formData.duration}
               onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
             />
             <Input
               type="number"
-              placeholder="Number of Lessons"
+              placeholder={t("admin.courses.lessonsCount")}
               value={formData.lessonsCount.toString()}
               onChange={(e) => setFormData({ ...formData, lessonsCount: e.target.value })}
             />
             <Select value={formData.level} onValueChange={(val: any) => setFormData({ ...formData, level: val })}>
               <SelectTrigger>
-                <SelectValue placeholder="Select Level" />
+                <SelectValue placeholder=t("admin.courses.selectLevel") />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="beginner">Beginner</SelectItem>
@@ -1293,7 +1296,7 @@ function CoursesTab() {
             {isAdmin ? (
               <Select value={formData.instructorId} onValueChange={(val) => setFormData({ ...formData, instructorId: val })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select Instructor" />
+                  <SelectValue placeholder=t("admin.courses.selectInstructor") />
                 </SelectTrigger>
                 <SelectContent>
                   {instructors?.map((instructor) => (
@@ -1312,7 +1315,7 @@ function CoursesTab() {
           </div>
 
           <Textarea
-            placeholder="Course Description"
+            placeholder={t("admin.courses.courseDescription")}
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             rows={4}
@@ -1347,7 +1350,7 @@ function CoursesTab() {
             ) : (
               <div className="text-center">
                 <Video className="h-8 w-8 mx-auto mb-2 text-accent/40" />
-                <p className="text-foreground/60 mb-4">Upload course video</p>
+                <p className="text-foreground/60 mb-4">{t("admin.courses.uploadCourseVideo")}</p>
                 <Button
                   variant="outline"
                   onClick={() => videoInputRef.current?.click()}
@@ -1386,11 +1389,11 @@ function CoursesTab() {
             {formData.imagePreview ? (
               <div className="space-y-3">
                 <div className="relative">
-                  <img src={formData.imagePreview} alt="Portada" className="w-full h-40 object-cover rounded-lg" />
+                  <img src={formData.imagePreview} alt={t("admin.courses.coverAlt")} className="w-full h-40 object-cover rounded-lg" />
                   {!formData.imageUrl && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
                       <Loader2 className="h-6 w-6 animate-spin text-white" />
-                      <span className="text-white ml-2 text-sm">Uploading...</span>
+                      <span className="text-white ml-2 text-sm">{t("admin.buttons.uploading")}</span>
                     </div>
                   )}
                   {formData.imageUrl && (
@@ -1409,7 +1412,7 @@ function CoursesTab() {
             ) : (
               <div className="text-center py-2">
                 <ImageIcon className="h-8 w-8 mx-auto mb-2 text-accent/40" />
-                <p className="text-foreground/60 text-sm mb-3">Upload a cover image for the course</p>
+                <p className="text-foreground/60 text-sm mb-3">{t("admin.courses.uploadCover")}</p>
                 <Button variant="outline" size="sm" onClick={() => imageInputRef.current?.click()} disabled={imageUploading}>
                   {imageUploading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Uploading...</> : <><Upload className="h-4 w-4 mr-2" />Select image</>}
                 </Button>
@@ -1428,7 +1431,7 @@ function CoursesTab() {
           <ImageCropperModal
             imageSrc={cropSrc}
             aspect={16 / 9}
-            label="Recortar imagen del curso (16:9)"
+            label={t("admin.courses.cropCover")}
             onCropComplete={handleCropComplete}
             onClose={() => setCropSrc(null)}
           />
@@ -1442,12 +1445,12 @@ function CoursesTab() {
               {createMutation.isPending || updateMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {editingId ? "Actualizando..." : "Creando..."}
+                  {editingId ? {editingId ? t("admin.buttons.updating") : t("admin.buttons.creating")}}
                 </>
               ) : (
                 <>
                   <Plus className="mr-2 h-4 w-4" />
-                  {editingId ? "Update Course" : "Create Course"}
+                  {editingId ? {editingId ? t("admin.courses.updateCourse") : t("admin.courses.createCourseButton")}}
                 </>
               )}
             </Button>
@@ -1461,13 +1464,13 @@ function CoursesTab() {
       {/* Courses List */}
       <Card>
         <CardHeader>
-          <CardTitle>{isAdmin ? "All Courses" : "My Courses"}</CardTitle>
+          <CardTitle>{isAdmin ? {isAdmin ? t("admin.courses.allCourses") : t("admin.courses.myCourses")}}</CardTitle>
           <CardDescription>
             {isAdmin
               ? `${courses?.length || 0} total courses`
               : myInstructorProfile
                 ? `Courses by ${myInstructorProfile.name}`
-                : "Manage your dance courses"}
+                : {t("admin.courses.manageCourses")}}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -1541,7 +1544,7 @@ function CoursesTab() {
           ) : (
             <div className="text-center py-8">
               <p className="text-foreground/60 mb-2">
-                {isAdmin ? "No courses in the system yet." : "You haven't uploaded any courses yet."}
+                {isAdmin ? {isAdmin ? t("admin.courses.noCourses") : t("admin.courses.noCoursesYet")}}
               </p>
               {!isAdmin && !myInstructorProfile && (
                 <p className="text-sm text-yellow-400">
@@ -1558,7 +1561,7 @@ function CoursesTab() {
         <Dialog open={!!emailingCourse} onOpenChange={(open) => { if (!open) { setEmailingCourse(null); setEmailSubject(""); setEmailBody(""); setEmailSegment("all"); setEmailSendNow(true); setEmailScheduledAt(""); setEmailPreview(false); } }}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2"><Send className="h-5 w-5 text-accent" />Email Campaign</DialogTitle>
+              <DialogTitle className="flex items-center gap-2"><Send className="h-5 w-5 text-accent" />{t("admin.events.emailCampaign")}</DialogTitle>
               <DialogDescription>Promote "{emailingCourse.title}" — pick a template or write custom HTML</DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1575,19 +1578,19 @@ function CoursesTab() {
                 </div>
                 <div className="mt-4 space-y-3">
                   <div>
-                    <label className="text-xs font-medium mb-1 block">Audience</label>
+                    <label className="text-xs font-medium mb-1 block">{t("admin.events.audience")}</label>
                     <Select value={emailSegment} onValueChange={setEmailSegment}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Active Contacts</SelectItem>
-                        <SelectItem value="customer">Customers</SelectItem>
-                        <SelectItem value="vip">VIP</SelectItem>
-                        <SelectItem value="lead">Leads</SelectItem>
+                        <SelectItem value="all">{t("admin.events.audienceAll")}</SelectItem>
+                        <SelectItem value="customer">{t("admin.events.audienceCustomers")}</SelectItem>
+                        <SelectItem value="vip">{t("admin.events.audienceVip")}</SelectItem>
+                        <SelectItem value="lead">{t("admin.events.audienceLeads")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <label className="text-xs font-medium mb-1 block">Send</label>
+                    <label className="text-xs font-medium mb-1 block">{t("admin.events.send")}</label>
                     <Select value={emailSendNow ? "now" : "schedule"} onValueChange={(v) => setEmailSendNow(v === "now")}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -1606,18 +1609,18 @@ function CoursesTab() {
               </div>
               <div className="md:col-span-2 space-y-3">
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Subject Line</label>
-                  <Input placeholder="Email subject" value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} />
+                  <label className="text-sm font-medium mb-1 block">{t("admin.events.subjectLine")}</label>
+                  <Input placeholder={t("admin.events.subjectPlaceholder")} value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} />
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-sm font-medium">Email Content (HTML)</label>
-                    <Button variant="ghost" size="sm" onClick={() => setEmailPreview(!emailPreview)} className="text-xs h-6"><Eye className="h-3 w-3 mr-1" />{emailPreview ? "Edit" : "Preview"}</Button>
+                    <label className="text-sm font-medium">{t("admin.events.emailContent")}</label>
+                    <Button variant="ghost" size="sm" onClick={() => setEmailPreview(!emailPreview)} className="text-xs h-6"><Eye className="h-3 w-3 mr-1" />{{emailPreview ? t("common.edit") : t("admin.events.preview")}}</Button>
                   </div>
                   {emailPreview ? (
-                    <div className="border border-border/50 rounded-lg overflow-hidden h-56"><iframe srcDoc={emailBody} className="w-full h-full" sandbox="allow-same-origin" title="Preview" /></div>
+                    <div className="border border-border/50 rounded-lg overflow-hidden h-56"><iframe srcDoc={emailBody} className="w-full h-full" sandbox="allow-same-origin" title={t("admin.events.preview") || "Preview"} /></div>
                   ) : (
-                    <Textarea placeholder="HTML email content" value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={10} className="font-mono text-xs" />
+                    <Textarea placeholder={t("admin.events.contentPlaceholder")} value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={10} className="font-mono text-xs" />
                   )}
                 </div>
               </div>
@@ -1630,7 +1633,7 @@ function CoursesTab() {
                 className="btn-vibrant gap-2"
               >
                 {(createCampaignMutation.isPending || sendCampaignMutation.isPending) ? <Loader2 className="h-4 w-4 animate-spin" /> : emailSendNow ? <Send className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
-                {emailSendNow ? "Send Now" : "Schedule"}
+                {emailSendNow ? {emailSendNow ? t("admin.events.sendNow") : t("admin.events.schedule")}}
               </Button>
             </div>
           </DialogContent>
@@ -1679,7 +1682,7 @@ function ClassesTab() {
       if (emailSendNow) {
         sendCampaignMutation.mutate({ campaignId: data.id });
       } else {
-        toast.success("Campaign scheduled!");
+        toast.success(t("admin.events.toastCampaignScheduled"));
         setEmailingClass(null);
         utils.emailMarketing.listCampaigns.invalidate();
       }
@@ -1688,7 +1691,7 @@ function ClassesTab() {
   });
   const sendCampaignMutation = trpc.emailMarketing.sendCampaign.useMutation({
     onSuccess: (data) => {
-      toast.success(`Email sent to ${data.sent} contacts!`);
+      toast.success(t("admin.events.toastEmailSent", { count: data.sent }));
       setEmailingClass(null);
       utils.emailMarketing.listCampaigns.invalidate();
     },
@@ -1697,7 +1700,7 @@ function ClassesTab() {
 
   const createMutation = trpc.classes.create.useMutation({
     onSuccess: () => {
-      toast.success("Class created and published!");
+      toast.success(t("admin.classes.toastCreated"));
       refetch();
     },
     onError: (err) => { toast.error(err.message); },
@@ -1705,7 +1708,7 @@ function ClassesTab() {
 
   const updateMutation = trpc.classes.update.useMutation({
     onSuccess: () => {
-      toast.success("Class updated!");
+      toast.success(t("admin.classes.toastUpdated"));
       refetch();
       resetForm();
     },
@@ -1714,7 +1717,7 @@ function ClassesTab() {
 
   const deleteMutation = trpc.classes.delete.useMutation({
     onSuccess: () => {
-      toast.success("Class deleted!");
+      toast.success(t("admin.classes.toastDeleted"));
       refetch();
       setConfirmDeleteId(null);
     },
@@ -1779,14 +1782,14 @@ function ClassesTab() {
   const handleImageSelect = (file: File) => {
     // SECURITY & UX: Validate image file type
     if (!file.type.startsWith('image/')) {
-      toast.error('Por favor selecciona un archivo de imagen válido (.jpg, .png, .webp)');
+      toast.error(t("admin.events.errorInvalidImage"));
       return;
     }
 
     // SECURITY: Validate file size (max 10MB for images)
     const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
     if (file.size > MAX_IMAGE_SIZE) {
-      toast.error(`La imagen es demasiado grande. Tamaño máximo: 10MB. Tu archivo: ${(file.size / 1024 / 1024).toFixed(1)}MB`);
+      toast.error(t("admin.events.errorImageTooLarge", { size: (file.size / 1024 / 1024).toFixed(1) }));
       return;
     }
 
@@ -1807,7 +1810,7 @@ function ClassesTab() {
         mimeType: "image/jpeg",
       });
       setFormData(prev => ({ ...prev, imageUrl: result.url }));
-      toast.success('Image uploaded successfully');
+      toast.success(t("upload.imageUploadedSuccess"));
     } catch {
       toast.error('Failed to upload image');
       setFormData(prev => ({ ...prev, imagePreview: "", imageUrl: "" }));
@@ -1858,7 +1861,7 @@ function ClassesTab() {
 
   const handleSaveClass = async () => {
     if (!formData.title || !formData.price || !formData.instructorId || !formData.classDate) {
-      toast.error("Por favor completa todos los campos requeridos");
+      toast.error(t("validation.fillRequiredFields"));
       return;
     }
 
@@ -1868,7 +1871,7 @@ function ClassesTab() {
         const result = await checkClassEntitlement();
         const entitlement = result.data;
         if (entitlement && !entitlement.allowed) {
-          setUpgradeReason(entitlement.reason ?? "You have reached your plan limit.");
+          setUpgradeReason(entitlement.reason ?? t("admin.events.errorPlanLimit"));
           setUpgradeDialogOpen(true);
           return;
         }
@@ -1934,24 +1937,24 @@ function ClassesTab() {
       )}
       <Card>
         <CardHeader>
-          <CardTitle>{editingId ? "Edit Class" : "Create New Class"}</CardTitle>
+          <CardTitle>{editingId ? {editingId ? t("admin.classes.editClass") : t("admin.classes.createClass")}}</CardTitle>
           <CardDescription>Add or edit live dance classes</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              placeholder="Class title"
+              placeholder={t("admin.classes.classTitle")}
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             />
             <Input
-              placeholder="Dance style (e.g. Salsa, Bachata)"
+              placeholder={t("admin.classes.danceStyle")}
               value={formData.danceStyle}
               onChange={(e) => setFormData({ ...formData, danceStyle: e.target.value })}
             />
             <Input
               type="number"
-              placeholder="Price (£)"
+              placeholder={t("admin.courses.price")}
               value={formData.price}
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
             />
@@ -1962,19 +1965,19 @@ function ClassesTab() {
             />
             <Input
               type="number"
-              placeholder="Duration (minutes)"
+              placeholder={t("admin.classes.duration")}
               value={formData.duration.toString()}
               onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
             />
             <Input
               type="number"
-              placeholder="Max. participants (optional)"
+              placeholder={t("admin.classes.maxParticipants")}
               value={formData.maxParticipants.toString()}
               onChange={(e) => setFormData({ ...formData, maxParticipants: e.target.value })}
             />
             <Select value={formData.level} onValueChange={(val: any) => setFormData({ ...formData, level: val })}>
               <SelectTrigger>
-                <SelectValue placeholder="Level" />
+                <SelectValue placeholder={t("admin.classes.level")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="beginner">Beginner</SelectItem>
@@ -1985,7 +1988,7 @@ function ClassesTab() {
             </Select>
             <Select value={formData.instructorId} onValueChange={(val) => setFormData({ ...formData, instructorId: val })}>
               <SelectTrigger>
-                <SelectValue placeholder="Select instructor" />
+                <SelectValue placeholder=t("admin.classes.selectInstructor") />
               </SelectTrigger>
               <SelectContent>
                 {instructors?.map((instructor) => (
@@ -1997,7 +2000,7 @@ function ClassesTab() {
             </Select>
           </div>
           <Textarea
-            placeholder="Class description"
+            placeholder={t("admin.classes.classDescription")}
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             rows={4}
@@ -2012,7 +2015,7 @@ function ClassesTab() {
               {uploading ? (
                 <div className="flex items-center justify-center gap-2 py-4">
                   <Loader2 className="h-6 w-6 animate-spin text-accent" />
-                  <span className="text-sm text-foreground/60">Uploading image...</span>
+                  <span className="text-sm text-foreground/60">{t("admin.classes.uploadingImage")}</span>
                 </div>
               ) : formData.imagePreview ? (
                 <div className="relative">
@@ -2028,8 +2031,8 @@ function ClassesTab() {
               ) : (
                 <div className="py-4">
                   <ImageIcon className="h-8 w-8 text-foreground/30 mx-auto mb-2" />
-                  <p className="text-sm text-foreground/60">Click to upload cover image</p>
-                  <p className="text-xs text-foreground/40 mt-1">JPG, PNG, WebP</p>
+                  <p className="text-sm text-foreground/60">{t("admin.classes.uploadCover")}</p>
+                  <p className="text-xs text-foreground/40 mt-1">{t("admin.classes.imageFormats")}</p>
                 </div>
               )}
             </div>
@@ -2047,12 +2050,12 @@ function ClassesTab() {
             <p className="text-sm font-medium text-foreground/80 mb-3">Payment Method</p>
             <Select value={formData.paymentMethod} onValueChange={(val: any) => setFormData({ ...formData, paymentMethod: val })}>
               <SelectTrigger>
-                <SelectValue placeholder="Select payment method" />
+                <SelectValue placeholder="t("admin.events.selectPaymentMethod")" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="online">Online (Stripe)</SelectItem>
-                <SelectItem value="cash">Cash Only</SelectItem>
-                <SelectItem value="both">Both Online & Cash</SelectItem>
+                <SelectItem value="online">{t("admin.events.paymentOnline")}</SelectItem>
+                <SelectItem value="cash">{t("admin.events.paymentCash")}</SelectItem>
+                <SelectItem value="both">{t("admin.classes.paymentBoth")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -2074,7 +2077,7 @@ function ClassesTab() {
                 <label className="text-sm font-semibold text-foreground cursor-pointer" onClick={() => setFormData({ ...formData, hasSocial: !formData.hasSocial })}>
                   🎉 Social after class?
                 </label>
-                <p className="text-xs text-foreground/50">Add details about the social dancing event after this class</p>
+                <p className="text-xs text-foreground/50">{t("admin.classes.socialDescription")}</p>
               </div>
             </div>
 
@@ -2083,7 +2086,7 @@ function ClassesTab() {
                 <p className="text-xs font-semibold text-accent uppercase tracking-wide mb-3">Social Event Details</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-xs text-foreground/60 font-medium">Start Time</label>
+                    <label className="text-xs text-foreground/60 font-medium">{t("admin.classes.socialStartTime")}</label>
                     <Input
                       type="time"
                       value={formData.socialTime}
@@ -2092,9 +2095,9 @@ function ClassesTab() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs text-foreground/60 font-medium">Location / Venue</label>
+                    <label className="text-xs text-foreground/60 font-medium">{t("admin.classes.socialLocation")}</label>
                     <Input
-                      placeholder="e.g., Bar XYZ, Studio B"
+                      placeholder={t("admin.classes.socialLocationPlaceholder")}
                       value={formData.socialLocation}
                       onChange={(e) => setFormData({ ...formData, socialLocation: e.target.value })}
                       className="bg-background/50"
@@ -2102,9 +2105,9 @@ function ClassesTab() {
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-foreground/60 font-medium">Description (optional)</label>
+                  <label className="text-xs text-foreground/60 font-medium">{t("admin.classes.socialDescriptionLabel")}</label>
                   <textarea
-                    placeholder="e.g., Join us for social dancing after class! All levels welcome. DJ playing salsa, bachata and more."
+                    placeholder={t("admin.classes.socialDescriptionPlaceholder")}
                     value={formData.socialDescription}
                     onChange={(e) => setFormData({ ...formData, socialDescription: e.target.value })}
                     rows={2}
@@ -2113,7 +2116,7 @@ function ClassesTab() {
                 </div>
                 {(formData.socialTime || formData.socialLocation) && (
                   <div className="flex items-center gap-2 text-xs text-accent bg-accent/10 rounded-lg px-3 py-2">
-                    <span>✅</span>
+                    <span>{t("admin.classes.socialCheckmark")}</span>
                     <span>
                       Social at {formData.socialTime || "TBD"}
                       {formData.socialLocation ? ` · ${formData.socialLocation}` : ""}
@@ -2128,7 +2131,7 @@ function ClassesTab() {
           <ImageCropperModal
             imageSrc={cropSrc}
             aspect={16 / 9}
-            label="Recortar imagen de la clase (16:9)"
+            label={t("admin.classes.cropImage")}
             onCropComplete={handleCropComplete}
             onClose={() => setCropSrc(null)}
           />
@@ -2142,12 +2145,12 @@ function ClassesTab() {
               {createMutation.isPending || updateMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {editingId ? "Actualizando..." : "Creando..."}
+                  {editingId ? {editingId ? t("admin.buttons.updating") : t("admin.buttons.creating")}}
                 </>
               ) : (
                 <>
                   <Plus className="mr-2 h-4 w-4" />
-                  {editingId ? "Update Class" : "Create Class"}
+                  {editingId ? {editingId ? t("admin.classes.updateClass") : t("admin.classes.createClassButton")}}
                 </>
               )}
             </Button>
@@ -2163,13 +2166,13 @@ function ClassesTab() {
       {/* Classes List */}
       <Card>
         <CardHeader>
-          <CardTitle>{isAdmin ? "Todas las Clases" : "Mis Clases"}</CardTitle>
+          <CardTitle>{isAdmin ? {isAdmin ? t("admin.classes.allClasses") : t("admin.classes.myClasses")}}</CardTitle>
           <CardDescription>
             {isAdmin
               ? `${classes?.length || 0} clases en total`
               : myInstructorProfile
                 ? `Clases impartidas por ${myInstructorProfile.name}`
-                : "Gestiona tu calendario de clases"}
+                : {t("admin.classes.manageClasses")}}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -2221,7 +2224,7 @@ function ClassesTab() {
                         size="sm"
                         onClick={() => setExpandedClassId(expandedClassId === cls.id ? null : cls.id)}
                         className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10 gap-1 text-xs"
-                        title="Attendance QR Code & Co-Instructors"
+                        title=t("admin.classes.qrTooltip")
                       >
                         <QrCode className="h-4 w-4" />
                         <span>QR</span>
@@ -2328,7 +2331,7 @@ function ClassesTab() {
           })() : (
             <div className="text-center py-8">
               <p className="text-foreground/60 mb-2">
-                {isAdmin ? "No classes in the system yet." : "You haven't created any classes yet."}
+                {isAdmin ? {isAdmin ? t("admin.classes.noClasses") : t("admin.classes.noClassesYet")}}
               </p>
               {!isAdmin && !myInstructorProfile && (
                 <p className="text-sm text-yellow-400">
@@ -2345,7 +2348,7 @@ function ClassesTab() {
         <Dialog open={!!emailingClass} onOpenChange={(open) => { if (!open) { setEmailingClass(null); setEmailSubject(""); setEmailBody(""); setEmailSegment("all"); setEmailSendNow(true); setEmailScheduledAt(""); setEmailPreview(false); } }}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2"><Send className="h-5 w-5 text-accent" />Email Campaign</DialogTitle>
+              <DialogTitle className="flex items-center gap-2"><Send className="h-5 w-5 text-accent" />{t("admin.events.emailCampaign")}</DialogTitle>
               <DialogDescription>Promote "{emailingClass.title}" — pick a template or write custom HTML</DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -2362,19 +2365,19 @@ function ClassesTab() {
                 </div>
                 <div className="mt-4 space-y-3">
                   <div>
-                    <label className="text-xs font-medium mb-1 block">Audience</label>
+                    <label className="text-xs font-medium mb-1 block">{t("admin.events.audience")}</label>
                     <Select value={emailSegment} onValueChange={setEmailSegment}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Active Contacts</SelectItem>
-                        <SelectItem value="customer">Customers</SelectItem>
-                        <SelectItem value="vip">VIP</SelectItem>
-                        <SelectItem value="lead">Leads</SelectItem>
+                        <SelectItem value="all">{t("admin.events.audienceAll")}</SelectItem>
+                        <SelectItem value="customer">{t("admin.events.audienceCustomers")}</SelectItem>
+                        <SelectItem value="vip">{t("admin.events.audienceVip")}</SelectItem>
+                        <SelectItem value="lead">{t("admin.events.audienceLeads")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <label className="text-xs font-medium mb-1 block">Send</label>
+                    <label className="text-xs font-medium mb-1 block">{t("admin.events.send")}</label>
                     <Select value={emailSendNow ? "now" : "schedule"} onValueChange={(v) => setEmailSendNow(v === "now")}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -2393,18 +2396,18 @@ function ClassesTab() {
               </div>
               <div className="md:col-span-2 space-y-3">
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Subject Line</label>
-                  <Input placeholder="Email subject" value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} />
+                  <label className="text-sm font-medium mb-1 block">{t("admin.events.subjectLine")}</label>
+                  <Input placeholder={t("admin.events.subjectPlaceholder")} value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} />
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-sm font-medium">Email Content (HTML)</label>
-                    <Button variant="ghost" size="sm" onClick={() => setEmailPreview(!emailPreview)} className="text-xs h-6"><Eye className="h-3 w-3 mr-1" />{emailPreview ? "Edit" : "Preview"}</Button>
+                    <label className="text-sm font-medium">{t("admin.events.emailContent")}</label>
+                    <Button variant="ghost" size="sm" onClick={() => setEmailPreview(!emailPreview)} className="text-xs h-6"><Eye className="h-3 w-3 mr-1" />{{emailPreview ? t("common.edit") : t("admin.events.preview")}}</Button>
                   </div>
                   {emailPreview ? (
-                    <div className="border border-border/50 rounded-lg overflow-hidden h-56"><iframe srcDoc={emailBody} className="w-full h-full" sandbox="allow-same-origin" title="Preview" /></div>
+                    <div className="border border-border/50 rounded-lg overflow-hidden h-56"><iframe srcDoc={emailBody} className="w-full h-full" sandbox="allow-same-origin" title={t("admin.events.preview") || "Preview"} /></div>
                   ) : (
-                    <Textarea placeholder="HTML email content" value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={10} className="font-mono text-xs" />
+                    <Textarea placeholder={t("admin.events.contentPlaceholder")} value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={10} className="font-mono text-xs" />
                   )}
                 </div>
               </div>
@@ -2417,7 +2420,7 @@ function ClassesTab() {
                 className="btn-vibrant gap-2"
               >
                 {(createCampaignMutation.isPending || sendCampaignMutation.isPending) ? <Loader2 className="h-4 w-4 animate-spin" /> : emailSendNow ? <Send className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
-                {emailSendNow ? "Send Now" : "Schedule"}
+                {emailSendNow ? {emailSendNow ? t("admin.events.sendNow") : t("admin.events.schedule")}}
               </Button>
             </div>
           </DialogContent>
@@ -2440,14 +2443,14 @@ function CoInstructorManager({ classId, instructors }: { classId: number; instru
   const { data: coInstructors, isLoading } = trpc.classes.getCoInstructors.useQuery(classId);
   const addMutation = trpc.classes.addCoInstructor.useMutation({
     onSuccess: () => {
-      toast.success("Co-instructor added!");
+      toast.success(t("admin.coInstructors.toastAdded"));
       utils.classes.getCoInstructors.invalidate(classId);
     },
     onError: (err) => toast.error(err.message),
   });
   const removeMutation = trpc.classes.removeCoInstructor.useMutation({
     onSuccess: () => {
-      toast.success("Co-instructor removed!");
+      toast.success(t("admin.coInstructors.toastRemoved"));
       utils.classes.getCoInstructors.invalidate(classId);
     },
     onError: (err) => toast.error(err.message),
@@ -2495,7 +2498,7 @@ function CoInstructorManager({ classId, instructors }: { classId: number; instru
           ))}
         </div>
       ) : (
-        <p className="text-xs text-foreground/40 mb-3">No co-instructors assigned</p>
+        <p className="text-xs text-foreground/40 mb-3">{t("admin.coInstructors.noCoInstructors")}</p>
       )}
 
       {/* Add co-instructor */}
@@ -2503,7 +2506,7 @@ function CoInstructorManager({ classId, instructors }: { classId: number; instru
         <div className="flex gap-2">
           <Select value={selectedInstructorId} onValueChange={setSelectedInstructorId}>
             <SelectTrigger className="flex-1 h-8 text-xs">
-              <SelectValue placeholder="Add instructor..." />
+              <SelectValue placeholder={t("admin.coInstructors.addPlaceholder")} />
             </SelectTrigger>
             <SelectContent>
               {availableInstructors.map((i: any) => (
@@ -2516,8 +2519,8 @@ function CoInstructorManager({ classId, instructors }: { classId: number; instru
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="lead">Lead</SelectItem>
-              <SelectItem value="assistant">Assistant</SelectItem>
+              <SelectItem value="lead">{t("admin.coInstructors.roleLead")}</SelectItem>
+              <SelectItem value="assistant">{t("admin.coInstructors.roleAssistant")}</SelectItem>
             </SelectContent>
           </Select>
           <Button
@@ -2544,7 +2547,7 @@ function InstructorsTab() {
   const uploadFileMutation = trpc.uploads.uploadFile.useMutation();
   const createMutation = trpc.instructors.create.useMutation({
     onSuccess: () => {
-      toast.success("Instructor created successfully!");
+      toast.success(t("admin.instructors.toastCreated"));
       refetch();
     },
     onError: (err) => {
@@ -2554,7 +2557,7 @@ function InstructorsTab() {
 
   const updateMutation = trpc.instructors.update.useMutation({
     onSuccess: () => {
-      toast.success("Instructor updated successfully!");
+      toast.success(t("admin.instructors.toastUpdated"));
       refetch();
     },
     onError: (err) => {
@@ -2564,7 +2567,7 @@ function InstructorsTab() {
 
   const deleteMutation = trpc.instructors.delete.useMutation({
     onSuccess: () => {
-      toast.success("Instructor deleted successfully!");
+      toast.success(t("admin.instructors.toastDeleted"));
       refetch();
     },
     onError: (err) => {
@@ -2612,7 +2615,7 @@ function InstructorsTab() {
       setFormData(prev => ({ ...prev, photoUrl: result.url }));
       toast.success('Foto subida correctamente');
     } catch (uploadErr: any) {
-      toast.error('Upload error: ' + uploadErr.message);
+      toast.error(t("admin.events.errorUpload", { message: uploadErr.message }));
       setFormData(prev => ({ ...prev, photoPreview: "", photoUrl: "" }));
     } finally {
       setUploading(false);
@@ -2624,7 +2627,7 @@ function InstructorsTab() {
 
   const handleCreateOrUpdate = () => {
     if (!formData.name) {
-      toast.error("Please enter instructor name");
+      toast.error(t("admin.instructors.errorEnterName"));
       return;
     }
 
@@ -2681,25 +2684,25 @@ function InstructorsTab() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>{editingId ? "Edit Instructor" : "Create New Instructor"}</CardTitle>
+          <CardTitle>{editingId ? {editingId ? t("admin.instructors.editInstructor") : t("admin.instructors.createInstructor")}}</CardTitle>
           <CardDescription>Add or modify dance instructors with photos and specialties</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              placeholder="Instructor Name"
+              placeholder={t("admin.instructors.name")}
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />
             <Input
-              placeholder="Instagram Handle (optional)"
+              placeholder={t("admin.instructors.instagram")}
               value={formData.instagramHandle}
               onChange={(e) => setFormData({ ...formData, instagramHandle: e.target.value })}
             />
           </div>
 
           <Textarea
-            placeholder="Bio"
+            placeholder={t("admin.instructors.bio")}
             value={formData.bio}
             onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
             rows={3}
@@ -2710,7 +2713,7 @@ function InstructorsTab() {
               Specialties (comma-separated: Salsa, Bachata, Reggaeton, etc)
             </label>
             <Input
-              placeholder="e.g., Salsa, Bachata, Reggaeton"
+              placeholder={t("admin.instructors.specialtiesPlaceholder")}
               value={formData.specialties}
               onChange={(e) => setFormData({ ...formData, specialties: e.target.value })}
             />
@@ -2723,13 +2726,13 @@ function InstructorsTab() {
                 <div className="relative">
                   <img
                     src={formData.photoPreview}
-                    alt="Instructor photo preview"
+                    alt={t("admin.instructors.photoPreview")}
                     className="w-full h-48 object-cover rounded-lg"
                   />
                   {!formData.photoUrl && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-lg">
                       <Loader2 className="h-8 w-8 animate-spin text-white" />
-                      <span className="text-white ml-2">Uploading...</span>
+                      <span className="text-white ml-2">{t("admin.buttons.uploading")}</span>
                     </div>
                   )}
                   {formData.photoUrl && (
@@ -2760,7 +2763,7 @@ function InstructorsTab() {
             ) : (
               <div className="text-center">
                 <ImageIcon className="h-8 w-8 mx-auto mb-2 text-accent/40" />
-                <p className="text-foreground/60 mb-4">Upload instructor photo</p>
+                <p className="text-foreground/60 mb-4">{t("admin.instructors.uploadPhoto")}</p>
                 <Button
                   variant="outline"
                   onClick={() => photoInputRef.current?.click()}
@@ -2798,7 +2801,7 @@ function InstructorsTab() {
           <ImageCropperModal
             imageSrc={cropSrc}
             aspect={1}
-            label="Recortar foto del instructor (1:1)"
+            label={t("admin.instructors.cropPhoto")}
             onCropComplete={handleCropComplete}
             onClose={() => setCropSrc(null)}
           />
@@ -2812,12 +2815,12 @@ function InstructorsTab() {
               {createMutation.isPending || updateMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {editingId ? "Updating..." : "Creating..."}
+                  {editingId ? t("admin.buttons.updating") : t("admin.buttons.creating")}
                 </>
               ) : (
                 <>
                   <Plus className="mr-2 h-4 w-4" />
-                  {editingId ? "Update Instructor" : "Create Instructor"}
+                  {editingId ? t("admin.instructors.updateInstructor") : t("admin.instructors.createInstructorButton")}
                 </>
               )}
             </Button>
@@ -2833,8 +2836,8 @@ function InstructorsTab() {
       {/* Instructors List */}
       <Card>
         <CardHeader>
-          <CardTitle>Your Instructors</CardTitle>
-          <CardDescription>Manage your dance instructors</CardDescription>
+          <CardTitle>{t("admin.instructors.title")}</CardTitle>
+          <CardDescription>{t("admin.instructors.description")}</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -2890,7 +2893,7 @@ function InstructorsTab() {
               ))}
             </div>
           ) : (
-            <p className="text-foreground/60 text-center py-8">No instructors found.</p>
+            <p className="text-foreground/60 text-center py-8">{t("admin.instructors.noInstructors")}</p>
           )}
         </CardContent>
       </Card>
@@ -2908,7 +2911,7 @@ function UsersTab() {
 
   const deleteUserMutation = trpc.admin.deleteUser.useMutation({
     onSuccess: () => {
-      toast.success("Usuario eliminado correctamente");
+      toast.success(t("admin.users.toastDeleted"));
       refetch();
       setConfirmDelete(null);
     },
@@ -2917,7 +2920,7 @@ function UsersTab() {
 
   const updateRoleMutation = trpc.admin.updateUserRole.useMutation({
     onSuccess: () => {
-      toast.success("Rol actualizado correctamente");
+      toast.success(t("admin.users.toastRoleUpdated"));
       refetch();
     },
     onError: (err) => toast.error(err.message),
@@ -2941,11 +2944,11 @@ function UsersTab() {
           <Users className="h-5 w-5" />
           User Management
         </CardTitle>
-        <CardDescription>Manage users, change roles and delete accounts</CardDescription>
+        <CardDescription>{t("admin.users.description")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Input
-          placeholder="Search by email or name..."
+          placeholder={t("admin.users.searchPlaceholder")}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -3042,7 +3045,7 @@ function UsersTab() {
                     </td>
                     <td className="py-3 px-4">
                       <Badge variant="outline" className="text-xs">
-                        {u.loginMethod === "custom" ? "Email" : "OAuth"}
+                        {u.loginMethod === "custom" ? t("admin.users.loginMethodEmail") : t("admin.users.loginMethodOauth")}
                       </Badge>
                     </td>
                     <td className="py-3 px-4 text-foreground/60 text-xs">
@@ -3151,24 +3154,24 @@ function OrdersTab() {
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="bg-card/50 border border-border/50 rounded-lg p-4 text-center">
             <p className="text-2xl font-bold text-accent">{allOrders?.length || 0}</p>
-            <p className="text-xs text-foreground/60 mt-1">Total Orders</p>
+            <p className="text-xs text-foreground/60 mt-1">{t("admin.orders.totalOrders")}</p>
           </div>
           <div className="bg-card/50 border border-border/50 rounded-lg p-4 text-center">
             <p className="text-2xl font-bold text-green-400">£{totalRevenue.toFixed(2)}</p>
-            <p className="text-xs text-foreground/60 mt-1">Total Revenue</p>
+            <p className="text-xs text-foreground/60 mt-1">{t("admin.orders.totalRevenue")}</p>
           </div>
           <div className="bg-card/50 border border-border/50 rounded-lg p-4 text-center">
             <p className="text-2xl font-bold text-blue-400">
               {new Set((allOrders || []).map((o) => o.userId)).size}
             </p>
-            <p className="text-xs text-foreground/60 mt-1">Unique Buyers</p>
+            <p className="text-xs text-foreground/60 mt-1">{t("admin.orders.uniqueBuyers")}</p>
           </div>
         </div>
 
         {/* Search */}
         <div className="mb-4">
           <Input
-            placeholder="Search by customer, item..."
+            placeholder={t("admin.orders.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="max-w-sm"
@@ -3180,7 +3183,7 @@ function OrdersTab() {
             <Loader2 className="w-8 h-8 animate-spin text-accent" />
           </div>
         ) : filtered.length === 0 ? (
-          <p className="text-foreground/60 text-center py-8">No orders found.</p>
+          <p className="text-foreground/60 text-center py-8">{t("admin.orders.noOrders")}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -3268,10 +3271,10 @@ function SettingsTab() {
     onSuccess: (data) => {
       setSyncResult(data);
       refetchStatus();
-      toast.success("Stripe products synced successfully!");
+      toast.success(t("admin.settings.stripeToastSuccess"));
     },
     onError: (err) => {
-      toast.error(`Sync failed: ${err.message}`);
+      toast.error(t("admin.settings.stripeToastError", { message: err.message }));
     },
   });
 
@@ -3279,7 +3282,7 @@ function SettingsTab() {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-    toast.success("Copied to clipboard!");
+    toast.success(t("admin.settings.stripeToastCopied"));
   };
 
   return (
@@ -3306,7 +3309,7 @@ function SettingsTab() {
             </div>
           ) : (
             <div className="space-y-3">
-              <h3 className="text-sm font-medium text-foreground/80">Current Configuration</h3>
+              <h3 className="text-sm font-medium text-foreground/80">{t("admin.settings.stripeCurrentConfig")}</h3>
               <div className="grid gap-2">
                 {productStatus?.map((p) => (
                   <div key={p.plan} className="flex items-center justify-between p-3 rounded-lg bg-card border border-border/50">
@@ -3353,7 +3356,7 @@ function SettingsTab() {
             ) : (
               <RefreshCw className="h-4 w-4" />
             )}
-            {syncMutation.isPending ? "Syncing with Stripe..." : "Sync Stripe Products"}
+            {syncMutation.isPending ? {syncMutation.isPending ? t("admin.settings.stripeSyncing") : t("admin.settings.stripeSyncButton")}}
           </Button>
 
           {/* Results */}
@@ -3402,7 +3405,7 @@ function SettingsTab() {
                     }
                   >
                     {copied ? <CheckCircle className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                    {copied ? "Copied!" : "Copy All"}
+                    {copied ? t("admin.settings.stripeCopied") : t("admin.settings.stripeCopyAll")}
                   </Button>
                 </div>
                 <div className="p-3 rounded-lg bg-black/40 border border-border/50 font-mono text-xs space-y-1">
@@ -3475,13 +3478,14 @@ function SettingsTab() {
 
 // ===== INSTRUCTOR/PROMOTER PROFILE TAB =====
 function InstructorProfileTab() {
+  const { t } = useTranslations();
   const { user } = useAuth();
   const utils = trpc.useUtils();
   const { data: profile, isLoading } = trpc.instructors.getMyProfile.useQuery();
   const uploadFileMutation = trpc.uploads.uploadFile.useMutation();
   const updateProfileMutation = trpc.instructors.updateMyProfile.useMutation({
     onSuccess: () => {
-      toast.success("Profile updated!");
+      toast.success(t("admin.profile.toastUpdated"));
       utils.instructors.getMyProfile.invalidate();
     },
     onError: (err) => toast.error(err.message),
@@ -3537,9 +3541,9 @@ function InstructorProfileTab() {
       });
       setForm((f) => ({ ...f, photoUrl: result.url }));
       setPhotoPreview(result.url);
-      toast.success("Photo uploaded!");
+      toast.success(t("admin.profile.toastPhotoUploaded"));
     } catch (err: any) {
-      toast.error("Upload failed: " + err.message);
+      toast.error(t("admin.profile.errorUploadFailed", { message: err.message }));
     } finally {
       setUploading(false);
     }
@@ -3605,7 +3609,7 @@ function InstructorProfileTab() {
                   disabled={uploading}
                 >
                   {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                  {uploading ? "Uploading..." : "Upload Photo"}
+                  {uploading ? t("admin.buttons.uploading") : t("admin.profile.uploadPhoto")}
                 </Button>
                 <input
                   ref={photoInputRef}
@@ -3614,63 +3618,63 @@ function InstructorProfileTab() {
                   className="hidden"
                   onChange={handlePhotoChange}
                 />
-                <p className="text-xs text-foreground/40 mt-1">JPG, PNG or WebP. Max 5MB.</p>
+                <p className="text-xs text-foreground/40 mt-1">{t("admin.profile.imageFormats")}</p>
               </div>
             </div>
 
             {/* Name */}
             <div>
-              <label className="text-sm font-medium mb-1 block">Display Name *</label>
+              <label className="text-sm font-medium mb-1 block">{t("admin.profile.displayName")}</label>
               <Input
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                placeholder="Your full name or stage name"
+                placeholder={t("admin.profile.displayNamePlaceholder")}
                 required
               />
             </div>
 
             {/* Bio */}
             <div>
-              <label className="text-sm font-medium mb-1 block">Bio</label>
+              <label className="text-sm font-medium mb-1 block">{t("admin.profile.bio")}</label>
               <Textarea
                 value={form.bio}
                 onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
-                placeholder="Tell students about your background, teaching style, and experience..."
+                placeholder={t("admin.profile.bioPlaceholder")}
                 rows={4}
               />
             </div>
 
             {/* Specialties */}
             <div>
-              <label className="text-sm font-medium mb-1 block">Specialties</label>
+              <label className="text-sm font-medium mb-1 block">{t("admin.profile.specialties")}</label>
               <Input
                 value={form.specialties}
                 onChange={(e) => setForm((f) => ({ ...f, specialties: e.target.value }))}
-                placeholder='e.g. ["Salsa", "Bachata", "Reggaeton"] or comma-separated'
+                placeholder={t("admin.profile.specialtiesPlaceholder")}
               />
-              <p className="text-xs text-foreground/40 mt-1">Enter as a JSON array or comma-separated list.</p>
+              <p className="text-xs text-foreground/40 mt-1">{t("admin.profile.specialtiesHelp")}</p>
             </div>
 
             {/* Instagram */}
             <div>
-              <label className="text-sm font-medium mb-1 block">Instagram Handle</label>
+              <label className="text-sm font-medium mb-1 block">{t("admin.profile.instagram")}</label>
               <div className="flex items-center gap-2">
                 <span className="text-foreground/50 text-sm">@</span>
                 <Input
                   value={form.instagramHandle}
                   onChange={(e) => setForm((f) => ({ ...f, instagramHandle: e.target.value.replace("@", "") }))}
-                  placeholder="yourusername"
+                  placeholder={t("admin.profile.instagramPlaceholder")}
                 />
               </div>
             </div>
 
             {/* Website */}
             <div>
-              <label className="text-sm font-medium mb-1 block">Website URL</label>
+              <label className="text-sm font-medium mb-1 block">{t("admin.profile.website")}</label>
               <Input
                 value={form.websiteUrl}
                 onChange={(e) => setForm((f) => ({ ...f, websiteUrl: e.target.value }))}
-                placeholder="https://yourwebsite.com"
+                placeholder={t("admin.profile.websitePlaceholder")}
                 type="url"
               />
             </div>
@@ -3694,7 +3698,7 @@ function InstructorProfileTab() {
       {profile && (
         <Card className="bg-card/30 border-border/30">
           <CardContent className="pt-4">
-            <p className="text-sm text-foreground/60 mb-3">Your public profile is visible at:</p>
+            <p className="text-sm text-foreground/60 mb-3">{t("admin.profile.publicProfileText")}</p>
             <a href={`/promoters/${profile.id}`} target="_blank" rel="noopener noreferrer">
               <Button variant="outline" className="gap-2">
                 <ExternalLink className="h-4 w-4" />
@@ -3709,7 +3713,7 @@ function InstructorProfileTab() {
         <ImageCropperModal
           imageSrc={cropSrc}
           aspect={1}
-          label="Recortar foto de perfil (1:1)"
+          label={t("admin.profile.cropPhoto")}
           onCropComplete={handleCropComplete}
           onClose={() => setCropSrc(null)}
         />
