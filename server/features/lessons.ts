@@ -1,8 +1,10 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { lessons, lessonProgress, coursePurchases } from "../../drizzle/schema";
+import { lessons, lessonProgress, coursePurchases, courses, instructors } from "../../drizzle/schema";
 import { eq, and, asc } from "drizzle-orm";
+import { storageGet } from "../storage";
+import { getAllRoles } from "../../drizzle/schema";
 
 // ─── Lessons Router ───────────────────────────────────────────────────────────
 
@@ -184,5 +186,130 @@ export const lessonsRouter = router({
             });
 
             return { success: true };
+        }),
+
+    /**
+     * Get secure video URL for a lesson
+     * SECURITY: Only returns video URL if:
+     * - User has purchased the course, OR
+     * - Lesson is marked as preview (free), OR
+     * - User is the course instructor/admin
+     */
+    getSecureVideoUrl: protectedProcedure
+        .input(z.object({ lessonId: z.number() }))
+        .query(async ({ ctx, input }) => {
+            const db = await getDb();
+            if (!db) throw new Error("Database not available");
+
+            // Get lesson details
+            const [lesson] = await db
+                .select()
+                .from(lessons)
+                .where(eq(lessons.id, input.lessonId))
+                .limit(1);
+
+            if (!lesson) throw new Error("Lesson not found");
+            if (!lesson.videoUrl) throw new Error("No video available for this lesson");
+
+            // If it's a preview lesson, allow access
+            if (lesson.isPreview) {
+                console.log(`[Lessons] ✅ Preview lesson access granted to user ${ctx.user.id} for lesson ${input.lessonId}`);
+
+                // Extract fileKey from videoUrl if needed
+                let fileKey = lesson.videoUrl;
+                if (lesson.videoUrl.includes("//")) {
+                    const urlParts = lesson.videoUrl.split("/");
+                    const relevantParts = [];
+                    let foundCourses = false;
+                    for (const part of urlParts) {
+                        if (part === "courses" || foundCourses) {
+                            foundCourses = true;
+                            relevantParts.push(part);
+                        }
+                    }
+                    if (relevantParts.length > 0) {
+                        fileKey = relevantParts.join("/");
+                    }
+                }
+
+                const { url: signedUrl } = await storageGet(fileKey);
+                return {
+                    videoUrl: signedUrl,
+                    expiresIn: 3600,
+                };
+            }
+
+            // Check if user is admin
+            const isAdmin = getAllRoles(ctx.user as any).includes("admin");
+
+            // Check if user is the course instructor
+            const [course] = await db
+                .select()
+                .from(courses)
+                .where(eq(courses.id, lesson.courseId))
+                .limit(1);
+
+            if (!course) throw new Error("Course not found");
+
+            let isInstructor = false;
+            if (course.instructorId) {
+                const [instructor] = await db
+                    .select()
+                    .from(instructors)
+                    .where(eq(instructors.id, course.instructorId))
+                    .limit(1);
+                if (instructor && instructor.userId === ctx.user.id) {
+                    isInstructor = true;
+                }
+            }
+
+            // Check if user has purchased the course
+            let hasPurchased = false;
+            if (!isAdmin && !isInstructor) {
+                const [purchase] = await db
+                    .select()
+                    .from(coursePurchases)
+                    .where(
+                        and(
+                            eq(coursePurchases.userId, ctx.user.id),
+                            eq(coursePurchases.courseId, lesson.courseId)
+                        )
+                    )
+                    .limit(1);
+
+                hasPurchased = !!purchase;
+            }
+
+            // Grant access if admin, instructor, or purchased
+            if (!isAdmin && !isInstructor && !hasPurchased) {
+                throw new Error("You must purchase this course to access this lesson");
+            }
+
+            // Extract fileKey from videoUrl if needed
+            let fileKey = lesson.videoUrl;
+            if (lesson.videoUrl.includes("//")) {
+                const urlParts = lesson.videoUrl.split("/");
+                const relevantParts = [];
+                let foundCourses = false;
+                for (const part of urlParts) {
+                    if (part === "courses" || foundCourses) {
+                        foundCourses = true;
+                        relevantParts.push(part);
+                    }
+                }
+                if (relevantParts.length > 0) {
+                    fileKey = relevantParts.join("/");
+                }
+            }
+
+            // Generate signed download URL with expiry
+            const { url: signedUrl } = await storageGet(fileKey);
+
+            console.log(`[Lessons] ✅ Secure video access granted to user ${ctx.user.id} for lesson ${input.lessonId}`);
+
+            return {
+                videoUrl: signedUrl,
+                expiresIn: 3600, // 1 hour
+            };
         }),
 });

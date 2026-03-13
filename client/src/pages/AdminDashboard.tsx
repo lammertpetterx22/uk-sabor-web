@@ -17,6 +17,7 @@ import QRCodeDisplay from "@/components/QRCodeDisplay";
 import UpgradePlanDialog from "@/components/UpgradePlanDialog";
 import DashboardOverview from "@/components/admin/DashboardOverview";
 import QuickActions from "@/components/admin/QuickActions";
+import InstructorOverview from "@/components/instructor/InstructorOverview";
 
 export default function AdminDashboard() {
   const { user, isAuthenticated, loading } = useAuth();
@@ -26,7 +27,7 @@ export default function AdminDashboard() {
   const isPromoter = user?.role === "promoter";
   const isCreator = isInstructor || isPromoter; // instructors and promoters share creator access
   const canManageCourses = isAdmin || isInstructor; // courses: instructors and admins only
-  const [activeTab, setActiveTab] = useState(isAdmin ? "overview" : "events");
+  const [activeTab, setActiveTab] = useState("overview"); // All roles start at overview
 
   // Redirect unauthenticated users in an effect (not in render body)
   useEffect(() => {
@@ -105,16 +106,18 @@ export default function AdminDashboard() {
               <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
           ) : isInstructor ? (
-            // Instructors: Events + Classes + Courses + Profile
-            <TabsList className="grid w-full grid-cols-4 mb-8">
+            // Instructors: Overview + Events + Classes + Courses + Profile
+            <TabsList className="grid w-full grid-cols-5 mb-8">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="events">My Events</TabsTrigger>
               <TabsTrigger value="classes">My Classes</TabsTrigger>
               <TabsTrigger value="courses">My Courses</TabsTrigger>
               <TabsTrigger value="profile">My Profile</TabsTrigger>
             </TabsList>
           ) : (
-            // Promoters: Events + Classes + Profile (no courses)
-            <TabsList className="grid w-full grid-cols-3 mb-8">
+            // Promoters: Overview + Events + Classes + Profile (no courses)
+            <TabsList className="grid w-full grid-cols-4 mb-8">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="events">My Events</TabsTrigger>
               <TabsTrigger value="classes">My Classes</TabsTrigger>
               <TabsTrigger value="profile">My Profile</TabsTrigger>
@@ -126,6 +129,13 @@ export default function AdminDashboard() {
             <TabsContent value="overview" className="space-y-8">
               <DashboardOverview />
               <QuickActions />
+            </TabsContent>
+          )}
+
+          {/* OVERVIEW TAB - Instructor & Promoter */}
+          {isCreator && (
+            <TabsContent value="overview" className="space-y-8">
+              <InstructorOverview onTabChange={setActiveTab} />
             </TabsContent>
           )}
 

@@ -4,6 +4,7 @@ import { getDb } from "../db";
 import { courses, coursePurchases, instructors } from "../../drizzle/schema";
 import { getAllRoles } from "../../drizzle/schema";
 import { eq, desc, and } from "drizzle-orm";
+import { storageGet } from "../storage";
 
 // Uses getAllRoles() to support multi-role users
 function isAdminRole(user: { role: string; roles?: string | null }): boolean {
@@ -272,4 +273,88 @@ export const coursesRouter = router({
 
     return result;
   }),
+
+  /**
+   * Get secure video URL for a course
+   * SECURITY: Only returns video URL if user has purchased the course OR is the instructor/admin
+   */
+  getSecureVideoUrl: protectedProcedure
+    .input(z.object({ courseId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Get course details
+      const [course] = await db
+        .select()
+        .from(courses)
+        .where(eq(courses.id, input.courseId))
+        .limit(1);
+
+      if (!course) throw new Error("Course not found");
+      if (!course.videoUrl) throw new Error("No video available for this course");
+
+      // Check access permissions
+      const isAdmin = isAdminRole(ctx.user);
+
+      // Check if user is the instructor
+      let isInstructor = false;
+      const instructor = await getInstructorForUser(db, ctx.user.id);
+      if (instructor && course.instructorId === instructor.id) {
+        isInstructor = true;
+      }
+
+      // Check if user has purchased the course
+      let hasPurchased = false;
+      if (!isAdmin && !isInstructor) {
+        const [purchase] = await db
+          .select()
+          .from(coursePurchases)
+          .where(
+            and(
+              eq(coursePurchases.userId, ctx.user.id),
+              eq(coursePurchases.courseId, input.courseId)
+            )
+          )
+          .limit(1);
+
+        hasPurchased = !!purchase;
+      }
+
+      // Grant access if admin, instructor, or purchased
+      if (!isAdmin && !isInstructor && !hasPurchased) {
+        throw new Error("You must purchase this course to access the video");
+      }
+
+      // If videoUrl is already a public CDN URL, extract the fileKey
+      // Otherwise, use videoUrl as fileKey directly
+      let fileKey = course.videoUrl;
+
+      // If it's a full URL from our CDN, we need to extract the path
+      if (course.videoUrl.includes("//")) {
+        // Extract path after domain (e.g., "courses/videos/123.mp4")
+        const urlParts = course.videoUrl.split("/");
+        const relevantParts = [];
+        let foundCourses = false;
+        for (const part of urlParts) {
+          if (part === "courses" || foundCourses) {
+            foundCourses = true;
+            relevantParts.push(part);
+          }
+        }
+        if (relevantParts.length > 0) {
+          fileKey = relevantParts.join("/");
+        }
+      }
+
+      // Generate signed download URL with expiry
+      const { url: signedUrl } = await storageGet(fileKey);
+
+      console.log(`[Courses] ✅ Secure video access granted to user ${ctx.user.id} for course ${input.courseId}`);
+
+      return {
+        videoUrl: signedUrl,
+        expiresIn: 3600, // 1 hour
+      };
+    }),
 });
