@@ -35,6 +35,7 @@ export default function ProtectedVideoPlayer({
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [detectedAspectRatio, setDetectedAspectRatio] = useState<string>("16/9");
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -196,14 +197,54 @@ export default function ProtectedVideoPlayer({
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // If it's a Bunny.net iframe, use simplified rendering
+  // Auto-detect aspect ratio for Bunny.net videos
+  useEffect(() => {
+    if (!isBunnyIframe) return;
+
+    const handleMetadata = (event: MessageEvent) => {
+      if (!event.origin.includes("mediadelivery.net")) return;
+      const data = event.data;
+
+      if (data.event === "loadedmetadata") {
+        const videoWidth = data.videoWidth || 0;
+        const videoHeight = data.videoHeight || 0;
+
+        if (videoWidth > 0 && videoHeight > 0) {
+          const ratio = videoWidth / videoHeight;
+
+          if (ratio > 1.5) {
+            setDetectedAspectRatio("16/9");
+          } else if (ratio < 0.8) {
+            setDetectedAspectRatio("9/16");
+          } else {
+            setDetectedAspectRatio("1/1");
+          }
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMetadata);
+    return () => window.removeEventListener("message", handleMetadata);
+  }, [isBunnyIframe]);
+
+  // If it's a Bunny.net iframe, use simplified rendering with responsive aspect ratio
   if (isBunnyIframe) {
     return (
       <div
         ref={containerRef}
-        className="relative bg-black aspect-video group select-none"
+        className="relative w-full max-w-full mx-auto bg-black group select-none rounded-lg overflow-hidden"
         onContextMenu={blockCtx}
-        style={{ userSelect: "none", WebkitUserSelect: "none" }}
+        style={{
+          userSelect: "none",
+          WebkitUserSelect: "none",
+          aspectRatio: detectedAspectRatio,
+          maxWidth:
+            detectedAspectRatio === "9/16"
+              ? "500px"
+              : detectedAspectRatio === "1/1"
+              ? "600px"
+              : "100%",
+        }}
       >
         {/* Lock overlay */}
         {locked && (
@@ -243,15 +284,15 @@ export default function ProtectedVideoPlayer({
     );
   }
 
-  // Regular video player for non-Bunny videos
+  // Regular video player for non-Bunny videos (always 16:9)
   return (
     <div
       ref={containerRef}
-      className="relative bg-black aspect-video group select-none"
+      className="relative w-full max-w-full mx-auto bg-black group select-none rounded-lg overflow-hidden"
       onContextMenu={blockCtx}
       onMouseMove={resetControlsTimer}
       onTouchStart={resetControlsTimer}
-      style={{ userSelect: "none", WebkitUserSelect: "none" }}
+      style={{ userSelect: "none", WebkitUserSelect: "none", aspectRatio: "16/9" }}
     >
       {/* Invisible anti-download overlay */}
       <div

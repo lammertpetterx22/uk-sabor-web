@@ -149,14 +149,58 @@ export default function BunnyVideoPlayer({
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
+  // ── Auto-detect aspect ratio from video metadata ─────────────────────────────
+  const [detectedAspectRatio, setDetectedAspectRatio] = useState<string>("16/9");
+
+  useEffect(() => {
+    const handleMetadata = (event: MessageEvent) => {
+      if (!event.origin.includes("mediadelivery.net")) return;
+      const data = event.data;
+
+      if (data.event === "loadedmetadata") {
+        const videoWidth = data.videoWidth || 0;
+        const videoHeight = data.videoHeight || 0;
+
+        if (videoWidth > 0 && videoHeight > 0) {
+          const ratio = videoWidth / videoHeight;
+
+          if (ratio > 1.5) {
+            setDetectedAspectRatio("16/9");
+            console.log("[BunnyPlayer] Detected: Horizontal (16:9)");
+          } else if (ratio < 0.8) {
+            setDetectedAspectRatio("9/16");
+            console.log("[BunnyPlayer] Detected: Vertical (9:16)");
+          } else {
+            setDetectedAspectRatio("1/1");
+            console.log("[BunnyPlayer] Detected: Square (1:1)");
+          }
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMetadata);
+    return () => window.removeEventListener("message", handleMetadata);
+  }, []);
+
   return (
-    <div className="relative bg-black aspect-video group select-none rounded-lg overflow-hidden">
+    <div
+      className="relative w-full max-w-full mx-auto bg-black rounded-lg overflow-hidden shadow-2xl group select-none"
+      style={{
+        aspectRatio: detectedAspectRatio,
+        maxWidth:
+          detectedAspectRatio === "9/16"
+            ? "500px" // Vertical: mobile-first
+            : detectedAspectRatio === "1/1"
+            ? "600px" // Square: medium
+            : "100%", // Horizontal: full width
+      }}
+    >
       {/* Lock overlay */}
       {locked && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md">
-          <div className="rounded-2xl border border-white/10 bg-white/5 px-8 py-6 text-center max-w-sm">
-            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#FA3698]/20 mx-auto">
-              <svg className="h-7 w-7 text-[#FA3698]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md">
+          <div className="rounded-2xl border border-white/10 bg-white/5 px-8 py-6 text-center max-w-sm mx-4">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#FA3698]/20 mx-auto">
+              <svg className="h-8 w-8 text-[#FA3698]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -165,8 +209,8 @@ export default function BunnyVideoPlayer({
                 />
               </svg>
             </div>
-            <p className="font-semibold text-white text-lg">Lección bloqueada</p>
-            <p className="mt-2 text-sm text-white/70">
+            <p className="font-semibold text-white text-lg mb-2">Lección bloqueada</p>
+            <p className="text-sm text-white/70">
               Completa la lección anterior para desbloquear este contenido
             </p>
           </div>
@@ -175,14 +219,14 @@ export default function BunnyVideoPlayer({
 
       {/* Watermark */}
       {title && !locked && (
-        <div className="absolute top-3 right-3 z-20 text-white/30 text-xs font-medium select-none pointer-events-none">
+        <div className="absolute top-3 right-3 z-20 text-white/30 text-xs font-medium select-none pointer-events-none px-2 py-1 bg-black/30 rounded">
           Con Sabor · {title}
         </div>
       )}
 
       {/* Loading state */}
       {isLoading && !locked && (
-        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm">
           <Loader2 className="h-12 w-12 text-[#FA3698] animate-spin" />
           <p className="mt-3 text-white/80 text-sm">Cargando video...</p>
         </div>
@@ -190,11 +234,11 @@ export default function BunnyVideoPlayer({
 
       {/* Error state */}
       {error && !locked && (
-        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/90">
-          <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-8 py-6 text-center max-w-sm">
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/95">
+          <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-8 py-6 text-center max-w-sm mx-4">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-3" />
-            <p className="font-semibold text-white">Error al cargar el video</p>
-            <p className="mt-2 text-sm text-white/70">{error}</p>
+            <p className="font-semibold text-white mb-2">Error al cargar el video</p>
+            <p className="text-sm text-white/70">{error}</p>
           </div>
         </div>
       )}
@@ -205,7 +249,7 @@ export default function BunnyVideoPlayer({
           ref={iframeRef}
           src={fullEmbedUrl}
           title={title || "Video"}
-          className="w-full h-full border-0"
+          className="absolute top-0 left-0 w-full h-full border-0"
           allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
           allowFullScreen
           onLoad={handleIframeLoad}
@@ -227,8 +271,8 @@ export default function BunnyVideoPlayer({
       {/* Fallback play button (shown when paused) */}
       {!isPlaying && !locked && !isLoading && !error && (
         <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-          <div className="w-20 h-20 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center border-2 border-white/30 shadow-lg">
-            <Play size={32} className="text-white ml-1" fill="white" />
+          <div className="w-20 h-20 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center border-2 border-white/40 shadow-2xl">
+            <Play size={36} className="text-white ml-1" fill="white" fillOpacity={0.9} />
           </div>
         </div>
       )}
