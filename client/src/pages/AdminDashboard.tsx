@@ -32,6 +32,16 @@ export default function AdminDashboard() {
   const canManageCourses = isAdmin || isInstructor; // courses: instructors and admins only
   const [activeTab, setActiveTab] = useState("overview"); // All roles start at overview
 
+  // Fetch courses for LessonsManager (only if user can manage courses)
+  const coursesQuery = canManageCourses && isAdmin
+    ? trpc.courses.listAll.useQuery({ limit: 100, offset: 0 })
+    : canManageCourses
+    ? trpc.admin.listMyCourses.useQuery()
+    : { data: undefined, isLoading: false };
+
+  const courses = coursesQuery.data;
+  const isLoadingCourses = coursesQuery.isLoading || false;
+
   // Redirect unauthenticated users in an effect (not in render body)
   useEffect(() => {
     if (loading) return;
@@ -161,7 +171,7 @@ export default function AdminDashboard() {
           {/* LESSONS TAB - Admin and Instructor only */}
           {canManageCourses && (
             <TabsContent value="lessons">
-              <LessonsManager courses={courses || []} isLoadingCourses={isLoading} />
+              <LessonsManager courses={courses || []} isLoadingCourses={isLoadingCourses} />
             </TabsContent>
           )}
 
