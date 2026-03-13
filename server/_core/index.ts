@@ -108,27 +108,27 @@ async function startServer() {
   app.get("/api/debug/lessons/:courseId", async (req, res) => {
     try {
       const { getDb } = await import("../db");
-      const { sql } = await import("drizzle-orm");
+      const { eq, asc } = await import("drizzle-orm");
+      const { lessons } = await import("../../drizzle/schema");
       const db = await getDb();
       if (!db) return res.json({ error: "DB not available" });
 
       const courseId = parseInt(req.params.courseId);
 
-      // Get lessons for this course
-      const result = await db.execute(sql.raw(`
-        SELECT id, courseId, title, bunnyVideoId, bunnyLibraryId, position, isPreview
-        FROM lessons
-        WHERE "courseId" = ${courseId}
-        ORDER BY position ASC
-      `));
+      // Get lessons for this course using Drizzle ORM
+      const allLessons = await db
+        .select()
+        .from(lessons)
+        .where(eq(lessons.courseId, courseId))
+        .orderBy(asc(lessons.position));
 
       res.json({
         courseId,
-        lessonsCount: result.rows?.length || 0,
-        lessons: result.rows || [],
+        lessonsCount: allLessons.length,
+        lessons: allLessons,
       });
     } catch (e: any) {
-      res.json({ error: e.message });
+      res.json({ error: e.message, stack: e.stack });
     }
   });
 
