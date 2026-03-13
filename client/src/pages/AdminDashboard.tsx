@@ -868,6 +868,7 @@ function EventsTab() {
 
 // ===== COURSES TAB =====
 function CoursesTab() {
+  const { t } = useTranslations();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const { data: courses, isLoading, refetch } = isAdmin
@@ -1652,6 +1653,7 @@ function CoursesTab() {
 
 // ===== CLASSES TAB =====
 function ClassesTab() {
+  const { t } = useTranslations();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const { data: classes, isLoading, refetch } = isAdmin
@@ -2439,6 +2441,7 @@ function ClassesTab() {
 
 // ===== CO-INSTRUCTOR MANAGER COMPONENT =====
 function CoInstructorManager({ classId, instructors }: { classId: number; instructors: any[] }) {
+  const { t } = useTranslations();
   const utils = trpc.useUtils();
   const { data: coInstructors, isLoading } = trpc.classes.getCoInstructors.useQuery(classId);
   const addMutation = trpc.classes.addCoInstructor.useMutation({
@@ -2543,6 +2546,7 @@ function CoInstructorManager({ classId, instructors }: { classId: number; instru
 
 // ===== INSTRUCTORS TAB =====
 function InstructorsTab() {
+  const { t } = useTranslations();
   const { data: instructors, isLoading, refetch } = trpc.instructors.list.useQuery();
   const uploadFileMutation = trpc.uploads.uploadFile.useMutation();
   const createMutation = trpc.instructors.create.useMutation({
@@ -2903,6 +2907,7 @@ function InstructorsTab() {
 
 // ===== USERS/CRM TAB =====
 function UsersTab() {
+  const { t } = useTranslations();
   const { user: currentUser } = useAuth();
   const { data: usersList, isLoading, refetch } = trpc.admin.listUsers.useQuery();
   const [searchTerm, setSearchTerm] = useState("");
@@ -3115,6 +3120,7 @@ function UsersTab() {
 
 // ===== ORDERS TAB =====
 function OrdersTab() {
+  const { t } = useTranslations();
   const { data: allOrders, isLoading } = trpc.admin.getAllOrders.useQuery();
   const [search, setSearch] = useState("");
 
@@ -3250,6 +3256,7 @@ function OrdersTab() {
 
 // ===== SETTINGS TAB =====
 function SettingsTab() {
+  const { t } = useTranslations();
   const [syncResult, setSyncResult] = useState<null | {
     results: Array<{
       plan: string;
