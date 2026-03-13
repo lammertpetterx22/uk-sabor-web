@@ -75,14 +75,14 @@ async function startServer() {
       let results = [];
 
       // Check current database and schema
-      const currentDbResult = await db.execute(sql.raw(`SELECT current_database(), current_schema()`));
+      const currentDbResult: any = await db.execute(sql.raw(`SELECT current_database(), current_schema()`));
       results.push({
         step: "Current database and schema",
-        current: currentDbResult.rows?.[0] || null
+        current: currentDbResult?.[0] || null
       });
 
       // List ALL tables regardless of schema
-      const allTablesAnySchemaResult = await db.execute(sql.raw(`
+      const allTablesAnySchemaResult: any = await db.execute(sql.raw(`
         SELECT table_schema, table_name
         FROM information_schema.tables
         WHERE table_type = 'BASE TABLE'
@@ -91,11 +91,11 @@ async function startServer() {
 
       results.push({
         step: "ALL tables in database (any schema)",
-        tables: allTablesAnySchemaResult.rows || []
+        tables: allTablesAnySchemaResult || []
       });
 
       // Check if lessons table exists
-      const tableExistsResult = await db.execute(sql.raw(`
+      const tableExistsResult: any = await db.execute(sql.raw(`
         SELECT EXISTS (
           SELECT FROM information_schema.tables
           WHERE table_name = 'lessons'
@@ -104,11 +104,11 @@ async function startServer() {
 
       results.push({
         step: "Does lessons table exist (any schema)?",
-        exists: tableExistsResult.rows?.[0] || null
+        exists: tableExistsResult?.[0] || null
       });
 
       // List all tables in public schema
-      const allTablesResult = await db.execute(sql.raw(`
+      const allTablesResult: any = await db.execute(sql.raw(`
         SELECT table_name
         FROM information_schema.tables
         WHERE table_schema = 'public'
@@ -117,11 +117,11 @@ async function startServer() {
 
       results.push({
         step: "All tables in public schema",
-        tables: allTablesResult.rows || []
+        tables: allTablesResult || []
       });
 
       // Check what columns currently exist in lessons table
-      const checkColumnsResult = await db.execute(sql.raw(`
+      const checkColumnsResult: any = await db.execute(sql.raw(`
         SELECT column_name, data_type
         FROM information_schema.columns
         WHERE table_schema = 'public' AND table_name = 'lessons'
@@ -130,7 +130,7 @@ async function startServer() {
 
       results.push({
         step: "Current lessons table columns",
-        columns: checkColumnsResult.rows || []
+        columns: checkColumnsResult || []
       });
 
       // Now run migrations
@@ -154,7 +154,7 @@ async function startServer() {
       }
 
       // Check columns again after migration
-      const checkColumnsAfterResult = await db.execute(sql.raw(`
+      const checkColumnsAfterResult: any = await db.execute(sql.raw(`
         SELECT column_name, data_type
         FROM information_schema.columns
         WHERE table_schema = 'public' AND table_name = 'lessons'
@@ -163,7 +163,7 @@ async function startServer() {
 
       results.push({
         step: "Lessons table columns AFTER migration",
-        columns: checkColumnsAfterResult.rows || []
+        columns: checkColumnsAfterResult || []
       });
 
       res.json({
