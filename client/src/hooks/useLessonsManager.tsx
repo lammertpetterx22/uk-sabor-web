@@ -125,11 +125,7 @@ export function useLessonsManager(courseId: number | null) {
         videoFile: file,
       }));
 
-      // Clean success message without technical details
-      toast.success("✅ Video subido exitosamente", {
-        description: "Ahora puedes crear la lección",
-        duration: 3000,
-      });
+      // Clean success - UI handles the display
     } catch (err: any) {
       toast.error("Error al subir el video", {
         description: "Por favor, intenta de nuevo",
