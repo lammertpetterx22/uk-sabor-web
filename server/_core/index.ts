@@ -72,34 +72,64 @@ async function startServer() {
       const db = await getDb();
       if (!db) return res.send("DB not available");
 
+      let results = [];
+
+      // First, check what columns currently exist in lessons table
+      const checkColumnsResult = await db.execute(sql.raw(`
+        SELECT column_name, data_type
+        FROM information_schema.columns
+        WHERE table_name = 'lessons'
+        ORDER BY ordinal_position
+      `));
+
+      results.push({
+        step: "Current lessons table columns",
+        columns: checkColumnsResult.rows || []
+      });
+
+      // Now run migrations
       const queries = [
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS roles TEXT",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS stripeCustomerId VARCHAR(255)",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS stripeAccountId VARCHAR(255)",
-        // Add Bunny.net columns to lessons table
-        "ALTER TABLE lessons ADD COLUMN IF NOT EXISTS bunnyVideoId VARCHAR(255)",
-        "ALTER TABLE lessons ADD COLUMN IF NOT EXISTS bunnyLibraryId VARCHAR(255)",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS \"stripeCustomerId\" VARCHAR(255)",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS \"stripeAccountId\" VARCHAR(255)",
+        // Add Bunny.net columns to lessons table with proper quoting
+        "ALTER TABLE lessons ADD COLUMN IF NOT EXISTS \"bunnyVideoId\" VARCHAR(255)",
+        "ALTER TABLE lessons ADD COLUMN IF NOT EXISTS \"bunnyLibraryId\" VARCHAR(255)",
       ];
 
-      let results = [];
       for (const q of queries) {
         try {
           await db.execute(sql.raw(q));
-          results.push(`✅ Success: ${q}`);
+          results.push({ success: true, query: q });
         } catch (e: any) {
           console.error("MIGRATION ERROR details:", e);
-          results.push(`⚠️ Skipped/Failed: ${q} - ${e.message}`);
+          results.push({ success: false, query: q, error: e.message });
         }
       }
+
+      // Check columns again after migration
+      const checkColumnsAfterResult = await db.execute(sql.raw(`
+        SELECT column_name, data_type
+        FROM information_schema.columns
+        WHERE table_name = 'lessons'
+        ORDER BY ordinal_position
+      `));
+
+      results.push({
+        step: "Lessons table columns AFTER migration",
+        columns: checkColumnsAfterResult.rows || []
+      });
+
       res.json({
         success: true,
         results,
-        message: "Migration complete! The lessons table now has bunnyVideoId and bunnyLibraryId columns."
+        message: "Migration complete! Check the results to see if bunnyVideoId and bunnyLibraryId were added."
       });
     } catch (e: any) {
       res.json({
         success: false,
-        error: e.message
+        error: e.message,
+        stack: e.stack
       });
     }
   });
