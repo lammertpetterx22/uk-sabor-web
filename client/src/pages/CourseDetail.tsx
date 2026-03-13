@@ -167,6 +167,16 @@ export default function CourseDetail() {
             {activeLesson && (activeLesson.videoUrl || activeLesson.bunnyVideoId) ? (
               <Card className="overflow-hidden border-border/50">
                 <div className="relative">
+                  {/* DEBUG: Show what we have */}
+                  {console.log("[CourseDetail] Rendering video player:", {
+                    hasBunnyVideoId: !!activeLesson.bunnyVideoId,
+                    hasBunnyLibraryId: !!activeLesson.bunnyLibraryId,
+                    hasVideoUrl: !!activeLesson.videoUrl,
+                    bunnyVideoId: activeLesson.bunnyVideoId,
+                    bunnyLibraryId: activeLesson.bunnyLibraryId,
+                    videoUrl: activeLesson.videoUrl,
+                    locked: activeLocked,
+                  })}
                   {/* Use BunnyVideoPlayer if bunnyVideoId is available, otherwise ProtectedVideoPlayer */}
                   {activeLesson.bunnyVideoId && activeLesson.bunnyLibraryId ? (
                     <BunnyVideoPlayer
