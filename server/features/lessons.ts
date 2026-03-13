@@ -3,9 +3,8 @@ import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { lessons, lessonProgress, coursePurchases, courses, instructors } from "../../drizzle/schema";
 import { eq, and, asc } from "drizzle-orm";
-import { storageGet } from "../storage";
 import { getAllRoles } from "../../drizzle/schema";
-import { bunnyGenerateSignedUrl, bunnyGetEmbedUrl, getBunnyLibraryId } from "../bunny";
+import { bunnyGenerateSignedUrl, getBunnyLibraryId } from "../bunny";
 
 // ─── Lessons Router ───────────────────────────────────────────────────────────
 
@@ -27,11 +26,10 @@ export const lessonsRouter = router({
                 .where(eq(lessons.courseId, courseId))
                 .orderBy(asc(lessons.position));
 
-            // If not authenticated → only preview lessons (no videoUrl exposed)
+            // If not authenticated → only preview lessons (no bunnyVideoId exposed)
             if (!ctx.user) {
                 return allLessons.map(l => ({
                     ...l,
-                    videoUrl: l.isPreview ? l.videoUrl : null,
                     bunnyVideoId: l.isPreview ? l.bunnyVideoId : null,
                     bunnyLibraryId: l.isPreview ? l.bunnyLibraryId : null,
                     locked: !l.isPreview,
@@ -49,7 +47,6 @@ export const lessonsRouter = router({
 
             return allLessons.map(l => ({
                 ...l,
-                videoUrl: hasPurchased || l.isPreview ? l.videoUrl : null,
                 bunnyVideoId: hasPurchased || l.isPreview ? l.bunnyVideoId : null,
                 bunnyLibraryId: hasPurchased || l.isPreview ? l.bunnyLibraryId : null,
                 locked: !hasPurchased && !l.isPreview,
@@ -167,9 +164,8 @@ export const lessonsRouter = router({
                 courseId: z.number().positive(),
                 title: z.string().min(1),
                 description: z.string().optional(),
-                videoUrl: z.string().optional(), // Legacy S3 URL (deprecated)
-                bunnyVideoId: z.string().optional(), // Bunny.net video GUID
-                bunnyLibraryId: z.string().optional(), // Bunny.net library ID
+                bunnyVideoId: z.string(), // REQUIRED: Bunny.net video GUID
+                bunnyLibraryId: z.string(), // REQUIRED: Bunny.net library ID
                 position: z.number().positive(),
                 durationSeconds: z.number().optional(),
                 isPreview: z.boolean().optional().default(false),
@@ -186,7 +182,7 @@ export const lessonsRouter = router({
                 courseId: input.courseId,
                 title: input.title,
                 description: input.description,
-                videoUrl: input.videoUrl,
+                videoUrl: null, // Deprecated field, always null
                 bunnyVideoId: input.bunnyVideoId,
                 bunnyLibraryId: input.bunnyLibraryId,
                 position: input.position,
@@ -204,7 +200,7 @@ export const lessonsRouter = router({
      * - Lesson is marked as preview (free), OR
      * - User is the course instructor/admin
      *
-     * Supports both Bunny.net (preferred) and legacy S3 URLs.
+     * Uses Bunny.net signed URLs exclusively (AWS S3 removed).
      */
     getSecureVideoUrl: protectedProcedure
         .input(z.object({ lessonId: z.number() }))
@@ -221,56 +217,29 @@ export const lessonsRouter = router({
 
             if (!lesson) throw new Error("Lesson not found");
 
-            // Check if video exists (Bunny.net or legacy S3)
-            const hasBunnyVideo = !!lesson.bunnyVideoId && !!lesson.bunnyLibraryId;
-            const hasLegacyVideo = !!lesson.videoUrl;
-
-            if (!hasBunnyVideo && !hasLegacyVideo) {
-                throw new Error("No video available for this lesson");
+            // Check if video exists (must have Bunny.net ID)
+            if (!lesson.bunnyVideoId || !lesson.bunnyLibraryId) {
+                throw new Error(
+                    "No video available for this lesson. Please upload a video using Bunny.net Stream API."
+                );
             }
 
             // If it's a preview lesson, allow access
             if (lesson.isPreview) {
                 console.log(`[Lessons] ✅ Preview lesson access granted to user ${ctx.user.id} for lesson ${input.lessonId}`);
 
-                // Prefer Bunny.net over legacy S3
-                if (hasBunnyVideo) {
-                    const signedUrl = bunnyGenerateSignedUrl(
-                        lesson.bunnyVideoId!,
-                        lesson.bunnyLibraryId!,
-                        86400 // 24 hours
-                    );
-                    return {
-                        videoUrl: signedUrl,
-                        bunnyVideoId: lesson.bunnyVideoId,
-                        bunnyLibraryId: lesson.bunnyLibraryId,
-                        isBunnyVideo: true,
-                        expiresIn: 86400,
-                    };
-                }
+                const signedUrl = bunnyGenerateSignedUrl(
+                    lesson.bunnyVideoId,
+                    lesson.bunnyLibraryId,
+                    86400 // 24 hours
+                );
 
-                // Fallback to legacy S3
-                let fileKey = lesson.videoUrl!;
-                if (lesson.videoUrl!.includes("//")) {
-                    const urlParts = lesson.videoUrl!.split("/");
-                    const relevantParts = [];
-                    let foundCourses = false;
-                    for (const part of urlParts) {
-                        if (part === "courses" || foundCourses) {
-                            foundCourses = true;
-                            relevantParts.push(part);
-                        }
-                    }
-                    if (relevantParts.length > 0) {
-                        fileKey = relevantParts.join("/");
-                    }
-                }
-
-                const { url: signedUrl } = await storageGet(fileKey);
                 return {
                     videoUrl: signedUrl,
-                    isBunnyVideo: false,
-                    expiresIn: 3600,
+                    bunnyVideoId: lesson.bunnyVideoId,
+                    bunnyLibraryId: lesson.bunnyLibraryId,
+                    isBunnyVideo: true,
+                    expiresIn: 86400,
                 };
             }
 
@@ -322,46 +291,19 @@ export const lessonsRouter = router({
 
             console.log(`[Lessons] ✅ Secure video access granted to user ${ctx.user.id} for lesson ${input.lessonId}`);
 
-            // Prefer Bunny.net over legacy S3
-            if (hasBunnyVideo) {
-                const signedUrl = bunnyGenerateSignedUrl(
-                    lesson.bunnyVideoId!,
-                    lesson.bunnyLibraryId!,
-                    86400 // 24 hours
-                );
-                return {
-                    videoUrl: signedUrl,
-                    bunnyVideoId: lesson.bunnyVideoId,
-                    bunnyLibraryId: lesson.bunnyLibraryId,
-                    isBunnyVideo: true,
-                    expiresIn: 86400,
-                };
-            }
-
-            // Fallback to legacy S3
-            let fileKey = lesson.videoUrl!;
-            if (lesson.videoUrl!.includes("//")) {
-                const urlParts = lesson.videoUrl!.split("/");
-                const relevantParts = [];
-                let foundCourses = false;
-                for (const part of urlParts) {
-                    if (part === "courses" || foundCourses) {
-                        foundCourses = true;
-                        relevantParts.push(part);
-                    }
-                }
-                if (relevantParts.length > 0) {
-                    fileKey = relevantParts.join("/");
-                }
-            }
-
-            // Generate signed download URL with expiry
-            const { url: signedUrl } = await storageGet(fileKey);
+            // Generate Bunny.net signed URL
+            const signedUrl = bunnyGenerateSignedUrl(
+                lesson.bunnyVideoId,
+                lesson.bunnyLibraryId,
+                86400 // 24 hours
+            );
 
             return {
                 videoUrl: signedUrl,
-                isBunnyVideo: false,
-                expiresIn: 3600, // 1 hour
+                bunnyVideoId: lesson.bunnyVideoId,
+                bunnyLibraryId: lesson.bunnyLibraryId,
+                isBunnyVideo: true,
+                expiresIn: 86400,
             };
         }),
 });

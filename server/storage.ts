@@ -1,60 +1,40 @@
 // Storage system for UK Sabor Platform
-// Uses AWS S3 for images and static files
-// NOTE: Videos now use Bunny.net Stream (see server/bunny.ts)
+// Uses Bunny.net Stream for ALL video content
+// This file is kept for backward compatibility with legacy image references
 
-import { s3Upload, s3GetUrl } from './s3';
-
-// Detect which storage backend to use
-function isS3Configured(): boolean {
-  return !!(
-    process.env.AWS_ACCESS_KEY_ID &&
-    process.env.AWS_SECRET_ACCESS_KEY &&
-    process.env.S3_BUCKET_NAME
-  );
-}
-
-function normalizeKey(relKey: string): string {
-  return relKey.replace(/^\/+/, "");
-}
+import { bunnyUploadVideo } from './bunny';
 
 /**
- * Upload file to S3 storage.
- * ⚠️ For videos, use Bunny.net instead (see server/bunny.ts and server/features/uploads.ts)
+ * @deprecated Use Bunny.net directly for all new uploads
+ * This function is kept only for legacy image compatibility
+ *
+ * For videos: Use trpc.uploads.uploadVideoToBunny
+ * For images: Upload directly to Bunny.net or use a CDN
  */
 export async function storagePut(
   relKey: string,
   data: Buffer | Uint8Array | string,
   contentType = "application/octet-stream"
 ): Promise<{ key: string; url: string }> {
-  // ✅ Use AWS S3 if configured
-  if (isS3Configured()) {
-    console.log(`[Storage] Using AWS S3 for upload: ${relKey}`);
-    return await s3Upload(relKey, data, contentType);
-  }
+  console.warn(`[Storage] DEPRECATED: storagePut() called with ${relKey}`);
+  console.warn(`[Storage] Please migrate to Bunny.net API directly`);
 
-  // If S3 is not configured, throw an error
   throw new Error(
-    "AWS S3 not configured. Set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and S3_BUCKET_NAME in .env"
+    "AWS S3 and Forge storage have been removed. Use Bunny.net Stream API for video uploads. " +
+    "Call trpc.uploads.uploadVideoToBunny instead."
   );
 }
 
 /**
- * Get public URL for a file in S3 storage.
- * ⚠️ For videos, use Bunny.net instead (see server/bunny.ts)
+ * @deprecated Use Bunny.net signed URLs for video playback
+ * This function is kept only for legacy compatibility
  */
 export async function storageGet(relKey: string): Promise<{ key: string; url: string; }> {
-  const key = normalizeKey(relKey);
+  console.warn(`[Storage] DEPRECATED: storageGet() called with ${relKey}`);
+  console.warn(`[Storage] Please use Bunny.net signed URLs via trpc.uploads.getBunnySignedUrl`);
 
-  // ✅ Use AWS S3 if configured
-  if (isS3Configured()) {
-    return {
-      key,
-      url: s3GetUrl(key),
-    };
-  }
-
-  // If S3 is not configured, throw an error
   throw new Error(
-    "AWS S3 not configured. Set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and S3_BUCKET_NAME in .env"
+    "AWS S3 and Forge storage have been removed. Use Bunny.net Stream API for videos. " +
+    "Call trpc.uploads.getBunnySignedUrl to get secure video URLs."
   );
 }

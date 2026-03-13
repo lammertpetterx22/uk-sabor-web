@@ -139,6 +139,7 @@ export async function bunnyUploadVideoTUS(
   const uploadStartTime = Date.now();
 
   // Use TUS protocol headers for resumable uploads
+  // Convert Buffer to Uint8Array for fetch API compatibility
   const response = await fetch(uploadUrl, {
     method: "PUT",
     headers: {
@@ -146,7 +147,7 @@ export async function bunnyUploadVideoTUS(
       "Content-Type": "application/octet-stream",
       "Tus-Resumable": "1.0.0", // Enable TUS protocol
     },
-    body: videoBuffer,
+    body: new Uint8Array(videoBuffer),
   });
 
   const uploadTime = ((Date.now() - uploadStartTime) / 1000).toFixed(2);
