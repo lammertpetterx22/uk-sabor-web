@@ -577,7 +577,7 @@ function EventsTab() {
             <p className="text-sm font-medium text-foreground/80 mb-3">Payment Method</p>
             <Select value={formData.paymentMethod} onValueChange={(val: any) => setFormData({ ...formData, paymentMethod: val })}>
               <SelectTrigger>
-                <SelectValue placeholder="t("admin.events.selectPaymentMethod")" />
+                <SelectValue placeholder={t("admin.events.selectPaymentMethod")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="online">{t("admin.events.paymentOnline")}</SelectItem>
@@ -831,7 +831,7 @@ function EventsTab() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-sm font-medium">{t("admin.events.emailContent")}</label>
-                    <Button variant="ghost" size="sm" onClick={() => setEmailPreview(!emailPreview)} className="text-xs h-6"><Eye className="h-3 w-3 mr-1" />{{emailPreview ? t("common.edit") : t("admin.events.preview")}}</Button>
+                    <Button variant="ghost" size="sm" onClick={() => setEmailPreview(!emailPreview)} className="text-xs h-6"><Eye className="h-3 w-3 mr-1" />{emailPreview ? t("common.edit") : t("admin.events.preview")}</Button>
                   </div>
                   {emailPreview ? (
                     <div className="border border-border/50 rounded-lg overflow-hidden h-56"><iframe srcDoc={emailBody} className="w-full h-full" sandbox="allow-same-origin" title={t("admin.events.preview") || "Preview"} /></div>
@@ -849,7 +849,7 @@ function EventsTab() {
                 className="btn-vibrant gap-2"
               >
                 {(createCampaignMutation.isPending || sendCampaignMutation.isPending) ? <Loader2 className="h-4 w-4 animate-spin" /> : emailSendNow ? <Send className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
-                {emailSendNow ? {emailSendNow ? t("admin.events.sendNow") : t("admin.events.schedule")}}
+                {emailSendNow ? t("admin.events.sendNow") : t("admin.events.schedule")}
               </Button>
             </div>
           </DialogContent>
@@ -1250,7 +1250,7 @@ function CoursesTab() {
       )}
       <Card>
         <CardHeader>
-          <CardTitle>{editingId ? {editingId ? t("admin.courses.editCourse") : t("admin.courses.createCourse")}}</CardTitle>
+          <CardTitle>{editingId ? t("admin.courses.editCourse") : t("admin.courses.createCourse")}</CardTitle>
           <CardDescription>Add or edit dance courses with video</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -1284,7 +1284,7 @@ function CoursesTab() {
             />
             <Select value={formData.level} onValueChange={(val: any) => setFormData({ ...formData, level: val })}>
               <SelectTrigger>
-                <SelectValue placeholder=t("admin.courses.selectLevel") />
+                <SelectValue placeholder={t("admin.courses.selectLevel")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="beginner">Beginner</SelectItem>
@@ -1296,7 +1296,7 @@ function CoursesTab() {
             {isAdmin ? (
               <Select value={formData.instructorId} onValueChange={(val) => setFormData({ ...formData, instructorId: val })}>
                 <SelectTrigger>
-                  <SelectValue placeholder=t("admin.courses.selectInstructor") />
+                  <SelectValue placeholder={t("admin.courses.selectInstructor")} />
                 </SelectTrigger>
                 <SelectContent>
                   {instructors?.map((instructor) => (
@@ -1445,12 +1445,12 @@ function CoursesTab() {
               {createMutation.isPending || updateMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {editingId ? {editingId ? t("admin.buttons.updating") : t("admin.buttons.creating")}}
+                  {editingId ? t("admin.buttons.updating") : t("admin.buttons.creating")}
                 </>
               ) : (
                 <>
                   <Plus className="mr-2 h-4 w-4" />
-                  {editingId ? {editingId ? t("admin.courses.updateCourse") : t("admin.courses.createCourseButton")}}
+                  {editingId ? t("admin.courses.updateCourse") : t("admin.courses.createCourseButton")}
                 </>
               )}
             </Button>
@@ -1464,13 +1464,13 @@ function CoursesTab() {
       {/* Courses List */}
       <Card>
         <CardHeader>
-          <CardTitle>{isAdmin ? {isAdmin ? t("admin.courses.allCourses") : t("admin.courses.myCourses")}}</CardTitle>
+          <CardTitle>{isAdmin ? t("admin.courses.allCourses") : t("admin.courses.myCourses")}</CardTitle>
           <CardDescription>
             {isAdmin
               ? `${courses?.length || 0} total courses`
               : myInstructorProfile
                 ? `Courses by ${myInstructorProfile.name}`
-                : {t("admin.courses.manageCourses")}}
+                : t("admin.courses.manageCourses")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -1544,7 +1544,7 @@ function CoursesTab() {
           ) : (
             <div className="text-center py-8">
               <p className="text-foreground/60 mb-2">
-                {isAdmin ? {isAdmin ? t("admin.courses.noCourses") : t("admin.courses.noCoursesYet")}}
+                {isAdmin ? t("admin.courses.noCourses") : t("admin.courses.noCoursesYet")}
               </p>
               {!isAdmin && !myInstructorProfile && (
                 <p className="text-sm text-yellow-400">
@@ -1615,7 +1615,7 @@ function CoursesTab() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-sm font-medium">{t("admin.events.emailContent")}</label>
-                    <Button variant="ghost" size="sm" onClick={() => setEmailPreview(!emailPreview)} className="text-xs h-6"><Eye className="h-3 w-3 mr-1" />{{emailPreview ? t("common.edit") : t("admin.events.preview")}}</Button>
+                    <Button variant="ghost" size="sm" onClick={() => setEmailPreview(!emailPreview)} className="text-xs h-6"><Eye className="h-3 w-3 mr-1" />{emailPreview ? t("common.edit") : t("admin.events.preview")}</Button>
                   </div>
                   {emailPreview ? (
                     <div className="border border-border/50 rounded-lg overflow-hidden h-56"><iframe srcDoc={emailBody} className="w-full h-full" sandbox="allow-same-origin" title={t("admin.events.preview") || "Preview"} /></div>
@@ -1633,7 +1633,7 @@ function CoursesTab() {
                 className="btn-vibrant gap-2"
               >
                 {(createCampaignMutation.isPending || sendCampaignMutation.isPending) ? <Loader2 className="h-4 w-4 animate-spin" /> : emailSendNow ? <Send className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
-                {emailSendNow ? {emailSendNow ? t("admin.events.sendNow") : t("admin.events.schedule")}}
+                {emailSendNow ? t("admin.events.sendNow") : t("admin.events.schedule")}
               </Button>
             </div>
           </DialogContent>
@@ -1937,7 +1937,7 @@ function ClassesTab() {
       )}
       <Card>
         <CardHeader>
-          <CardTitle>{editingId ? {editingId ? t("admin.classes.editClass") : t("admin.classes.createClass")}}</CardTitle>
+          <CardTitle>{editingId ? t("admin.classes.editClass") : t("admin.classes.createClass")}</CardTitle>
           <CardDescription>Add or edit live dance classes</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -1988,7 +1988,7 @@ function ClassesTab() {
             </Select>
             <Select value={formData.instructorId} onValueChange={(val) => setFormData({ ...formData, instructorId: val })}>
               <SelectTrigger>
-                <SelectValue placeholder=t("admin.classes.selectInstructor") />
+                <SelectValue placeholder={t("admin.classes.selectInstructor")} />
               </SelectTrigger>
               <SelectContent>
                 {instructors?.map((instructor) => (
@@ -2050,7 +2050,7 @@ function ClassesTab() {
             <p className="text-sm font-medium text-foreground/80 mb-3">Payment Method</p>
             <Select value={formData.paymentMethod} onValueChange={(val: any) => setFormData({ ...formData, paymentMethod: val })}>
               <SelectTrigger>
-                <SelectValue placeholder="t("admin.events.selectPaymentMethod")" />
+                <SelectValue placeholder={t("admin.events.selectPaymentMethod")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="online">{t("admin.events.paymentOnline")}</SelectItem>
@@ -2145,12 +2145,12 @@ function ClassesTab() {
               {createMutation.isPending || updateMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {editingId ? {editingId ? t("admin.buttons.updating") : t("admin.buttons.creating")}}
+                  {editingId ? t("admin.buttons.updating") : t("admin.buttons.creating")}
                 </>
               ) : (
                 <>
                   <Plus className="mr-2 h-4 w-4" />
-                  {editingId ? {editingId ? t("admin.classes.updateClass") : t("admin.classes.createClassButton")}}
+                  {editingId ? t("admin.classes.updateClass") : t("admin.classes.createClassButton")}
                 </>
               )}
             </Button>
@@ -2166,13 +2166,13 @@ function ClassesTab() {
       {/* Classes List */}
       <Card>
         <CardHeader>
-          <CardTitle>{isAdmin ? {isAdmin ? t("admin.classes.allClasses") : t("admin.classes.myClasses")}}</CardTitle>
+          <CardTitle>{isAdmin ? t("admin.classes.allClasses") : t("admin.classes.myClasses")}</CardTitle>
           <CardDescription>
             {isAdmin
               ? `${classes?.length || 0} clases en total`
               : myInstructorProfile
                 ? `Clases impartidas por ${myInstructorProfile.name}`
-                : {t("admin.classes.manageClasses")}}
+                : t("admin.classes.manageClasses")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -2224,7 +2224,7 @@ function ClassesTab() {
                         size="sm"
                         onClick={() => setExpandedClassId(expandedClassId === cls.id ? null : cls.id)}
                         className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10 gap-1 text-xs"
-                        title=t("admin.classes.qrTooltip")
+                        title={t("admin.classes.qrTooltip")}
                       >
                         <QrCode className="h-4 w-4" />
                         <span>QR</span>
@@ -2331,7 +2331,7 @@ function ClassesTab() {
           })() : (
             <div className="text-center py-8">
               <p className="text-foreground/60 mb-2">
-                {isAdmin ? {isAdmin ? t("admin.classes.noClasses") : t("admin.classes.noClassesYet")}}
+                {isAdmin ? t("admin.classes.noClasses") : t("admin.classes.noClassesYet")}
               </p>
               {!isAdmin && !myInstructorProfile && (
                 <p className="text-sm text-yellow-400">
@@ -2402,7 +2402,7 @@ function ClassesTab() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-sm font-medium">{t("admin.events.emailContent")}</label>
-                    <Button variant="ghost" size="sm" onClick={() => setEmailPreview(!emailPreview)} className="text-xs h-6"><Eye className="h-3 w-3 mr-1" />{{emailPreview ? t("common.edit") : t("admin.events.preview")}}</Button>
+                    <Button variant="ghost" size="sm" onClick={() => setEmailPreview(!emailPreview)} className="text-xs h-6"><Eye className="h-3 w-3 mr-1" />{emailPreview ? t("common.edit") : t("admin.events.preview")}</Button>
                   </div>
                   {emailPreview ? (
                     <div className="border border-border/50 rounded-lg overflow-hidden h-56"><iframe srcDoc={emailBody} className="w-full h-full" sandbox="allow-same-origin" title={t("admin.events.preview") || "Preview"} /></div>
@@ -2420,7 +2420,7 @@ function ClassesTab() {
                 className="btn-vibrant gap-2"
               >
                 {(createCampaignMutation.isPending || sendCampaignMutation.isPending) ? <Loader2 className="h-4 w-4 animate-spin" /> : emailSendNow ? <Send className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
-                {emailSendNow ? {emailSendNow ? t("admin.events.sendNow") : t("admin.events.schedule")}}
+                {emailSendNow ? t("admin.events.sendNow") : t("admin.events.schedule")}
               </Button>
             </div>
           </DialogContent>
@@ -2684,7 +2684,7 @@ function InstructorsTab() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>{editingId ? {editingId ? t("admin.instructors.editInstructor") : t("admin.instructors.createInstructor")}}</CardTitle>
+          <CardTitle>{editingId ? t("admin.instructors.editInstructor") : t("admin.instructors.createInstructor")}</CardTitle>
           <CardDescription>Add or modify dance instructors with photos and specialties</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -3356,7 +3356,7 @@ function SettingsTab() {
             ) : (
               <RefreshCw className="h-4 w-4" />
             )}
-            {syncMutation.isPending ? {syncMutation.isPending ? t("admin.settings.stripeSyncing") : t("admin.settings.stripeSyncButton")}}
+            {syncMutation.isPending ? t("admin.settings.stripeSyncing") : t("admin.settings.stripeSyncButton")}
           </Button>
 
           {/* Results */}
