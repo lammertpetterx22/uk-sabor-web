@@ -74,11 +74,38 @@ async function startServer() {
 
       let results = [];
 
-      // First, check what columns currently exist in lessons table
+      // Check if lessons table exists
+      const tableExistsResult = await db.execute(sql.raw(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables
+          WHERE table_schema = 'public'
+          AND table_name = 'lessons'
+        )
+      `));
+
+      results.push({
+        step: "Does lessons table exist?",
+        exists: tableExistsResult.rows?.[0] || null
+      });
+
+      // List all tables in public schema
+      const allTablesResult = await db.execute(sql.raw(`
+        SELECT table_name
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+        ORDER BY table_name
+      `));
+
+      results.push({
+        step: "All tables in public schema",
+        tables: allTablesResult.rows || []
+      });
+
+      // Check what columns currently exist in lessons table
       const checkColumnsResult = await db.execute(sql.raw(`
         SELECT column_name, data_type
         FROM information_schema.columns
-        WHERE table_name = 'lessons'
+        WHERE table_schema = 'public' AND table_name = 'lessons'
         ORDER BY ordinal_position
       `));
 
@@ -111,7 +138,7 @@ async function startServer() {
       const checkColumnsAfterResult = await db.execute(sql.raw(`
         SELECT column_name, data_type
         FROM information_schema.columns
-        WHERE table_name = 'lessons'
+        WHERE table_schema = 'public' AND table_name = 'lessons'
         ORDER BY ordinal_position
       `));
 
