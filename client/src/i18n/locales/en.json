@@ -204,7 +204,19 @@
     "noRequests": "No requests found with this filter",
     "requestProcessed": "This request was processed",
     "updateSuccess": "Request updated successfully",
-    "updateError": "Error updating request"
+    "updateError": "Error updating request",
+    "filterAll": "All",
+    "filterPending": "Pending",
+    "filterPaid": "Paid",
+    "filterRejected": "Rejected",
+    "requestedBy": "Requested by",
+    "noEmail": "no email",
+    "deleted": "Deleted",
+    "verifyBeforePaying": "Verify that you have made the payment externally before marking it as \"Paid\"",
+    "processingInfo": "Processing information",
+    "processedOn": "This request was processed on",
+    "withStatus": "with status",
+    "note": "Note"
   },
   "upload": {
     "videoTooLarge": "The video is too large",

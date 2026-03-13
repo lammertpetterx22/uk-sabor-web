@@ -1,9 +1,9 @@
 import { trpc } from "@/lib/trpc";
-import { 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
-  User, 
+import {
+  CheckCircle2,
+  XCircle,
+  Clock,
+  User,
   Banknote,
   ExternalLink,
   Search,
@@ -21,8 +21,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslations } from "@/hooks/useTranslations";
 
 export default function AdminWithdrawals() {
+  const { t } = useTranslations();
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [filter, setFilter] = useState<"all" | "pending" | "paid" | "rejected">("pending");
@@ -31,7 +33,7 @@ export default function AdminWithdrawals() {
 
   const updateWithdrawal = trpc.financials.adminUpdateWithdrawal.useMutation({
     onSuccess: () => {
-      toast.success("Solicitud actualizada correctamente.");
+      toast.success(t('withdrawals.updateSuccess'));
       setSelectedRequest(null);
       setAdminNotes("");
       refetch();
@@ -84,20 +86,20 @@ export default function AdminWithdrawals() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Gestión de Retiros</h1>
-          <p className="text-white/40 mt-1">Revisa y procesa las solicitudes de pago de los profesores.</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">{t('withdrawals.title')}</h1>
+          <p className="text-white/40 mt-1">{t('withdrawals.subtitle')}</p>
         </div>
-        
+
         <div className="flex bg-white/5 p-1 rounded-xl border border-white/10">
-          {(["all", "pending", "paid", "rejected"] as const).map((f) => (
+          {([{value: "all", label: t('withdrawals.filterAll')}, {value: "pending", label: t('withdrawals.filterPending')}, {value: "paid", label: t('withdrawals.filterPaid')}, {value: "rejected", label: t('withdrawals.filterRejected')}] as const).map((f) => (
             <button
-              key={f}
-              onClick={() => setFilter(f)}
+              key={f.value}
+              onClick={() => setFilter(f.value)}
               className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
-                filter === f ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/60"
+                filter === f.value ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/60"
               }`}
             >
-              {f === "all" ? "Todos" : f === "pending" ? "Pendientes" : f === "paid" ? "Pagados" : "Rechazados"}
+              {f.label}
             </button>
           ))}
         </div>
@@ -109,18 +111,18 @@ export default function AdminWithdrawals() {
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="bg-white/5 text-white/40 border-b border-white/10">
-                <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Usuario</th>
-                <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Monto</th>
-                <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Fecha Solicitud</th>
-                <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Estado</th>
-                <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-right">Acciones</th>
+                <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{t('withdrawals.user')}</th>
+                <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{t('withdrawals.amount')}</th>
+                <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{t('withdrawals.requestDate')}</th>
+                <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{t('withdrawals.status')}</th>
+                <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-right">{t('withdrawals.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
               {!filteredRequests || filteredRequests.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center text-white/20 italic">
-                    No se encontraron solicitudes con este filtro.
+                    {t('withdrawals.noRequests')}
                   </td>
                 </tr>
               ) : (
@@ -132,8 +134,8 @@ export default function AdminWithdrawals() {
                           <User size={18} />
                         </div>
                         <div>
-                          <p className="text-white font-bold">{r.user?.name || "Eliminado"}</p>
-                          <p className="text-white/30 text-xs">{r.user?.email || "sin email"}</p>
+                          <p className="text-white font-bold">{r.user?.name || t('withdrawals.deleted')}</p>
+                          <p className="text-white/30 text-xs">{r.user?.email || t('withdrawals.noEmail')}</p>
                         </div>
                       </div>
                     </td>
@@ -145,24 +147,24 @@ export default function AdminWithdrawals() {
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
-                        r.request.status === "paid" 
-                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
+                        r.request.status === "paid"
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                           : r.request.status === "pending"
                           ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
                           : "bg-red-500/10 text-red-400 border-red-500/20"
                       }`}>
-                        {r.request.status === "paid" ? "Pagado" : r.request.status === "pending" ? "Pendiente" : "Rechazado"}
+                        {r.request.status === "paid" ? t('earnings.paid') : r.request.status === "pending" ? t('earnings.pending') : t('earnings.rejected')}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
                       {r.request.status === "pending" ? (
-                        <Button 
+                        <Button
                           onClick={() => setSelectedRequest(r)}
-                          variant="ghost" 
+                          variant="ghost"
                           size="sm"
                           className="text-[#FA3698] hover:text-white hover:bg-[#FA3698] border border-[#FA3698]/20 rounded-lg h-9"
                         >
-                          Gestionar
+                          {t('withdrawals.manage')}
                         </Button>
                       ) : (
                         <div className="flex justify-end gap-2 text-white/25">
@@ -184,9 +186,9 @@ export default function AdminWithdrawals() {
       <Dialog open={!!selectedRequest} onOpenChange={(open) => !open && setSelectedRequest(null)}>
         <DialogContent className="bg-[#0f0f0f] border-white/10 text-white sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Gestionar Retiro #{selectedRequest?.request.id}</DialogTitle>
+            <DialogTitle className="text-xl font-bold">{t('withdrawals.manage')} #{selectedRequest?.request.id}</DialogTitle>
             <DialogDescription className="text-white/40">
-              Verifica que has realizado el pago externamente antes de marcarlo como "Pagado".
+              {t('withdrawals.verifyBeforePaying')}
             </DialogDescription>
           </DialogHeader>
 
@@ -198,14 +200,14 @@ export default function AdminWithdrawals() {
                 </div>
                 <div>
                   <p className="text-white font-bold text-2xl">{formatCurrency(selectedRequest.request.amount)}</p>
-                  <p className="text-white/40 text-xs">Solicitado por {selectedRequest.user?.name}</p>
+                  <p className="text-white/40 text-xs">{t('withdrawals.requestedBy')} {selectedRequest.user?.name}</p>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white/60 ml-1">Notas Administrativas (Opcional)</label>
+                <label className="text-sm font-medium text-white/60 ml-1">{t('withdrawals.adminNotes')} ({t('common.optional')})</label>
                 <Textarea
-                  placeholder="Ej: Transferencia realizada via Wise. Referencia: 123456"
+                  placeholder={t('withdrawals.adminNotesPlaceholder')}
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
                   className="bg-white/5 border-white/10 focus:border-[#FA3698]/50 min-h-[100px] rounded-xl"
@@ -216,10 +218,10 @@ export default function AdminWithdrawals() {
                 <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 flex gap-3 text-blue-400">
                   <AlertCircle size={20} className="shrink-0" />
                   <div className="text-xs">
-                    <p className="font-bold uppercase tracking-wider mb-1">Información de procesamiento</p>
-                    <p>Esta solicitud fue procesada el {formatDate(selectedRequest.request.processedAt)} con el estado <span className="font-bold">{selectedRequest.request.status}</span>.</p>
+                    <p className="font-bold uppercase tracking-wider mb-1">{t('withdrawals.processingInfo')}</p>
+                    <p>{t('withdrawals.processedOn')} {formatDate(selectedRequest.request.processedAt)} {t('withdrawals.withStatus')} <span className="font-bold">{selectedRequest.request.status}</span>.</p>
                     {selectedRequest.request.adminNotes && (
-                      <p className="mt-2 text-white/50">Nota: {selectedRequest.request.adminNotes}</p>
+                      <p className="mt-2 text-white/50">{t('withdrawals.note')}: {selectedRequest.request.adminNotes}</p>
                     )}
                   </div>
                 </div>
@@ -230,27 +232,27 @@ export default function AdminWithdrawals() {
           <DialogFooter className="gap-2 sm:justify-between">
             {selectedRequest?.request.status === "pending" ? (
               <>
-                <Button 
+                <Button
                   disabled={updateWithdrawal.isPending}
                   onClick={() => handleUpdate("rejected")}
-                  variant="ghost" 
+                  variant="ghost"
                   className="text-red-400 hover:text-white hover:bg-red-500/20 border border-red-500/20 rounded-xl px-6"
                 >
                   <XCircle size={16} className="mr-2" />
-                  Rechazar
+                  {t('withdrawals.reject')}
                 </Button>
-                <Button 
+                <Button
                   disabled={updateWithdrawal.isPending}
                   onClick={() => handleUpdate("paid")}
                   className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl px-8 flex-1"
                 >
                   <CheckCircle2 size={16} className="mr-2" />
-                  Marcar como Pagado
+                  {t('withdrawals.markAsPaid')}
                 </Button>
               </>
             ) : (
               <Button onClick={() => setSelectedRequest(null)} className="w-full bg-white/10 hover:bg-white/20 text-white rounded-xl">
-                Cerrar
+                {t('common.close')}
               </Button>
             )}
           </DialogFooter>

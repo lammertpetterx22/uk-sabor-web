@@ -204,7 +204,19 @@
     "noRequests": "No se encontraron solicitudes con este filtro",
     "requestProcessed": "Esta solicitud fue procesada",
     "updateSuccess": "Solicitud actualizada correctamente",
-    "updateError": "Error al actualizar solicitud"
+    "updateError": "Error al actualizar solicitud",
+    "filterAll": "Todos",
+    "filterPending": "Pendientes",
+    "filterPaid": "Pagados",
+    "filterRejected": "Rechazados",
+    "requestedBy": "Solicitado por",
+    "noEmail": "sin email",
+    "deleted": "Eliminado",
+    "verifyBeforePaying": "Verifica que has realizado el pago externamente antes de marcarlo como \"Pagado\"",
+    "processingInfo": "Información de procesamiento",
+    "processedOn": "Esta solicitud fue procesada el",
+    "withStatus": "con el estado",
+    "note": "Nota"
   },
   "upload": {
     "videoTooLarge": "El video es demasiado grande",
