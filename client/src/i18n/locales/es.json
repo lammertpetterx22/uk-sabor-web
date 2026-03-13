@@ -41,10 +41,17 @@
     "courses": "Cursos",
     "classes": "Clases",
     "instructors": "Profesores",
+    "promoters": "Promotores",
     "admin": "Administración",
+    "myPanel": "Mi Panel",
     "profile": "Perfil",
     "earnings": "Ganancias",
-    "dashboard": "Panel"
+    "dashboard": "Panel",
+    "crm": "CRM",
+    "email": "Email",
+    "plans": "Planes",
+    "signOut": "Cerrar Sesión",
+    "login": "Iniciar Sesión"
   },
   "roles": {
     "admin": "Administrador",
