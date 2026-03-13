@@ -1,0 +1,22 @@
+CREATE INDEX "class_purchases_user_id_idx" ON "classPurchases" USING btree ("userId");--> statement-breakpoint
+CREATE INDEX "class_purchases_class_id_idx" ON "classPurchases" USING btree ("classId");--> statement-breakpoint
+CREATE INDEX "class_purchases_instructor_id_idx" ON "classPurchases" USING btree ("instructorId");--> statement-breakpoint
+CREATE INDEX "classes_instructor_id_idx" ON "classes" USING btree ("instructorId");--> statement-breakpoint
+CREATE INDEX "classes_status_idx" ON "classes" USING btree ("status");--> statement-breakpoint
+CREATE INDEX "classes_class_date_idx" ON "classes" USING btree ("classDate");--> statement-breakpoint
+CREATE INDEX "course_purchases_user_id_idx" ON "coursePurchases" USING btree ("userId");--> statement-breakpoint
+CREATE INDEX "course_purchases_course_id_idx" ON "coursePurchases" USING btree ("courseId");--> statement-breakpoint
+CREATE INDEX "course_purchases_instructor_id_idx" ON "coursePurchases" USING btree ("instructorId");--> statement-breakpoint
+CREATE INDEX "courses_instructor_id_idx" ON "courses" USING btree ("instructorId");--> statement-breakpoint
+CREATE INDEX "courses_status_idx" ON "courses" USING btree ("status");--> statement-breakpoint
+CREATE INDEX "courses_level_idx" ON "courses" USING btree ("level");--> statement-breakpoint
+CREATE INDEX "event_tickets_user_id_idx" ON "eventTickets" USING btree ("userId");--> statement-breakpoint
+CREATE INDEX "event_tickets_event_id_idx" ON "eventTickets" USING btree ("eventId");--> statement-breakpoint
+CREATE INDEX "event_tickets_status_idx" ON "eventTickets" USING btree ("status");--> statement-breakpoint
+CREATE INDEX "events_status_idx" ON "events" USING btree ("status");--> statement-breakpoint
+CREATE INDEX "events_creator_id_idx" ON "events" USING btree ("creatorId");--> statement-breakpoint
+CREATE INDEX "events_date_idx" ON "events" USING btree ("eventDate");--> statement-breakpoint
+CREATE INDEX "instructors_user_id_idx" ON "instructors" USING btree ("userId");--> statement-breakpoint
+CREATE INDEX "users_email_idx" ON "users" USING btree ("email");--> statement-breakpoint
+CREATE INDEX "users_role_idx" ON "users" USING btree ("role");--> statement-breakpoint
+CREATE INDEX "users_stripe_customer_idx" ON "users" USING btree ("stripeCustomerId");

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { adminProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { crmContacts, crmInteractions, crmNotes, users, eventTickets, coursePurchases, classPurchases, emailOpens, emailClicks, orders } from "../../drizzle/schema";
-import { eq, like, and, or, count, sql } from "drizzle-orm";
+import { eq, like, and, or, count, sql, desc } from "drizzle-orm";
 import { sendEmail } from "./email";
 
 export const crmRouter = router({
@@ -18,58 +18,50 @@ export const crmRouter = router({
       if (!db) throw new Error("Database not available");
 
       try {
-        // Get all users
-        let allUsers;
-        
-        if (input.search) {
-          // Search by name or email
-          const searchLike = `%${input.search}%`;
-          allUsers = await db
-            .select()
-            .from(users)
-            .where(
-              or(
-                like(users.email, searchLike),
-                like(users.name, searchLike)
-              )
+        // Build WHERE conditions
+        const whereConditions = input.search
+          ? or(
+              like(users.email, `%${input.search}%`),
+              like(users.name, `%${input.search}%`)
             )
-            .limit(input.limit)
-            .offset(input.offset);
-        } else {
-          allUsers = await db
-            .select()
-            .from(users)
-            .limit(input.limit)
-            .offset(input.offset);
-        }
+          : undefined;
 
-        // Enrich with purchase counts
-        const enrichedUsers = await Promise.all(
-          allUsers.map(async (user) => {
-            const eventTicketCount = await db
-              .select({ count: count() })
-              .from(eventTickets)
-              .where(eq(eventTickets.userId, user.id));
-            
-            const courseCount = await db
-              .select({ count: count() })
-              .from(coursePurchases)
-              .where(eq(coursePurchases.userId, user.id));
-            
-            const classCount = await db
-              .select({ count: count() })
-              .from(classPurchases)
-              .where(eq(classPurchases.userId, user.id));
-
-            return {
-              ...user,
-              ticketsPurchased: eventTicketCount[0]?.count || 0,
-              coursesPurchased: courseCount[0]?.count || 0,
-              classesPurchased: classCount[0]?.count || 0,
-              totalPurchases: (eventTicketCount[0]?.count || 0) + (courseCount[0]?.count || 0) + (classCount[0]?.count || 0),
-            };
+        // ✅ FIX N+1: Single query with LEFT JOINs and GROUP BY
+        // This replaces 3N queries (N users × 3 counts each) with 1 query
+        const enrichedUsers = await db
+          .select({
+            id: users.id,
+            openId: users.openId,
+            name: users.name,
+            email: users.email,
+            avatarUrl: users.avatarUrl,
+            bio: users.bio,
+            role: users.role,
+            roles: users.roles,
+            subscriptionPlan: users.subscriptionPlan,
+            stripeCustomerId: users.stripeCustomerId,
+            stripeAccountId: users.stripeAccountId,
+            createdAt: users.createdAt,
+            updatedAt: users.updatedAt,
+            lastSignedIn: users.lastSignedIn,
+            ticketsPurchased: sql<number>`CAST(COUNT(DISTINCT ${eventTickets.id}) AS INTEGER)`,
+            coursesPurchased: sql<number>`CAST(COUNT(DISTINCT ${coursePurchases.id}) AS INTEGER)`,
+            classesPurchased: sql<number>`CAST(COUNT(DISTINCT ${classPurchases.id}) AS INTEGER)`,
+            totalPurchases: sql<number>`CAST(
+              COUNT(DISTINCT ${eventTickets.id}) +
+              COUNT(DISTINCT ${coursePurchases.id}) +
+              COUNT(DISTINCT ${classPurchases.id})
+            AS INTEGER)`,
           })
-        );
+          .from(users)
+          .leftJoin(eventTickets, eq(eventTickets.userId, users.id))
+          .leftJoin(coursePurchases, eq(coursePurchases.userId, users.id))
+          .leftJoin(classPurchases, eq(classPurchases.userId, users.id))
+          .where(whereConditions)
+          .groupBy(users.id)
+          .orderBy(desc(users.createdAt))
+          .limit(input.limit)
+          .offset(input.offset);
 
         return enrichedUsers;
       } catch (error) {

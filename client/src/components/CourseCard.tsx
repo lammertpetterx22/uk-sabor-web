@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +11,7 @@ interface CourseCardProps {
   instructorName?: string;
 }
 
-export default function CourseCard({ course, instructorName }: CourseCardProps) {
+const CourseCard = memo(function CourseCard({ course, instructorName }: CourseCardProps) {
   const levelColors: Record<string, string> = {
     beginner: "bg-emerald-500/20 text-emerald-400",
     intermediate: "bg-amber-500/20 text-amber-400",
@@ -85,4 +86,6 @@ export default function CourseCard({ course, instructorName }: CourseCardProps) 
       </div>
     </Card>
   );
-}
+});
+
+export default CourseCard;

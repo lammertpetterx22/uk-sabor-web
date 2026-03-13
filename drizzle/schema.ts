@@ -1,4 +1,4 @@
-import { serial, decimal, integer, pgTable, text, timestamp, varchar, boolean, json } from "drizzle-orm/pg-core";
+import { serial, decimal, integer, pgTable, text, timestamp, varchar, boolean, json, index } from "drizzle-orm/pg-core";
 
 /**
  * Core user table backing auth flow.
@@ -28,7 +28,11 @@ export const users = pgTable("users", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
-});
+}, (table) => ({
+  emailIdx: index("users_email_idx").on(table.email),
+  roleIdx: index("users_role_idx").on(table.role),
+  stripeCustomerIdx: index("users_stripe_customer_idx").on(table.stripeCustomerId),
+}));
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -68,7 +72,9 @@ export const instructors = pgTable("instructors", {
   specialties: text("specialties"), // JSON array as string
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
-});
+}, (table) => ({
+  userIdIdx: index("instructors_user_id_idx").on(table.userId),
+}));
 
 // Events table
 export const events = pgTable("events", {
@@ -88,7 +94,11 @@ export const events = pgTable("events", {
   creatorId: integer("creatorId"), // User ID of the event creator (instructor/promoter/admin)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
-});
+}, (table) => ({
+  statusIdx: index("events_status_idx").on(table.status),
+  creatorIdIdx: index("events_creator_id_idx").on(table.creatorId),
+  eventDateIdx: index("events_date_idx").on(table.eventDate),
+}));
 
 // Courses table
 export const courses = pgTable("courses", {
@@ -96,7 +106,7 @@ export const courses = pgTable("courses", {
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   imageUrl: text("imageUrl"),
-  videoUrl: text("videoUrl"), // URL to course video on S3
+  videoUrl: text("videoUrl"), // Legacy: URL to course video on S3 (deprecated, lessons now use Bunny.net)
   instructorId: integer("instructorId").notNull(),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   level: varchar("level", { length: 255 }).default("all-levels"),
@@ -106,7 +116,11 @@ export const courses = pgTable("courses", {
   status: varchar("status", { length: 255 }).default("draft"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
-});
+}, (table) => ({
+  instructorIdIdx: index("courses_instructor_id_idx").on(table.instructorId),
+  statusIdx: index("courses_status_idx").on(table.status),
+  levelIdx: index("courses_level_idx").on(table.level),
+}));
 
 // Classes table
 export const classes = pgTable("classes", {
@@ -122,7 +136,9 @@ export const classes = pgTable("classes", {
   maxParticipants: integer("maxParticipants"),
   currentParticipants: integer("currentParticipants").default(0),
   imageUrl: text("imageUrl"), // Cover image for the class
-  videoUrl: text("videoUrl"), // For recorded classes
+  videoUrl: text("videoUrl"), // Legacy: For recorded classes (deprecated, use Bunny.net)
+  bunnyVideoId: varchar("bunnyVideoId", { length: 255 }), // Bunny.net Video GUID for recorded classes
+  bunnyLibraryId: varchar("bunnyLibraryId", { length: 255 }), // Bunny.net Library ID
   status: varchar("status", { length: 255 }).default("draft"),
   hasSocial: boolean("hasSocial").default(false), // Whether there's a social event after the class
   socialTime: varchar("socialTime", { length: 255 }), // Time of the social event (e.g., "22:00")
@@ -131,7 +147,11 @@ export const classes = pgTable("classes", {
   paymentMethod: varchar("paymentMethod", { length: 255 }).default("online"), // Payment method: Stripe online, cash, or both
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
-});
+}, (table) => ({
+  instructorIdIdx: index("classes_instructor_id_idx").on(table.instructorId),
+  statusIdx: index("classes_status_idx").on(table.status),
+  classDateIdx: index("classes_class_date_idx").on(table.classDate),
+}));
 
 // Orders table (for payment tracking)
 export const orders = pgTable("orders", {
@@ -162,7 +182,11 @@ export const eventTickets = pgTable("eventTickets", {
   status: varchar("status", { length: 255 }).default("valid"),
   purchasedAt: timestamp("purchasedAt").defaultNow().notNull(),
   usedAt: timestamp("usedAt"),
-});
+}, (table) => ({
+  userIdIdx: index("event_tickets_user_id_idx").on(table.userId),
+  eventIdIdx: index("event_tickets_event_id_idx").on(table.eventId),
+  statusIdx: index("event_tickets_status_idx").on(table.status),
+}));
 
 // Course Purchases table
 export const coursePurchases = pgTable("coursePurchases", {
@@ -178,7 +202,11 @@ export const coursePurchases = pgTable("coursePurchases", {
   completed: boolean("completed").default(false),
   purchasedAt: timestamp("purchasedAt").defaultNow().notNull(),
   completedAt: timestamp("completedAt"),
-});
+}, (table) => ({
+  userIdIdx: index("course_purchases_user_id_idx").on(table.userId),
+  courseIdIdx: index("course_purchases_course_id_idx").on(table.courseId),
+  instructorIdIdx: index("course_purchases_instructor_id_idx").on(table.instructorId),
+}));
 
 // Class Purchases table
 export const classPurchases = pgTable("classPurchases", {
@@ -194,7 +222,11 @@ export const classPurchases = pgTable("classPurchases", {
   status: varchar("status", { length: 255 }).default("active"),
   purchasedAt: timestamp("purchasedAt").defaultNow().notNull(),
   expiresAt: timestamp("expiresAt"),
-});
+}, (table) => ({
+  userIdIdx: index("class_purchases_user_id_idx").on(table.userId),
+  classIdIdx: index("class_purchases_class_id_idx").on(table.classId),
+  instructorIdIdx: index("class_purchases_instructor_id_idx").on(table.instructorId),
+}));
 
 // Type exports
 export type Instructor = typeof instructors.$inferSelect;
@@ -436,7 +468,9 @@ export const lessons = pgTable("lessons", {
   courseId: integer("courseId").notNull(),           // FK → courses.id
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
-  videoUrl: text("videoUrl"),                    // S3 / CDN URL (protected stream)
+  videoUrl: text("videoUrl"),                    // Legacy: S3 / CDN URL (deprecated, use Bunny.net)
+  bunnyVideoId: varchar("bunnyVideoId", { length: 255 }), // Bunny.net Video GUID
+  bunnyLibraryId: varchar("bunnyLibraryId", { length: 255 }), // Bunny.net Library ID
   position: integer("position").notNull(),           // 1-based sequential order
   durationSeconds: integer("durationSeconds"),       // Used for auto-complete threshold
   isPreview: boolean("isPreview").default(false).notNull(), // Free preview without purchase

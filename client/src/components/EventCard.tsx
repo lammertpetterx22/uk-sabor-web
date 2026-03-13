@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { MapPin, Calendar, DollarSign } from "lucide-react";
@@ -8,7 +9,7 @@ interface EventCardProps {
   event: Event;
 }
 
-export default function EventCard({ event }: EventCardProps) {
+const EventCard = memo(function EventCard({ event }: EventCardProps) {
   const eventDate = new Date(event.eventDate);
   const formattedDate = eventDate.toLocaleDateString("en-GB", {
     weekday: "short",
@@ -66,4 +67,6 @@ export default function EventCard({ event }: EventCardProps) {
       </div>
     </Card>
   );
-}
+});
+
+export default EventCard;

@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Instagram } from "lucide-react";
@@ -8,7 +9,7 @@ interface InstructorCardProps {
   instructor: Instructor;
 }
 
-export default function InstructorCard({ instructor }: InstructorCardProps) {
+const InstructorCard = memo(function InstructorCard({ instructor }: InstructorCardProps) {
   const specialties = instructor.specialties
     ? typeof instructor.specialties === "string"
       ? JSON.parse(instructor.specialties)
@@ -85,4 +86,6 @@ export default function InstructorCard({ instructor }: InstructorCardProps) {
       </div>
     </Card>
   );
-}
+});
+
+export default InstructorCard;

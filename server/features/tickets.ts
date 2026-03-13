@@ -27,23 +27,38 @@ export const ticketsRouter = router({
         const db = await getDb();
         if (!db) throw new Error("Database not available");
 
-        const tickets = await db
-            .select()
+        // ✅ FIX N+1: Single query with LEFT JOIN
+        // This replaces N queries (1 per ticket) with 1 query
+        const ticketsWithEvents = await db
+            .select({
+                // Ticket fields
+                id: eventTickets.id,
+                userId: eventTickets.userId,
+                eventId: eventTickets.eventId,
+                orderId: eventTickets.orderId,
+                quantity: eventTickets.quantity,
+                instructorId: eventTickets.instructorId,
+                pricePaid: eventTickets.pricePaid,
+                platformFee: eventTickets.platformFee,
+                instructorEarnings: eventTickets.instructorEarnings,
+                ticketCode: eventTickets.ticketCode,
+                status: eventTickets.status,
+                purchasedAt: eventTickets.purchasedAt,
+                usedAt: eventTickets.usedAt,
+                // Event info (nested object)
+                event: {
+                    id: events.id,
+                    title: events.title,
+                    eventDate: events.eventDate,
+                    venue: events.venue,
+                    imageUrl: events.imageUrl,
+                }
+            })
             .from(eventTickets)
+            .leftJoin(events, eq(events.id, eventTickets.eventId))
             .where(eq(eventTickets.userId, ctx.user.id));
 
-        const withEvents = await Promise.all(
-            tickets.map(async ticket => {
-                const [event] = await db
-                    .select({ id: events.id, title: events.title, eventDate: events.eventDate, venue: events.venue, imageUrl: events.imageUrl })
-                    .from(events)
-                    .where(eq(events.id, ticket.eventId))
-                    .limit(1);
-                return { ...ticket, event: event ?? null };
-            })
-        );
-
-        return withEvents;
+        return ticketsWithEvents;
     }),
 
     /**

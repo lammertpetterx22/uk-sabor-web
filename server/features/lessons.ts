@@ -5,6 +5,7 @@ import { lessons, lessonProgress, coursePurchases, courses, instructors } from "
 import { eq, and, asc } from "drizzle-orm";
 import { storageGet } from "../storage";
 import { getAllRoles } from "../../drizzle/schema";
+import { bunnyGenerateSignedUrl, bunnyGetEmbedUrl, getBunnyLibraryId } from "../bunny";
 
 // ─── Lessons Router ───────────────────────────────────────────────────────────
 
@@ -31,6 +32,8 @@ export const lessonsRouter = router({
                 return allLessons.map(l => ({
                     ...l,
                     videoUrl: l.isPreview ? l.videoUrl : null,
+                    bunnyVideoId: l.isPreview ? l.bunnyVideoId : null,
+                    bunnyLibraryId: l.isPreview ? l.bunnyLibraryId : null,
                     locked: !l.isPreview,
                 }));
             }
@@ -47,6 +50,8 @@ export const lessonsRouter = router({
             return allLessons.map(l => ({
                 ...l,
                 videoUrl: hasPurchased || l.isPreview ? l.videoUrl : null,
+                bunnyVideoId: hasPurchased || l.isPreview ? l.bunnyVideoId : null,
+                bunnyLibraryId: hasPurchased || l.isPreview ? l.bunnyLibraryId : null,
                 locked: !hasPurchased && !l.isPreview,
             }));
         }),
@@ -162,7 +167,9 @@ export const lessonsRouter = router({
                 courseId: z.number().positive(),
                 title: z.string().min(1),
                 description: z.string().optional(),
-                videoUrl: z.string().optional(),
+                videoUrl: z.string().optional(), // Legacy S3 URL (deprecated)
+                bunnyVideoId: z.string().optional(), // Bunny.net video GUID
+                bunnyLibraryId: z.string().optional(), // Bunny.net library ID
                 position: z.number().positive(),
                 durationSeconds: z.number().optional(),
                 isPreview: z.boolean().optional().default(false),
@@ -180,6 +187,8 @@ export const lessonsRouter = router({
                 title: input.title,
                 description: input.description,
                 videoUrl: input.videoUrl,
+                bunnyVideoId: input.bunnyVideoId,
+                bunnyLibraryId: input.bunnyLibraryId,
                 position: input.position,
                 durationSeconds: input.durationSeconds,
                 isPreview: input.isPreview ?? false,
@@ -194,6 +203,8 @@ export const lessonsRouter = router({
      * - User has purchased the course, OR
      * - Lesson is marked as preview (free), OR
      * - User is the course instructor/admin
+     *
+     * Supports both Bunny.net (preferred) and legacy S3 URLs.
      */
     getSecureVideoUrl: protectedProcedure
         .input(z.object({ lessonId: z.number() }))
@@ -209,16 +220,39 @@ export const lessonsRouter = router({
                 .limit(1);
 
             if (!lesson) throw new Error("Lesson not found");
-            if (!lesson.videoUrl) throw new Error("No video available for this lesson");
+
+            // Check if video exists (Bunny.net or legacy S3)
+            const hasBunnyVideo = !!lesson.bunnyVideoId && !!lesson.bunnyLibraryId;
+            const hasLegacyVideo = !!lesson.videoUrl;
+
+            if (!hasBunnyVideo && !hasLegacyVideo) {
+                throw new Error("No video available for this lesson");
+            }
 
             // If it's a preview lesson, allow access
             if (lesson.isPreview) {
                 console.log(`[Lessons] ✅ Preview lesson access granted to user ${ctx.user.id} for lesson ${input.lessonId}`);
 
-                // Extract fileKey from videoUrl if needed
-                let fileKey = lesson.videoUrl;
-                if (lesson.videoUrl.includes("//")) {
-                    const urlParts = lesson.videoUrl.split("/");
+                // Prefer Bunny.net over legacy S3
+                if (hasBunnyVideo) {
+                    const signedUrl = bunnyGenerateSignedUrl(
+                        lesson.bunnyVideoId!,
+                        lesson.bunnyLibraryId!,
+                        86400 // 24 hours
+                    );
+                    return {
+                        videoUrl: signedUrl,
+                        bunnyVideoId: lesson.bunnyVideoId,
+                        bunnyLibraryId: lesson.bunnyLibraryId,
+                        isBunnyVideo: true,
+                        expiresIn: 86400,
+                    };
+                }
+
+                // Fallback to legacy S3
+                let fileKey = lesson.videoUrl!;
+                if (lesson.videoUrl!.includes("//")) {
+                    const urlParts = lesson.videoUrl!.split("/");
                     const relevantParts = [];
                     let foundCourses = false;
                     for (const part of urlParts) {
@@ -235,6 +269,7 @@ export const lessonsRouter = router({
                 const { url: signedUrl } = await storageGet(fileKey);
                 return {
                     videoUrl: signedUrl,
+                    isBunnyVideo: false,
                     expiresIn: 3600,
                 };
             }
@@ -285,10 +320,28 @@ export const lessonsRouter = router({
                 throw new Error("You must purchase this course to access this lesson");
             }
 
-            // Extract fileKey from videoUrl if needed
-            let fileKey = lesson.videoUrl;
-            if (lesson.videoUrl.includes("//")) {
-                const urlParts = lesson.videoUrl.split("/");
+            console.log(`[Lessons] ✅ Secure video access granted to user ${ctx.user.id} for lesson ${input.lessonId}`);
+
+            // Prefer Bunny.net over legacy S3
+            if (hasBunnyVideo) {
+                const signedUrl = bunnyGenerateSignedUrl(
+                    lesson.bunnyVideoId!,
+                    lesson.bunnyLibraryId!,
+                    86400 // 24 hours
+                );
+                return {
+                    videoUrl: signedUrl,
+                    bunnyVideoId: lesson.bunnyVideoId,
+                    bunnyLibraryId: lesson.bunnyLibraryId,
+                    isBunnyVideo: true,
+                    expiresIn: 86400,
+                };
+            }
+
+            // Fallback to legacy S3
+            let fileKey = lesson.videoUrl!;
+            if (lesson.videoUrl!.includes("//")) {
+                const urlParts = lesson.videoUrl!.split("/");
                 const relevantParts = [];
                 let foundCourses = false;
                 for (const part of urlParts) {
@@ -305,10 +358,9 @@ export const lessonsRouter = router({
             // Generate signed download URL with expiry
             const { url: signedUrl } = await storageGet(fileKey);
 
-            console.log(`[Lessons] ✅ Secure video access granted to user ${ctx.user.id} for lesson ${input.lessonId}`);
-
             return {
                 videoUrl: signedUrl,
+                isBunnyVideo: false,
                 expiresIn: 3600, // 1 hour
             };
         }),
