@@ -15,6 +15,8 @@ import { useLocation, Link } from "wouter";
 import ImageCropperModal from "@/components/ImageCropperModal";
 import QRCodeDisplay from "@/components/QRCodeDisplay";
 import UpgradePlanDialog from "@/components/UpgradePlanDialog";
+import DashboardOverview from "@/components/admin/DashboardOverview";
+import QuickActions from "@/components/admin/QuickActions";
 
 export default function AdminDashboard() {
   const { user, isAuthenticated, loading } = useAuth();
@@ -24,7 +26,7 @@ export default function AdminDashboard() {
   const isPromoter = user?.role === "promoter";
   const isCreator = isInstructor || isPromoter; // instructors and promoters share creator access
   const canManageCourses = isAdmin || isInstructor; // courses: instructors and admins only
-  const [activeTab, setActiveTab] = useState(isAdmin ? "events" : "events");
+  const [activeTab, setActiveTab] = useState(isAdmin ? "overview" : "events");
 
   // Redirect unauthenticated users in an effect (not in render body)
   useEffect(() => {
@@ -92,7 +94,8 @@ export default function AdminDashboard() {
       <div className="container py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {isAdmin ? (
-            <TabsList className="grid w-full grid-cols-7 mb-8">
+            <TabsList className="grid w-full grid-cols-8 mb-8">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="events">Events</TabsTrigger>
               <TabsTrigger value="courses">Courses</TabsTrigger>
               <TabsTrigger value="classes">Classes</TabsTrigger>
@@ -116,6 +119,14 @@ export default function AdminDashboard() {
               <TabsTrigger value="classes">My Classes</TabsTrigger>
               <TabsTrigger value="profile">My Profile</TabsTrigger>
             </TabsList>
+          )}
+
+          {/* OVERVIEW TAB - Admin Only */}
+          {isAdmin && (
+            <TabsContent value="overview" className="space-y-8">
+              <DashboardOverview />
+              <QuickActions />
+            </TabsContent>
           )}
 
           {/* EVENTS TAB - Admin, Instructor, Promoter */}
