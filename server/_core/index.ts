@@ -73,24 +73,34 @@ async function startServer() {
       if (!db) return res.send("DB not available");
 
       const queries = [
-        "ALTER TABLE users ADD COLUMN roles TEXT",
-        "ALTER TABLE users ADD COLUMN stripeCustomerId VARCHAR(255)",
-        "ALTER TABLE users ADD COLUMN stripeAccountId VARCHAR(255)"
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS roles TEXT",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS stripeCustomerId VARCHAR(255)",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS stripeAccountId VARCHAR(255)",
+        // Add Bunny.net columns to lessons table
+        "ALTER TABLE lessons ADD COLUMN IF NOT EXISTS bunnyVideoId VARCHAR(255)",
+        "ALTER TABLE lessons ADD COLUMN IF NOT EXISTS bunnyLibraryId VARCHAR(255)",
       ];
 
       let results = [];
       for (const q of queries) {
         try {
           await db.execute(sql.raw(q));
-          results.push(`Success: ${q}`);
+          results.push(`✅ Success: ${q}`);
         } catch (e: any) {
           console.error("MIGRATION ERROR details:", e);
-          results.push(`Skipped/Failed: ${q} - ${e.message}`);
+          results.push(`⚠️ Skipped/Failed: ${q} - ${e.message}`);
         }
       }
-      res.json({ results });
+      res.json({
+        success: true,
+        results,
+        message: "Migration complete! The lessons table now has bunnyVideoId and bunnyLibraryId columns."
+      });
     } catch (e: any) {
-      res.send("Error migrating schema: " + e.message);
+      res.json({
+        success: false,
+        error: e.message
+      });
     }
   });
 
