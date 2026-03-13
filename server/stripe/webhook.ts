@@ -150,18 +150,21 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       }
 
       if (creatorUserId && netEarningsPence > 0) {
-        let platformFeeGBP = 0;
-        let instructorEarningsGBP = netEarningsPence / 100;
+        const planDef = PLANS[sellerPlan as PlanKey] || PLANS.starter;
 
-        // For courses, calculate tiered commission
+        // Calculate commission based on item type and plan
+        let commissionRate = 0;
         if (itemType === "course") {
-          const planDef = PLANS[sellerPlan as PlanKey] || PLANS.starter;
-          const commissionRate = planDef.courseCommissionRate;
-          const commissionPence = Math.round(netEarningsPence * commissionRate);
-          platformFeeGBP = commissionPence / 100;
-          instructorEarningsGBP = (netEarningsPence - commissionPence) / 100;
+          commissionRate = planDef.courseCommissionRate;
+        } else if (itemType === "event" || itemType === "class") {
+          commissionRate = planDef.commissionRate; // Event/class commission rate
         }
 
+        const commissionPence = Math.round(netEarningsPence * commissionRate);
+        const platformFeeGBP = commissionPence / 100;
+        const instructorEarningsGBP = (netEarningsPence - commissionPence) / 100;
+
+        // Record earnings in balance and ledger for ALL types (events, courses, classes)
         await addEarnings({
           userId: creatorUserId,
           amount: instructorEarningsGBP,
@@ -174,7 +177,9 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         (metadata as any)._calculated_instructor_earnings = instructorEarningsGBP;
         (metadata as any)._creator_user_id = creatorUserId;
 
-        console.log(`[Webhook] Allocated £${instructorEarningsGBP.toFixed(2)} to creator ${creatorUserId} (Fee: £${platformFeeGBP.toFixed(2)})`);
+        console.log(`[Webhook] ✅ Allocated £${instructorEarningsGBP.toFixed(2)} to creator ${creatorUserId} for ${itemType} (Commission: ${(commissionRate * 100).toFixed(1)}%, Fee: £${platformFeeGBP.toFixed(2)})`);
+      } else {
+        console.warn(`[Webhook] ⚠️ No earnings recorded - creatorUserId: ${creatorUserId}, netEarnings: ${netEarningsPence}p, itemType: ${itemType}`);
       }
     } catch (finError) {
       console.error("[Webhook] Error allocating earnings:", finError);

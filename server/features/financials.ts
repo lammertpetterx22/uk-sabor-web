@@ -31,6 +31,7 @@ export async function getOrCreateBalance(userId: number) {
 
 /**
  * Add earnings to a teacher's balance and record in ledger
+ * Auto-creates balance record if it doesn't exist
  */
 export async function addEarnings(args: {
   userId: number;
@@ -42,6 +43,9 @@ export async function addEarnings(args: {
   if (!db) throw new Error("Database not available");
 
   const amountStr = args.amount.toFixed(2);
+
+  // Ensure balance exists (create if not)
+  await getOrCreateBalance(args.userId);
 
   // Update balance atomically
   await db.update(balances)
@@ -61,26 +65,27 @@ export async function addEarnings(args: {
     orderId: args.orderId,
     status: "completed",
   });
+
+  console.log(`[Financials] ✅ Added £${amountStr} to user ${args.userId} balance (${args.description})`);
 }
 
 // ─── Router ───────────────────────────────────────────────────────────────────
 
 export const financialsRouter = router({
-  /** Get current wallet balance and metrics */
+  /** Get current wallet balance and metrics - ONLY for the authenticated user */
   getWallet: protectedProcedure.query(async ({ ctx }) => {
-    // Only teachers/promoters/admins should access this, but we'll check role-specifically in UI
-    // If we want hard check: if (!["instructor", "promoter", "admin"].includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN" });
-    
+    // Security: User can ONLY access their OWN balance
     return await getOrCreateBalance(ctx.user.id);
   }),
 
-  /** Get transaction history */
+  /** Get transaction history - ONLY for the authenticated user */
   getLedger: protectedProcedure
     .input(z.object({ limit: z.number().default(20), offset: z.number().default(0) }))
     .query(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
+      // Security: User can ONLY see their OWN transactions
       return await db
         .select()
         .from(ledgerTransactions)
@@ -90,13 +95,14 @@ export const financialsRouter = router({
         .offset(input.offset);
     }),
 
-  /** Request a withdrawal */
+  /** Request a withdrawal - user can ONLY withdraw their OWN funds */
   requestWithdrawal: protectedProcedure
     .input(z.object({ amount: z.number().positive() }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
+      // Security: User can ONLY withdraw from their OWN balance
       const balance = await getOrCreateBalance(ctx.user.id);
       const currentAvailable = parseFloat(balance.currentBalance as string);
 
@@ -133,14 +139,16 @@ export const financialsRouter = router({
         status: "pending",
       });
 
+      console.log(`[Financials] 💰 User ${ctx.user.id} requested withdrawal of £${input.amount.toFixed(2)}`);
       return request;
     }),
 
-  /** Get user's withdrawal requests */
+  /** Get user's withdrawal requests - ONLY their own */
   getMyWithdrawals: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
+    // Security: User can ONLY see their OWN withdrawal requests
     return await db
       .select()
       .from(withdrawalRequests)
@@ -148,11 +156,13 @@ export const financialsRouter = router({
       .orderBy(desc(withdrawalRequests.requestedAt));
   }),
 
-  /** Get course sales detailed data */
+  /** Get course sales detailed data - ONLY for courses sold by this user */
   getCourseSales: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
+    // Security: User can ONLY see sales of THEIR OWN courses
+    // instructorId in coursePurchases is the userId of the instructor who owns the course
     return await db
       .select({
         id: coursePurchases.id,
@@ -168,11 +178,13 @@ export const financialsRouter = router({
       .orderBy(desc(coursePurchases.purchasedAt));
   }),
 
-  /** Get event ticket sales detailed data */
+  /** Get event ticket sales detailed data - ONLY for events created by this user */
   getEventSales: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
+    // Security: User can ONLY see sales of THEIR OWN events
+    // instructorId in eventTickets is the userId of the event creator
     return await db
       .select({
         id: eventTickets.id,
@@ -189,11 +201,13 @@ export const financialsRouter = router({
       .orderBy(desc(eventTickets.purchasedAt));
   }),
 
-  /** Get class sales detailed data */
+  /** Get class sales detailed data - ONLY for classes taught by this user */
   getClassSales: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
+    // Security: User can ONLY see sales of THEIR OWN classes
+    // instructorId in classPurchases is the userId of the class instructor
     return await db
       .select({
         id: classPurchases.id,
