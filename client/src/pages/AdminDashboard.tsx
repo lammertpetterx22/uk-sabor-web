@@ -337,10 +337,19 @@ function EventsTab() {
 
   // Step 1: read file → open cropper
   const handleImageSelect = (file: File) => {
+    // SECURITY & UX: Validate image file type
     if (!file.type.startsWith('image/')) {
-      toast.error('Please select a valid image file');
+      toast.error('Por favor selecciona un archivo de imagen válido (.jpg, .png, .webp)');
       return;
     }
+
+    // SECURITY: Validate file size (max 10MB for images)
+    const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+    if (file.size > MAX_IMAGE_SIZE) {
+      toast.error(`La imagen es demasiado grande. Tamaño máximo: 10MB. Tu archivo: ${(file.size / 1024 / 1024).toFixed(1)}MB`);
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => setCropSrc(e.target?.result as string);
     reader.readAsDataURL(file);
@@ -1005,7 +1014,19 @@ function CoursesTab() {
 
   // Course cover image: step 1 → open cropper
   const handleImageSelect = (file: File) => {
-    if (!file.type.startsWith('image/')) { toast.error('Please select a valid image file'); return; }
+    // SECURITY & UX: Validate image file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Por favor selecciona un archivo de imagen válido (.jpg, .png, .webp)');
+      return;
+    }
+
+    // SECURITY: Validate file size (max 10MB for images)
+    const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+    if (file.size > MAX_IMAGE_SIZE) {
+      toast.error(`La imagen es demasiado grande. Tamaño máximo: 10MB. Tu archivo: ${(file.size / 1024 / 1024).toFixed(1)}MB`);
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => setCropSrc(e.target?.result as string);
     reader.readAsDataURL(file);
@@ -1041,10 +1062,24 @@ function CoursesTab() {
   };
 
   const handleVideoUpload = async (file: File) => {
+    // SECURITY & UX: Validate video file type
     if (!file.type.startsWith('video/')) {
-      toast.error('Please select a valid video file');
+      toast.error('Por favor selecciona un archivo de video válido (.mp4, .mov, .avi)');
       return;
     }
+
+    // SECURITY: Validate file size (max 500MB for videos)
+    const MAX_VIDEO_SIZE = 500 * 1024 * 1024; // 500MB in bytes
+    if (file.size > MAX_VIDEO_SIZE) {
+      toast.error(`El video es demasiado grande. Tamaño máximo: 500MB. Tu archivo: ${(file.size / 1024 / 1024).toFixed(1)}MB`);
+      return;
+    }
+
+    // UX: Show informative toast for large files
+    if (file.size > 50 * 1024 * 1024) { // 50MB+
+      toast.info(`Subiendo video de ${(file.size / 1024 / 1024).toFixed(1)}MB. Esto puede tardar unos minutos...`, { duration: 5000 });
+    }
+
     setUploading(true);
     try {
       const reader = new FileReader();
@@ -1061,15 +1096,15 @@ function CoursesTab() {
             folder: "courses/videos",
           });
           setFormData(prev => ({ ...prev, videoUrl: result.url }));
-          toast.success('Video uploaded: ' + file.name);
+          toast.success(`✅ Video subido exitosamente: ${file.name}`);
         } catch (uploadErr: any) {
-          toast.error('Upload failed: ' + uploadErr.message);
+          toast.error(`❌ Error al subir: ${uploadErr.message}`);
           setFormData(prev => ({ ...prev, videoFile: null, videoPreview: "", videoUrl: "" }));
         }
       };
       reader.readAsDataURL(file);
     } catch (error) {
-      toast.error('Failed to process video');
+      toast.error('Error al procesar el video. Intenta de nuevo.');
     } finally {
       setUploading(false);
     }
@@ -1673,10 +1708,19 @@ function ClassesTab() {
 
   // Step 1: read file → open cropper
   const handleImageSelect = (file: File) => {
+    // SECURITY & UX: Validate image file type
     if (!file.type.startsWith('image/')) {
-      toast.error('Please select a valid image file');
+      toast.error('Por favor selecciona un archivo de imagen válido (.jpg, .png, .webp)');
       return;
     }
+
+    // SECURITY: Validate file size (max 10MB for images)
+    const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+    if (file.size > MAX_IMAGE_SIZE) {
+      toast.error(`La imagen es demasiado grande. Tamaño máximo: 10MB. Tu archivo: ${(file.size / 1024 / 1024).toFixed(1)}MB`);
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => setCropSrc(e.target?.result as string);
     reader.readAsDataURL(file);
