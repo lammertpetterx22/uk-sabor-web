@@ -28,12 +28,19 @@ export const lessonsRouter = router({
 
             // If not authenticated → only preview lessons (no bunnyVideoId exposed)
             if (!ctx.user) {
-                return allLessons.map(l => ({
-                    ...l,
-                    bunnyVideoId: l.isPreview ? l.bunnyVideoId : null,
-                    bunnyLibraryId: l.isPreview ? l.bunnyLibraryId : null,
-                    locked: !l.isPreview,
-                }));
+                return allLessons.map(l => {
+                    const shouldGenerateUrl = l.isPreview && l.bunnyVideoId && l.bunnyLibraryId;
+
+                    return {
+                        ...l,
+                        bunnyVideoId: l.isPreview ? l.bunnyVideoId : null,
+                        bunnyLibraryId: l.isPreview ? l.bunnyLibraryId : null,
+                        videoUrl: shouldGenerateUrl
+                            ? bunnyGenerateSignedUrl(l.bunnyVideoId!, l.bunnyLibraryId!, 86400)
+                            : null,
+                        locked: !l.isPreview,
+                    };
+                });
             }
 
             // Check purchase
@@ -45,12 +52,20 @@ export const lessonsRouter = router({
 
             const hasPurchased = !!purchase;
 
-            return allLessons.map(l => ({
-                ...l,
-                bunnyVideoId: hasPurchased || l.isPreview ? l.bunnyVideoId : null,
-                bunnyLibraryId: hasPurchased || l.isPreview ? l.bunnyLibraryId : null,
-                locked: !hasPurchased && !l.isPreview,
-            }));
+            return allLessons.map(l => {
+                const hasAccess = hasPurchased || l.isPreview;
+                const shouldGenerateUrl = hasAccess && l.bunnyVideoId && l.bunnyLibraryId;
+
+                return {
+                    ...l,
+                    bunnyVideoId: hasAccess ? l.bunnyVideoId : null,
+                    bunnyLibraryId: hasAccess ? l.bunnyLibraryId : null,
+                    videoUrl: shouldGenerateUrl
+                        ? bunnyGenerateSignedUrl(l.bunnyVideoId!, l.bunnyLibraryId!, 86400)
+                        : null,
+                    locked: !hasAccess,
+                };
+            });
         }),
 
     /**
