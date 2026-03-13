@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { 
-  Wallet, 
-  ArrowUpRight, 
-  ArrowDownLeft, 
-  Clock, 
-  CheckCircle2, 
-  XCircle, 
-  Plus, 
+import {
+  Wallet,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Plus,
   History,
   TrendingUp,
   AlertCircle,
@@ -29,9 +29,11 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useTranslations } from "@/hooks/useTranslations";
 
 export default function Earnings() {
   const { user } = useAuth();
+  const { t } = useTranslations();
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
 
@@ -44,7 +46,7 @@ export default function Earnings() {
 
   const requestWithdrawal = trpc.financials.requestWithdrawal.useMutation({
     onSuccess: () => {
-      toast.success("Solicitud de retiro enviada correctamente.");
+      toast.success(t('earnings.withdrawalRequested'));
       setIsWithdrawModalOpen(false);
       setWithdrawAmount("");
       refetchWallet();
@@ -58,7 +60,7 @@ export default function Earnings() {
   const handleWithdraw = () => {
     const amount = parseFloat(withdrawAmount);
     if (isNaN(amount) || amount <= 0) {
-      toast.error("Por favor ingresa un monto válido.");
+      toast.error(t('earnings.invalidAmount'));
       return;
     }
     requestWithdrawal.mutate({ amount });
@@ -96,15 +98,15 @@ export default function Earnings() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Tus Ganancias</h1>
-          <p className="text-white/40 mt-1">Gestiona tus ingresos y solicita retiros de fondos.</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">{t('earnings.title')}</h1>
+          <p className="text-white/40 mt-1">{t('earnings.subtitle')}</p>
         </div>
         <button
           onClick={() => setIsWithdrawModalOpen(true)}
           className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#FA3698] to-[#FD4D43] text-white font-bold rounded-xl shadow-lg hover:shadow-[#FA3698]/20 transition-all active:scale-95"
         >
           <Banknote size={20} />
-          Retirar Fondos
+          {t('earnings.withdrawFunds')}
         </button>
       </div>
 
@@ -114,11 +116,11 @@ export default function Earnings() {
           <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
             <Wallet size={80} className="text-[#FA3698]" />
           </div>
-          <p className="text-sm font-medium text-white/50 mb-1">Disponible para retiro</p>
+          <p className="text-sm font-medium text-white/50 mb-1">{t('earnings.availableBalance')}</p>
           <h2 className="text-4xl font-bold text-white">{formatCurrency(wallet?.currentBalance)}</h2>
           <div className="mt-4 flex items-center gap-2 text-[#4ADE80] text-xs font-semibold">
             <TrendingUp size={14} />
-            <span>Fondos liquidados</span>
+            <span>{t('earnings.settledFunds')}</span>
           </div>
         </div>
 
@@ -126,11 +128,11 @@ export default function Earnings() {
           <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
             <Clock size={80} className="text-[#FACC15]" />
           </div>
-          <p className="text-sm font-medium text-white/50 mb-1">Pendiente (En tránsito)</p>
+          <p className="text-sm font-medium text-white/50 mb-1">{t('earnings.pendingBalance')}</p>
           <h2 className="text-4xl font-bold text-white">{formatCurrency(wallet?.pendingBalance)}</h2>
           <div className="mt-4 flex items-center gap-2 text-[#FACC15] text-xs font-semibold">
             <AlertCircle size={14} />
-            <span>Próximamente disponible</span>
+            <span>{t('earnings.upcomingAvailable')}</span>
           </div>
         </div>
 
@@ -138,9 +140,9 @@ export default function Earnings() {
           <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
             <History size={80} className="text-white" />
           </div>
-          <p className="text-sm font-medium text-white/50 mb-1">Total ganado</p>
+          <p className="text-sm font-medium text-white/50 mb-1">{t('earnings.totalEarned')}</p>
           <h2 className="text-4xl font-bold text-white tracking-tight">{formatCurrency(wallet?.totalEarned)}</h2>
-          <p className="mt-4 text-white/30 text-[11px] uppercase tracking-wider font-bold">Histórico total</p>
+          <p className="mt-4 text-white/30 text-[11px] uppercase tracking-wider font-bold">{t('earnings.totalHistorical')}</p>
         </div>
 
         {/* Dynamic Plan Commission Info */}
@@ -151,8 +153,8 @@ export default function Earnings() {
                     <Sparkles className="text-accent h-8 w-8" />
                  </div>
                  <div>
-                    <h3 className="text-xl font-bold text-white">Tu Plan: <span className="text-accent uppercase">{user?.subscriptionPlan || 'Starter'}</span></h3>
-                    <p className="text-white/40 text-sm">Comisión por curso vendido: <span className="text-white font-bold">{
+                    <h3 className="text-xl font-bold text-white">{t('earnings.yourPlan')}: <span className="text-accent uppercase">{user?.subscriptionPlan || 'Starter'}</span></h3>
+                    <p className="text-white/40 text-sm">{t('earnings.commissionRate')}: <span className="text-white font-bold">{
                       user?.subscriptionPlan === 'academy' ? '0%' :
                       user?.subscriptionPlan === 'promoter_plan' ? '5%' :
                       user?.subscriptionPlan === 'creator' ? '10%' : '15%'
@@ -162,8 +164,8 @@ export default function Earnings() {
               <div className="flex flex-wrap gap-2 justify-center">
                  {['Starter (15%)', 'Creator (10%)', 'Promoter (5%)', 'Academy (0%)'].map((p, i) => (
                    <div key={i} className={`px-4 py-2 rounded-xl text-xs font-bold border ${
-                     p.toLowerCase().includes(user?.subscriptionPlan || 'starter') 
-                     ? 'bg-accent/20 border-accent text-accent' 
+                     p.toLowerCase().includes(user?.subscriptionPlan || 'starter')
+                     ? 'bg-accent/20 border-accent text-accent'
                      : 'bg-white/5 border-white/10 text-white/30'
                    }`}>
                      {p}
@@ -181,26 +183,26 @@ export default function Earnings() {
           <div className="space-y-4">
             <div className="flex items-center gap-2 px-2">
               <GraduationCap size={20} className="text-blue-400" />
-              <h3 className="text-xl font-bold text-white">Ventas de Cursos</h3>
+              <h3 className="text-xl font-bold text-white">{t('earnings.courseSales')}</h3>
             </div>
-            
+
             <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="bg-white/5 text-white/40 border-b border-white/10">
-                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Fecha</th>
-                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Curso</th>
-                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Precio</th>
-                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Comisión</th>
-                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-right">Ganancia</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{t('earnings.date')}</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{t('earnings.course')}</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{t('earnings.price')}</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{t('earnings.commission')}</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-right">{t('earnings.earning')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
                     {courseSales?.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="px-6 py-12 text-center text-white/20 italic">
-                          No has vendido ningún curso todavía.
+                          {t('earnings.noCourseSalesYet')}
                         </td>
                       </tr>
                     ) : (
@@ -233,26 +235,26 @@ export default function Earnings() {
           <div className="space-y-4">
             <div className="flex items-center gap-2 px-2">
               <Ticket size={20} className="text-orange-400" />
-              <h3 className="text-xl font-bold text-white">Ventas de Entradas</h3>
+              <h3 className="text-xl font-bold text-white">{t('earnings.eventSales')}</h3>
             </div>
-            
+
             <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="bg-white/5 text-white/40 border-b border-white/10">
-                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Fecha</th>
-                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Evento</th>
-                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-center">Cant.</th>
-                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Precio</th>
-                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-right">Ganancia</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{t('earnings.date')}</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{t('earnings.event')}</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-center">{t('earnings.quantity')}</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{t('earnings.price')}</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-right">{t('earnings.earning')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
                     {eventSales?.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="px-6 py-12 text-center text-white/20 italic">
-                          No hay ventas de entradas registradas.
+                          {t('earnings.noEventSalesYet')}
                         </td>
                       </tr>
                     ) : (
@@ -285,25 +287,25 @@ export default function Earnings() {
           <div className="space-y-4">
             <div className="flex items-center gap-2 px-2">
               <Users size={20} className="text-purple-400" />
-              <h3 className="text-xl font-bold text-white">Ventas de Clases</h3>
+              <h3 className="text-xl font-bold text-white">{t('earnings.classSales')}</h3>
             </div>
-            
+
             <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="bg-white/5 text-white/40 border-b border-white/10">
-                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Fecha</th>
-                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Clase</th>
-                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Precio</th>
-                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-right">Ganancia</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{t('earnings.date')}</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{t('earnings.class')}</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{t('earnings.price')}</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-right">{t('earnings.earning')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
                     {classSales?.length === 0 ? (
                       <tr>
                         <td colSpan={4} className="px-6 py-12 text-center text-white/20 italic">
-                          No hay ventas de clases registradas.
+                          {t('earnings.noClassSalesYet')}
                         </td>
                       </tr>
                     ) : (
@@ -333,25 +335,25 @@ export default function Earnings() {
           <div className="space-y-4">
             <div className="flex items-center gap-2 px-2">
               <History size={20} className="text-[#FA3698]" />
-              <h3 className="text-xl font-bold text-white">Historial de Transacciones (Billetera)</h3>
+              <h3 className="text-xl font-bold text-white">{t('earnings.walletHistory')}</h3>
             </div>
-            
+
             <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="bg-white/5 text-white/40 border-b border-white/10">
-                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Fecha</th>
-                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Descripción</th>
-                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Monto</th>
-                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-right">Estado</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{t('earnings.date')}</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{t('earnings.description')}</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">{t('earnings.amount')}</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-right">{t('earnings.status')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
                     {ledger?.length === 0 ? (
                       <tr>
                         <td colSpan={4} className="px-6 py-12 text-center text-white/20 italic">
-                          No hay transacciones registradas todavía.
+                          {t('earnings.noTransactionsYet')}
                         </td>
                       </tr>
                     ) : (
@@ -379,8 +381,8 @@ export default function Earnings() {
                           </td>
                           <td className="px-6 py-4 text-right">
                             <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
-                              tx.status === "completed" 
-                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
+                              tx.status === "completed"
+                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                                 : tx.status === "pending"
                                 ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
                                 : "bg-red-500/10 text-red-400 border-red-500/20"
@@ -388,7 +390,7 @@ export default function Earnings() {
                               {tx.status === "completed" && <CheckCircle2 size={10} />}
                               {tx.status === "pending" && <Clock size={10} />}
                               {tx.status === "cancelled" && <XCircle size={10} />}
-                              {tx.status === "completed" ? "Completado" : tx.status === "pending" ? "Pendiente" : "Cancelado"}
+                              {tx.status === "completed" ? t('earnings.completed') : tx.status === "pending" ? t('earnings.pending') : t('earnings.cancelled')}
                             </span>
                           </td>
                         </tr>
@@ -405,9 +407,9 @@ export default function Earnings() {
         <div className="space-y-4">
           <div className="flex items-center gap-2 px-2">
             <ArrowUpRight size={20} className="text-[#FD4D43]" />
-            <h3 className="text-xl font-bold text-white">Últimos Retiros</h3>
+            <h3 className="text-xl font-bold text-white">{t('earnings.latestWithdrawals')}</h3>
           </div>
-          
+
           <div className="space-y-3">
             {withdrawals?.slice(0, 5).map(req => (
               <div key={req.id} className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center justify-between">
@@ -418,7 +420,7 @@ export default function Earnings() {
                 <div className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${
                   req.status === "paid" ? "text-emerald-400" : req.status === "rejected" ? "text-[#FD4D43]" : "text-yellow-400"
                 }`}>
-                  {req.status === "paid" ? "Pagado" : req.status === "rejected" ? "Rechazado" : "Pendiente"}
+                  {req.status === "paid" ? t('earnings.paid') : req.status === "rejected" ? t('earnings.rejected') : t('earnings.pending')}
                   {req.status === "paid" && <CheckCircle2 size={12} />}
                   {req.status === "pending" && <Clock size={12} />}
                 </div>
@@ -426,7 +428,7 @@ export default function Earnings() {
             ))}
             {(!withdrawals || withdrawals.length === 0) && (
               <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center text-white/20 italic text-sm">
-                Aún no has solicitado ningún retiro.
+                {t('earnings.noWithdrawalsYet')}
               </div>
             )}
           </div>
@@ -437,20 +439,20 @@ export default function Earnings() {
       <Dialog open={isWithdrawModalOpen} onOpenChange={setIsWithdrawModalOpen}>
         <DialogContent className="bg-[#0f0f0f] border-white/10 text-white sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Solicitar Retiro</DialogTitle>
+            <DialogTitle className="text-xl font-bold">{t('earnings.requestWithdrawal')}</DialogTitle>
             <DialogDescription className="text-white/40">
-              El administrador procesará tu pago a la cuenta bancaria vinculada en un plazo de 2-3 días hábiles.
+              {t('earnings.withdrawalDescription')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="py-6 space-y-4">
             <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex justify-between items-center">
-              <span className="text-white/40 text-sm">Disponible:</span>
+              <span className="text-white/40 text-sm">{t('earnings.available')}:</span>
               <span className="text-white font-bold text-lg">{formatCurrency(wallet?.currentBalance)}</span>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-white/60 ml-1">Monto a retirar (£)</label>
+              <label className="text-sm font-medium text-white/60 ml-1">{t('earnings.withdrawalAmount')} (£)</label>
               <div className="relative group">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-hover:text-white/40 transition-colors">£</span>
                 <Input
@@ -462,11 +464,11 @@ export default function Earnings() {
                 />
               </div>
               <div className="flex justify-end gap-2 mt-2">
-                <button 
+                <button
                   onClick={() => setWithdrawAmount(wallet?.currentBalance?.toString() || "0")}
                   className="text-[10px] font-bold uppercase text-[#FA3698] hover:text-[#FA3698]/80 transition-colors"
                 >
-                  Retirar todo
+                  {t('earnings.withdrawAll')}
                 </button>
               </div>
             </div>
@@ -474,14 +476,14 @@ export default function Earnings() {
 
           <DialogFooter className="gap-2">
             <Button variant="ghost" onClick={() => setIsWithdrawModalOpen(false)} className="rounded-xl border border-white/5 hover:bg-white/5">
-              Cancelar
+              {t('common.cancel')}
             </Button>
-            <Button 
-              onClick={handleWithdraw} 
+            <Button
+              onClick={handleWithdraw}
               disabled={requestWithdrawal.isPending || !withdrawAmount}
               className="bg-gradient-to-r from-[#FA3698] to-[#FD4D43] text-white hover:shadow-lg hover:shadow-[#FA3698]/20 transition-all rounded-xl px-8"
             >
-              {requestWithdrawal.isPending ? "Procesando..." : "Confirmar Retiro"}
+              {requestWithdrawal.isPending ? t('earnings.processing') : t('earnings.confirmWithdrawal')}
             </Button>
           </DialogFooter>
         </DialogContent>
