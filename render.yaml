@@ -18,11 +18,11 @@ services:
         sync: false
       - key: OAUTH_SERVER_URL
         sync: false
-      # Bunny.net Stream (Videos)
+      # Bunny.net Stream (Videos) - CRÍTICO PARA UPLOADS
       - key: BUNNY_API_KEY
         value: d13c6575-3b2d-490f-bca7-e3df257fb5ada4506b8e-7a74-432e-839e-7a6128f74efb
       - key: BUNNY_VIDEO_LIBRARY_ID
-        value: 616736
+        value: "616736"
       - key: BUNNY_ALLOWED_REFERRER
         value: https://uk-sabor-web.onrender.com
       # Bunny.net Storage (Imágenes)
