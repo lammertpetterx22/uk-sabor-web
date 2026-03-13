@@ -17,6 +17,8 @@ interface ProtectedVideoPlayerProps {
   onComplete?: () => void;
   /** If true, play is disabled and a lock overlay is shown. */
   locked?: boolean;
+  /** If true, the src is a Bunny.net iframe embed URL */
+  isBunnyVideo?: boolean;
 }
 
 export default function ProtectedVideoPlayer({
@@ -26,7 +28,10 @@ export default function ProtectedVideoPlayer({
   onProgress,
   onComplete,
   locked = false,
+  isBunnyVideo = false,
 }: ProtectedVideoPlayerProps) {
+  // Auto-detect Bunny.net iframe URLs
+  const isBunnyIframe = isBunnyVideo || src.includes('iframe.mediadelivery.net') || src.includes('iframe.bunnycdn.net');
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -191,6 +196,54 @@ export default function ProtectedVideoPlayer({
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
+  // If it's a Bunny.net iframe, use simplified rendering
+  if (isBunnyIframe) {
+    return (
+      <div
+        ref={containerRef}
+        className="relative bg-black aspect-video group select-none"
+        onContextMenu={blockCtx}
+        style={{ userSelect: "none", WebkitUserSelect: "none" }}
+      >
+        {/* Lock overlay */}
+        {locked && (
+          <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm">
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-8 py-6 text-center">
+              <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#FA3698]/20 mx-auto">
+                <svg className="h-7 w-7 text-[#FA3698]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <p className="font-semibold text-white">Lección bloqueada</p>
+              <p className="mt-1 text-sm text-white/60">Completa la lección anterior para desbloquear</p>
+            </div>
+          </div>
+        )}
+
+        {/* Bunny.net iframe embed */}
+        {!locked && (
+          <iframe
+            src={src}
+            loading="lazy"
+            className="w-full h-full border-0"
+            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+            allowFullScreen
+            onContextMenu={blockCtx}
+          />
+        )}
+
+        {/* Watermark */}
+        {title && !locked && (
+          <div className="absolute top-3 right-3 z-20 text-white/20 text-xs font-medium select-none pointer-events-none">
+            Con Sabor · {title}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Regular video player for non-Bunny videos
   return (
     <div
       ref={containerRef}
