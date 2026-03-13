@@ -45,6 +45,13 @@ async function startServer() {
   // Configure body parser with larger size limit for video uploads (2GB for 20-40 min videos)
   app.use(express.json({ limit: "2gb" }));
   app.use(express.urlencoded({ limit: "2gb", extended: true }));
+
+  // Extended timeout for video upload requests (10 minutes)
+  app.use((req, res, next) => {
+    req.setTimeout(600000); // 10 minutes
+    res.setTimeout(600000); // 10 minutes
+    next();
+  });
   // Email open/click tracking endpoints (public, no auth required)
   registerEmailTrackingRoutes(app);
   // OAuth callback under /api/oauth/callback
@@ -96,6 +103,11 @@ async function startServer() {
 
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);
+
+  // Set server timeout to 10 minutes for video uploads
+  server.timeout = 600000; // 10 minutes
+  server.keepAliveTimeout = 610000; // 10 min + 10 seconds
+  server.headersTimeout = 620000; // 10 min + 20 seconds
 
   if (port !== preferredPort) {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);

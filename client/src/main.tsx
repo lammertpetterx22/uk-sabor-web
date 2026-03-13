@@ -47,6 +47,8 @@ const trpcClient = trpc.createClient({
         return globalThis.fetch(input, {
           ...(init ?? {}),
           credentials: "include",
+          // Timeout extendido para uploads de video (10 minutos)
+          signal: AbortSignal.timeout(600000), // 10 min = 600,000ms
         });
       },
     }),
