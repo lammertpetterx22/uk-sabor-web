@@ -25,10 +25,18 @@ STRIPE_WEBHOOK_SECRET=whsec_YOUR_WEBHOOK_SECRET_HERE
 
 ### 2. Variables NUEVAS de Bunny.net (⚠️ AGREGAR AHORA)
 
+#### Bunny.net Stream (Videos)
 ```bash
 BUNNY_API_KEY=d13c6575-3b2d-490f-bca7-e3df257fb5ada4506b8e-7a74-432e-839e-7a6128f74efb
 BUNNY_VIDEO_LIBRARY_ID=616736
 BUNNY_ALLOWED_REFERRER=https://uk-sabor-web.onrender.com
+```
+
+#### Bunny.net Storage (Imágenes)
+```bash
+BUNNY_STORAGE_ZONE=uk-sabor
+BUNNY_STORAGE_API_KEY=3676c5c0-86dc-4ed3-ab67eb67acf6-0245-40c7
+BUNNY_CDN_URL=https://uk-sabor.b-cdn.net
 ```
 
 ### 3. Variables REMOVIDAS (❌ ELIMINAR SI EXISTEN)
