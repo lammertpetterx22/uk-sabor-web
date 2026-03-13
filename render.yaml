@@ -18,3 +18,17 @@ services:
         sync: false
       - key: OAUTH_SERVER_URL
         sync: false
+      # Bunny.net Stream (Videos)
+      - key: BUNNY_API_KEY
+        value: d13c6575-3b2d-490f-bca7-e3df257fb5ada4506b8e-7a74-432e-839e-7a6128f74efb
+      - key: BUNNY_VIDEO_LIBRARY_ID
+        value: 616736
+      - key: BUNNY_ALLOWED_REFERRER
+        value: https://uk-sabor-web.onrender.com
+      # Bunny.net Storage (Imágenes)
+      - key: BUNNY_STORAGE_ZONE
+        value: uk-sabor
+      - key: BUNNY_STORAGE_API_KEY
+        value: 3676c5c0-86dc-4ed3-ab67eb67acf6-0245-40c7
+      - key: BUNNY_CDN_URL
+        value: https://uk-sabor.b-cdn.net
