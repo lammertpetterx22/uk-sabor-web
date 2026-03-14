@@ -221,8 +221,10 @@ export const adminRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
+      const roles = getAllRoles(ctx.user as any);
+
       // Non-admins can only edit their own events
-      if (ctx.user.role !== "admin") {
+      if (!roles.includes("admin")) {
         const [existing] = await db.select({ creatorId: events.creatorId }).from(events).where(eq(events.id, input.id)).limit(1);
         if (!existing || existing.creatorId !== ctx.user.id) {
           throw new TRPCError({ code: "FORBIDDEN", message: "You can only edit your own events" });
@@ -250,8 +252,10 @@ export const adminRouter = router({
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
+    const roles = getAllRoles(ctx.user as any);
+
     // Non-admins can only delete their own events
-    if (ctx.user.role !== "admin") {
+    if (!roles.includes("admin")) {
       const [existing] = await db.select({ creatorId: events.creatorId }).from(events).where(eq(events.id, input.id)).limit(1);
       if (!existing || existing.creatorId !== ctx.user.id) {
         throw new TRPCError({ code: "FORBIDDEN", message: "You can only delete your own events" });
@@ -271,7 +275,7 @@ export const adminRouter = router({
         description: z.string().optional(),
         danceStyle: z.string().optional(),
         level: z.enum(["beginner", "intermediate", "advanced", "all-levels"]),
-        price: z.number().positive(),
+        price: z.string(),
         instructorId: z.number(),
         duration: z.string().optional(),
         lessonsCount: z.number().int().optional(),
@@ -307,7 +311,7 @@ export const adminRouter = router({
         description: input.description,
         danceStyle: input.danceStyle,
         level: input.level,
-        price: input.price.toString(),
+        price: input.price,
         instructorId: input.instructorId,
         duration: input.duration,
         lessonsCount: input.lessonsCount,
@@ -327,7 +331,7 @@ export const adminRouter = router({
         description: z.string().optional(),
         danceStyle: z.string().optional(),
         level: z.enum(["beginner", "intermediate", "advanced", "all-levels"]).optional(),
-        price: z.number().positive().optional(),
+        price: z.string().optional(),
         duration: z.string().optional(),
         lessonsCount: z.number().int().optional(),
         videoUrl: z.string().optional(),
@@ -356,7 +360,7 @@ export const adminRouter = router({
       if (input.description) updateData.description = input.description;
       if (input.danceStyle) updateData.danceStyle = input.danceStyle;
       if (input.level) updateData.level = input.level;
-      if (input.price) updateData.price = input.price.toString();
+      if (input.price) updateData.price = input.price;
       if (input.duration) updateData.duration = input.duration;
       if (input.lessonsCount) updateData.lessonsCount = input.lessonsCount;
       if (input.videoUrl) updateData.videoUrl = input.videoUrl;
@@ -397,12 +401,17 @@ export const adminRouter = router({
         description: z.string().optional(),
         danceStyle: z.string().optional(),
         classDate: z.string().min(1, "Class date is required"),
-        duration: z.number().int().positive(),
-        price: z.number().positive(),
+        duration: z.number().int().positive().optional(),
+        price: z.string(),
         instructorId: z.number(),
         maxParticipants: z.number().int().positive().optional(),
         hasSocial: z.boolean().optional().default(false),
         socialTime: z.string().optional(),
+        socialLocation: z.string().optional(),
+        socialDescription: z.string().optional(),
+        level: z.string().optional(),
+        imageUrl: z.string().optional(),
+        paymentMethod: z.enum(["online", "cash", "both"]).optional().default("online"),
       })
     )
     .mutation(async ({ input }) => {
@@ -419,14 +428,19 @@ export const adminRouter = router({
         description: input.description,
         danceStyle: input.danceStyle,
         classDate: parsedDate,
-        duration: input.duration,
-        price: input.price.toString(),
+        duration: input.duration || null,
+        price: input.price,
         instructorId: input.instructorId,
         maxParticipants: input.maxParticipants || null,
         currentParticipants: 0,
         status: "published",
         hasSocial: input.hasSocial ?? false,
         socialTime: input.socialTime,
+        socialLocation: input.socialLocation,
+        socialDescription: input.socialDescription,
+        level: input.level as any,
+        imageUrl: input.imageUrl,
+        paymentMethod: input.paymentMethod || "online",
       });
 
       return { success: true };
@@ -441,19 +455,26 @@ export const adminRouter = router({
         danceStyle: z.string().optional(),
         classDate: z.string().optional(),
         duration: z.number().int().positive().optional(),
-        price: z.number().positive().optional(),
+        price: z.string().optional(),
         maxParticipants: z.number().int().positive().optional(),
         status: z.string().optional(),
         hasSocial: z.boolean().optional(),
         socialTime: z.string().optional(),
+        socialLocation: z.string().optional(),
+        socialDescription: z.string().optional(),
+        level: z.string().optional(),
+        imageUrl: z.string().optional(),
+        paymentMethod: z.enum(["online", "cash", "both"]).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
+      const roles = getAllRoles(ctx.user as any);
+
       // Non-admins can only edit their own classes
-      if (ctx.user.role !== "admin") {
+      if (!roles.includes("admin")) {
         const [instructor] = await db.select({ id: instructorsTable.id })
           .from(instructorsTable).where(eq(instructorsTable.userId, ctx.user.id)).limit(1);
         if (!instructor) throw new TRPCError({ code: "FORBIDDEN", message: "Instructor profile not found" });
@@ -469,11 +490,16 @@ export const adminRouter = router({
       if (input.danceStyle) updateData.danceStyle = input.danceStyle;
       if (input.classDate) updateData.classDate = new Date(input.classDate);
       if (input.duration) updateData.duration = input.duration;
-      if (input.price) updateData.price = input.price.toString();
+      if (input.price) updateData.price = input.price;
       if (input.maxParticipants) updateData.maxParticipants = input.maxParticipants;
       if (input.status) updateData.status = input.status;
       if (input.hasSocial !== undefined) updateData.hasSocial = input.hasSocial;
       if (input.socialTime !== undefined) updateData.socialTime = input.socialTime;
+      if (input.socialLocation !== undefined) updateData.socialLocation = input.socialLocation;
+      if (input.socialDescription !== undefined) updateData.socialDescription = input.socialDescription;
+      if (input.level) updateData.level = input.level;
+      if (input.imageUrl) updateData.imageUrl = input.imageUrl;
+      if (input.paymentMethod) updateData.paymentMethod = input.paymentMethod;
 
       await db.update(classes).set(updateData).where(eq(classes.id, input.id));
 
@@ -484,8 +510,10 @@ export const adminRouter = router({
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
+    const roles = getAllRoles(ctx.user as any);
+
     // Non-admins can only delete their own classes
-    if (ctx.user.role !== "admin") {
+    if (!roles.includes("admin")) {
       const [instructor] = await db.select({ id: instructorsTable.id })
         .from(instructorsTable).where(eq(instructorsTable.userId, ctx.user.id)).limit(1);
       if (!instructor) throw new TRPCError({ code: "FORBIDDEN", message: "Instructor profile not found" });
