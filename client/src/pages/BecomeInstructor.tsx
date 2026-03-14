@@ -12,8 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Clock, XCircle, Loader2, Music, Calendar, GraduationCap, Star } from "lucide-react";
-import { useUser } from "@/hooks/useUser";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { useLocation } from "wouter";
 
 const applicationSchema = z.object({
   requestType: z.enum(["instructor", "promoter"]),
@@ -33,8 +33,8 @@ const applicationSchema = z.object({
 type ApplicationFormData = z.infer<typeof applicationSchema>;
 
 export default function BecomeInstructor() {
-  const { user, isLoading: userLoading } = useUser();
-  const navigate = useNavigate();
+  const { user, loading: userLoading } = useAuth();
+  const [, setLocation] = useLocation();
   const [selectedType, setSelectedType] = useState<"instructor" | "promoter">("instructor");
 
   // Get user's application status
@@ -99,7 +99,7 @@ export default function BecomeInstructor() {
             <CardDescription>Debes iniciar sesión para solicitar ser instructor o promotor</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => navigate("/login")} className="w-full">
+            <Button onClick={() => setLocation("/login")} className="w-full">
               Iniciar Sesión
             </Button>
           </CardContent>
@@ -235,7 +235,7 @@ export default function BecomeInstructor() {
                 </div>
               )}
 
-              <Button variant="outline" onClick={() => navigate("/dashboard")} className="w-full">
+              <Button variant="outline" onClick={() => setLocation("/dashboard")} className="w-full">
                 Volver al Dashboard
               </Button>
             </CardContent>
@@ -474,7 +474,7 @@ export default function BecomeInstructor() {
 
               {/* Submit Button */}
               <div className="flex gap-4">
-                <Button type="button" variant="outline" onClick={() => navigate("/")} className="flex-1">
+                <Button type="button" variant="outline" onClick={() => setLocation("/")} className="flex-1">
                   Cancelar
                 </Button>
                 <Button type="submit" disabled={submitApplication.isPending} className="flex-1">
