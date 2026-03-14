@@ -105,24 +105,36 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-        <div className="container h-16 flex items-center justify-between">
-          <h1 className="text-2xl font-bold gradient-text">
-            {isAdmin ? t("dashboard.adminDashboard") : isPromoter ? t("dashboard.promoterPanel") : t("dashboard.instructorPanel")}
-          </h1>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
+      {/* Modern Header */}
+      <div className="border-b border-border/50 bg-card/80 backdrop-blur-xl sticky top-0 z-40 shadow-lg">
+        <div className="container h-20 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-accent/20 to-purple-500/20 flex items-center justify-center border border-accent/30">
+              <Settings className="h-6 w-6 text-accent" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                {isAdmin ? "Panel de Administración" : isPromoter ? t("dashboard.promoterPanel") : t("dashboard.instructorPanel")}
+              </h1>
+              <p className="text-xs text-muted-foreground">
+                {isAdmin ? "Gestión completa del sistema" : "Gestiona tu contenido"}
+              </p>
+            </div>
+          </div>
           <div className="flex items-center gap-3">
             <a href="/attendance" target="_blank" rel="noopener noreferrer">
-              <Button size="sm" className="btn-vibrant gap-2">
+              <Button size="sm" className="btn-vibrant gap-2 shadow-lg">
                 <QrCode className="h-4 w-4" />
-                <span className="hidden sm:inline">{t("admin.scanQR")}</span>
+                <span className="hidden sm:inline">Escanear QR</span>
               </Button>
             </a>
-            <Badge className={isAdmin ? "bg-red-500/20 text-red-400 border-red-500/50" : isPromoter ? "bg-accent/20 text-accent border-accent/50" : "bg-purple-500/20 text-purple-400 border-purple-500/50"}>
-              {isAdmin ? t("roles.admin") : isPromoter ? t("roles.promoter") : t("roles.instructor")}
-            </Badge>
-            <span className="text-sm text-foreground/60">{user?.name || user?.email}</span>
+            <div className="flex flex-col items-end gap-1">
+              <Badge className={isAdmin ? "bg-gradient-to-r from-red-500/20 to-orange-500/20 text-red-400 border-red-500/50" : isPromoter ? "bg-accent/20 text-accent border-accent/50" : "bg-purple-500/20 text-purple-400 border-purple-500/50"}>
+                {isAdmin ? "Administrador" : isPromoter ? t("roles.promoter") : t("roles.instructor")}
+              </Badge>
+              <span className="text-xs text-foreground/60">{user?.name || user?.email}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -131,33 +143,87 @@ export default function AdminDashboard() {
       <div className="container py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {isAdmin ? (
-            <TabsList className="grid w-full grid-cols-9 mb-8">
-              <TabsTrigger value="overview">{t("admin.tabs.overview")}</TabsTrigger>
-              <TabsTrigger value="events">{t("admin.tabs.events")}</TabsTrigger>
-              <TabsTrigger value="courses">{t("admin.tabs.courses")}</TabsTrigger>
-              <TabsTrigger value="lessons">Lecciones</TabsTrigger>
-              <TabsTrigger value="classes">{t("admin.tabs.classes")}</TabsTrigger>
-              <TabsTrigger value="instructors">{t("admin.tabs.instructors")}</TabsTrigger>
-              <TabsTrigger value="users">{t("admin.tabs.users")}</TabsTrigger>
-              <TabsTrigger value="orders">{t("admin.tabs.orders")}</TabsTrigger>
-              <TabsTrigger value="settings">{t("admin.tabs.settings")}</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-2 mb-8 h-auto p-2 bg-card/50 backdrop-blur-sm border border-border/50">
+              <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-accent/20 data-[state=active]:to-purple-500/20 data-[state=active]:border-accent/50">
+                <LayoutTemplate className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Inicio</span>
+              </TabsTrigger>
+              <TabsTrigger value="events" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-500/20 data-[state=active]:to-cyan-500/20 data-[state=active]:border-blue-500/50">
+                <Calendar className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Eventos</span>
+              </TabsTrigger>
+              <TabsTrigger value="courses" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:border-purple-500/50">
+                <Video className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Cursos</span>
+              </TabsTrigger>
+              <TabsTrigger value="lessons" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-indigo-500/20 data-[state=active]:to-purple-500/20 data-[state=active]:border-indigo-500/50">
+                <Video className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Lecciones</span>
+              </TabsTrigger>
+              <TabsTrigger value="classes" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-orange-500/20 data-[state=active]:to-red-500/20 data-[state=active]:border-orange-500/50">
+                <Users className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Clases</span>
+              </TabsTrigger>
+              <TabsTrigger value="instructors" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-green-500/20 data-[state=active]:to-emerald-500/20 data-[state=active]:border-green-500/50">
+                <Users className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Instructores</span>
+              </TabsTrigger>
+              <TabsTrigger value="users" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-yellow-500/20 data-[state=active]:to-orange-500/20 data-[state=active]:border-yellow-500/50">
+                <Users className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Usuarios</span>
+              </TabsTrigger>
+              <TabsTrigger value="orders" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-pink-500/20 data-[state=active]:to-rose-500/20 data-[state=active]:border-pink-500/50">
+                <Mail className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Órdenes</span>
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-gray-500/20 data-[state=active]:to-slate-500/20 data-[state=active]:border-gray-500/50">
+                <Settings className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Ajustes</span>
+              </TabsTrigger>
             </TabsList>
           ) : isInstructor ? (
             // Instructors: Overview + Events + Classes + My Courses (unified) + Profile
-            <TabsList className="grid w-full grid-cols-5 mb-8">
-              <TabsTrigger value="overview">{t("admin.tabs.overview")}</TabsTrigger>
-              <TabsTrigger value="events">{t("admin.tabs.myEvents")}</TabsTrigger>
-              <TabsTrigger value="classes">{t("admin.tabs.myClasses")}</TabsTrigger>
-              <TabsTrigger value="my-courses">Mis Cursos</TabsTrigger>
-              <TabsTrigger value="profile">{t("admin.tabs.myProfile")}</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-2 mb-8 h-auto p-2 bg-card/50 backdrop-blur-sm border border-border/50">
+              <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-accent/20 data-[state=active]:to-purple-500/20 data-[state=active]:border-accent/50">
+                <LayoutTemplate className="h-4 w-4 mr-2" />
+                Inicio
+              </TabsTrigger>
+              <TabsTrigger value="events" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-500/20 data-[state=active]:to-cyan-500/20 data-[state=active]:border-blue-500/50">
+                <Calendar className="h-4 w-4 mr-2" />
+                Mis Eventos
+              </TabsTrigger>
+              <TabsTrigger value="classes" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-orange-500/20 data-[state=active]:to-red-500/20 data-[state=active]:border-orange-500/50">
+                <Users className="h-4 w-4 mr-2" />
+                Mis Clases
+              </TabsTrigger>
+              <TabsTrigger value="my-courses" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:border-purple-500/50">
+                <Video className="h-4 w-4 mr-2" />
+                Mis Cursos
+              </TabsTrigger>
+              <TabsTrigger value="profile" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-green-500/20 data-[state=active]:to-emerald-500/20 data-[state=active]:border-green-500/50">
+                <Users className="h-4 w-4 mr-2" />
+                Mi Perfil
+              </TabsTrigger>
             </TabsList>
           ) : (
             // Promoters: Overview + Events + Classes + Profile (no courses)
-            <TabsList className="grid w-full grid-cols-4 mb-8">
-              <TabsTrigger value="overview">{t("admin.tabs.overview")}</TabsTrigger>
-              <TabsTrigger value="events">{t("admin.tabs.myEvents")}</TabsTrigger>
-              <TabsTrigger value="classes">{t("admin.tabs.myClasses")}</TabsTrigger>
-              <TabsTrigger value="profile">{t("admin.tabs.myProfile")}</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-2 mb-8 h-auto p-2 bg-card/50 backdrop-blur-sm border border-border/50">
+              <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-accent/20 data-[state=active]:to-purple-500/20 data-[state=active]:border-accent/50">
+                <LayoutTemplate className="h-4 w-4 mr-2" />
+                Inicio
+              </TabsTrigger>
+              <TabsTrigger value="events" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-500/20 data-[state=active]:to-cyan-500/20 data-[state=active]:border-blue-500/50">
+                <Calendar className="h-4 w-4 mr-2" />
+                Mis Eventos
+              </TabsTrigger>
+              <TabsTrigger value="classes" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-orange-500/20 data-[state=active]:to-red-500/20 data-[state=active]:border-orange-500/50">
+                <Users className="h-4 w-4 mr-2" />
+                Mis Clases
+              </TabsTrigger>
+              <TabsTrigger value="profile" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-green-500/20 data-[state=active]:to-emerald-500/20 data-[state=active]:border-green-500/50">
+                <Users className="h-4 w-4 mr-2" />
+                Mi Perfil
+              </TabsTrigger>
             </TabsList>
           )}
 
