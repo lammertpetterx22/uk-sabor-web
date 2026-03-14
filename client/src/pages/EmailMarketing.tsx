@@ -569,78 +569,142 @@ function TemplatesTab() {
   if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-accent" /></div>;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold">Email Templates</h2>
-          <p className="text-sm text-foreground/60">Reusable templates for your campaigns</p>
+          <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
+            Email Templates
+          </h2>
+          <p className="text-base text-foreground/70 mt-1">Ready-to-use designs for your email campaigns</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           {(!templates || templates.length === 0) && (
-            <Button variant="outline" onClick={() => seedMutation.mutate()} disabled={seedMutation.isPending} className="gap-2">
-              {seedMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              Load Default Templates
+            <Button variant="outline" onClick={() => seedMutation.mutate()} disabled={seedMutation.isPending} className="gap-2 border-purple-200 hover:bg-purple-50">
+              {seedMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4 text-purple-600" />}
+              Get Started Templates
             </Button>
           )}
-          <Button onClick={() => { setEditingTemplate(null); setShowEditor(true); }} className="btn-vibrant gap-2">
-            <Plus className="h-4 w-4" />
-            New Template
+          <Button onClick={() => { setEditingTemplate(null); setShowEditor(true); }} className="btn-vibrant gap-2 shadow-lg">
+            <Plus className="h-5 w-5" />
+            Create Template
           </Button>
         </div>
       </div>
 
+      {/* Empty State */}
       {templates && templates.length === 0 && (
-        <Card className="border-dashed border-border/30">
-          <CardContent className="py-16 text-center">
-            <LayoutTemplate className="h-12 w-12 text-foreground/20 mx-auto mb-4" />
-            <h3 className="font-semibold text-foreground/60 mb-2">No templates yet</h3>
-            <p className="text-sm text-foreground/40 mb-4">Load the 5 default templates or create your own</p>
-            <Button onClick={() => seedMutation.mutate()} disabled={seedMutation.isPending} className="btn-vibrant gap-2">
-              {seedMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              Load Default Templates
-            </Button>
+        <Card className="border-2 border-dashed border-purple-200 bg-gradient-to-br from-purple-50/50 to-blue-50/50">
+          <CardContent className="py-20 text-center">
+            <div className="inline-block p-4 bg-gradient-to-br from-purple-100 to-blue-100 rounded-2xl mb-6">
+              <LayoutTemplate className="h-16 w-16 text-purple-600" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">Start with Professional Templates</h3>
+            <p className="text-base text-gray-600 mb-6 max-w-md mx-auto">
+              Load our 5 beautifully designed templates or create your own from scratch
+            </p>
+            <div className="flex gap-3 justify-center">
+              <Button onClick={() => seedMutation.mutate()} disabled={seedMutation.isPending} className="btn-vibrant gap-2 px-6">
+                {seedMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
+                Load Starter Templates
+              </Button>
+              <Button variant="outline" onClick={() => { setEditingTemplate(null); setShowEditor(true); }} className="gap-2 px-6">
+                <Plus className="h-5 w-5" />
+                Create Your Own
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Templates Grid */}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {templates?.map((tpl) => (
-          <Card key={tpl.id} className="border-border/50 hover:border-accent/30 transition-colors group">
-            <CardContent className="pt-5">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">{CATEGORY_ICONS[tpl.category || "custom"]}</span>
-                  <div>
-                    <h3 className="font-semibold text-sm">{tpl.name}</h3>
-                    <Badge variant="outline" className={`text-xs mt-0.5 ${CATEGORY_COLORS[tpl.category || "custom"]}`}>
-                      {tpl.category}
-                    </Badge>
-                  </div>
+          <Card key={tpl.id} className="border-2 border-gray-200 hover:border-purple-400 hover:shadow-xl transition-all duration-200 group overflow-hidden">
+            <CardContent className="p-0">
+              {/* Preview thumbnail */}
+              <div className="relative h-40 bg-gradient-to-br from-purple-50 to-blue-50 overflow-hidden">
+                <div className="absolute inset-0 flex items-center justify-center p-4">
+                  <div className="text-6xl opacity-50">{CATEGORY_ICONS[tpl.category || "custom"]}</div>
                 </div>
                 {tpl.isDefault && (
-                  <Badge variant="outline" className="text-xs bg-accent/10 text-accent border-accent/30">Default</Badge>
+                  <div className="absolute top-3 right-3">
+                    <Badge className="bg-white/90 text-purple-600 border-purple-200 shadow-sm">
+                      ✨ Starter
+                    </Badge>
+                  </div>
                 )}
               </div>
-              <p className="text-xs text-foreground/50 truncate mb-4">{tpl.subject}</p>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => setPreviewTemplate(tpl)} className="flex-1 gap-1 text-xs">
-                  <Eye className="h-3 w-3" /> Preview
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => { setEditingTemplate(tpl); setShowEditor(true); }} className="gap-1 text-xs">
-                  <Edit2 className="h-3 w-3" />
-                </Button>
-                {!tpl.isDefault && (
-                  confirmDeleteId === tpl.id ? (
-                    <div className="flex gap-1">
-                      <Button variant="destructive" size="sm" onClick={() => { deleteMutation.mutate({ id: tpl.id }); setConfirmDeleteId(null); }} className="text-xs">Yes</Button>
-                      <Button variant="outline" size="sm" onClick={() => setConfirmDeleteId(null)} className="text-xs">No</Button>
-                    </div>
-                  ) : (
-                    <Button variant="outline" size="sm" onClick={() => setConfirmDeleteId(tpl.id)} className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1 text-xs">
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  )
-                )}
+
+              {/* Content */}
+              <div className="p-5 space-y-3">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-bold text-base text-gray-900 group-hover:text-purple-600 transition-colors">
+                      {tpl.name}
+                    </h3>
+                  </div>
+                  <Badge variant="outline" className={`text-xs ${CATEGORY_COLORS[tpl.category || "custom"]}`}>
+                    {tpl.category}
+                  </Badge>
+                </div>
+
+                <p className="text-sm text-gray-600 line-clamp-2 min-h-[40px]">
+                  Subject: {tpl.subject}
+                </p>
+
+                {/* Actions */}
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPreviewTemplate(tpl)}
+                    className="flex-1 gap-1.5 hover:bg-purple-50 hover:text-purple-600 hover:border-purple-300"
+                  >
+                    <Eye className="h-4 w-4" />
+                    Preview
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { setEditingTemplate(tpl); setShowEditor(true); }}
+                    className="flex-1 gap-1.5 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                    Edit
+                  </Button>
+                  {!tpl.isDefault && (
+                    confirmDeleteId === tpl.id ? (
+                      <div className="flex gap-1">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => { deleteMutation.mutate({ id: tpl.id }); setConfirmDeleteId(null); }}
+                          className="text-xs px-2"
+                        >
+                          Yes
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setConfirmDeleteId(null)}
+                          className="text-xs px-2"
+                        >
+                          No
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setConfirmDeleteId(tpl.id)}
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50 hover:border-red-300"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -660,18 +724,40 @@ function TemplatesTab() {
       {/* Preview Dialog */}
       {previewTemplate && (
         <Dialog open={!!previewTemplate} onOpenChange={(o) => !o && setPreviewTemplate(null)}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-4xl max-h-[90vh]">
             <DialogHeader>
-              <DialogTitle>{previewTemplate.name}</DialogTitle>
-              <DialogDescription>Subject: {previewTemplate.subject}</DialogDescription>
+              <DialogTitle className="text-2xl flex items-center gap-2">
+                <Eye className="h-6 w-6 text-purple-600" />
+                {previewTemplate.name}
+              </DialogTitle>
+              <DialogDescription className="text-base">
+                Subject: <span className="font-semibold text-gray-700">{previewTemplate.subject}</span>
+              </DialogDescription>
             </DialogHeader>
-            <div className="border border-border/50 rounded-lg overflow-hidden h-96">
-              <iframe
-                srcDoc={previewTemplate.htmlContent}
-                className="w-full h-full"
-                sandbox="allow-same-origin"
-                title="Template Preview"
-              />
+            <div className="border-2 border-gray-200 rounded-xl overflow-hidden bg-white shadow-inner">
+              <div className="bg-gray-100 px-4 py-2 border-b border-gray-200 flex items-center gap-2">
+                <Mail className="h-4 w-4 text-gray-500" />
+                <span className="text-sm text-gray-600">Email Preview</span>
+              </div>
+              <div className="p-6 overflow-y-auto" style={{ maxHeight: '60vh' }}>
+                <div dangerouslySetInnerHTML={{ __html: previewTemplate.htmlContent }} />
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end pt-4 border-t">
+              <Button variant="outline" onClick={() => setPreviewTemplate(null)}>
+                Close
+              </Button>
+              <Button
+                onClick={() => {
+                  setEditingTemplate(previewTemplate);
+                  setPreviewTemplate(null);
+                  setShowEditor(true);
+                }}
+                className="btn-vibrant gap-2"
+              >
+                <Edit2 className="h-4 w-4" />
+                Edit This Template
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
