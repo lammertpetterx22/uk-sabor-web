@@ -29,9 +29,9 @@ const SABOR_LOGO =
 // ──────────────────────────────────────────────────────────────────────────────
 const BOTTOM_TABS = [
     { href: "/", label: "Home", icon: Home },
-    { href: "/courses", label: "Cursos", icon: BookOpen },
-    { href: "/events", label: "Eventos", icon: CalendarDays },
-    { href: "/profile", label: "Perfil", icon: User },
+    { href: "/courses", label: "Courses", icon: BookOpen },
+    { href: "/events", label: "Events", icon: CalendarDays },
+    { href: "/profile", label: "Profile", icon: User },
 ];
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -39,9 +39,9 @@ const BOTTOM_TABS = [
 // ──────────────────────────────────────────────────────────────────────────────
 const PUBLIC_NAV = [
     { href: "/", label: "Home", icon: Home },
-    { href: "/courses", label: "Cursos", icon: BookOpen },
-    { href: "/events", label: "Eventos", icon: CalendarDays },
-    { href: "/classes", label: "Clases", icon: CalendarDays },
+    { href: "/courses", label: "Courses", icon: BookOpen },
+    { href: "/events", label: "Events", icon: CalendarDays },
+    { href: "/classes", label: "Classes", icon: CalendarDays },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -134,7 +134,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <nav className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-1">
                 {/* Public */}
                 <p className="px-4 py-2 text-[10px] uppercase tracking-widest text-white/25 font-semibold">
-                    Explorar
+                    Explore
                 </p>
                 {PUBLIC_NAV.map((item) => (
                     <NavLink key={item.href} {...item} onClick={onClose} />
@@ -144,7 +144,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 {isAuthenticated && (
                     <>
                         <p className="px-4 pt-4 pb-2 text-[10px] uppercase tracking-widest text-white/25 font-semibold">
-                            Mi cuenta
+                            My Account
                         </p>
                         <NavLink
                             href="/dashboard"
@@ -155,14 +155,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         <NavLink
                             href="/profile"
                             icon={User}
-                            label="Mi Perfil"
+                            label="My Profile"
                             onClick={onClose}
                         />
                         {!isCreator && (
                             <NavLink
                                 href="/become-instructor"
                                 icon={UserPlus}
-                                label="Ser Instructor/Promotor"
+                                label="Become Instructor/Promoter"
                                 onClick={onClose}
                             />
                         )}
@@ -173,31 +173,31 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 {isCreator && (
                     <>
                         <p className="px-4 pt-4 pb-2 text-[10px] uppercase tracking-widest text-white/25 font-semibold">
-                            Panel de control
+                            Control Panel
                         </p>
                         <NavLink
                             href="/admin"
                             icon={Settings}
-                            label={isAdmin ? "Admin" : "Mi Panel"}
+                            label={isAdmin ? "Admin" : "My Panel"}
                             onClick={onClose}
                         />
                         <NavLink
                             href="/attendance"
                             icon={QrCode}
-                            label="Asistencia"
+                            label="Attendance"
                             onClick={onClose}
                         />
                         <NavLink
                             href="/earnings"
                             icon={Wallet}
-                            label="Ganancias"
+                            label="Earnings"
                             onClick={onClose}
                         />
                         {isCreator && (
                             <NavLink
                                 href="/pricing"
                                 icon={BarChart3}
-                                label="Planes"
+                                label="Plans"
                                 onClick={onClose}
                             />
                         )}
@@ -208,13 +208,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 {isAdmin && (
                     <>
                         <p className="px-4 pt-4 pb-2 text-[10px] uppercase tracking-widest text-white/25 font-semibold">
-                            Administración
+                            Administration
                         </p>
                         <NavLink href="/crm" icon={Users} label="CRM" onClick={onClose} />
                         <NavLink
                             href="/admin/withdrawals"
                             icon={Banknote}
-                            label="Retiros"
+                            label="Withdrawals"
                             onClick={onClose}
                         />
                         <NavLink
@@ -239,7 +239,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-white text-xs font-medium truncate">
-                                    {user?.name || "Usuario"}
+                                    {user?.name || "User"}
                                 </p>
                                 <p className="text-white/40 text-[11px] truncate">{user?.email}</p>
                             </div>
@@ -249,7 +249,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             className="flex items-center gap-3 px-4 py-3 rounded-xl text-white/50 hover:text-[#FD4D43] hover:bg-[#FD4D43]/10 transition-all text-sm font-medium"
                         >
                             <LogOut size={16} />
-                            Cerrar sesión
+                            Log Out
                         </button>
                     </div>
                 ) : (
@@ -258,7 +258,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         onClick={onClose}
                         className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#FA3698] to-[#FD4D43] text-white font-bold text-sm hover:shadow-lg hover:shadow-[#FA3698]/30 transition-all"
                     >
-                        Iniciar sesión
+                        Log In
                     </Link>
                 )}
             </div>
@@ -292,7 +292,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     <button
                         onClick={() => handleSetDrawerOpen(true)}
                         className="p-2 -ml-2 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-all"
-                        aria-label="Abrir menú"
+                        aria-label="Open menu"
                     >
                         <Menu size={20} />
                     </button>
@@ -328,7 +328,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <nav
                 className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch bg-black/95 backdrop-blur-xl border-t border-white/8"
                 style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-                aria-label="Navegación principal"
+                aria-label="Main navigation"
             >
                 {BOTTOM_TABS.map(({ href, label, icon: Icon }) => {
                     const active = location === href;

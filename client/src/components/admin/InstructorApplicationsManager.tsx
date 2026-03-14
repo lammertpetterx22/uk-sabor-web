@@ -77,7 +77,7 @@ export default function InstructorApplicationsManager() {
 
   const deleteApplication = trpc.admin.deleteInstructorApplication.useMutation({
     onSuccess: () => {
-      toast.success("Solicitud eliminada");
+      toast.success("Application deleted");
       refetch();
     },
     onError: (error) => {
@@ -103,7 +103,7 @@ export default function InstructorApplicationsManager() {
       });
     } else {
       if (!adminNotes.trim()) {
-        toast.error("Debes proporcionar una razón para el rechazo");
+        toast.error("You must provide a reason for rejection");
         return;
       }
       rejectApplication.mutate({
@@ -114,7 +114,7 @@ export default function InstructorApplicationsManager() {
   };
 
   const handleDelete = (id: number) => {
-    if (confirm("¿Estás seguro de eliminar esta solicitud?")) {
+    if (confirm("Are you sure you want to delete this application?")) {
       deleteApplication.mutate({ applicationId: id });
     }
   };
@@ -125,21 +125,21 @@ export default function InstructorApplicationsManager() {
         return (
           <Badge variant="outline" className="flex items-center gap-1 text-amber-600 border-amber-300">
             <Clock className="w-3 h-3" />
-            Pendiente
+            Pending
           </Badge>
         );
       case "approved":
         return (
           <Badge variant="outline" className="flex items-center gap-1 text-green-600 border-green-300">
             <CheckCircle2 className="w-3 h-3" />
-            Aprobado
+            Approved
           </Badge>
         );
       case "rejected":
         return (
           <Badge variant="outline" className="flex items-center gap-1 text-red-600 border-red-300">
             <XCircle className="w-3 h-3" />
-            Rechazado
+            Rejected
           </Badge>
         );
       default:
@@ -176,7 +176,7 @@ export default function InstructorApplicationsManager() {
           <CardHeader className="pb-3">
             <CardDescription className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-amber-600" />
-              Pendientes
+              Pending
             </CardDescription>
             <CardTitle className="text-3xl text-amber-600">{pendingCount}</CardTitle>
           </CardHeader>
@@ -188,7 +188,7 @@ export default function InstructorApplicationsManager() {
           <CardHeader className="pb-3">
             <CardDescription className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-green-600" />
-              Aprobados
+              Approved
             </CardDescription>
             <CardTitle className="text-3xl text-green-600">{approvedCount}</CardTitle>
           </CardHeader>
@@ -200,7 +200,7 @@ export default function InstructorApplicationsManager() {
           <CardHeader className="pb-3">
             <CardDescription className="flex items-center gap-2">
               <XCircle className="w-4 h-4 text-red-600" />
-              Rechazados
+              Rejected
             </CardDescription>
             <CardTitle className="text-3xl text-red-600">{rejectedCount}</CardTitle>
           </CardHeader>
@@ -210,12 +210,12 @@ export default function InstructorApplicationsManager() {
       {/* Filter Tabs */}
       <Tabs value={statusFilter} onValueChange={(val) => setStatusFilter(val as ApplicationStatus)}>
         <TabsList>
-          <TabsTrigger value="all">Todas</TabsTrigger>
+          <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="pending">
-            Pendientes {pendingCount > 0 && `(${pendingCount})`}
+            Pending {pendingCount > 0 && `(${pendingCount})`}
           </TabsTrigger>
-          <TabsTrigger value="approved">Aprobadas</TabsTrigger>
-          <TabsTrigger value="rejected">Rechazadas</TabsTrigger>
+          <TabsTrigger value="approved">Approved</TabsTrigger>
+          <TabsTrigger value="rejected">Rejected</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -225,7 +225,7 @@ export default function InstructorApplicationsManager() {
           <Card>
             <CardContent className="py-12 text-center">
               <FileText className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-500">No hay solicitudes {statusFilter !== "all" ? statusFilter : ""}</p>
+              <p className="text-gray-500">No {statusFilter !== "all" ? statusFilter : ""} applications found</p>
             </CardContent>
           </Card>
         ) : (
@@ -242,9 +242,9 @@ export default function InstructorApplicationsManager() {
                       </Badge>
                     </div>
                     <CardDescription className="text-sm text-gray-500">
-                      Solicitado el {new Date(application.requestedAt).toLocaleDateString("es-ES")}
+                      Requested on {new Date(application.requestedAt).toLocaleDateString("en-GB")}
                       {application.reviewedAt &&
-                        ` • Revisado el ${new Date(application.reviewedAt).toLocaleDateString("es-ES")}`}
+                        ` • Reviewed on ${new Date(application.reviewedAt).toLocaleDateString("en-GB")}`}
                     </CardDescription>
                   </div>
                   <div className="flex gap-2">
@@ -257,7 +257,7 @@ export default function InstructorApplicationsManager() {
                           onClick={() => handleReview(application, "approve")}
                         >
                           <CheckCircle2 className="w-4 h-4 mr-1" />
-                          Aprobar
+                          Approve
                         </Button>
                         <Button
                           size="sm"
@@ -266,7 +266,7 @@ export default function InstructorApplicationsManager() {
                           onClick={() => handleReview(application, "reject")}
                         >
                           <XCircle className="w-4 h-4 mr-1" />
-                          Rechazar
+                          Reject
                         </Button>
                       </>
                     )}
@@ -296,7 +296,7 @@ export default function InstructorApplicationsManager() {
                   )}
                   <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-600">Rol actual: {application.currentRole}</span>
+                    <span className="text-gray-600">Current role: {application.currentRole}</span>
                   </div>
                 </div>
 
@@ -322,7 +322,7 @@ export default function InstructorApplicationsManager() {
                         className="flex items-center gap-2 text-blue-600 hover:underline"
                       >
                         <Globe className="w-4 h-4" />
-                        Sitio Web
+                        Website
                       </a>
                     )}
                   </div>
@@ -330,24 +330,24 @@ export default function InstructorApplicationsManager() {
 
                 {/* Interested In */}
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Interesado en publicar:</p>
+                  <p className="text-sm font-medium text-gray-700 mb-2">Interested in publishing:</p>
                   <div className="flex flex-wrap gap-2">
                     {application.interestedInEvents && (
                       <Badge variant="secondary">
                         <Calendar className="w-3 h-3 mr-1" />
-                        Eventos
+                        Events
                       </Badge>
                     )}
                     {application.interestedInClasses && (
                       <Badge variant="secondary">
                         <Music className="w-3 h-3 mr-1" />
-                        Clases
+                        Classes
                       </Badge>
                     )}
                     {application.interestedInCourses && (
                       <Badge variant="secondary">
                         <GraduationCap className="w-3 h-3 mr-1" />
-                        Cursos
+                        Courses
                       </Badge>
                     )}
                   </div>
@@ -356,7 +356,7 @@ export default function InstructorApplicationsManager() {
                 {/* Specialties */}
                 {application.specialtiesArray && application.specialtiesArray.length > 0 && (
                   <div>
-                    <p className="text-sm font-medium text-gray-700 mb-2">Especialidades:</p>
+                    <p className="text-sm font-medium text-gray-700 mb-2">Specialties:</p>
                     <div className="flex flex-wrap gap-2">
                       {application.specialtiesArray.map((specialty: string, idx: number) => (
                         <Badge key={idx} variant="outline">
@@ -369,13 +369,13 @@ export default function InstructorApplicationsManager() {
 
                 {/* Bio */}
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">Biografía:</p>
+                  <p className="text-sm font-medium text-gray-700 mb-1">Biography:</p>
                   <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md">{application.bio}</p>
                 </div>
 
                 {/* Experience */}
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">Experiencia:</p>
+                  <p className="text-sm font-medium text-gray-700 mb-1">Experience:</p>
                   <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md">{application.experience}</p>
                 </div>
 
@@ -384,7 +384,7 @@ export default function InstructorApplicationsManager() {
                   <Alert>
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
-                      <strong>Notas del Administrador:</strong>
+                      <strong>Administrator Notes:</strong>
                       <p className="mt-1">{application.adminNotes}</p>
                     </AlertDescription>
                   </Alert>
@@ -400,7 +400,7 @@ export default function InstructorApplicationsManager() {
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {reviewAction === "approve" ? "Aprobar Solicitud" : "Rechazar Solicitud"}
+              {reviewAction === "approve" ? "Approve Application" : "Reject Application"}
             </DialogTitle>
             <DialogDescription>
               {selectedApplication &&
@@ -419,14 +419,14 @@ export default function InstructorApplicationsManager() {
                   className="w-4 h-4 text-purple-600 rounded"
                 />
                 <Label htmlFor="createProfile" className="cursor-pointer">
-                  Crear perfil de instructor automáticamente
+                  Automatically create instructor profile
                 </Label>
               </div>
             )}
 
             <div className="space-y-2">
               <Label htmlFor="adminNotes">
-                Notas {reviewAction === "reject" ? "(Requerido)" : "(Opcional)"}
+                Notes {reviewAction === "reject" ? "(Required)" : "(Optional)"}
               </Label>
               <Textarea
                 id="adminNotes"
@@ -434,8 +434,8 @@ export default function InstructorApplicationsManager() {
                 onChange={(e) => setAdminNotes(e.target.value)}
                 placeholder={
                   reviewAction === "approve"
-                    ? "Notas adicionales sobre la aprobación..."
-                    : "Explica la razón del rechazo..."
+                    ? "Additional notes about the approval..."
+                    : "Explain the reason for rejection..."
                 }
                 rows={4}
               />
@@ -445,9 +445,9 @@ export default function InstructorApplicationsManager() {
               <Alert>
                 <CheckCircle2 className="h-4 w-4" />
                 <AlertDescription>
-                  El usuario obtendrá el rol de{" "}
-                  <strong className="capitalize">{selectedApplication?.requestType}</strong> y podrá empezar
-                  a publicar contenido.
+                  The user will get the role of{" "}
+                  <strong className="capitalize">{selectedApplication?.requestType}</strong> and will be able to start
+                  publishing content.
                 </AlertDescription>
               </Alert>
             )}
@@ -455,7 +455,7 @@ export default function InstructorApplicationsManager() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowReviewDialog(false)}>
-              Cancelar
+              Cancel
             </Button>
             <Button
               onClick={handleSubmitReview}
@@ -469,7 +469,7 @@ export default function InstructorApplicationsManager() {
               {(approveApplication.isPending || rejectApplication.isPending) && (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               )}
-              {reviewAction === "approve" ? "Aprobar" : "Rechazar"}
+              {reviewAction === "approve" ? "Approve" : "Reject"}
             </Button>
           </DialogFooter>
         </DialogContent>
