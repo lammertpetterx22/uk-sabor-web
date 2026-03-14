@@ -32,21 +32,31 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { ProfessionalUploadProgress } from "@/../components/video/ProfessionalUploadProgress";
+import CourseFormCard from "@/components/admin/CourseFormCard";
 
 interface MyCoursesDashboardProps {
   courses: any[];
   isLoadingCourses: boolean;
   onRefresh: () => void;
+  isAdmin?: boolean;
+  instructors?: any[];
+  myInstructorProfile?: any;
 }
 
 export default function MyCoursesDashboard({
   courses,
   isLoadingCourses,
-  onRefresh
+  onRefresh,
+  isAdmin = false,
+  instructors = [],
+  myInstructorProfile
 }: MyCoursesDashboardProps) {
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [showLessonDialog, setShowLessonDialog] = useState(false);
+  const [showCourseDialog, setShowCourseDialog] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<any>(null);
   const [editingLesson, setEditingLesson] = useState<any>(null);
+  const [confirmDeleteCourseId, setConfirmDeleteCourseId] = useState<number | null>(null);
 
   const videoInputRef = useState<HTMLInputElement | null>(null)[1];
 
@@ -69,6 +79,22 @@ export default function MyCoursesDashboard({
     }
   );
 
+  // Course mutations
+  const deleteCurseMutation = trpc.courses.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Curso eliminado exitosamente");
+      setConfirmDeleteCourseId(null);
+      if (selectedCourse?.id === confirmDeleteCourseId) {
+        setSelectedCourse(null);
+      }
+      onRefresh();
+    },
+    onError: (err) => {
+      toast.error(`Error al eliminar: ${err.message}`);
+    },
+  });
+
+  // Lesson mutations
   const deleteLessonMutation = trpc.lessons.delete.useMutation({
     onSuccess: () => {
       toast.success("Lección eliminada");
@@ -108,6 +134,27 @@ export default function MyCoursesDashboard({
     }
   };
 
+  const handleDeleteCourse = (courseId: number) => {
+    setConfirmDeleteCourseId(courseId);
+  };
+
+  const confirmDeleteCourse = () => {
+    if (confirmDeleteCourseId) {
+      deleteCurseMutation.mutate(confirmDeleteCourseId);
+    }
+  };
+
+  const handleOpenCourseDialog = () => {
+    setEditingCourse(null);
+    setShowCourseDialog(true);
+  };
+
+  const handleEditCourse = (course: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingCourse(course);
+    setShowCourseDialog(true);
+  };
+
   // Main view: Show all courses
   if (!selectedCourse) {
     return (
@@ -115,16 +162,25 @@ export default function MyCoursesDashboard({
         {/* Header */}
         <Card className="border-border/50 bg-gradient-to-br from-card/90 to-card/50 backdrop-blur-sm">
           <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
-                <GraduationCap className="h-6 w-6 text-purple-500" />
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
+                  <GraduationCap className="h-6 w-6 text-purple-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl gradient-text">Mis Cursos</CardTitle>
+                  <CardDescription>
+                    Gestiona tus cursos y sus lecciones
+                  </CardDescription>
+                </div>
               </div>
-              <div>
-                <CardTitle className="text-2xl gradient-text">Mis Cursos</CardTitle>
-                <CardDescription>
-                  Gestiona tus cursos y sus lecciones
-                </CardDescription>
-              </div>
+              <Button
+                onClick={handleOpenCourseDialog}
+                className="btn-vibrant"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Crear Curso
+              </Button>
             </div>
           </CardHeader>
         </Card>
@@ -199,10 +255,60 @@ export default function MyCoursesDashboard({
                     </div>
                   </div>
 
-                  <Button className="w-full btn-vibrant" size="sm">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Gestionar Curso
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button className="flex-1 btn-vibrant" size="sm">
+                      <Settings className="h-4 w-4 mr-2" />
+                      Gestionar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => handleEditCourse(course, e)}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    {confirmDeleteCourseId === course.id ? (
+                      <div className="flex gap-1">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            confirmDeleteCourse();
+                          }}
+                          disabled={deleteCurseMutation.isPending}
+                        >
+                          {deleteCurseMutation.isPending ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            "Sí"
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConfirmDeleteCourseId(null);
+                          }}
+                        >
+                          No
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteCourse(course.id);
+                        }}
+                        className="text-red-600 hover:text-red-700 hover:border-red-300"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -215,13 +321,34 @@ export default function MyCoursesDashboard({
                 <h3 className="text-lg font-semibold text-foreground/80 mb-2">
                   No tienes cursos aún
                 </h3>
-                <p className="text-foreground/60 text-sm">
-                  Contacta al administrador para crear tu primer curso
+                <p className="text-foreground/60 text-sm mb-4">
+                  Crea tu primer curso para comenzar
                 </p>
+                <Button onClick={handleOpenCourseDialog} className="btn-vibrant">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Crear Mi Primer Curso
+                </Button>
               </div>
             </CardContent>
           </Card>
         )}
+
+        {/* Create/Edit Course Dialog */}
+        <Dialog open={showCourseDialog} onOpenChange={setShowCourseDialog}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <CourseFormCard
+              editingCourse={editingCourse}
+              instructors={instructors}
+              myInstructorProfile={myInstructorProfile}
+              isAdmin={isAdmin}
+              onSuccess={() => {
+                setShowCourseDialog(false);
+                setEditingCourse(null);
+                onRefresh();
+              }}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }

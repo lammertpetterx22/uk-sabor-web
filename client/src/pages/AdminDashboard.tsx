@@ -33,7 +33,7 @@ export default function AdminDashboard() {
   const canManageCourses = isAdmin || isInstructor; // courses: instructors and admins only
   const [activeTab, setActiveTab] = useState("overview"); // All roles start at overview
 
-  // Fetch courses for LessonsManager (only if user can manage courses)
+  // Fetch courses for LessonsManager and MyCoursesDashboard (only if user can manage courses)
   const coursesQuery = canManageCourses && isAdmin
     ? trpc.courses.listAll.useQuery({ limit: 100, offset: 0 })
     : canManageCourses
@@ -42,6 +42,12 @@ export default function AdminDashboard() {
 
   const courses = coursesQuery.data;
   const isLoadingCourses = coursesQuery.isLoading || false;
+
+  // Fetch instructors and instructor profile for course creation
+  const { data: instructors } = trpc.instructors.list.useQuery();
+  const { data: myInstructorProfile } = trpc.instructors.getMyProfile.useQuery(undefined, {
+    enabled: isInstructor,
+  });
 
   // Redirect unauthenticated users in an effect (not in render body)
   useEffect(() => {
@@ -181,6 +187,9 @@ export default function AdminDashboard() {
               <MyCoursesDashboard
                 courses={courses || []}
                 isLoadingCourses={isLoadingCourses}
+                isAdmin={false}
+                instructors={instructors || []}
+                myInstructorProfile={myInstructorProfile}
                 onRefresh={() => {
                   if (coursesQuery && 'refetch' in coursesQuery) {
                     (coursesQuery as any).refetch();
