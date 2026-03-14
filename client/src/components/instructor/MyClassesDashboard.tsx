@@ -24,7 +24,7 @@ import {
   Award,
   PartyPopper
 } from "lucide-react";
-import { useTranslations } from "@/lib/i18n";
+import { useTranslations } from "@/hooks/useTranslations";
 
 interface MyClassesDashboardProps {
   classes: any[];
