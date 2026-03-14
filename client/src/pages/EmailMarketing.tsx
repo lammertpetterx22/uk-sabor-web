@@ -163,55 +163,87 @@ function TemplateEditorDialog({
           {/* Editor and Preview side by side */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Editor */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-semibold">Your Message</label>
-                <Badge variant="outline" className="text-xs">Live Editor</Badge>
+                <div className="flex items-center gap-2">
+                  <label className="text-base font-bold text-gray-900">Your Message</label>
+                  <Badge variant="outline" className="bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 border-purple-300">
+                    ✨ Live Editor
+                  </Badge>
+                </div>
               </div>
-              <div className="border-2 border-purple-200 rounded-xl overflow-hidden bg-white shadow-sm hover:border-purple-400 transition-colors">
+
+              <div className="border-2 border-purple-300 rounded-2xl overflow-hidden bg-white shadow-lg hover:border-purple-500 hover:shadow-xl transition-all">
                 <div
                   contentEditable
                   suppressContentEditableWarning
                   onInput={(e) => setHtmlContent(e.currentTarget.innerHTML)}
                   dangerouslySetInnerHTML={{ __html: htmlContent || '' }}
-                  className="p-6 min-h-[400px] focus:outline-none text-gray-800 text-base leading-relaxed"
-                  style={{ maxHeight: '500px', overflowY: 'auto' }}
+                  className="p-8 min-h-[450px] focus:outline-none text-gray-900 text-lg leading-relaxed"
+                  style={{ maxHeight: '550px', overflowY: 'auto' }}
                 />
                 {!htmlContent && (
-                  <div className="absolute top-6 left-6 text-gray-400 pointer-events-none text-base">
-                    Start typing your message here...
-                    <br />
-                    <span className="text-sm">You can paste formatted text, add links, and style your content!</span>
+                  <div className="absolute top-8 left-8 text-gray-400 pointer-events-none text-lg">
+                    <div className="space-y-2">
+                      <p className="font-medium">Start typing your message here...</p>
+                      <p className="text-base text-gray-400">
+                        💡 Tip: You can paste formatted text from anywhere!
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        Your formatting will be preserved automatically
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
-              <p className="text-xs text-gray-500 flex items-center gap-1">
-                <Sparkles className="w-3 h-3" />
-                Type naturally - formatting is preserved automatically
-              </p>
+
+              <div className="flex items-center gap-2 text-sm text-gray-600 bg-gradient-to-r from-purple-50 to-blue-50 p-3 rounded-lg border border-purple-100">
+                <Sparkles className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                <p>Write naturally - bold, italics, links, and all formatting is automatically preserved!</p>
+              </div>
             </div>
 
             {/* Preview */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-semibold">Live Preview</label>
-                <Button variant="ghost" size="sm" onClick={() => setPreview(!preview)} className="h-8">
-                  <Eye className="w-3 h-3 mr-1" />
-                  {preview ? "Hide" : "Show"}
+                <label className="text-base font-bold text-gray-900">Live Preview</label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPreview(!preview)}
+                  className="h-9 gap-2 border-purple-300 hover:bg-purple-50 hover:text-purple-700"
+                >
+                  <Eye className="w-4 h-4" />
+                  {preview ? "Hide Preview" : "Show Preview"}
                 </Button>
               </div>
+
               {preview && htmlContent ? (
-                <div className="border-2 border-gray-200 rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-white shadow-sm">
-                  <div className="p-6 overflow-y-auto min-h-[400px] max-h-[500px]">
-                    <div dangerouslySetInnerHTML={{ __html: htmlContent }} className="text-base leading-relaxed" />
+                <div className="border-2 border-gray-300 rounded-2xl overflow-hidden shadow-lg">
+                  <div className="bg-gradient-to-r from-gray-100 to-gray-200 px-4 py-2.5 border-b border-gray-300 flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">How it looks in emails</span>
+                  </div>
+                  <div className="bg-white p-8 overflow-y-auto min-h-[450px] max-h-[550px]">
+                    <div dangerouslySetInnerHTML={{ __html: htmlContent }} className="text-lg leading-relaxed" />
                   </div>
                 </div>
               ) : (
-                <div className="border-2 border-dashed border-gray-300 rounded-xl min-h-[400px] flex items-center justify-center bg-gradient-to-br from-purple-50/30 to-blue-50/30">
-                  <div className="text-center px-4">
-                    <Eye className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                    <p className="text-base font-medium text-gray-400 mb-2">Preview Your Email</p>
-                    <p className="text-sm text-gray-400">Click "Show" to see how your message will look</p>
+                <div className="border-2 border-dashed border-purple-300 rounded-2xl min-h-[450px] flex items-center justify-center bg-gradient-to-br from-purple-50/50 via-blue-50/50 to-purple-50/50">
+                  <div className="text-center px-6 py-8">
+                    <div className="inline-block p-4 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full mb-4">
+                      <Eye className="w-12 h-12 text-purple-600" />
+                    </div>
+                    <p className="text-lg font-semibold text-gray-700 mb-2">Preview Your Message</p>
+                    <p className="text-base text-gray-500 mb-4">See exactly how your email will look</p>
+                    <Button
+                      onClick={() => setPreview(true)}
+                      variant="outline"
+                      className="gap-2 border-purple-300 hover:bg-purple-50"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Show Preview
+                    </Button>
                   </div>
                 </div>
               )}
@@ -219,12 +251,38 @@ function TemplateEditorDialog({
           </div>
         </div>
 
-        <div className="flex gap-3 justify-end mt-8 pt-6 border-t-2">
-          <Button variant="outline" onClick={onClose} className="px-6">Cancel</Button>
-          <Button onClick={handleSave} disabled={isPending} className="btn-vibrant px-8">
-            {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {template?.id ? "💾 Save Changes" : "✨ Create Template"}
-          </Button>
+        <div className="flex gap-4 justify-between items-center mt-8 pt-6 border-t-2 border-gray-200">
+          <p className="text-sm text-gray-500 flex items-center gap-1">
+            <Sparkles className="w-4 h-4 text-purple-600" />
+            Changes are saved automatically as you type
+          </p>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={onClose} className="px-8 h-11 text-base">
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={isPending} className="btn-vibrant px-10 h-11 text-base shadow-lg">
+              {isPending ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  {template?.id ? (
+                    <>
+                      <CheckCircle className="h-5 w-5 mr-2" />
+                      Save Changes
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-5 w-5 mr-2" />
+                      Create Template
+                    </>
+                  )}
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
