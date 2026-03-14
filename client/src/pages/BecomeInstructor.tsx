@@ -17,11 +17,11 @@ import { useLocation } from "wouter";
 
 const applicationSchema = z.object({
   requestType: z.enum(["instructor", "promoter"]),
-  fullName: z.string().min(1, "El nombre completo es requerido"),
-  email: z.string().email("Email válido es requerido"),
+  fullName: z.string().min(1, "Full name is required"),
+  email: z.string().email("Valid email is required"),
   phone: z.string().optional(),
-  bio: z.string().min(10, "Por favor cuéntanos sobre ti (mínimo 10 caracteres)"),
-  experience: z.string().min(10, "Por favor describe tu experiencia (mínimo 10 caracteres)"),
+  bio: z.string().min(10, "Please tell us about yourself (minimum 10 characters)"),
+  experience: z.string().min(10, "Please describe your experience (minimum 10 characters)"),
   specialties: z.string().optional(), // Comma-separated dance styles
   instagramHandle: z.string().optional(),
   websiteUrl: z.string().optional(),
@@ -29,7 +29,7 @@ const applicationSchema = z.object({
   interestedInClasses: z.boolean(),
   interestedInCourses: z.boolean(),
 }).refine((data) => data.interestedInEvents || data.interestedInClasses || data.interestedInCourses, {
-  message: "Debes seleccionar al menos una opción de lo que te gustaría publicar",
+  message: "You must select at least one option of what you'd like to publish",
   path: ["interestedInEvents"], // Will show error on first checkbox
 });
 
@@ -98,12 +98,12 @@ export default function BecomeInstructor() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-purple-50 to-white p-4">
         <Card className="max-w-md w-full">
           <CardHeader>
-            <CardTitle>Autenticación Requerida</CardTitle>
-            <CardDescription>Debes iniciar sesión para solicitar ser instructor o promotor</CardDescription>
+            <CardTitle>Authentication Required</CardTitle>
+            <CardDescription>You must log in to apply as an instructor or promoter</CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={() => setLocation("/login")} className="w-full">
-              Iniciar Sesión
+              Log In
             </Button>
           </CardContent>
         </Card>
@@ -122,10 +122,10 @@ export default function BecomeInstructor() {
                 <div className="p-2 bg-purple-600 rounded-lg">
                   <Star className="w-6 h-6 text-white" />
                 </div>
-                Estado de tu Solicitud
+                Your Application Status
               </CardTitle>
               <CardDescription className="text-base">
-                Enviaste una solicitud el {new Date(existingApplication.requestedAt).toLocaleDateString("es-ES", {
+                You submitted an application on {new Date(existingApplication.requestedAt).toLocaleDateString("en-GB", {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric'
@@ -135,23 +135,23 @@ export default function BecomeInstructor() {
             <CardContent className="space-y-6">
               {/* Status Badge */}
               <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-gray-700">Estado:</span>
+                <span className="text-sm font-medium text-gray-700">Status:</span>
                 {existingApplication.status === "pending" && (
                   <Badge variant="outline" className="flex items-center gap-2 text-amber-600 border-amber-300">
                     <Clock className="w-4 h-4" />
-                    Pendiente de Revisión
+                    Pending Review
                   </Badge>
                 )}
                 {existingApplication.status === "approved" && (
                   <Badge variant="outline" className="flex items-center gap-2 text-green-600 border-green-300">
                     <CheckCircle2 className="w-4 h-4" />
-                    Aprobado
+                    Approved
                   </Badge>
                 )}
                 {existingApplication.status === "rejected" && (
                   <Badge variant="outline" className="flex items-center gap-2 text-red-600 border-red-300">
                     <XCircle className="w-4 h-4" />
-                    Rechazado
+                    Rejected
                   </Badge>
                 )}
               </div>
@@ -159,11 +159,11 @@ export default function BecomeInstructor() {
               {/* Application Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Tipo de Solicitud:</p>
+                  <p className="text-sm font-medium text-gray-700">Application Type:</p>
                   <p className="text-base capitalize">{existingApplication.requestType}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Nombre Completo:</p>
+                  <p className="text-sm font-medium text-gray-700">Full Name:</p>
                   <p className="text-base">{existingApplication.fullName}</p>
                 </div>
                 <div>
@@ -172,7 +172,7 @@ export default function BecomeInstructor() {
                 </div>
                 {existingApplication.phone && (
                   <div>
-                    <p className="text-sm font-medium text-gray-700">Teléfono:</p>
+                    <p className="text-sm font-medium text-gray-700">Phone:</p>
                     <p className="text-base">{existingApplication.phone}</p>
                   </div>
                 )}
@@ -180,24 +180,24 @@ export default function BecomeInstructor() {
 
               {/* Interested In */}
               <div>
-                <p className="text-sm font-medium text-gray-700 mb-2">Interesado en publicar:</p>
+                <p className="text-sm font-medium text-gray-700 mb-2">Interested in publishing:</p>
                 <div className="flex flex-wrap gap-2">
                   {existingApplication.interestedInEvents && (
                     <Badge variant="secondary">
                       <Calendar className="w-3 h-3 mr-1" />
-                      Eventos
+                      Events
                     </Badge>
                   )}
                   {existingApplication.interestedInClasses && (
                     <Badge variant="secondary">
                       <Music className="w-3 h-3 mr-1" />
-                      Clases
+                      Classes
                     </Badge>
                   )}
                   {existingApplication.interestedInCourses && (
                     <Badge variant="secondary">
                       <GraduationCap className="w-3 h-3 mr-1" />
-                      Cursos
+                      Courses
                     </Badge>
                   )}
                 </div>
@@ -207,7 +207,7 @@ export default function BecomeInstructor() {
               {existingApplication.status === "rejected" && existingApplication.adminNotes && (
                 <Alert>
                   <AlertDescription>
-                    <strong>Nota del Administrador:</strong>
+                    <strong>Administrator Note:</strong>
                     <p className="mt-2">{existingApplication.adminNotes}</p>
                   </AlertDescription>
                 </Alert>
@@ -218,7 +218,7 @@ export default function BecomeInstructor() {
                 <Alert>
                   <Clock className="h-4 w-4" />
                   <AlertDescription>
-                    Tu solicitud está siendo revisada. Te notificaremos cuando haya una actualización.
+                    Your application is being reviewed. We'll notify you when there's an update.
                   </AlertDescription>
                 </Alert>
               )}
@@ -227,8 +227,8 @@ export default function BecomeInstructor() {
                 <Alert className="border-green-200 bg-green-50">
                   <CheckCircle2 className="h-4 w-4 text-green-600" />
                   <AlertDescription className="text-green-800">
-                    ¡Felicitaciones! Tu solicitud ha sido aprobada. Ahora puedes empezar a publicar contenido en la
-                    plataforma.
+                    Congratulations! Your application has been approved. You can now start publishing content on the
+                    platform.
                   </AlertDescription>
                 </Alert>
               )}
@@ -238,17 +238,17 @@ export default function BecomeInstructor() {
                   <Alert className="border-red-200 bg-red-50">
                     <XCircle className="h-4 w-4 text-red-600" />
                     <AlertDescription className="text-red-800">
-                      Tu solicitud fue rechazada. Puedes enviar una nueva solicitud cuando estés listo.
+                      Your application was rejected. You can submit a new application when you're ready.
                     </AlertDescription>
                   </Alert>
                   <Button onClick={() => window.location.reload()} className="w-full">
-                    Enviar Nueva Solicitud
+                    Submit New Application
                   </Button>
                 </div>
               )}
 
               <Button variant="outline" onClick={() => setLocation("/dashboard")} className="w-full">
-                Volver al Dashboard
+                Back to Dashboard
               </Button>
             </CardContent>
           </Card>
@@ -267,11 +267,11 @@ export default function BecomeInstructor() {
             <Star className="w-12 h-12 text-white" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
-            Conviértete en Instructor o Promotor
+            Become an Instructor or Promoter
           </h1>
           <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            Comparte tu pasión por la danza con nuestra comunidad. Publica eventos, clases y cursos en nuestra
-            plataforma y haz crecer tu negocio.
+            Share your passion for dance with our community. Publish events, classes and courses on our
+            platform and grow your business.
           </p>
         </div>
 
@@ -301,7 +301,7 @@ export default function BecomeInstructor() {
                 </div>
                 <div>
                   <CardTitle className="text-xl">Instructor</CardTitle>
-                  <CardDescription>Imparte clases y cursos de danza</CardDescription>
+                  <CardDescription>Teach dance classes and courses</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -309,15 +309,15 @@ export default function BecomeInstructor() {
               <ul className="space-y-3 text-sm text-gray-600">
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Publica clases presenciales y virtuales</span>
+                  <span>Publish in-person and virtual classes</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Crea cursos completos con lecciones grabadas</span>
+                  <span>Create complete courses with recorded lessons</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Organiza eventos y talleres</span>
+                  <span>Organize events and workshops</span>
                 </li>
               </ul>
             </CardContent>
@@ -346,8 +346,8 @@ export default function BecomeInstructor() {
                   }`} />
                 </div>
                 <div>
-                  <CardTitle className="text-xl">Promotor</CardTitle>
-                  <CardDescription>Organiza eventos de danza</CardDescription>
+                  <CardTitle className="text-xl">Promoter</CardTitle>
+                  <CardDescription>Organize dance events</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -355,15 +355,15 @@ export default function BecomeInstructor() {
               <ul className="space-y-3 text-sm text-gray-600">
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Publica eventos sociales y fiestas</span>
+                  <span>Publish social events and parties</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Gestiona venta de entradas online</span>
+                  <span>Manage online ticket sales</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Promociona tus eventos a la comunidad</span>
+                  <span>Promote your events to the community</span>
                 </li>
               </ul>
             </CardContent>
@@ -373,9 +373,9 @@ export default function BecomeInstructor() {
         {/* Application Form */}
         <Card className="shadow-xl border-t-4 border-t-purple-600">
           <CardHeader className="bg-gradient-to-r from-purple-50 to-blue-50 border-b">
-            <CardTitle className="text-2xl">Formulario de Solicitud</CardTitle>
+            <CardTitle className="text-2xl">Application Form</CardTitle>
             <CardDescription className="text-base">
-              Completa todos los campos para enviar tu solicitud. Revisaremos tu información y te contactaremos pronto.
+              Complete all fields to submit your application. We'll review your information and contact you soon.
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
@@ -387,18 +387,18 @@ export default function BecomeInstructor() {
               <div className="space-y-5">
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-1 bg-gradient-to-b from-purple-600 to-blue-600 rounded-full" />
-                  <h3 className="text-lg font-semibold text-gray-900">Información Personal</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Personal Information</h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-2">
                     <Label htmlFor="fullName" className="text-sm font-medium text-gray-700">
-                      Nombre Completo *
+                      Full Name *
                     </Label>
                     <Input
                       id="fullName"
                       {...register("fullName")}
-                      placeholder="Tu nombre completo"
+                      placeholder="Your full name"
                       className="transition-all focus:ring-2 focus:ring-purple-500"
                     />
                     {errors.fullName && <p className="text-sm text-red-600 flex items-center gap-1">
@@ -414,7 +414,7 @@ export default function BecomeInstructor() {
                       id="email"
                       type="email"
                       {...register("email")}
-                      placeholder="tu@email.com"
+                      placeholder="your@email.com"
                       className="transition-all focus:ring-2 focus:ring-purple-500"
                     />
                     {errors.email && <p className="text-sm text-red-600 flex items-center gap-1">
@@ -424,7 +424,7 @@ export default function BecomeInstructor() {
 
                   <div className="space-y-2">
                     <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
-                      Teléfono
+                      Phone
                     </Label>
                     <Input
                       id="phone"
@@ -441,7 +441,7 @@ export default function BecomeInstructor() {
                     <Input
                       id="instagramHandle"
                       {...register("instagramHandle")}
-                      placeholder="@tuusuario"
+                      placeholder="@yourusername"
                       className="transition-all focus:ring-2 focus:ring-purple-500"
                     />
                   </div>
@@ -449,12 +449,12 @@ export default function BecomeInstructor() {
 
                 <div className="space-y-2">
                   <Label htmlFor="websiteUrl" className="text-sm font-medium text-gray-700">
-                    Sitio Web
+                    Website
                   </Label>
                   <Input
                     id="websiteUrl"
                     {...register("websiteUrl")}
-                    placeholder="https://tusitio.com"
+                    placeholder="https://yourwebsite.com"
                     className="transition-all focus:ring-2 focus:ring-purple-500"
                   />
                 </div>
@@ -464,17 +464,17 @@ export default function BecomeInstructor() {
               <div className="space-y-5">
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-1 bg-gradient-to-b from-purple-600 to-blue-600 rounded-full" />
-                  <h3 className="text-lg font-semibold text-gray-900">Cuéntanos sobre ti</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Tell us about yourself</h3>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="bio" className="text-sm font-medium text-gray-700">
-                    Biografía *
+                    Biography *
                   </Label>
                   <Textarea
                     id="bio"
                     {...register("bio")}
-                    placeholder="Cuéntanos quién eres, tu pasión por la danza, qué te inspira..."
+                    placeholder="Tell us who you are, your passion for dance, what inspires you..."
                     rows={4}
                     className="transition-all focus:ring-2 focus:ring-purple-500 resize-none"
                   />
@@ -485,12 +485,12 @@ export default function BecomeInstructor() {
 
                 <div className="space-y-2">
                   <Label htmlFor="experience" className="text-sm font-medium text-gray-700">
-                    Experiencia *
+                    Experience *
                   </Label>
                   <Textarea
                     id="experience"
                     {...register("experience")}
-                    placeholder="Describe tu experiencia como instructor/promotor, años enseñando, logros destacados, certificaciones..."
+                    placeholder="Describe your experience as an instructor/promoter, years teaching, notable achievements, certifications..."
                     rows={4}
                     className="transition-all focus:ring-2 focus:ring-purple-500 resize-none"
                   />
@@ -501,7 +501,7 @@ export default function BecomeInstructor() {
 
                 <div className="space-y-2">
                   <Label htmlFor="specialties" className="text-sm font-medium text-gray-700">
-                    Especialidades (separa con comas)
+                    Specialties (comma-separated)
                   </Label>
                   <Input
                     id="specialties"
@@ -511,7 +511,7 @@ export default function BecomeInstructor() {
                   />
                   <p className="text-xs text-gray-500 flex items-center gap-1">
                     <Music className="w-3 h-3" />
-                    Ejemplo: Salsa, Bachata, Kizomba
+                    Example: Salsa, Bachata, Kizomba
                   </p>
                 </div>
               </div>
@@ -521,8 +521,8 @@ export default function BecomeInstructor() {
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-1 bg-gradient-to-b from-purple-600 to-blue-600 rounded-full" />
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">¿Qué te gustaría publicar?</h3>
-                    <p className="text-sm text-gray-600">Selecciona al menos una opción</p>
+                    <h3 className="text-lg font-semibold text-gray-900">What would you like to publish?</h3>
+                    <p className="text-sm text-gray-600">Select at least one option</p>
                   </div>
                 </div>
 
@@ -543,9 +543,9 @@ export default function BecomeInstructor() {
                       <Label htmlFor="interestedInEvents" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <Calendar className="w-5 h-5 text-purple-600" />
-                          <span className="font-semibold">Eventos y talleres</span>
+                          <span className="font-semibold">Events and workshops</span>
                         </div>
-                        <p className="text-xs text-gray-600">Organiza eventos sociales y fiestas</p>
+                        <p className="text-xs text-gray-600">Organize social events and parties</p>
                       </Label>
                     </div>
                   </div>
@@ -566,9 +566,9 @@ export default function BecomeInstructor() {
                       <Label htmlFor="interestedInClasses" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <Music className="w-5 h-5 text-purple-600" />
-                          <span className="font-semibold">Clases presenciales</span>
+                          <span className="font-semibold">In-person classes</span>
                         </div>
-                        <p className="text-xs text-gray-600">Imparte clases en vivo</p>
+                        <p className="text-xs text-gray-600">Teach live classes</p>
                       </Label>
                     </div>
                   </div>
@@ -589,9 +589,9 @@ export default function BecomeInstructor() {
                       <Label htmlFor="interestedInCourses" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <GraduationCap className="w-5 h-5 text-purple-600" />
-                          <span className="font-semibold">Cursos online</span>
+                          <span className="font-semibold">Online courses</span>
                         </div>
-                        <p className="text-xs text-gray-600">Crea cursos grabados</p>
+                        <p className="text-xs text-gray-600">Create recorded courses</p>
                       </Label>
                     </div>
                   </div>
@@ -619,7 +619,7 @@ export default function BecomeInstructor() {
                   onClick={() => setLocation("/")}
                   className="flex-1 h-12 text-base"
                 >
-                  Cancelar
+                  Cancel
                 </Button>
                 <Button
                   type="submit"
@@ -629,12 +629,12 @@ export default function BecomeInstructor() {
                   {submitApplication.isPending ? (
                     <>
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Enviando...
+                      Submitting...
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="w-5 h-5 mr-2" />
-                      Enviar Solicitud
+                      Submit Application
                     </>
                   )}
                 </Button>
