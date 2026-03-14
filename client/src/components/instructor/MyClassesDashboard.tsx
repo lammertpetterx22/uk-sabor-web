@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import ClassFormCard from "@/components/admin/ClassFormCard";
@@ -22,7 +23,8 @@ import {
   Clock,
   Music,
   Award,
-  PartyPopper
+  PartyPopper,
+  GraduationCap
 } from "lucide-react";
 import { useTranslations } from "@/hooks/useTranslations";
 
@@ -46,7 +48,6 @@ export default function MyClassesDashboard({
   const { t } = useTranslations();
   const utils = trpc.useUtils();
 
-  // Estado para clases
   const [showClassDialog, setShowClassDialog] = useState(false);
   const [editingClass, setEditingClass] = useState<any>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
@@ -82,18 +83,19 @@ export default function MyClassesDashboard({
     { enabled: expandedClassId !== null }
   );
 
-  // Handlers
   const handleCreateClass = () => {
     setEditingClass(null);
     setShowClassDialog(true);
   };
 
-  const handleEditClass = (cls: any) => {
+  const handleEditClass = (cls: any, e: React.MouseEvent) => {
+    e.stopPropagation();
     setEditingClass(cls);
     setShowClassDialog(true);
   };
 
-  const handleDeleteClass = (classId: number) => {
+  const handleDeleteClass = (classId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
     if (confirmDeleteId === classId) {
       deleteMutation.mutate({ id: classId });
     } else {
@@ -101,7 +103,8 @@ export default function MyClassesDashboard({
     }
   };
 
-  const handleTogglePublish = (cls: any) => {
+  const handleTogglePublish = (cls: any, e: React.MouseEvent) => {
+    e.stopPropagation();
     const newStatus = cls.status === "published" ? "draft" : "published";
     updateMutation.mutate({
       id: cls.id,
@@ -117,11 +120,11 @@ export default function MyClassesDashboard({
     link.click();
   };
 
-  const handleToggleExpanded = (classId: number) => {
+  const handleToggleExpanded = (classId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
     setExpandedClassId(expandedClassId === classId ? null : classId);
   };
 
-  // Format date
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("es-ES", {
@@ -134,21 +137,19 @@ export default function MyClassesDashboard({
     });
   };
 
-  // Get level badge color
   const getLevelColor = (level: string) => {
     switch (level) {
       case "beginner":
-        return "bg-green-500/10 text-green-500 border-green-500/30";
+        return "bg-green-500/10 text-green-600 border-green-500/30";
       case "intermediate":
-        return "bg-yellow-500/10 text-yellow-500 border-yellow-500/30";
+        return "bg-yellow-500/10 text-yellow-600 border-yellow-500/30";
       case "advanced":
-        return "bg-red-500/10 text-red-500 border-red-500/30";
+        return "bg-red-500/10 text-red-600 border-red-500/30";
       default:
-        return "bg-blue-500/10 text-blue-500 border-blue-500/30";
+        return "bg-blue-500/10 text-blue-600 border-blue-500/30";
     }
   };
 
-  // Get level label
   const getLevelLabel = (level: string) => {
     switch (level) {
       case "beginner":
@@ -158,65 +159,55 @@ export default function MyClassesDashboard({
       case "advanced":
         return "Avanzado";
       default:
-        return "Todos los Niveles";
+        return "Todos";
     }
   };
 
-  // Loading state
-  if (isLoadingClasses) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-3 text-lg text-muted-foreground">Cargando clases...</span>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-            Mis Clases
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            Gestiona tus clases y horarios
-          </p>
-        </div>
-        <Button
-          onClick={handleCreateClass}
-          size="lg"
-          className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Crear Clase
-        </Button>
-      </div>
-
-      {/* Classes Grid */}
-      {classes.length === 0 ? (
-        <Card className="border-2 border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <Calendar className="h-16 w-16 text-muted-foreground/40 mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No hay clases</h3>
-            <p className="text-muted-foreground mb-6 text-center max-w-md">
-              Comienza creando tu primera clase para ofrecer tus enseñanzas
-            </p>
-            <Button onClick={handleCreateClass} size="lg">
-              <Plus className="h-5 w-5 mr-2" />
-              Crear Primera Clase
+      {/* Header - mismo estilo que MyCoursesDashboard */}
+      <Card className="border-border/50 bg-gradient-to-br from-card/90 to-card/50 backdrop-blur-sm">
+        <CardHeader>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/20 border border-orange-500/30">
+                <GraduationCap className="h-6 w-6 text-orange-500" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl gradient-text">Mis Clases</CardTitle>
+                <CardDescription>
+                  Gestiona tus clases y horarios
+                </CardDescription>
+              </div>
+            </div>
+            <Button
+              onClick={handleCreateClass}
+              className="btn-vibrant"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Crear Clase
             </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          </div>
+        </CardHeader>
+      </Card>
+
+      {/* Classes Grid - mismo estilo que MyCoursesDashboard */}
+      {isLoadingClasses ? (
+        <div className="flex justify-center py-16">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin text-accent mx-auto mb-4" />
+            <p className="text-foreground/60">Cargando clases...</p>
+          </div>
+        </div>
+      ) : classes && classes.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {classes.map((cls) => (
             <Card
               key={cls.id}
-              className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50 overflow-hidden"
+              className="border-border/50 bg-card/50 backdrop-blur-sm hover:border-accent/50 transition-all cursor-pointer group overflow-hidden"
+              onClick={() => handleToggleExpanded(cls.id, {} as React.MouseEvent)}
             >
-              {/* Image Header */}
+              {/* Class Image */}
               {cls.imageUrl && (
                 <div className="relative h-48 w-full overflow-hidden">
                   <img
@@ -225,11 +216,8 @@ export default function MyClassesDashboard({
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <div className="absolute top-3 right-3 flex gap-2">
-                    <Badge
-                      variant={cls.status === "published" ? "default" : "secondary"}
-                      className="shadow-lg"
-                    >
+                  <div className="absolute bottom-3 left-3 right-3">
+                    <Badge className="bg-black/50 backdrop-blur-sm border-0 text-white">
                       {cls.status === "published" ? (
                         <>
                           <Eye className="h-3 w-3 mr-1" />
@@ -243,187 +231,170 @@ export default function MyClassesDashboard({
                       )}
                     </Badge>
                   </div>
-                  <div className="absolute bottom-3 left-3">
-                    <h3 className="text-white font-bold text-xl drop-shadow-lg">
-                      {cls.title}
-                    </h3>
-                  </div>
                 </div>
               )}
 
-              <CardContent className="p-6 space-y-4">
-                {/* If no image, show title here */}
+              <CardContent className="p-4 space-y-3">
+                <div>
+                  <h3 className="font-semibold text-lg text-foreground line-clamp-2 group-hover:text-accent transition-colors">
+                    {cls.title}
+                  </h3>
+                  {cls.description && (
+                    <p className="text-sm text-foreground/60 mt-1 line-clamp-2">
+                      {cls.description}
+                    </p>
+                  )}
+                </div>
+
+                {/* Status badge if no image */}
                 {!cls.imageUrl && (
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-xl font-bold">{cls.title}</h3>
-                      <Badge
-                        variant={cls.status === "published" ? "default" : "secondary"}
-                        className="mt-2"
-                      >
-                        {cls.status === "published" ? (
-                          <>
-                            <Eye className="h-3 w-3 mr-1" />
-                            Publicado
-                          </>
-                        ) : (
-                          <>
-                            <EyeOff className="h-3 w-3 mr-1" />
-                            Borrador
-                          </>
-                        )}
-                      </Badge>
-                    </div>
-                  </div>
+                  <Badge className="bg-black/10 backdrop-blur-sm">
+                    {cls.status === "published" ? (
+                      <>
+                        <Eye className="h-3 w-3 mr-1" />
+                        Publicado
+                      </>
+                    ) : (
+                      <>
+                        <EyeOff className="h-3 w-3 mr-1" />
+                        Borrador
+                      </>
+                    )}
+                  </Badge>
                 )}
 
-                {/* Class Details */}
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3 text-sm">
-                    <Calendar className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Fecha y Hora</p>
-                      <p className="text-muted-foreground capitalize">
-                        {formatDate(cls.classDate)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Dance Style and Level */}
-                  <div className="flex flex-wrap gap-2">
-                    {cls.danceStyle && (
-                      <Badge variant="outline" className="border-primary/30">
-                        <Music className="h-3 w-3 mr-1" />
-                        {cls.danceStyle}
-                      </Badge>
-                    )}
-                    <Badge variant="outline" className={getLevelColor(cls.level)}>
-                      <Award className="h-3 w-3 mr-1" />
-                      {getLevelLabel(cls.level)}
+                {/* Dance Style and Level Badges */}
+                <div className="flex flex-wrap gap-2">
+                  {cls.danceStyle && (
+                    <Badge variant="outline" className="text-xs">
+                      <Music className="h-3 w-3 mr-1" />
+                      {cls.danceStyle}
                     </Badge>
+                  )}
+                  <Badge variant="outline" className={`text-xs ${getLevelColor(cls.level)}`}>
+                    <Award className="h-3 w-3 mr-1" />
+                    {getLevelLabel(cls.level)}
+                  </Badge>
+                  {cls.hasSocial && (
+                    <Badge variant="outline" className="text-xs bg-purple-500/10 text-purple-600 border-purple-500/30">
+                      <PartyPopper className="h-3 w-3 mr-1" />
+                      Social
+                    </Badge>
+                  )}
+                </div>
+
+                <Separator className="bg-border/50" />
+
+                {/* Class Details */}
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2 text-foreground/80">
+                    <Calendar className="h-4 w-4 text-accent flex-shrink-0" />
+                    <span className="text-xs capitalize line-clamp-1">
+                      {formatDate(cls.classDate)}
+                    </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex items-center gap-2 text-sm">
-                      <DollarSign className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="font-medium">${cls.price}</p>
-                        <p className="text-xs text-muted-foreground">por clase</p>
-                      </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex items-center gap-2 text-foreground/80">
+                      <DollarSign className="h-4 w-4 text-accent" />
+                      <span className="text-xs font-medium">${cls.price}</span>
                     </div>
-
                     {cls.duration && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Clock className="h-5 w-5 text-primary" />
-                        <div>
-                          <p className="font-medium">{cls.duration} min</p>
-                          <p className="text-xs text-muted-foreground">duración</p>
-                        </div>
+                      <div className="flex items-center gap-2 text-foreground/80">
+                        <Clock className="h-4 w-4 text-accent" />
+                        <span className="text-xs">{cls.duration}min</span>
                       </div>
                     )}
                   </div>
 
                   {cls.maxParticipants && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Users className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="font-medium">{cls.maxParticipants} participantes</p>
-                        <p className="text-xs text-muted-foreground">capacidad máxima</p>
-                      </div>
+                    <div className="flex items-center gap-2 text-foreground/80">
+                      <Users className="h-4 w-4 text-accent" />
+                      <span className="text-xs">{cls.maxParticipants} participantes</span>
                     </div>
                   )}
 
-                  {/* Social Dancing Badge */}
-                  {cls.hasSocial && (
-                    <Badge className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-500 border-purple-500/30">
-                      <PartyPopper className="h-3 w-3 mr-1" />
-                      Incluye Social Dancing
-                    </Badge>
-                  )}
-
-                  {cls.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2 pt-2 border-t">
-                      {cls.description}
-                    </p>
-                  )}
-
-                  {/* Instructor Info */}
+                  {/* Instructor info */}
                   {cls.instructor && (
-                    <div className="flex items-center gap-2 pt-2 border-t text-sm">
-                      <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
-                        <span className="font-semibold text-primary">
+                    <div className="flex items-center gap-2 pt-2 border-t border-border/50">
+                      <div className="h-6 w-6 rounded-full bg-gradient-to-br from-accent/20 to-purple-500/20 flex items-center justify-center">
+                        <span className="text-xs font-semibold text-accent">
                           {cls.instructor.name.charAt(0)}
                         </span>
                       </div>
-                      <div>
-                        <p className="font-medium">{cls.instructor.name}</p>
-                        <p className="text-xs text-muted-foreground">Instructor</p>
-                      </div>
+                      <span className="text-xs text-foreground/70">{cls.instructor.name}</span>
                     </div>
                   )}
                 </div>
 
+                <Separator className="bg-border/50" />
+
                 {/* Action Buttons */}
-                <div className="flex flex-wrap gap-2 pt-4 border-t">
+                <div className="flex gap-2 flex-wrap">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleEditClass(cls)}
-                    className="flex-1"
+                    onClick={(e) => handleEditClass(cls, e)}
+                    className="flex-1 text-xs"
                   >
-                    <Edit2 className="h-4 w-4 mr-2" />
+                    <Edit2 className="h-3 w-3 mr-1" />
                     Editar
                   </Button>
-
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleTogglePublish(cls)}
-                    className="flex-1"
+                    onClick={(e) => handleTogglePublish(cls, e)}
+                    className="flex-1 text-xs"
                   >
                     {cls.status === "published" ? (
                       <>
-                        <EyeOff className="h-4 w-4 mr-2" />
-                        Despublicar
+                        <EyeOff className="h-3 w-3 mr-1" />
+                        Ocultar
                       </>
                     ) : (
                       <>
-                        <Eye className="h-4 w-4 mr-2" />
+                        <Eye className="h-3 w-3 mr-1" />
                         Publicar
                       </>
                     )}
                   </Button>
+                </div>
 
+                <div className="flex gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleToggleExpanded(cls.id)}
+                    onClick={(e) => handleToggleExpanded(cls.id, e)}
+                    className="flex-1 text-xs"
                   >
-                    <QrCode className="h-4 w-4 mr-2" />
-                    QR
+                    <QrCode className="h-3 w-3 mr-1" />
+                    {expandedClassId === cls.id ? "Ocultar QR" : "Ver QR"}
                   </Button>
-
                   <Button
                     variant={confirmDeleteId === cls.id ? "destructive" : "outline"}
                     size="sm"
-                    onClick={() => handleDeleteClass(cls.id)}
+                    onClick={(e) => handleDeleteClass(cls.id, e)}
+                    className="text-xs"
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
+                    <Trash2 className="h-3 w-3 mr-1" />
                     {confirmDeleteId === cls.id ? "Confirmar" : "Eliminar"}
                   </Button>
                 </div>
 
                 {/* QR Code Section (expandable) */}
                 {expandedClassId === cls.id && classQRCodes && (
-                  <div className="pt-4 border-t space-y-3 animate-in slide-in-from-top-2">
+                  <div className="pt-3 border-t space-y-3 animate-in slide-in-from-top-2">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-sm">Código QR de la Clase</h4>
+                      <h4 className="font-semibold text-xs">Código QR</h4>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDownloadQR(cls)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDownloadQR(cls);
+                        }}
                       >
-                        <Download className="h-4 w-4 mr-2" />
+                        <Download className="h-3 w-3 mr-1" />
                         Descargar
                       </Button>
                     </div>
@@ -432,22 +403,35 @@ export default function MyClassesDashboard({
                         <img
                           src={classQRCodes.qrCodeUrl}
                           alt="QR Code"
-                          className="w-48 h-48 border-4 border-white shadow-lg rounded-lg"
+                          className="w-32 h-32 border-2 border-white shadow-lg rounded"
                         />
                       </div>
                     )}
-                    <p className="text-xs text-center text-muted-foreground">
-                      Los participantes pueden escanear este código para ver los detalles de la clase
-                    </p>
                   </div>
                 )}
               </CardContent>
             </Card>
           ))}
         </div>
+      ) : (
+        <Card className="border-2 border-dashed border-border/50">
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="p-4 rounded-full bg-accent/10 mb-4">
+              <GraduationCap className="h-12 w-12 text-accent" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">No hay clases</h3>
+            <p className="text-foreground/60 mb-6 max-w-sm">
+              Comienza creando tu primera clase para ofrecer tus enseñanzas
+            </p>
+            <Button onClick={handleCreateClass} className="btn-vibrant">
+              <Plus className="h-4 w-4 mr-2" />
+              Crear Primera Clase
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Class Dialog (Create/Edit) */}
+      {/* Class Dialog */}
       <Dialog open={showClassDialog} onOpenChange={setShowClassDialog}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
