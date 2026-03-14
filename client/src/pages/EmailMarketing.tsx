@@ -123,24 +123,25 @@ function TemplateEditorDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{template?.id ? "Edit Template" : "Create Template"}</DialogTitle>
-          <DialogDescription>
-            Create beautiful email templates with our simple editor
+          <DialogTitle className="text-2xl">{template?.id ? "Edit Template" : "Create New Template"}</DialogTitle>
+          <DialogDescription className="text-base">
+            Write your message naturally and it will look beautiful in emails ✨
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-5">
+        <div className="space-y-6">
+          {/* Top row: Name, Category, Subject */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Template Name</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Summer Event Promo" />
+              <label className="text-sm font-semibold mb-2 block">Template Name</label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Summer Event Promo" className="h-11" />
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">Category</label>
+              <label className="text-sm font-semibold mb-2 block">Category</label>
               <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger>
+                <SelectTrigger className="h-11">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -154,63 +155,75 @@ function TemplateEditorDialog({
               </Select>
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">Subject Line</label>
-              <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g., 🎉 Join us for our next event!" />
-              <p className="text-xs text-foreground/50 mt-1">This is what people will see in their inbox</p>
+              <label className="text-sm font-semibold mb-2 block">Subject Line</label>
+              <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="🎉 Join us for our next event!" className="h-11" />
             </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Email Message</label>
-              <div className="border border-border/50 rounded-lg overflow-hidden bg-white relative">
+          </div>
+
+          {/* Editor and Preview side by side */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Editor */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold">Your Message</label>
+                <Badge variant="outline" className="text-xs">Live Editor</Badge>
+              </div>
+              <div className="border-2 border-purple-200 rounded-xl overflow-hidden bg-white shadow-sm hover:border-purple-400 transition-colors">
                 <div
                   contentEditable
                   suppressContentEditableWarning
                   onInput={(e) => setHtmlContent(e.currentTarget.innerHTML)}
                   dangerouslySetInnerHTML={{ __html: htmlContent || '' }}
-                  className="p-4 min-h-[240px] focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800"
-                  style={{ maxHeight: '400px', overflowY: 'auto' }}
-                  data-placeholder="Start typing your message here... You can paste formatted text or just type naturally!"
+                  className="p-6 min-h-[400px] focus:outline-none text-gray-800 text-base leading-relaxed"
+                  style={{ maxHeight: '500px', overflowY: 'auto' }}
                 />
                 {!htmlContent && (
-                  <div className="absolute top-4 left-4 text-gray-400 pointer-events-none">
-                    Start typing your message here... You can paste formatted text or just type naturally!
+                  <div className="absolute top-6 left-6 text-gray-400 pointer-events-none text-base">
+                    Start typing your message here...
+                    <br />
+                    <span className="text-sm">You can paste formatted text, add links, and style your content!</span>
                   </div>
                 )}
               </div>
-              <p className="text-xs text-foreground/50 mt-1">Type or paste your message - it will look great! ✨</p>
+              <p className="text-xs text-gray-500 flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
+                Type naturally - formatting is preserved automatically
+              </p>
             </div>
-          </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <label className="text-sm font-medium">Preview</label>
-              <Button variant="outline" size="sm" onClick={() => setPreview(!preview)}>
-                <Eye className="h-3 w-3 mr-1" />
-                {preview ? "Hide" : "Show"}
-              </Button>
+            {/* Preview */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold">Live Preview</label>
+                <Button variant="ghost" size="sm" onClick={() => setPreview(!preview)} className="h-8">
+                  <Eye className="w-3 h-3 mr-1" />
+                  {preview ? "Hide" : "Show"}
+                </Button>
+              </div>
+              {preview && htmlContent ? (
+                <div className="border-2 border-gray-200 rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-white shadow-sm">
+                  <div className="p-6 overflow-y-auto min-h-[400px] max-h-[500px]">
+                    <div dangerouslySetInnerHTML={{ __html: htmlContent }} className="text-base leading-relaxed" />
+                  </div>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-gray-300 rounded-xl min-h-[400px] flex items-center justify-center bg-gradient-to-br from-purple-50/30 to-blue-50/30">
+                  <div className="text-center px-4">
+                    <Eye className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                    <p className="text-base font-medium text-gray-400 mb-2">Preview Your Email</p>
+                    <p className="text-sm text-gray-400">Click "Show" to see how your message will look</p>
+                  </div>
+                </div>
+              )}
             </div>
-            {preview && htmlContent ? (
-              <div className="border border-border/50 rounded-lg overflow-hidden h-[420px] bg-white">
-                <div className="p-6 overflow-y-auto h-full">
-                  <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
-                </div>
-              </div>
-            ) : (
-              <div className="border border-dashed border-border/30 rounded-lg h-[420px] flex items-center justify-center text-foreground/30 bg-gradient-to-br from-purple-50/50 to-blue-50/50">
-                <div className="text-center">
-                  <Eye className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-sm">Click "Show" to preview your email</p>
-                  <p className="text-xs mt-1">See how it will look to your audience</p>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
-        <div className="flex gap-2 justify-end mt-6 pt-4 border-t">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSave} disabled={isPending} className="btn-vibrant">
+        <div className="flex gap-3 justify-end mt-8 pt-6 border-t-2">
+          <Button variant="outline" onClick={onClose} className="px-6">Cancel</Button>
+          <Button onClick={handleSave} disabled={isPending} className="btn-vibrant px-8">
             {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {template?.id ? "Save Changes" : "Create Template"}
+            {template?.id ? "💾 Save Changes" : "✨ Create Template"}
           </Button>
         </div>
       </DialogContent>
