@@ -173,14 +173,14 @@ function TemplateEditorDialog({
                 </div>
               </div>
 
-              <div className="border-2 border-purple-300 rounded-2xl overflow-hidden bg-white shadow-lg hover:border-purple-500 hover:shadow-xl transition-all">
+              <div className="border-2 border-purple-300 rounded-2xl overflow-hidden bg-white shadow-lg hover:border-purple-500 hover:shadow-xl transition-all relative">
                 <div
                   contentEditable
                   suppressContentEditableWarning
                   onInput={(e) => setHtmlContent(e.currentTarget.innerHTML)}
                   dangerouslySetInnerHTML={{ __html: htmlContent || '' }}
-                  className="p-8 min-h-[450px] focus:outline-none text-gray-900 text-lg leading-relaxed"
-                  style={{ maxHeight: '550px', overflowY: 'auto' }}
+                  className="p-8 min-h-[500px] focus:outline-none text-gray-900 text-lg leading-relaxed"
+                  style={{ maxHeight: '600px', overflowY: 'auto' }}
                 />
                 {!htmlContent && (
                   <div className="absolute top-8 left-8 text-gray-400 pointer-events-none text-lg">
@@ -224,12 +224,12 @@ function TemplateEditorDialog({
                     <Mail className="w-4 h-4 text-gray-600" />
                     <span className="text-sm font-medium text-gray-700">How it looks in emails</span>
                   </div>
-                  <div className="bg-white p-8 overflow-y-auto min-h-[450px] max-h-[550px]">
+                  <div className="bg-white p-8 overflow-y-auto min-h-[500px] max-h-[600px]">
                     <div dangerouslySetInnerHTML={{ __html: htmlContent }} className="text-lg leading-relaxed" />
                   </div>
                 </div>
               ) : (
-                <div className="border-2 border-dashed border-purple-300 rounded-2xl min-h-[450px] flex items-center justify-center bg-gradient-to-br from-purple-50/50 via-blue-50/50 to-purple-50/50">
+                <div className="border-2 border-dashed border-purple-300 rounded-2xl min-h-[500px] flex items-center justify-center bg-gradient-to-br from-purple-50/50 via-blue-50/50 to-purple-50/50">
                   <div className="text-center px-6 py-8">
                     <div className="inline-block p-4 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full mb-4">
                       <Eye className="w-12 h-12 text-purple-600" />
