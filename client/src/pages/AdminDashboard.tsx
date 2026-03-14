@@ -143,34 +143,22 @@ export default function AdminDashboard() {
       <div className="container py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {isAdmin ? (
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-2 mb-8 h-auto p-2 bg-card/50 backdrop-blur-sm border border-border/50">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-8 h-auto p-2 bg-card/50 backdrop-blur-sm border border-border/50">
               <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-accent/20 data-[state=active]:to-purple-500/20 data-[state=active]:border-accent/50">
                 <LayoutTemplate className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">Inicio</span>
               </TabsTrigger>
-              <TabsTrigger value="events" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-500/20 data-[state=active]:to-cyan-500/20 data-[state=active]:border-blue-500/50">
+              <TabsTrigger value="content" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-500/20 data-[state=active]:to-cyan-500/20 data-[state=active]:border-blue-500/50">
                 <Calendar className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Eventos</span>
+                <span className="hidden sm:inline">Contenido</span>
               </TabsTrigger>
-              <TabsTrigger value="courses" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:border-purple-500/50">
+              <TabsTrigger value="my-courses" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:border-purple-500/50">
                 <Video className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">Cursos</span>
               </TabsTrigger>
-              <TabsTrigger value="lessons" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-indigo-500/20 data-[state=active]:to-purple-500/20 data-[state=active]:border-indigo-500/50">
-                <Video className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Lecciones</span>
-              </TabsTrigger>
-              <TabsTrigger value="classes" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-orange-500/20 data-[state=active]:to-red-500/20 data-[state=active]:border-orange-500/50">
+              <TabsTrigger value="management" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-green-500/20 data-[state=active]:to-emerald-500/20 data-[state=active]:border-green-500/50">
                 <Users className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Clases</span>
-              </TabsTrigger>
-              <TabsTrigger value="instructors" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-green-500/20 data-[state=active]:to-emerald-500/20 data-[state=active]:border-green-500/50">
-                <Users className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Instructores</span>
-              </TabsTrigger>
-              <TabsTrigger value="users" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-yellow-500/20 data-[state=active]:to-orange-500/20 data-[state=active]:border-yellow-500/50">
-                <Users className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Usuarios</span>
+                <span className="hidden sm:inline">Gestión</span>
               </TabsTrigger>
               <TabsTrigger value="orders" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-pink-500/20 data-[state=active]:to-rose-500/20 data-[state=active]:border-pink-500/50">
                 <Mail className="h-4 w-4 mr-2" />
@@ -242,13 +230,13 @@ export default function AdminDashboard() {
             </TabsContent>
           )}
 
-          {/* EVENTS TAB - Admin, Instructor, Promoter - NEW PREMIUM UI */}
-          {(isAdmin || isCreator) && (
+          {/* EVENTS TAB - Instructor, Promoter (mantiene nombre "events") */}
+          {isCreator && !isAdmin && (
             <TabsContent value="events">
               <MyEventsDashboard
                 events={events}
                 isLoadingEvents={isLoadingEvents}
-                isAdmin={isAdmin}
+                isAdmin={false}
                 onRefresh={() => {
                   if (eventsQuery && 'refetch' in eventsQuery) {
                     (eventsQuery as any).refetch();
@@ -258,45 +246,13 @@ export default function AdminDashboard() {
             </TabsContent>
           )}
 
-          {/* COURSES TAB - Admin only (old interface for admins) */}
-          {isAdmin && (
-            <TabsContent value="courses">
-              <CoursesTab />
-            </TabsContent>
-          )}
-
-          {/* LESSONS TAB - Admin only (old interface for admins) */}
-          {isAdmin && (
-            <TabsContent value="lessons">
-              <LessonsManager courses={courses || []} isLoadingCourses={isLoadingCourses} />
-            </TabsContent>
-          )}
-
-          {/* MY COURSES TAB - Instructor only (new unified interface) */}
-          {isInstructor && (
-            <TabsContent value="my-courses">
-              <MyCoursesDashboard
-                courses={courses || []}
-                isLoadingCourses={isLoadingCourses}
-                isAdmin={false}
-                instructors={instructors || []}
-                myInstructorProfile={myInstructorProfile}
-                onRefresh={() => {
-                  if (coursesQuery && 'refetch' in coursesQuery) {
-                    (coursesQuery as any).refetch();
-                  }
-                }}
-              />
-            </TabsContent>
-          )}
-
-          {/* CLASSES TAB - Admin, Instructor, Promoter - NEW PREMIUM UI */}
-          {(isAdmin || isCreator) && (
+          {/* CLASSES TAB - Instructor, Promoter (mantiene nombre "classes") */}
+          {isCreator && !isAdmin && (
             <TabsContent value="classes">
               <MyClassesDashboard
                 classes={classes}
                 isLoadingClasses={isLoadingClasses}
-                isAdmin={isAdmin}
+                isAdmin={false}
                 instructors={instructors || []}
                 myInstructorProfile={myInstructorProfile}
                 onRefresh={() => {
@@ -308,17 +264,93 @@ export default function AdminDashboard() {
             </TabsContent>
           )}
 
-          {/* INSTRUCTORS TAB - Admin only */}
+          {/* CONTENT TAB - Admin only (Eventos + Clases con subtabs) */}
           {isAdmin && (
-            <TabsContent value="instructors">
-              <InstructorsTab />
+            <TabsContent value="content" className="space-y-6">
+              <Tabs defaultValue="events" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-6">
+                  <TabsTrigger value="events" className="data-[state=active]:bg-blue-500/20">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Eventos
+                  </TabsTrigger>
+                  <TabsTrigger value="classes" className="data-[state=active]:bg-orange-500/20">
+                    <Users className="h-4 w-4 mr-2" />
+                    Clases
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="events">
+                  <MyEventsDashboard
+                    events={events}
+                    isLoadingEvents={isLoadingEvents}
+                    isAdmin={true}
+                    onRefresh={() => {
+                      if (eventsQuery && 'refetch' in eventsQuery) {
+                        (eventsQuery as any).refetch();
+                      }
+                    }}
+                  />
+                </TabsContent>
+
+                <TabsContent value="classes">
+                  <MyClassesDashboard
+                    classes={classes}
+                    isLoadingClasses={isLoadingClasses}
+                    isAdmin={true}
+                    instructors={instructors || []}
+                    myInstructorProfile={myInstructorProfile}
+                    onRefresh={() => {
+                      if (classesQuery && 'refetch' in classesQuery) {
+                        (classesQuery as any).refetch();
+                      }
+                    }}
+                  />
+                </TabsContent>
+              </Tabs>
             </TabsContent>
           )}
 
-          {/* USERS/CRM TAB - Admin only */}
+          {/* MY COURSES TAB - Admin e Instructor (nuevo tab unificado para admin) */}
+          {(isAdmin || isInstructor) && (
+            <TabsContent value="my-courses">
+              <MyCoursesDashboard
+                courses={courses || []}
+                isLoadingCourses={isLoadingCourses}
+                isAdmin={isAdmin}
+                instructors={instructors || []}
+                myInstructorProfile={myInstructorProfile}
+                onRefresh={() => {
+                  if (coursesQuery && 'refetch' in coursesQuery) {
+                    (coursesQuery as any).refetch();
+                  }
+                }}
+              />
+            </TabsContent>
+          )}
+
+          {/* MANAGEMENT TAB - Admin only (Instructores + Usuarios con subtabs) */}
           {isAdmin && (
-            <TabsContent value="users">
-              <UsersTab />
+            <TabsContent value="management" className="space-y-6">
+              <Tabs defaultValue="instructors" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-6">
+                  <TabsTrigger value="instructors" className="data-[state=active]:bg-green-500/20">
+                    <Users className="h-4 w-4 mr-2" />
+                    Instructores
+                  </TabsTrigger>
+                  <TabsTrigger value="users" className="data-[state=active]:bg-yellow-500/20">
+                    <Users className="h-4 w-4 mr-2" />
+                    Usuarios
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="instructors">
+                  <InstructorsTab />
+                </TabsContent>
+
+                <TabsContent value="users">
+                  <UsersTab />
+                </TabsContent>
+              </Tabs>
             </TabsContent>
           )}
 
