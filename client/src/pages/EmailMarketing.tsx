@@ -844,62 +844,84 @@ function CampaignsTab() {
   if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-accent" /></div>;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold">Campaigns</h2>
-          <p className="text-sm text-foreground/60">Manage and send bulk email campaigns</p>
+          <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
+            Email Campaigns
+          </h2>
+          <p className="text-base text-foreground/70 mt-1">Create and manage your promotional email campaigns</p>
         </div>
-        <Button onClick={() => setShowComposer(true)} className="btn-vibrant gap-2">
-          <Plus className="h-4 w-4" />
-          New Campaign
+        <Button onClick={() => setShowComposer(true)} className="btn-vibrant gap-2 shadow-lg h-11 px-6">
+          <Sparkles className="h-5 w-5" />
+          Create Campaign
         </Button>
       </div>
 
+      {/* Empty State */}
       {(!campaigns || campaigns.length === 0) && (
-        <Card className="border-dashed border-border/30">
-          <CardContent className="py-16 text-center">
-            <Send className="h-12 w-12 text-foreground/20 mx-auto mb-4" />
-            <h3 className="font-semibold text-foreground/60 mb-2">No campaigns yet</h3>
-            <p className="text-sm text-foreground/40 mb-4">Create your first email campaign to reach your contacts</p>
-            <Button onClick={() => setShowComposer(true)} className="btn-vibrant gap-2">
-              <Plus className="h-4 w-4" /> New Campaign
+        <Card className="border-2 border-dashed border-purple-200 bg-gradient-to-br from-purple-50/50 to-blue-50/50">
+          <CardContent className="py-20 text-center">
+            <div className="inline-block p-4 bg-gradient-to-br from-purple-100 to-blue-100 rounded-2xl mb-6">
+              <Send className="h-16 w-16 text-purple-600" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">Start Reaching Your Audience</h3>
+            <p className="text-base text-gray-600 mb-6 max-w-md mx-auto">
+              Create beautiful email campaigns to promote your events, courses, and classes
+            </p>
+            <Button onClick={() => setShowComposer(true)} className="btn-vibrant gap-2 px-8 h-11">
+              <Sparkles className="h-5 w-5" />
+              Create Your First Campaign
             </Button>
           </CardContent>
         </Card>
       )}
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {campaigns?.map((campaign) => (
-          <Card key={campaign.id} className="border-border/50 hover:border-accent/30 transition-colors">
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-start justify-between gap-4">
+          <Card key={campaign.id} className="border-2 border-gray-200 hover:border-purple-400 hover:shadow-lg transition-all group">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between gap-6">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <h3 className="font-semibold truncate">{campaign.name}</h3>
+                  <div className="flex items-center gap-3 mb-2 flex-wrap">
+                    <h3 className="text-lg font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
+                      {campaign.name}
+                    </h3>
                     <StatusBadge status={campaign.status || "draft"} />
                     {campaign.segment !== "all" && (
-                      <Badge variant="outline" className="text-xs capitalize">{campaign.segment}</Badge>
+                      <Badge variant="outline" className="text-xs capitalize bg-purple-50 text-purple-600 border-purple-200">
+                        {campaign.segment}
+                      </Badge>
                     )}
                   </div>
-                  <p className="text-sm text-foreground/60 truncate mb-2">{campaign.subject}</p>
-                  <div className="flex items-center gap-4 text-xs text-foreground/50">
+                  <p className="text-base text-gray-600 mb-3 line-clamp-1">{campaign.subject}</p>
+                  <div className="flex items-center gap-6 text-sm text-gray-500">
                     {campaign.status === "sent" && (
                       <>
-                        <span className="flex items-center gap-1"><Users className="h-3 w-3" />{campaign.totalSent} sent</span>
-                        <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{campaign.totalOpened} opened</span>
-                        <span className="flex items-center gap-1"><MousePointer className="h-3 w-3" />{campaign.totalClicked} clicked</span>
+                        <span className="flex items-center gap-1.5 font-medium">
+                          <Users className="h-4 w-4 text-purple-600" />
+                          <span className="text-gray-900">{campaign.totalSent}</span> sent
+                        </span>
+                        <span className="flex items-center gap-1.5 font-medium">
+                          <Eye className="h-4 w-4 text-blue-600" />
+                          <span className="text-gray-900">{campaign.totalOpened}</span> opened
+                        </span>
+                        <span className="flex items-center gap-1.5 font-medium">
+                          <MousePointer className="h-4 w-4 text-green-600" />
+                          <span className="text-gray-900">{campaign.totalClicked}</span> clicked
+                        </span>
                       </>
                     )}
                     {campaign.status === "scheduled" && campaign.scheduledAt && (
-                      <span className="flex items-center gap-1 text-blue-400">
-                        <Clock className="h-3 w-3" />
+                      <span className="flex items-center gap-1.5 text-blue-600 font-medium">
+                        <Clock className="h-4 w-4" />
                         Scheduled: {new Date(campaign.scheduledAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}
                       </span>
                     )}
                     {campaign.sentAt && (
-                      <span className="flex items-center gap-1">
-                        <CheckCircle className="h-3 w-3 text-green-400" />
+                      <span className="flex items-center gap-1.5">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
                         {new Date(campaign.sentAt).toLocaleDateString("en-GB", { dateStyle: "medium" })}
                       </span>
                     )}
@@ -908,12 +930,22 @@ function CampaignsTab() {
                 <div className="flex gap-2 flex-shrink-0">
                   {campaign.status === "sent" && (
                     <>
-                      <Button variant="outline" size="sm" onClick={() => setDetailCampaignId(campaign.id)} className="gap-1 text-xs">
-                        <BarChart2 className="h-3 w-3" /> Stats
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDetailCampaignId(campaign.id)}
+                        className="gap-1.5 hover:bg-purple-50 hover:text-purple-600 hover:border-purple-300"
+                      >
+                        <BarChart2 className="h-4 w-4" /> Stats
                       </Button>
-                      <Button asChild variant="outline" size="sm" className="gap-1 text-xs border-accent/30 text-accent hover:bg-accent/10">
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+                      >
                         <Link href={`/email-marketing/campaigns/${campaign.id}`}>
-                          <Eye className="h-3 w-3" /> Details
+                          <Eye className="h-4 w-4" /> View
                         </Link>
                       </Button>
                     </>
@@ -924,20 +956,43 @@ function CampaignsTab() {
                       size="sm"
                       onClick={() => sendMutation.mutate({ campaignId: campaign.id, origin: window.location.origin })}
                       disabled={sendMutation.isPending}
-                      className="gap-1 text-xs border-green-500/50 text-green-400 hover:bg-green-500/10"
+                      className="gap-1.5 border-green-500 text-green-600 hover:bg-green-50 hover:border-green-600"
                     >
-                      {sendMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+                      {sendMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
                       Send Now
                     </Button>
                   )}
                   {confirmDeleteId === campaign.id ? (
-                    <div className="flex gap-1">
-                      <Button variant="destructive" size="sm" onClick={() => { deleteMutation.mutate({ id: campaign.id }); setConfirmDeleteId(null); }} className="text-xs">Yes</Button>
-                      <Button variant="outline" size="sm" onClick={() => setConfirmDeleteId(null)} className="text-xs">No</Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => { deleteMutation.mutate({ id: campaign.id }); setConfirmDeleteId(null); }}
+                        className="px-4"
+                      >
+                        Confirm
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setConfirmDeleteId(null)}
+                        className="px-4"
+                      >
+                        Cancel
+                      </Button>
                     </div>
                   ) : (
-                    <Button variant="outline" size="sm" onClick={() => setConfirmDeleteId(campaign.id)} className="text-destructive border-destructive/30 hover:bg-destructive/10">
-                      <Trash2 className="h-3 w-3" />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setConfirmDeleteId(campaign.id)}
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50 hover:border-red-300"
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   )}
                 </div>
@@ -1188,44 +1243,64 @@ export default function EmailMarketing() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-blue-50/30">
       <div className="container py-8 pt-24">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold gradient-text flex items-center gap-3">
-              <Mail className="h-8 w-8 text-accent" />
-              Email Marketing
-            </h1>
-            <p className="text-foreground/60 mt-1">Templates, campaigns, and engagement analytics</p>
+        {/* Page Header */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl shadow-lg">
+                <Mail className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600">
+                  Email Marketing
+                </h1>
+                <p className="text-base text-gray-600 mt-1">Create beautiful campaigns and reach your community</p>
+              </div>
+            </div>
+            <Link href="/admin">
+              <Button variant="outline" className="gap-2 border-purple-200 hover:bg-purple-50">
+                <ChevronRight className="h-4 w-4 rotate-180" />
+                Back to Admin
+              </Button>
+            </Link>
           </div>
-          <Link href="/admin">
-            <Button variant="outline" size="sm">← Admin Dashboard</Button>
-          </Link>
         </div>
 
-        <Tabs defaultValue="templates" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-md">
-            <TabsTrigger value="templates" className="flex items-center gap-2">
-              <LayoutTemplate className="h-4 w-4" />
+        {/* Tabs */}
+        <Tabs defaultValue="templates" className="space-y-8">
+          <TabsList className="grid w-full grid-cols-3 max-w-2xl h-14 bg-white border-2 border-gray-200 shadow-sm p-1">
+            <TabsTrigger
+              value="templates"
+              className="flex items-center gap-2 text-base font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white"
+            >
+              <LayoutTemplate className="h-5 w-5" />
               <span>Templates</span>
             </TabsTrigger>
-            <TabsTrigger value="campaigns" className="flex items-center gap-2">
-              <Send className="h-4 w-4" />
+            <TabsTrigger
+              value="campaigns"
+              className="flex items-center gap-2 text-base font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white"
+            >
+              <Send className="h-5 w-5" />
               <span>Campaigns</span>
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <BarChart2 className="h-4 w-4" />
+            <TabsTrigger
+              value="analytics"
+              className="flex items-center gap-2 text-base font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white"
+            >
+              <BarChart2 className="h-5 w-5" />
               <span>Analytics</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="templates">
+          <TabsContent value="templates" className="mt-8">
             <TemplatesTab />
           </TabsContent>
-          <TabsContent value="campaigns">
+          <TabsContent value="campaigns" className="mt-8">
             <CampaignsTab />
           </TabsContent>
-          <TabsContent value="analytics">
+          <TabsContent value="analytics" className="mt-8">
             <AnalyticsTab />
           </TabsContent>
         </Tabs>
