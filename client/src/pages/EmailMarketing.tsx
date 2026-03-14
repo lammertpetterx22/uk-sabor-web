@@ -123,12 +123,21 @@ function TemplateEditorDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl">{template?.id ? "Edit Template" : "Create New Template"}</DialogTitle>
-          <DialogDescription className="text-base">
-            Write your message naturally and it will look beautiful in emails ✨
-          </DialogDescription>
+      <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto bg-gradient-to-br from-white via-purple-50/20 to-blue-50/20 border-0 shadow-2xl">
+        <DialogHeader className="border-b border-purple-100 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl shadow-lg">
+              <Edit2 className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <DialogTitle className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
+                {template?.id ? "Edit Template" : "Create New Template"}
+              </DialogTitle>
+              <DialogDescription className="text-base text-gray-600 mt-1">
+                Design beautiful email templates with our visual editor
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -676,79 +685,85 @@ function TemplatesTab() {
       )}
 
       {/* Templates Grid */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
         {templates?.map((tpl) => (
-          <Card key={tpl.id} className="border-2 border-gray-200 hover:border-purple-400 hover:shadow-xl transition-all duration-200 group overflow-hidden">
+          <Card key={tpl.id} className="border-0 shadow-lg hover:shadow-2xl transition-all duration-300 group overflow-hidden bg-white">
             <CardContent className="p-0">
-              {/* Preview thumbnail */}
-              <div className="relative h-40 bg-gradient-to-br from-purple-50 to-blue-50 overflow-hidden">
-                <div className="absolute inset-0 flex items-center justify-center p-4">
-                  <div className="text-6xl opacity-50">{CATEGORY_ICONS[tpl.category || "custom"]}</div>
+              {/* Premium Preview thumbnail */}
+              <div className="relative h-48 bg-gradient-to-br from-purple-500 via-purple-600 to-blue-600 overflow-hidden">
+                {/* Animated background pattern */}
+                <div className="absolute inset-0 opacity-20">
+                  <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')]"></div>
                 </div>
-                {tpl.isDefault && (
-                  <div className="absolute top-3 right-3">
-                    <Badge className="bg-white/90 text-purple-600 border-purple-200 shadow-sm">
-                      ✨ Starter
-                    </Badge>
-                  </div>
-                )}
-              </div>
 
-              {/* Content */}
-              <div className="p-5 space-y-3">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-bold text-base text-gray-900 group-hover:text-purple-600 transition-colors">
-                      {tpl.name}
-                    </h3>
+                {/* Icon */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-8xl transform group-hover:scale-110 transition-transform duration-300 drop-shadow-lg">
+                    {CATEGORY_ICONS[tpl.category || "custom"]}
                   </div>
-                  <Badge variant="outline" className={`text-xs ${CATEGORY_COLORS[tpl.category || "custom"]}`}>
-                    {tpl.category}
+                </div>
+
+                {/* Badges */}
+                <div className="absolute top-4 right-4 flex flex-col gap-2">
+                  {tpl.isDefault && (
+                    <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 shadow-lg font-semibold">
+                      ⭐ Starter
+                    </Badge>
+                  )}
+                  <Badge className="bg-white/95 backdrop-blur-sm text-purple-600 border-0 shadow-md font-semibold">
+                    {CATEGORY_ICONS[tpl.category || "custom"]} {tpl.category}
                   </Badge>
                 </div>
 
-                <p className="text-sm text-gray-600 line-clamp-2 min-h-[40px]">
-                  Subject: {tpl.subject}
-                </p>
+                {/* Overlay gradient on hover */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 space-y-4 bg-gradient-to-b from-white to-gray-50">
+                <div>
+                  <h3 className="font-bold text-xl text-gray-900 group-hover:text-purple-600 transition-colors mb-2 line-clamp-1">
+                    {tpl.name}
+                  </h3>
+                  <p className="text-sm text-gray-600 line-clamp-2 min-h-[40px] leading-relaxed">
+                    {tpl.subject}
+                  </p>
+                </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 pt-2">
+                <div className="flex gap-3">
                   <Button
-                    variant="outline"
-                    size="sm"
                     onClick={() => setPreviewTemplate(tpl)}
-                    className="flex-1 gap-1.5 hover:bg-purple-50 hover:text-purple-600 hover:border-purple-300"
+                    className="flex-1 gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-md hover:shadow-lg transition-all"
                   >
                     <Eye className="h-4 w-4" />
                     Preview
                   </Button>
                   <Button
-                    variant="outline"
-                    size="sm"
                     onClick={() => { setEditingTemplate(tpl); setShowEditor(true); }}
-                    className="flex-1 gap-1.5 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+                    className="flex-1 gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all"
                   >
                     <Edit2 className="h-4 w-4" />
                     Edit
                   </Button>
                   {!tpl.isDefault && (
                     confirmDeleteId === tpl.id ? (
-                      <div className="flex gap-1">
+                      <div className="flex gap-2">
                         <Button
                           variant="destructive"
                           size="sm"
                           onClick={() => { deleteMutation.mutate({ id: tpl.id }); setConfirmDeleteId(null); }}
-                          className="text-xs px-2"
+                          className="px-3 shadow-md"
                         >
-                          Yes
+                          ✓
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => setConfirmDeleteId(null)}
-                          className="text-xs px-2"
+                          className="px-3"
                         >
-                          No
+                          ✕
                         </Button>
                       </div>
                     ) : (
@@ -756,7 +771,7 @@ function TemplatesTab() {
                         variant="outline"
                         size="sm"
                         onClick={() => setConfirmDeleteId(tpl.id)}
-                        className="text-red-500 hover:text-red-600 hover:bg-red-50 hover:border-red-300"
+                        className="text-red-600 hover:text-white hover:bg-red-600 border-red-300 hover:border-red-600 transition-all"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -779,43 +794,79 @@ function TemplatesTab() {
         />
       )}
 
-      {/* Preview Dialog */}
+      {/* Preview Dialog - Ultra Premium */}
       {previewTemplate && (
         <Dialog open={!!previewTemplate} onOpenChange={(o) => !o && setPreviewTemplate(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh]">
-            <DialogHeader>
-              <DialogTitle className="text-2xl flex items-center gap-2">
-                <Eye className="h-6 w-6 text-purple-600" />
-                {previewTemplate.name}
-              </DialogTitle>
-              <DialogDescription className="text-base">
-                Subject: <span className="font-semibold text-gray-700">{previewTemplate.subject}</span>
-              </DialogDescription>
-            </DialogHeader>
-            <div className="border-2 border-gray-200 rounded-xl overflow-hidden bg-white shadow-inner">
-              <div className="bg-gray-100 px-4 py-2 border-b border-gray-200 flex items-center gap-2">
-                <Mail className="h-4 w-4 text-gray-500" />
-                <span className="text-sm text-gray-600">Email Preview</span>
-              </div>
-              <div className="p-6 overflow-y-auto" style={{ maxHeight: '60vh' }}>
-                <div dangerouslySetInnerHTML={{ __html: previewTemplate.htmlContent }} />
+          <DialogContent className="max-w-5xl max-h-[95vh] bg-gradient-to-br from-white via-gray-50 to-purple-50/30 border-0 shadow-2xl p-0 gap-0">
+            {/* Premium Header */}
+            <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-blue-600 px-8 py-6 text-white">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
+                      <Eye className="h-6 w-6" />
+                    </div>
+                    <DialogTitle className="text-3xl font-bold text-white">
+                      {previewTemplate.name}
+                    </DialogTitle>
+                  </div>
+                  <DialogDescription className="text-white/90 text-base font-medium flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    Subject: {previewTemplate.subject}
+                  </DialogDescription>
+                </div>
+                <Badge className="bg-white/90 text-purple-700 border-0 shadow-md font-semibold px-3 py-1">
+                  {CATEGORY_ICONS[previewTemplate.category || "custom"]} {previewTemplate.category}
+                </Badge>
               </div>
             </div>
-            <div className="flex gap-3 justify-end pt-4 border-t">
-              <Button variant="outline" onClick={() => setPreviewTemplate(null)}>
-                Close
-              </Button>
-              <Button
-                onClick={() => {
-                  setEditingTemplate(previewTemplate);
-                  setPreviewTemplate(null);
-                  setShowEditor(true);
-                }}
-                className="btn-vibrant gap-2"
-              >
-                <Edit2 className="h-4 w-4" />
-                Edit This Template
-              </Button>
+
+            {/* Email Preview Container */}
+            <div className="p-8">
+              <div className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-gray-200">
+                {/* Email Client Header */}
+                <div className="bg-gradient-to-r from-gray-100 to-gray-200 px-6 py-4 border-b-2 border-gray-300">
+                  <div className="flex items-center gap-3">
+                    <div className="flex gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                      <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                    <div className="flex-1 text-center">
+                      <span className="text-sm font-semibold text-gray-700">Email Preview</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Email Content */}
+                <div className="bg-white p-10 overflow-y-auto" style={{ maxHeight: '55vh' }}>
+                  <div dangerouslySetInnerHTML={{ __html: previewTemplate.htmlContent }} className="prose prose-lg max-w-none" />
+                </div>
+              </div>
+            </div>
+
+            {/* Premium Footer */}
+            <div className="px-8 pb-8 flex gap-4 justify-between items-center">
+              <p className="text-sm text-gray-500 flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-purple-600" />
+                This is how your email will look in inboxes
+              </p>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setPreviewTemplate(null)} className="px-6">
+                  Close
+                </Button>
+                <Button
+                  onClick={() => {
+                    setEditingTemplate(previewTemplate);
+                    setPreviewTemplate(null);
+                    setShowEditor(true);
+                  }}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white gap-2 px-6 shadow-lg"
+                >
+                  <Edit2 className="h-4 w-4" />
+                  Edit Template
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
