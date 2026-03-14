@@ -20,6 +20,8 @@ import QuickActions from "@/components/admin/QuickActions";
 import InstructorOverview from "@/components/instructor/InstructorOverview";
 import LessonsManager from "@/components/admin/LessonsManager";
 import MyCoursesDashboard from "@/components/instructor/MyCoursesDashboard";
+import MyEventsDashboard from "@/components/instructor/MyEventsDashboard";
+import MyClassesDashboard from "@/components/instructor/MyClassesDashboard";
 import { useTranslations } from "@/hooks/useTranslations";
 
 export default function AdminDashboard() {
@@ -48,6 +50,20 @@ export default function AdminDashboard() {
   const { data: myInstructorProfile } = trpc.instructors.getMyProfile.useQuery(undefined, {
     enabled: isInstructor,
   });
+
+  // Fetch events and classes for instructor/promoter panels
+  const eventsQuery = isAdmin
+    ? trpc.admin.listAllEvents.useQuery()
+    : (isCreator ? trpc.admin.listMyEvents.useQuery() : { data: undefined, isLoading: false });
+
+  const classesQuery = isAdmin
+    ? trpc.classes.listAll.useQuery({ limit: 100, offset: 0 })
+    : (isCreator ? trpc.admin.listMyClasses.useQuery() : { data: undefined, isLoading: false });
+
+  const events = eventsQuery.data || [];
+  const isLoadingEvents = eventsQuery.isLoading || false;
+  const classes = classesQuery.data || [];
+  const isLoadingClasses = classesQuery.isLoading || false;
 
   // Redirect unauthenticated users in an effect (not in render body)
   useEffect(() => {
@@ -160,10 +176,19 @@ export default function AdminDashboard() {
             </TabsContent>
           )}
 
-          {/* EVENTS TAB - Admin, Instructor, Promoter */}
+          {/* EVENTS TAB - Admin, Instructor, Promoter - NEW PREMIUM UI */}
           {(isAdmin || isCreator) && (
             <TabsContent value="events">
-              <EventsTab />
+              <MyEventsDashboard
+                events={events}
+                isLoadingEvents={isLoadingEvents}
+                isAdmin={isAdmin}
+                onRefresh={() => {
+                  if (eventsQuery && 'refetch' in eventsQuery) {
+                    (eventsQuery as any).refetch();
+                  }
+                }}
+              />
             </TabsContent>
           )}
 
@@ -199,10 +224,21 @@ export default function AdminDashboard() {
             </TabsContent>
           )}
 
-          {/* CLASSES TAB - Admin, Instructor, Promoter */}
+          {/* CLASSES TAB - Admin, Instructor, Promoter - NEW PREMIUM UI */}
           {(isAdmin || isCreator) && (
             <TabsContent value="classes">
-              <ClassesTab />
+              <MyClassesDashboard
+                classes={classes}
+                isLoadingClasses={isLoadingClasses}
+                isAdmin={isAdmin}
+                instructors={instructors || []}
+                myInstructorProfile={myInstructorProfile}
+                onRefresh={() => {
+                  if (classesQuery && 'refetch' in classesQuery) {
+                    (classesQuery as any).refetch();
+                  }
+                }}
+              />
             </TabsContent>
           )}
 

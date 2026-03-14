@@ -28,12 +28,14 @@ import ImageCropperModal from "@/components/ImageCropperModal";
 import { useTranslations } from "@/hooks/useTranslations";
 
 interface EventFormCardProps {
+  editingEvent?: any;
   onSuccess?: () => void;
   checkEventEntitlement?: () => Promise<any>;
   onUpgradeRequired?: (reason: string) => void;
 }
 
 export default function EventFormCard({
+  editingEvent,
   onSuccess,
   checkEventEntitlement,
   onUpgradeRequired
@@ -52,17 +54,44 @@ export default function EventFormCard({
     },
   });
 
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    venue: "",
-    city: "",
-    eventDate: "",
-    ticketPrice: "",
-    maxTickets: "",
-    imageUrl: "",
-    imagePreview: "",
-    paymentMethod: "online" as "online" | "cash" | "both",
+  const updateMutation = trpc.admin.updateEvent.useMutation({
+    onSuccess: () => {
+      toast.success("✅ Evento actualizado exitosamente");
+      resetForm();
+      onSuccess?.();
+    },
+    onError: (err) => {
+      toast.error(err.message);
+    },
+  });
+
+  const [formData, setFormData] = useState(() => {
+    if (editingEvent) {
+      return {
+        title: editingEvent.title || "",
+        description: editingEvent.description || "",
+        venue: editingEvent.venue || "",
+        city: editingEvent.city || "",
+        eventDate: editingEvent.eventDate ? new Date(editingEvent.eventDate).toISOString().slice(0, 16) : "",
+        ticketPrice: editingEvent.ticketPrice?.toString() || "",
+        maxTickets: editingEvent.maxTickets?.toString() || "",
+        imageUrl: editingEvent.imageUrl || "",
+        imagePreview: editingEvent.imageUrl || "",
+        paymentMethod: (editingEvent.paymentMethod || "online") as "online" | "cash" | "both",
+      };
+    }
+    return {
+      title: "",
+      description: "",
+      venue: "",
+      city: "",
+      eventDate: "",
+      ticketPrice: "",
+      maxTickets: "",
+      imageUrl: "",
+      imagePreview: "",
+      paymentMethod: "online" as "online" | "cash" | "both",
+    };
   });
 
   const [uploading, setUploading] = useState(false);
@@ -126,6 +155,24 @@ export default function EventFormCard({
       return;
     }
 
+    // If editing, update existing event
+    if (editingEvent) {
+      updateMutation.mutate({
+        id: editingEvent.id,
+        title: formData.title,
+        description: formData.description,
+        venue: formData.venue,
+        city: formData.city,
+        eventDate: formData.eventDate,
+        ticketPrice: formData.ticketPrice,
+        maxTickets: formData.maxTickets ? parseInt(formData.maxTickets) : undefined,
+        imageUrl: formData.imageUrl,
+        paymentMethod: formData.paymentMethod,
+      });
+      return;
+    }
+
+    // Check entitlement only for new events
     if (checkEventEntitlement) {
       try {
         const result = await checkEventEntitlement();
@@ -161,10 +208,10 @@ export default function EventFormCard({
           </div>
           <div>
             <CardTitle className="text-2xl gradient-text">
-              {t("admin.events.createNewEvent")}
+              {editingEvent ? "Editar Evento" : t("admin.events.createNewEvent")}
             </CardTitle>
             <CardDescription className="text-foreground/60 mt-1">
-              {t("admin.events.createDescription")}
+              {editingEvent ? "Actualiza la información del evento" : t("admin.events.createDescription")}
             </CardDescription>
           </div>
         </div>
@@ -487,18 +534,18 @@ export default function EventFormCard({
           <Button
             type="button"
             onClick={handleCreateEvent}
-            disabled={createMutation.isPending || uploading}
+            disabled={createMutation.isPending || updateMutation.isPending || uploading}
             className="btn-vibrant flex-1 h-12 text-base font-semibold shadow-lg"
           >
-            {createMutation.isPending ? (
+            {(createMutation.isPending || updateMutation.isPending) ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Creando Evento...
+                {editingEvent ? "Actualizando..." : "Creando Evento..."}
               </>
             ) : (
               <>
                 <Sparkles className="mr-2 h-5 w-5" />
-                Crear Evento
+                {editingEvent ? "Actualizar Evento" : "Crear Evento"}
               </>
             )}
           </Button>
