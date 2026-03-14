@@ -636,25 +636,25 @@ function TemplatesTab() {
   if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-accent" /></div>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-accent to-[#FD4D43]">
+          <h2 className="text-xl font-bold text-foreground">
             Email Templates
           </h2>
-          <p className="text-base text-foreground/70 mt-1">Ready-to-use designs for your email campaigns</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Ready-to-use designs for your email campaigns</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           {(!templates || templates.length === 0) && (
-            <Button variant="outline" onClick={() => seedMutation.mutate()} disabled={seedMutation.isPending} className="gap-2 border-accent/30 hover:bg-accent/10">
-              {seedMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4 text-accent" />}
-              Get Started Templates
+            <Button variant="outline" size="sm" onClick={() => seedMutation.mutate()} disabled={seedMutation.isPending} className="gap-2 border-accent/30 hover:bg-accent/10 h-9">
+              {seedMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 text-accent" />}
+              <span className="text-xs">Get Started</span>
             </Button>
           )}
-          <Button onClick={() => { setEditingTemplate(null); setShowEditor(true); }} className="btn-vibrant gap-2 shadow-lg">
-            <Plus className="h-5 w-5" />
-            Create Template
+          <Button onClick={() => { setEditingTemplate(null); setShowEditor(true); }} size="sm" className="btn-vibrant gap-2 shadow-lg h-9">
+            <Plus className="h-4 w-4" />
+            <span className="text-xs">Create Template</span>
           </Button>
         </div>
       </div>
@@ -685,85 +685,96 @@ function TemplatesTab() {
       )}
 
       {/* Templates Grid */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {templates?.map((tpl) => (
           <Card key={tpl.id} className="border border-border/50 bg-card/50 backdrop-blur-sm hover:border-accent/50 hover:shadow-xl transition-all duration-300 group overflow-hidden">
             <CardContent className="p-0">
-              {/* Premium Preview thumbnail */}
-              <div className="relative h-48 bg-gradient-to-br from-accent via-accent/90 to-[#FD4D43] overflow-hidden">
-                {/* Animated background pattern */}
-                <div className="absolute inset-0 opacity-20">
+              {/* Premium Dark Preview */}
+              <div className="relative h-40 bg-gradient-to-br from-background via-card to-accent/10 border-b border-border/50 overflow-hidden">
+                {/* Subtle grid pattern */}
+                <div className="absolute inset-0 opacity-5">
                   <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')]"></div>
                 </div>
 
-                {/* Icon */}
+                {/* Icon with gradient glow */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-8xl transform group-hover:scale-110 transition-transform duration-300 drop-shadow-lg">
-                    {CATEGORY_ICONS[tpl.category || "custom"]}
+                  <div className="relative">
+                    <div className="absolute inset-0 blur-2xl bg-accent/20 scale-150"></div>
+                    <div className="relative text-6xl transform group-hover:scale-110 transition-transform duration-300">
+                      {CATEGORY_ICONS[tpl.category || "custom"]}
+                    </div>
                   </div>
                 </div>
 
-                {/* Badges */}
-                <div className="absolute top-4 right-4 flex flex-col gap-2">
+                {/* Badges - Top Left */}
+                <div className="absolute top-3 left-3 flex flex-col gap-2">
                   {tpl.isDefault && (
-                    <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 shadow-lg font-semibold">
+                    <Badge className="bg-accent/20 backdrop-blur-md text-accent border border-accent/50 shadow-lg font-medium text-xs">
                       ⭐ Starter
                     </Badge>
                   )}
-                  <Badge className="bg-white/95 backdrop-blur-sm text-accent border-0 shadow-md font-semibold">
+                  <Badge className="bg-card/80 backdrop-blur-md text-foreground border border-border/50 shadow-md font-medium text-xs">
                     {CATEGORY_ICONS[tpl.category || "custom"]} {tpl.category}
                   </Badge>
                 </div>
 
-                {/* Overlay gradient on hover */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                {/* Accent glow on hover */}
+                <div className="absolute inset-0 bg-gradient-to-t from-accent/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
 
               {/* Content */}
-              <div className="p-6 space-y-4">
-                <div>
-                  <h3 className="font-bold text-lg text-foreground group-hover:text-accent transition-colors mb-2 line-clamp-1">
+              <div className="p-5">
+                <div className="mb-4">
+                  <h3 className="font-bold text-base text-foreground group-hover:text-accent transition-colors mb-1.5 line-clamp-1">
                     {tpl.name}
                   </h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px] leading-relaxed">
+                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                     {tpl.subject}
                   </p>
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-3">
+                <div className="grid grid-cols-2 gap-2">
                   <Button
                     onClick={() => setPreviewTemplate(tpl)}
-                    className="flex-1 gap-2 bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent text-white shadow-md hover:shadow-lg transition-all"
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5 h-9 hover:bg-accent/10 hover:text-accent hover:border-accent/50 transition-all"
                   >
-                    <Eye className="h-4 w-4" />
-                    Preview
+                    <Eye className="h-3.5 w-3.5" />
+                    <span className="text-xs">Preview</span>
                   </Button>
                   <Button
                     onClick={() => { setEditingTemplate(tpl); setShowEditor(true); }}
-                    className="flex-1 gap-2 bg-gradient-to-r from-[#FD4D43] to-[#FD4D43]/90 hover:from-[#FD4D43]/90 hover:to-[#FD4D43] text-white shadow-md hover:shadow-lg transition-all"
+                    size="sm"
+                    className="gap-1.5 h-9 btn-vibrant"
                   >
-                    <Edit2 className="h-4 w-4" />
-                    Edit
+                    <Edit2 className="h-3.5 w-3.5" />
+                    <span className="text-xs">Edit</span>
                   </Button>
-                  {!tpl.isDefault && (
-                    confirmDeleteId === tpl.id ? (
+                </div>
+
+                {!tpl.isDefault && (
+                  <div className="mt-3 pt-3 border-t border-border/50">
+                    {confirmDeleteId === tpl.id ? (
                       <div className="flex gap-2">
                         <Button
                           variant="destructive"
                           size="sm"
                           onClick={() => { deleteMutation.mutate({ id: tpl.id }); setConfirmDeleteId(null); }}
-                          className="px-3 shadow-md"
+                          className="flex-1 h-8 text-xs"
                         >
-                          ✓
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Confirm
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => setConfirmDeleteId(null)}
-                          className="px-3"
+                          className="flex-1 h-8 text-xs"
                         >
-                          ✕
+                          <X className="h-3 w-3 mr-1" />
+                          Cancel
                         </Button>
                       </div>
                     ) : (
@@ -771,13 +782,14 @@ function TemplatesTab() {
                         variant="outline"
                         size="sm"
                         onClick={() => setConfirmDeleteId(tpl.id)}
-                        className="text-red-600 hover:text-white hover:bg-red-600 border-red-300 hover:border-red-600 transition-all"
+                        className="w-full h-8 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 border-red-500/30 hover:border-red-500/50 transition-all"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3 w-3 mr-1.5" />
+                        Delete Template
                       </Button>
-                    )
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -895,18 +907,18 @@ function CampaignsTab() {
   if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-accent" /></div>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-accent to-[#FD4D43]">
+          <h2 className="text-xl font-bold text-foreground">
             Email Campaigns
           </h2>
-          <p className="text-base text-foreground/70 mt-1">Create and manage your promotional email campaigns</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Create and manage your promotional email campaigns</p>
         </div>
-        <Button onClick={() => setShowComposer(true)} className="btn-vibrant gap-2 shadow-lg h-11 px-6">
-          <Sparkles className="h-5 w-5" />
-          Create Campaign
+        <Button onClick={() => setShowComposer(true)} size="sm" className="btn-vibrant gap-2 shadow-lg h-9">
+          <Sparkles className="h-4 w-4" />
+          <span className="text-xs">Create Campaign</span>
         </Button>
       </div>
 
@@ -921,8 +933,8 @@ function CampaignsTab() {
             <p className="text-base text-muted-foreground mb-6 max-w-md mx-auto">
               Create beautiful email campaigns to promote your events, courses, and classes
             </p>
-            <Button onClick={() => setShowComposer(true)} className="btn-vibrant gap-2 px-8 h-11 shadow-lg">
-              <Sparkles className="h-5 w-5" />
+            <Button onClick={() => setShowComposer(true)} className="btn-vibrant gap-2 px-6 shadow-lg">
+              <Sparkles className="h-4 w-4" />
               Create Your First Campaign
             </Button>
           </CardContent>
@@ -1323,10 +1335,10 @@ export default function EmailMarketing() {
       </div>
 
       {/* Main Content */}
-      <div className="container py-8">
+      <div className="container py-6">
         {/* Tabs - Same style as AdminDashboard */}
         <Tabs defaultValue="templates" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 gap-2 mb-8 h-auto p-2 bg-card/50 backdrop-blur-sm border border-border/50">
+          <TabsList className="grid w-full grid-cols-3 gap-2 mb-6 h-auto p-2 bg-card/50 backdrop-blur-sm border border-border/50">
             <TabsTrigger
               value="templates"
               className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-accent/20 data-[state=active]:to-purple-500/20 data-[state=active]:border-accent/50"
