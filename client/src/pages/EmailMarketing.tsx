@@ -127,18 +127,18 @@ function TemplateEditorDialog({
         <DialogHeader>
           <DialogTitle>{template?.id ? "Edit Template" : "Create Template"}</DialogTitle>
           <DialogDescription>
-            Use <code className="text-accent bg-accent/10 px-1 rounded text-xs">{"{{variableName}}"}</code> placeholders for dynamic content.
+            Create beautiful email templates with our simple editor
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-5">
             <div>
-              <label className="text-sm font-medium mb-1 block">Template Name</label>
+              <label className="text-sm font-medium mb-2 block">Template Name</label>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Summer Event Promo" />
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block">Category</label>
+              <label className="text-sm font-medium mb-2 block">Category</label>
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger>
                   <SelectValue />
@@ -154,54 +154,54 @@ function TemplateEditorDialog({
               </Select>
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block">Subject Line</label>
-              <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g., 🎉 New Event: {{eventTitle}}" />
+              <label className="text-sm font-medium mb-2 block">Subject Line</label>
+              <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g., 🎉 Join us for our next event!" />
+              <p className="text-xs text-foreground/50 mt-1">This is what people will see in their inbox</p>
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block">HTML Content</label>
+              <label className="text-sm font-medium mb-2 block">Email Message</label>
               <Textarea
                 value={htmlContent}
                 onChange={(e) => setHtmlContent(e.target.value)}
-                rows={14}
-                className="font-mono text-xs"
-                placeholder="<div>Your email HTML here...</div>"
+                rows={10}
+                className="resize-none"
+                placeholder="Write your email message here... You can include details about your event, class, or promotion."
               />
+              <p className="text-xs text-foreground/50 mt-1">Keep it friendly and engaging! ✨</p>
             </div>
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-3">
               <label className="text-sm font-medium">Preview</label>
               <Button variant="outline" size="sm" onClick={() => setPreview(!preview)}>
                 <Eye className="h-3 w-3 mr-1" />
-                {preview ? "Hide" : "Show"} Preview
+                {preview ? "Hide" : "Show"}
               </Button>
             </div>
             {preview && htmlContent ? (
-              <div className="border border-border/50 rounded-lg overflow-hidden h-[400px]">
-                <iframe
-                  srcDoc={htmlContent}
-                  className="w-full h-full"
-                  sandbox="allow-same-origin"
-                  title="Email Preview"
-                />
+              <div className="border border-border/50 rounded-lg overflow-hidden h-[420px] bg-white">
+                <div className="p-6 overflow-y-auto h-full">
+                  <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
+                </div>
               </div>
             ) : (
-              <div className="border border-dashed border-border/30 rounded-lg h-[400px] flex items-center justify-center text-foreground/30">
+              <div className="border border-dashed border-border/30 rounded-lg h-[420px] flex items-center justify-center text-foreground/30 bg-gradient-to-br from-purple-50/50 to-blue-50/50">
                 <div className="text-center">
-                  <Eye className="h-8 w-8 mx-auto mb-2" />
-                  <p className="text-sm">Click "Show Preview" to render</p>
+                  <Eye className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p className="text-sm">Click "Show" to preview your email</p>
+                  <p className="text-xs mt-1">See how it will look to your audience</p>
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        <div className="flex gap-2 justify-end mt-4">
+        <div className="flex gap-2 justify-end mt-6 pt-4 border-t">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={handleSave} disabled={isPending} className="btn-vibrant">
             {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {template?.id ? "Update Template" : "Create Template"}
+            {template?.id ? "Save Changes" : "Create Template"}
           </Button>
         </div>
       </DialogContent>
@@ -292,7 +292,7 @@ function CampaignComposerDialog({
             New Email Campaign
           </DialogTitle>
           <DialogDescription>
-            Compose and send or schedule a bulk email to your contacts.
+            Send a message to your community. Choose who receives it and when!
           </DialogDescription>
         </DialogHeader>
 
@@ -300,7 +300,7 @@ function CampaignComposerDialog({
           {/* Left: Template picker */}
           <div className="md:col-span-1">
             <h3 className="text-sm font-semibold text-foreground/70 mb-3 flex items-center gap-1">
-              <LayoutTemplate className="h-4 w-4" /> Templates
+              <LayoutTemplate className="h-4 w-4" /> Use a Template
             </h3>
             <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
               {templates?.map((tpl) => (
@@ -326,37 +326,38 @@ function CampaignComposerDialog({
           </div>
 
           {/* Right: Compose */}
-          <div className="md:col-span-2 space-y-4">
+          <div className="md:col-span-2 space-y-5">
             <div>
-              <label className="text-sm font-medium mb-1 block">Campaign Name</label>
+              <label className="text-sm font-medium mb-2 block">Campaign Name</label>
               <Input value={name} onChange={(e) => setCampaignName(e.target.value)} placeholder="e.g., March Event Blast" />
+              <p className="text-xs text-foreground/50 mt-1">This is just for you - your audience won't see it</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium mb-1 block">Audience</label>
+                <label className="text-sm font-medium mb-2 block">Who should receive this?</label>
                 <Select value={segment} onValueChange={setSegment}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Active Contacts</SelectItem>
-                    <SelectItem value="customer">Customers</SelectItem>
-                    <SelectItem value="vip">VIP</SelectItem>
-                    <SelectItem value="lead">Leads</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="all">Everyone</SelectItem>
+                    <SelectItem value="customer">Customers only</SelectItem>
+                    <SelectItem value="vip">VIP members</SelectItem>
+                    <SelectItem value="lead">New leads</SelectItem>
+                    <SelectItem value="inactive">Inactive users</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">Send</label>
+                <label className="text-sm font-medium mb-2 block">When to send?</label>
                 <Select value={sendNow ? "now" : "schedule"} onValueChange={(v) => setSendNow(v === "now")}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="now">Send Immediately</SelectItem>
-                    <SelectItem value="schedule">Schedule for Later</SelectItem>
+                    <SelectItem value="now">Send right now</SelectItem>
+                    <SelectItem value="schedule">Schedule for later</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -364,8 +365,8 @@ function CampaignComposerDialog({
 
             {!sendNow && (
               <div>
-                <label className="text-sm font-medium mb-1 block flex items-center gap-1">
-                  <Calendar className="h-3.5 w-3.5" /> Schedule Date & Time
+                <label className="text-sm font-medium mb-2 block flex items-center gap-1">
+                  <Calendar className="h-3.5 w-3.5" /> Pick a date and time
                 </label>
                 <Input
                   type="datetime-local"
@@ -376,48 +377,47 @@ function CampaignComposerDialog({
                 />
                 {scheduledAt && (
                   <p className="text-xs text-foreground/50 mt-1">
-                    Will send on {new Date(scheduledAt).toLocaleString("en-GB", { dateStyle: "full", timeStyle: "short" })}
+                    Your email will be sent on {new Date(scheduledAt).toLocaleString("en-GB", { dateStyle: "full", timeStyle: "short" })}
                   </p>
                 )}
               </div>
             )}
 
             <div>
-              <label className="text-sm font-medium mb-1 block">Subject Line</label>
+              <label className="text-sm font-medium mb-2 block">Subject Line</label>
               <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g., 🎉 Don't miss this weekend's event!" />
+              <p className="text-xs text-foreground/50 mt-1">Make it catchy! This is the first thing people see</p>
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-sm font-medium">Email Content (HTML)</label>
-                <Button variant="ghost" size="sm" onClick={() => setPreview(!preview)} className="text-xs h-6">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium">Your Message</label>
+                <Button variant="ghost" size="sm" onClick={() => setPreview(!preview)} className="text-xs h-7">
                   <Eye className="h-3 w-3 mr-1" />
                   {preview ? "Edit" : "Preview"}
                 </Button>
               </div>
               {preview ? (
-                <div className="border border-border/50 rounded-lg overflow-hidden h-48">
-                  <iframe
-                    srcDoc={htmlContent}
-                    className="w-full h-full"
-                    sandbox="allow-same-origin"
-                    title="Email Preview"
-                  />
+                <div className="border border-border/50 rounded-lg overflow-hidden h-52 bg-white">
+                  <div className="p-4 overflow-y-auto h-full">
+                    <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
+                  </div>
                 </div>
               ) : (
                 <Textarea
                   value={htmlContent}
                   onChange={(e) => setHtmlContent(e.target.value)}
                   rows={8}
-                  className="font-mono text-xs"
-                  placeholder="<div>Your email HTML here...</div>"
+                  className="resize-none"
+                  placeholder="Write your message here... Share what's exciting, what's new, or what you'd like your community to know!"
                 />
               )}
+              <p className="text-xs text-foreground/50 mt-1">Keep it personal and engaging! ✨</p>
             </div>
           </div>
         </div>
 
-        <div className="flex gap-2 justify-end mt-4 pt-4 border-t border-border/30">
+        <div className="flex gap-2 justify-end mt-6 pt-4 border-t border-border/30">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={handleSend} disabled={isPending} className="btn-vibrant gap-2">
             {isPending ? (
@@ -427,7 +427,7 @@ function CampaignComposerDialog({
             ) : (
               <Calendar className="h-4 w-4" />
             )}
-            {isPending ? "Sending…" : sendNow ? "Send Now" : "Schedule Campaign"}
+            {isPending ? "Sending…" : sendNow ? "Send Now" : "Schedule"}
           </Button>
         </div>
       </DialogContent>
