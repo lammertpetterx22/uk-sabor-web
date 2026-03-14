@@ -160,14 +160,23 @@ function TemplateEditorDialog({
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">Email Message</label>
-              <Textarea
-                value={htmlContent}
-                onChange={(e) => setHtmlContent(e.target.value)}
-                rows={10}
-                className="resize-none"
-                placeholder="Write your email message here... You can include details about your event, class, or promotion."
-              />
-              <p className="text-xs text-foreground/50 mt-1">Keep it friendly and engaging! ✨</p>
+              <div className="border border-border/50 rounded-lg overflow-hidden bg-white relative">
+                <div
+                  contentEditable
+                  suppressContentEditableWarning
+                  onInput={(e) => setHtmlContent(e.currentTarget.innerHTML)}
+                  dangerouslySetInnerHTML={{ __html: htmlContent || '' }}
+                  className="p-4 min-h-[240px] focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800"
+                  style={{ maxHeight: '400px', overflowY: 'auto' }}
+                  data-placeholder="Start typing your message here... You can paste formatted text or just type naturally!"
+                />
+                {!htmlContent && (
+                  <div className="absolute top-4 left-4 text-gray-400 pointer-events-none">
+                    Start typing your message here... You can paste formatted text or just type naturally!
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-foreground/50 mt-1">Type or paste your message - it will look great! ✨</p>
             </div>
           </div>
 
