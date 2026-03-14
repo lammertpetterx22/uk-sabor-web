@@ -12,8 +12,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useCallback } from "react";
-import ProtectedVideoPlayer from "@/components/ProtectedVideoPlayer";
-import BunnyVideoPlayer from "@/components/BunnyVideoPlayer";
+import { EnhancedVideoPlayer } from "@/../components/video/EnhancedVideoPlayer";
 import LessonList, { isLessonUnlocked } from "@/components/LessonList";
 
 // ─── Types (mirrors tRPC lesson shape) ─────────────────────────────────────
@@ -90,13 +89,6 @@ export default function CourseDetail() {
       toast.error("Completa la lección anterior para desbloquear esta.");
       return;
     }
-    console.log("[CourseDetail] Selected lesson:", {
-      id: lesson.id,
-      title: lesson.title,
-      videoUrl: lesson.videoUrl,
-      bunnyVideoId: lesson.bunnyVideoId,
-      bunnyLibraryId: lesson.bunnyLibraryId,
-    });
     setActiveLessonId(lesson.id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -163,22 +155,14 @@ export default function CourseDetail() {
         {lessons.length === 0 && ((course as any).videoUrl || (course as any).bunnyVideoId) && (
           <Card className="overflow-hidden border-border/50 mb-8 max-w-4xl mx-auto shadow-2xl">
             <div className="relative">
-              {(course as any).bunnyVideoId && (course as any).bunnyLibraryId ? (
-                <BunnyVideoPlayer
-                  bunnyVideoId={(course as any).bunnyVideoId}
-                  bunnyLibraryId={(course as any).bunnyLibraryId}
-                  title={course.title}
-                  locked={!hasPurchased}
-                />
-              ) : course.videoUrl ? (
-                <ProtectedVideoPlayer
-                  src={course.videoUrl}
-                  poster={course.imageUrl || undefined}
-                  title={course.title}
-                  locked={!hasPurchased}
-                  isBunnyVideo={course.videoUrl.includes('iframe.mediadelivery.net')}
-                />
-              ) : null}
+              <EnhancedVideoPlayer
+                bunnyVideoId={(course as any).bunnyVideoId}
+                bunnyLibraryId={(course as any).bunnyLibraryId}
+                videoUrl={course.videoUrl}
+                poster={course.imageUrl || undefined}
+                title={course.title}
+                isLocked={!hasPurchased}
+              />
               {/* Course title bar */}
               <div className="px-4 py-3 bg-card/80 border-t border-border/30 flex items-center gap-3">
                 <Play size={14} className="text-[#FA3698]" />
@@ -198,37 +182,16 @@ export default function CourseDetail() {
             {activeLesson && (activeLesson.videoUrl || activeLesson.bunnyVideoId) ? (
               <Card className="overflow-hidden border-border/50">
                 <div className="relative">
-                  {/* DEBUG: Show what we have */}
-                  {console.log("[CourseDetail] Rendering video player:", {
-                    hasBunnyVideoId: !!activeLesson.bunnyVideoId,
-                    hasBunnyLibraryId: !!activeLesson.bunnyLibraryId,
-                    hasVideoUrl: !!activeLesson.videoUrl,
-                    bunnyVideoId: activeLesson.bunnyVideoId,
-                    bunnyLibraryId: activeLesson.bunnyLibraryId,
-                    videoUrl: activeLesson.videoUrl,
-                    locked: activeLocked,
-                  })}
-                  {/* Use BunnyVideoPlayer if bunnyVideoId is available, otherwise ProtectedVideoPlayer */}
-                  {activeLesson.bunnyVideoId && activeLesson.bunnyLibraryId ? (
-                    <BunnyVideoPlayer
-                      bunnyVideoId={activeLesson.bunnyVideoId}
-                      bunnyLibraryId={activeLesson.bunnyLibraryId}
-                      title={activeLesson.title}
-                      locked={activeLocked}
-                      onProgress={handleProgress}
-                      onComplete={handleComplete}
-                    />
-                  ) : activeLesson.videoUrl ? (
-                    <ProtectedVideoPlayer
-                      src={activeLesson.videoUrl}
-                      poster={course.imageUrl || undefined}
-                      title={activeLesson.title}
-                      locked={activeLocked}
-                      onProgress={handleProgress}
-                      onComplete={handleComplete}
-                      isBunnyVideo={activeLesson.videoUrl.includes('iframe.mediadelivery.net')}
-                    />
-                  ) : null}
+                  <EnhancedVideoPlayer
+                    bunnyVideoId={activeLesson.bunnyVideoId || undefined}
+                    bunnyLibraryId={activeLesson.bunnyLibraryId || undefined}
+                    videoUrl={activeLesson.videoUrl || undefined}
+                    poster={course.imageUrl || undefined}
+                    title={activeLesson.title}
+                    isLocked={activeLocked}
+                    onProgress={handleProgress}
+                    onComplete={handleComplete}
+                  />
                   {/* Lesson title bar */}
                   <div className="px-4 py-3 bg-card/80 border-t border-border/30 flex items-center gap-3">
                     <Play size={14} className="text-[#FA3698]" />

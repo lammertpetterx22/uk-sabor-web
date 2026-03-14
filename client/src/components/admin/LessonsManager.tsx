@@ -9,7 +9,7 @@ import { trpc } from "@/lib/trpc";
 import { useLessonsManager } from "@/hooks/useLessonsManager";
 import { Loader2, Plus, Video, Upload, X, Trash2, Eye, Lock, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
-import { ProfessionalUploadProgress } from "@/components/video/ProfessionalUploadProgress";
+import { ProfessionalUploadProgress } from "@/../components/video/ProfessionalUploadProgress";
 
 interface LessonsManagerProps {
   courses: any[];

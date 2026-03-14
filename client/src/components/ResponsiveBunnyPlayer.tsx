@@ -85,7 +85,6 @@ export default function ResponsiveBunnyPlayer({
 
       if (data.event === "ready") {
         setIsLoading(false);
-        console.log("[ResponsiveBunnyPlayer] Video player ready");
       } else if (data.event === "play") {
         setIsPlaying(true);
       } else if (data.event === "pause") {
@@ -103,7 +102,6 @@ export default function ResponsiveBunnyPlayer({
           if (!hasCompleted && percent >= 95) {
             setHasCompleted(true);
             onComplete?.();
-            console.log("[ResponsiveBunnyPlayer] Video completed (95%)");
           }
         }
       } else if (data.event === "loadedmetadata") {
@@ -117,21 +115,17 @@ export default function ResponsiveBunnyPlayer({
           if (ratio > 1.5) {
             // Wide (16:9 or similar)
             setDetectedAspectRatio("16/9");
-            console.log("[ResponsiveBunnyPlayer] Detected: Horizontal (16:9)");
           } else if (ratio < 0.8) {
             // Tall (9:16 - TikTok/Reels style)
             setDetectedAspectRatio("9/16");
-            console.log("[ResponsiveBunnyPlayer] Detected: Vertical (9:16)");
           } else {
             // Square (1:1 - Instagram style)
             setDetectedAspectRatio("1/1");
-            console.log("[ResponsiveBunnyPlayer] Detected: Square (1:1)");
           }
         }
       } else if (data.event === "error") {
         setError("Error al cargar el video. Por favor, intenta de nuevo.");
         setIsLoading(false);
-        console.error("[ResponsiveBunnyPlayer] Playback error:", data);
       }
     };
 
