@@ -209,6 +209,50 @@ function TemplateEditorDialog({
   );
 }
 
+// ─── Auto-generate beautiful email HTML ───────────────────────────────────────
+function generateEmailHTML(type: "event" | "course" | "class", item: any): string {
+  const baseStyles = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center;">
+        <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: bold;">
+          ${item.title || item.name}
+        </h1>
+      </div>
+      <div style="padding: 40px 30px;">
+        ${item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.title || item.name}" style="width: 100%; border-radius: 12px; margin-bottom: 24px;" />` : ''}
+        <p style="font-size: 18px; color: #333333; line-height: 1.6; margin-bottom: 24px;">
+          ${item.description || 'Join us for an amazing experience!'}
+        </p>
+        ${type === 'event' && item.startDate ? `
+        <div style="background: #f7fafc; border-left: 4px solid #667eea; padding: 20px; margin: 24px 0; border-radius: 8px;">
+          <p style="margin: 0; color: #4a5568; font-size: 16px;">
+            <strong style="color: #667eea;">📅 Date:</strong> ${new Date(item.startDate).toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+          ${item.location ? `<p style="margin: 8px 0 0 0; color: #4a5568; font-size: 16px;"><strong style="color: #667eea;">📍 Location:</strong> ${item.location}</p>` : ''}
+        </div>
+        ` : ''}
+        ${item.price ? `
+        <div style="text-align: center; margin: 32px 0;">
+          <p style="font-size: 16px; color: #718096; margin-bottom: 8px;">Price</p>
+          <p style="font-size: 36px; font-weight: bold; color: #667eea; margin: 0;">£${item.price}</p>
+        </div>
+        ` : ''}
+        <div style="text-align: center; margin-top: 32px;">
+          <a href="${window.location.origin}/${type}s/${item.id}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; padding: 16px 48px; text-decoration: none; border-radius: 50px; font-size: 18px; font-weight: bold; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+            ${type === 'event' ? 'Get Tickets' : type === 'course' ? 'Enroll Now' : 'Book Your Spot'}
+          </a>
+        </div>
+      </div>
+      <div style="background: #f7fafc; padding: 24px; text-align: center; border-top: 1px solid #e2e8f0;">
+        <p style="color: #718096; font-size: 14px; margin: 0;">
+          You're receiving this because you're part of our amazing community!
+        </p>
+      </div>
+    </div>
+  `;
+  return baseStyles;
+}
+
 // ─── Campaign Composer Dialog ─────────────────────────────────────────────────
 function CampaignComposerDialog({
   open,
@@ -219,22 +263,25 @@ function CampaignComposerDialog({
   onClose: () => void;
   onSent: () => void;
 }) {
-  const [step, setStep] = useState<"compose" | "schedule" | "confirm">("compose");
+  const [step, setStep] = useState<"select" | "preview" | "send">("select");
+  const [contentType, setContentType] = useState<"event" | "course" | "class" | "custom">("event");
+  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [name, setCampaignName] = useState("");
   const [subject, setSubject] = useState("");
   const [htmlContent, setHtmlContent] = useState("");
   const [segment, setSegment] = useState("all");
-  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
   const [scheduledAt, setScheduledAt] = useState("");
   const [sendNow, setSendNow] = useState(true);
-  const [preview, setPreview] = useState(false);
-  const [createdCampaignId, setCreatedCampaignId] = useState<number | null>(null);
+
+  // Fetch available content
+  const { data: events } = trpc.events.list.useQuery(undefined, { enabled: contentType === "event" });
+  const { data: courses } = trpc.courses.list.useQuery(undefined, { enabled: contentType === "course" });
+  const { data: classes } = trpc.classes.list.useQuery(undefined, { enabled: contentType === "class" });
 
   const { data: templates } = trpc.emailMarketing.listTemplates.useQuery();
 
   const createMutation = trpc.emailMarketing.createCampaign.useMutation({
     onSuccess: (data) => {
-      setCreatedCampaignId(data.id);
       if (sendNow) {
         sendMutation.mutate({ campaignId: data.id, origin: window.location.origin });
       } else {
@@ -248,29 +295,32 @@ function CampaignComposerDialog({
 
   const sendMutation = trpc.emailMarketing.sendCampaign.useMutation({
     onSuccess: (data) => {
-      toast.success(`Campaign sent to ${data.sent} contacts!`);
+      toast.success(`Sent to ${data.sent} people!`);
       onSent();
       onClose();
     },
     onError: (e) => toast.error(e.message),
   });
 
-  const handleTemplateSelect = (tpl: any) => {
-    setSelectedTemplateId(tpl.id);
-    setSubject(tpl.subject);
-    setHtmlContent(tpl.htmlContent);
+  // Handle item selection and auto-generate email
+  const handleItemSelect = (item: any) => {
+    setSelectedItemId(item.id);
+    const itemName = item.title || item.name;
+    setCampaignName(`${contentType.charAt(0).toUpperCase() + contentType.slice(1)}: ${itemName}`);
+    setSubject(`🎉 ${itemName} - Don't miss out!`);
+    setHtmlContent(generateEmailHTML(contentType as any, item));
+    setStep("preview");
   };
 
   const handleSend = () => {
     if (!name || !subject || !htmlContent) {
-      toast.error("Please fill in all fields");
+      toast.error("Please complete all steps");
       return;
     }
     createMutation.mutate({
       name,
       subject,
       htmlContent,
-      templateId: selectedTemplateId || undefined,
       segment: segment as any,
       scheduledAt: !sendNow && scheduledAt ? scheduledAt : undefined,
     });
@@ -283,152 +333,190 @@ function CampaignComposerDialog({
     .toISOString()
     .slice(0, 16);
 
+  // Get current items based on type
+  const currentItems = contentType === "event" ? events : contentType === "course" ? courses : classes;
+
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Send className="h-5 w-5 text-accent" />
-            New Email Campaign
+            <Sparkles className="h-6 w-6 text-accent" />
+            Promote Your Content
           </DialogTitle>
           <DialogDescription>
-            Send a message to your community. Choose who receives it and when!
+            Pick what you want to promote and we'll create a beautiful email for you!
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Left: Template picker */}
-          <div className="md:col-span-1">
-            <h3 className="text-sm font-semibold text-foreground/70 mb-3 flex items-center gap-1">
-              <LayoutTemplate className="h-4 w-4" /> Use a Template
-            </h3>
-            <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
-              {templates?.map((tpl) => (
-                <button
-                  key={tpl.id}
-                  onClick={() => handleTemplateSelect(tpl)}
-                  className={`w-full text-left p-3 rounded-lg border transition-colors ${selectedTemplateId === tpl.id
-                    ? "border-accent bg-accent/10"
-                    : "border-border/30 hover:border-accent/50 hover:bg-accent/5"
-                    }`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-base">{CATEGORY_ICONS[tpl.category || "custom"]}</span>
-                    <span className="text-xs font-semibold truncate">{tpl.name}</span>
-                  </div>
-                  <p className="text-xs text-foreground/50 truncate">{tpl.subject}</p>
-                </button>
-              ))}
-              {(!templates || templates.length === 0) && (
-                <p className="text-xs text-foreground/40 text-center py-4">No templates yet</p>
-              )}
-            </div>
-          </div>
-
-          {/* Right: Compose */}
-          <div className="md:col-span-2 space-y-5">
+        {/* Step 1: Select Content */}
+        {step === "select" && (
+          <div className="space-y-6">
             <div>
-              <label className="text-sm font-medium mb-2 block">Campaign Name</label>
-              <Input value={name} onChange={(e) => setCampaignName(e.target.value)} placeholder="e.g., March Event Blast" />
-              <p className="text-xs text-foreground/50 mt-1">This is just for you - your audience won't see it</p>
+              <label className="text-base font-semibold mb-3 block">What do you want to promote?</label>
+              <div className="grid grid-cols-3 gap-3">
+                <button
+                  onClick={() => setContentType("event")}
+                  className={`p-6 rounded-xl border-2 transition-all ${
+                    contentType === "event"
+                      ? "border-purple-500 bg-purple-50 shadow-lg"
+                      : "border-gray-200 hover:border-purple-300"
+                  }`}
+                >
+                  <div className="text-4xl mb-2">🎉</div>
+                  <div className="font-semibold">Events</div>
+                  <div className="text-xs text-gray-500 mt-1">Parties, workshops, socials</div>
+                </button>
+                <button
+                  onClick={() => setContentType("course")}
+                  className={`p-6 rounded-xl border-2 transition-all ${
+                    contentType === "course"
+                      ? "border-purple-500 bg-purple-50 shadow-lg"
+                      : "border-gray-200 hover:border-purple-300"
+                  }`}
+                >
+                  <div className="text-4xl mb-2">🎓</div>
+                  <div className="font-semibold">Courses</div>
+                  <div className="text-xs text-gray-500 mt-1">Online video courses</div>
+                </button>
+                <button
+                  onClick={() => setContentType("class")}
+                  className={`p-6 rounded-xl border-2 transition-all ${
+                    contentType === "class"
+                      ? "border-purple-500 bg-purple-50 shadow-lg"
+                      : "border-gray-200 hover:border-purple-300"
+                  }`}
+                >
+                  <div className="text-4xl mb-2">💃</div>
+                  <div className="font-semibold">Classes</div>
+                  <div className="text-xs text-gray-500 mt-1">In-person dance classes</div>
+                </button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Who should receive this?</label>
-                <Select value={segment} onValueChange={setSegment}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Everyone</SelectItem>
-                    <SelectItem value="customer">Customers only</SelectItem>
-                    <SelectItem value="vip">VIP members</SelectItem>
-                    <SelectItem value="lead">New leads</SelectItem>
-                    <SelectItem value="inactive">Inactive users</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">When to send?</label>
-                <Select value={sendNow ? "now" : "schedule"} onValueChange={(v) => setSendNow(v === "now")}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="now">Send right now</SelectItem>
-                    <SelectItem value="schedule">Schedule for later</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {!sendNow && (
-              <div>
-                <label className="text-sm font-medium mb-2 block flex items-center gap-1">
-                  <Calendar className="h-3.5 w-3.5" /> Pick a date and time
-                </label>
-                <Input
-                  type="datetime-local"
-                  value={scheduledAt}
-                  onChange={(e) => setScheduledAt(e.target.value)}
-                  min={minDateTime}
-                  className="w-full"
-                />
-                {scheduledAt && (
-                  <p className="text-xs text-foreground/50 mt-1">
-                    Your email will be sent on {new Date(scheduledAt).toLocaleString("en-GB", { dateStyle: "full", timeStyle: "short" })}
-                  </p>
+            <div>
+              <label className="text-base font-semibold mb-3 block">
+                Choose a {contentType} to promote
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto pr-2">
+                {currentItems && currentItems.length > 0 ? (
+                  currentItems.map((item: any) => (
+                    <button
+                      key={item.id}
+                      onClick={() => handleItemSelect(item)}
+                      className="text-left p-4 rounded-lg border-2 border-gray-200 hover:border-purple-400 hover:shadow-md transition-all group"
+                    >
+                      {item.imageUrl && (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.title || item.name}
+                          className="w-full h-32 object-cover rounded-lg mb-3"
+                        />
+                      )}
+                      <h3 className="font-semibold text-base group-hover:text-purple-600 transition-colors">
+                        {item.title || item.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                        {item.description || "Click to promote this!"}
+                      </p>
+                      {item.price && (
+                        <p className="text-purple-600 font-bold mt-2">£{item.price}</p>
+                      )}
+                    </button>
+                  ))
+                ) : (
+                  <div className="col-span-2 text-center py-12">
+                    <p className="text-gray-400">No {contentType}s available yet</p>
+                    <p className="text-sm text-gray-400 mt-1">Create one first to promote it!</p>
+                  </div>
                 )}
               </div>
-            )}
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Subject Line</label>
-              <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g., 🎉 Don't miss this weekend's event!" />
-              <p className="text-xs text-foreground/50 mt-1">Make it catchy! This is the first thing people see</p>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium">Your Message</label>
-                <Button variant="ghost" size="sm" onClick={() => setPreview(!preview)} className="text-xs h-7">
-                  <Eye className="h-3 w-3 mr-1" />
-                  {preview ? "Edit" : "Preview"}
-                </Button>
-              </div>
-              {preview ? (
-                <div className="border border-border/50 rounded-lg overflow-hidden h-52 bg-white">
-                  <div className="p-4 overflow-y-auto h-full">
-                    <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
-                  </div>
-                </div>
-              ) : (
-                <Textarea
-                  value={htmlContent}
-                  onChange={(e) => setHtmlContent(e.target.value)}
-                  rows={8}
-                  className="resize-none"
-                  placeholder="Write your message here... Share what's exciting, what's new, or what you'd like your community to know!"
-                />
-              )}
-              <p className="text-xs text-foreground/50 mt-1">Keep it personal and engaging! ✨</p>
             </div>
           </div>
-        </div>
+        )}
 
-        <div className="flex gap-2 justify-end mt-6 pt-4 border-t border-border/30">
+        {/* Step 2: Preview & Configure */}
+        {step === "preview" && (
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <Button variant="ghost" size="sm" onClick={() => setStep("select")} className="gap-1">
+                ← Back to selection
+              </Button>
+              <Badge className="bg-green-100 text-green-700 border-green-300">Ready to send!</Badge>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Subject Line</label>
+                  <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
+                  <p className="text-xs text-gray-500 mt-1">You can edit this if you want!</p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Who should receive this?</label>
+                  <Select value={segment} onValueChange={setSegment}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Everyone</SelectItem>
+                      <SelectItem value="customer">Customers only</SelectItem>
+                      <SelectItem value="vip">VIP members</SelectItem>
+                      <SelectItem value="lead">New leads</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">When to send?</label>
+                  <Select value={sendNow ? "now" : "schedule"} onValueChange={(v) => setSendNow(v === "now")}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="now">Send right now</SelectItem>
+                      <SelectItem value="schedule">Schedule for later</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {!sendNow && (
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Pick a date and time</label>
+                    <Input
+                      type="datetime-local"
+                      value={scheduledAt}
+                      onChange={(e) => setScheduledAt(e.target.value)}
+                      min={minDateTime}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">Email Preview</label>
+                <div className="border-2 border-gray-200 rounded-lg overflow-hidden bg-gray-50 h-96 overflow-y-auto">
+                  <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
+                </div>
+                <p className="text-xs text-gray-500 mt-2">This is how your email will look!</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-2 justify-end mt-6 pt-4 border-t">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSend} disabled={isPending} className="btn-vibrant gap-2">
-            {isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : sendNow ? (
-              <Send className="h-4 w-4" />
-            ) : (
-              <Calendar className="h-4 w-4" />
-            )}
-            {isPending ? "Sending…" : sendNow ? "Send Now" : "Schedule"}
-          </Button>
+          {step === "preview" && (
+            <Button onClick={handleSend} disabled={isPending} className="btn-vibrant gap-2">
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              {isPending ? "Sending…" : sendNow ? "Send Now!" : "Schedule"}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
