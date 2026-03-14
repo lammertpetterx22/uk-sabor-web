@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
-import { Loader2, Plus, Edit2, Trash2, AlertCircle, Upload, X, Image as ImageIcon, Video, Users, QrCode, Mail, Calendar, LayoutTemplate, Eye, Send, Settings, RefreshCw, CheckCircle, Copy, ExternalLink } from "lucide-react";
+import { Loader2, Plus, Edit2, Trash2, AlertCircle, Upload, X, Image as ImageIcon, Video, Users, QrCode, Mail, Calendar, LayoutTemplate, Eye, Send, Settings, RefreshCw, CheckCircle, Copy, ExternalLink, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation, Link } from "wouter";
 import ImageCropperModal from "@/components/ImageCropperModal";
@@ -22,6 +22,7 @@ import LessonsManager from "@/components/admin/LessonsManager";
 import MyCoursesDashboard from "@/components/instructor/MyCoursesDashboard";
 import MyEventsDashboard from "@/components/instructor/MyEventsDashboard";
 import MyClassesDashboard from "@/components/instructor/MyClassesDashboard";
+import InstructorApplicationsManager from "@/components/admin/InstructorApplicationsManager";
 import { useTranslations } from "@/hooks/useTranslations";
 
 export default function AdminDashboard() {
@@ -143,7 +144,7 @@ export default function AdminDashboard() {
       <div className="container py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {isAdmin ? (
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-8 h-auto p-2 bg-card/50 backdrop-blur-sm border border-border/50">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-2 mb-8 h-auto p-2 bg-card/50 backdrop-blur-sm border border-border/50">
               <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-accent/20 data-[state=active]:to-purple-500/20 data-[state=active]:border-accent/50">
                 <LayoutTemplate className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">Inicio</span>
@@ -159,6 +160,10 @@ export default function AdminDashboard() {
               <TabsTrigger value="management" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-green-500/20 data-[state=active]:to-emerald-500/20 data-[state=active]:border-green-500/50">
                 <Users className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">Gestión</span>
+              </TabsTrigger>
+              <TabsTrigger value="applications" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500/20 data-[state=active]:to-yellow-500/20 data-[state=active]:border-amber-500/50">
+                <UserPlus className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Solicitudes</span>
               </TabsTrigger>
               <TabsTrigger value="orders" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-pink-500/20 data-[state=active]:to-rose-500/20 data-[state=active]:border-pink-500/50">
                 <Mail className="h-4 w-4 mr-2" />
@@ -351,6 +356,26 @@ export default function AdminDashboard() {
                   <UsersTab />
                 </TabsContent>
               </Tabs>
+            </TabsContent>
+          )}
+
+          {/* APPLICATIONS TAB - Admin only */}
+          {isAdmin && (
+            <TabsContent value="applications">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <UserPlus className="h-5 w-5" />
+                    Solicitudes de Instructor / Promotor
+                  </CardTitle>
+                  <CardDescription>
+                    Revisa y gestiona las solicitudes para convertirse en instructor o promotor
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <InstructorApplicationsManager />
+                </CardContent>
+              </Card>
             </TabsContent>
           )}
 

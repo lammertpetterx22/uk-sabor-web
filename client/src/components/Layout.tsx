@@ -18,6 +18,7 @@ import {
     BarChart3,
     Banknote,
     Wallet,
+    UserPlus,
 } from "lucide-react";
 
 const SABOR_LOGO =
@@ -157,6 +158,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             label="Mi Perfil"
                             onClick={onClose}
                         />
+                        {!isCreator && (
+                            <NavLink
+                                href="/become-instructor"
+                                icon={UserPlus}
+                                label="Ser Instructor/Promotor"
+                                onClick={onClose}
+                            />
+                        )}
                     </>
                 )}
 

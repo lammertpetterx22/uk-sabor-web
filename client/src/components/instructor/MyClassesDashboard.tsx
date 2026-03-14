@@ -97,7 +97,7 @@ export default function MyClassesDashboard({
   const handleDeleteClass = (classId: number, e: React.MouseEvent) => {
     e.stopPropagation();
     if (confirmDeleteId === classId) {
-      deleteMutation.mutate({ id: classId });
+      deleteMutation.mutate(classId);
     } else {
       setConfirmDeleteId(classId);
     }

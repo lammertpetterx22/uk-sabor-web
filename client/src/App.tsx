@@ -35,6 +35,7 @@ const AdminWithdrawals = lazy(() => import("./pages/AdminWithdrawals"));
 const PromoterProfile = lazy(() => import("./pages/PromoterProfile"));
 const Promoters = lazy(() => import("./pages/Promoters"));
 const StaffScanner = lazy(() => import("./pages/StaffScanner"));
+const BecomeInstructor = lazy(() => import("./pages/BecomeInstructor"));
 
 // Loading fallback
 function PageLoader() {
@@ -84,6 +85,11 @@ function Router() {
           <Route path="/dashboard">
             <ProtectedRoute>
               <UserDashboard />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/become-instructor">
+            <ProtectedRoute>
+              <BecomeInstructor />
             </ProtectedRoute>
           </Route>
 

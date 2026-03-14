@@ -24,4 +24,6 @@ export type {
   InsertClassPurchase,
   Order,
   InsertOrder,
+  InstructorApplication,
+  InsertInstructorApplication,
 } from "../drizzle/schema";

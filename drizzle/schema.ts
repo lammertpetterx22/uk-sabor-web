@@ -555,3 +555,45 @@ export type InsertLedgerTransaction = typeof ledgerTransactions.$inferInsert;
 
 export type WithdrawalRequest = typeof withdrawalRequests.$inferSelect;
 export type InsertWithdrawalRequest = typeof withdrawalRequests.$inferInsert;
+
+// ─── Instructor Application Requests ──────────────────────────────────────────
+
+/**
+ * Instructor Application Requests — users can request to become instructors/promoters
+ * and gain permissions to publish events, classes, and courses.
+ */
+export const instructorApplications = pgTable("instructorApplications", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  requestType: varchar("requestType", { length: 50 }).notNull(), // 'instructor', 'promoter'
+  status: varchar("status", { length: 50 }).default("pending").notNull(), // 'pending', 'approved', 'rejected'
+
+  // Application details
+  fullName: varchar("fullName", { length: 255 }).notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  phone: varchar("phone", { length: 20 }),
+  bio: text("bio"), // Tell us about yourself
+  experience: text("experience"), // Dance/teaching experience
+  specialties: text("specialties"), // Dance styles (JSON array)
+  instagramHandle: varchar("instagramHandle", { length: 255 }),
+  websiteUrl: text("websiteUrl"),
+
+  // What they want to publish
+  interestedInEvents: boolean("interestedInEvents").default(false),
+  interestedInClasses: boolean("interestedInClasses").default(false),
+  interestedInCourses: boolean("interestedInCourses").default(false),
+
+  // Admin review
+  adminNotes: text("adminNotes"),
+  reviewedBy: integer("reviewedBy"), // Admin user ID who reviewed
+  reviewedAt: timestamp("reviewedAt"),
+
+  requestedAt: timestamp("requestedAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+}, (table) => ({
+  userIdIdx: index("instructor_applications_user_id_idx").on(table.userId),
+  statusIdx: index("instructor_applications_status_idx").on(table.status),
+}));
+
+export type InstructorApplication = typeof instructorApplications.$inferSelect;
+export type InsertInstructorApplication = typeof instructorApplications.$inferInsert;

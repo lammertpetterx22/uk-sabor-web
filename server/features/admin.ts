@@ -2,8 +2,8 @@ import { z } from "zod";
 import { adminProcedure, protectedProcedure, router } from "../_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { getDb } from "../db";
-import { events, courses, classes, users, orders, eventTickets, classPurchases, coursePurchases, instructors as instructorsTable } from "../../drizzle/schema";
-import { getAllRoles } from "../../drizzle/schema";
+import { events, courses, classes, users, orders, eventTickets, classPurchases, coursePurchases, instructors as instructorsTable, instructorApplications } from "../../drizzle/schema";
+import { getAllRoles, serializeRoles } from "../../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
 import { canCreateCourse } from "../stripe/plans";
 
@@ -595,4 +595,297 @@ export const adminRouter = router({
 
     return enriched;
   }),
+
+  // ===== INSTRUCTOR APPLICATIONS MANAGEMENT =====
+
+  /**
+   * Submit a new application to become an instructor/promoter (user-facing)
+   */
+  submitInstructorApplication: protectedProcedure
+    .input(
+      z.object({
+        requestType: z.enum(["instructor", "promoter"]),
+        fullName: z.string().min(1, "Full name is required"),
+        email: z.string().email("Valid email is required"),
+        phone: z.string().optional(),
+        bio: z.string().min(10, "Please tell us about yourself (min 10 characters)"),
+        experience: z.string().min(10, "Please describe your experience (min 10 characters)"),
+        specialties: z.array(z.string()).default([]),
+        instagramHandle: z.string().optional(),
+        websiteUrl: z.string().optional(),
+        interestedInEvents: z.boolean().default(false),
+        interestedInClasses: z.boolean().default(false),
+        interestedInCourses: z.boolean().default(false),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      // Check if user already has a pending application
+      const [existingApp] = await db
+        .select()
+        .from(instructorApplications)
+        .where(eq(instructorApplications.userId, ctx.user.id))
+        .orderBy(desc(instructorApplications.requestedAt))
+        .limit(1);
+
+      if (existingApp && existingApp.status === "pending") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You already have a pending application. Please wait for admin review."
+        });
+      }
+
+      // Create new application
+      await db.insert(instructorApplications).values({
+        userId: ctx.user.id,
+        requestType: input.requestType,
+        fullName: input.fullName,
+        email: input.email,
+        phone: input.phone,
+        bio: input.bio,
+        experience: input.experience,
+        specialties: JSON.stringify(input.specialties),
+        instagramHandle: input.instagramHandle,
+        websiteUrl: input.websiteUrl,
+        interestedInEvents: input.interestedInEvents,
+        interestedInClasses: input.interestedInClasses,
+        interestedInCourses: input.interestedInCourses,
+        status: "pending",
+      });
+
+      return { success: true, message: "Application submitted successfully!" };
+    }),
+
+  /**
+   * Get user's own application status
+   */
+  getMyApplication: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+    const [application] = await db
+      .select()
+      .from(instructorApplications)
+      .where(eq(instructorApplications.userId, ctx.user.id))
+      .orderBy(desc(instructorApplications.requestedAt))
+      .limit(1);
+
+    return application || null;
+  }),
+
+  /**
+   * List all instructor applications (admin only)
+   */
+  listInstructorApplications: adminProcedure
+    .input(
+      z.object({
+        status: z.enum(["pending", "approved", "rejected", "all"]).default("all"),
+      }).optional()
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      let query = db.select().from(instructorApplications);
+
+      if (input?.status && input.status !== "all") {
+        query = query.where(eq(instructorApplications.status, input.status)) as any;
+      }
+
+      const applications = await query.orderBy(desc(instructorApplications.requestedAt));
+
+      // Enrich with user data
+      const enriched = await Promise.all(
+        applications.map(async (app) => {
+          let userName = "Unknown";
+          let userEmail = "";
+          let currentRole = "user";
+
+          try {
+            const [user] = await db
+              .select({ name: users.name, email: users.email, role: users.role })
+              .from(users)
+              .where(eq(users.id, app.userId))
+              .limit(1);
+            if (user) {
+              userName = user.name ?? "Unknown";
+              userEmail = user.email ?? "";
+              currentRole = user.role ?? "user";
+            }
+          } catch { }
+
+          return {
+            ...app,
+            userName,
+            userEmail,
+            currentRole,
+            specialtiesArray: app.specialties ? JSON.parse(app.specialties) : []
+          };
+        })
+      );
+
+      return enriched;
+    }),
+
+  /**
+   * Approve an instructor application (admin only)
+   */
+  approveInstructorApplication: adminProcedure
+    .input(
+      z.object({
+        applicationId: z.number(),
+        adminNotes: z.string().optional(),
+        createInstructorProfile: z.boolean().default(true), // Auto-create instructor profile
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      // Get the application
+      const [application] = await db
+        .select()
+        .from(instructorApplications)
+        .where(eq(instructorApplications.id, input.applicationId))
+        .limit(1);
+
+      if (!application) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Application not found" });
+      }
+
+      if (application.status !== "pending") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Application has already been reviewed" });
+      }
+
+      // Update application status
+      await db
+        .update(instructorApplications)
+        .set({
+          status: "approved",
+          reviewedBy: ctx.user.id,
+          reviewedAt: new Date(),
+          adminNotes: input.adminNotes,
+          updatedAt: new Date(),
+        })
+        .where(eq(instructorApplications.id, input.applicationId));
+
+      // Update user role
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, application.userId))
+        .limit(1);
+
+      if (user) {
+        const currentRoles = getAllRoles(user);
+        const newRole = application.requestType; // "instructor" or "promoter"
+
+        // Add new role if not already present
+        if (!currentRoles.includes(newRole)) {
+          currentRoles.push(newRole);
+        }
+
+        // Update user with new role
+        await db
+          .update(users)
+          .set({
+            role: newRole, // Set primary role to the new role
+            roles: serializeRoles(currentRoles),
+          })
+          .where(eq(users.id, application.userId));
+      }
+
+      // Create instructor profile if requested and role is instructor
+      if (input.createInstructorProfile && application.requestType === "instructor") {
+        // Check if instructor profile already exists
+        const [existingInstructor] = await db
+          .select()
+          .from(instructorsTable)
+          .where(eq(instructorsTable.userId, application.userId))
+          .limit(1);
+
+        if (!existingInstructor) {
+          const specialtiesArray = application.specialties ? JSON.parse(application.specialties) : [];
+
+          await db.insert(instructorsTable).values({
+            userId: application.userId,
+            name: application.fullName,
+            bio: application.bio,
+            instagramHandle: application.instagramHandle,
+            websiteUrl: application.websiteUrl,
+            specialties: JSON.stringify(specialtiesArray),
+          });
+        }
+      }
+
+      return {
+        success: true,
+        message: `Application approved! User is now a ${application.requestType}.`
+      };
+    }),
+
+  /**
+   * Reject an instructor application (admin only)
+   */
+  rejectInstructorApplication: adminProcedure
+    .input(
+      z.object({
+        applicationId: z.number(),
+        adminNotes: z.string().min(1, "Please provide a reason for rejection"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      // Get the application
+      const [application] = await db
+        .select()
+        .from(instructorApplications)
+        .where(eq(instructorApplications.id, input.applicationId))
+        .limit(1);
+
+      if (!application) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Application not found" });
+      }
+
+      if (application.status !== "pending") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Application has already been reviewed" });
+      }
+
+      // Update application status
+      await db
+        .update(instructorApplications)
+        .set({
+          status: "rejected",
+          reviewedBy: ctx.user.id,
+          reviewedAt: new Date(),
+          adminNotes: input.adminNotes,
+          updatedAt: new Date(),
+        })
+        .where(eq(instructorApplications.id, input.applicationId));
+
+      return {
+        success: true,
+        message: "Application rejected."
+      };
+    }),
+
+  /**
+   * Delete an application (admin only)
+   */
+  deleteInstructorApplication: adminProcedure
+    .input(z.object({ applicationId: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      await db
+        .delete(instructorApplications)
+        .where(eq(instructorApplications.id, input.applicationId));
+
+      return { success: true };
+    }),
 });
