@@ -123,17 +123,17 @@ function TemplateEditorDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto bg-gradient-to-br from-white via-purple-50/20 to-blue-50/20 border-0 shadow-2xl">
-        <DialogHeader className="border-b border-purple-100 pb-4">
+      <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto bg-card/95 backdrop-blur-xl border border-border/50 shadow-2xl">
+        <DialogHeader className="border-b border-border/50 pb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl shadow-lg">
+            <div className="p-2.5 bg-gradient-to-br from-accent to-[#FD4D43] rounded-xl shadow-lg">
               <Edit2 className="h-6 w-6 text-white" />
             </div>
             <div>
-              <DialogTitle className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
+              <DialogTitle className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-accent to-[#FD4D43]">
                 {template?.id ? "Edit Template" : "Create New Template"}
               </DialogTitle>
-              <DialogDescription className="text-base text-gray-600 mt-1">
+              <DialogDescription className="text-base text-foreground/60 mt-1">
                 Design beautiful email templates with our visual editor
               </DialogDescription>
             </div>
@@ -175,30 +175,30 @@ function TemplateEditorDialog({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <label className="text-base font-bold text-gray-900">Your Message</label>
-                  <Badge variant="outline" className="bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 border-purple-300">
+                  <label className="text-base font-bold text-foreground">Your Message</label>
+                  <Badge variant="outline" className="bg-accent/20 text-accent border-accent/30">
                     ✨ Live Editor
                   </Badge>
                 </div>
               </div>
 
-              <div className="border-2 border-purple-300 rounded-2xl overflow-hidden bg-white shadow-lg hover:border-purple-500 hover:shadow-xl transition-all relative">
+              <div className="border border-border/50 rounded-xl overflow-hidden bg-background/50 backdrop-blur-sm hover:border-accent/50 transition-all relative">
                 <div
                   contentEditable
                   suppressContentEditableWarning
                   onInput={(e) => setHtmlContent(e.currentTarget.innerHTML)}
                   dangerouslySetInnerHTML={{ __html: htmlContent || '' }}
-                  className="p-8 min-h-[500px] focus:outline-none text-gray-900 text-lg leading-relaxed"
+                  className="p-8 min-h-[500px] focus:outline-none text-foreground text-lg leading-relaxed"
                   style={{ maxHeight: '600px', overflowY: 'auto' }}
                 />
                 {!htmlContent && (
-                  <div className="absolute top-8 left-8 text-gray-400 pointer-events-none text-lg">
+                  <div className="absolute top-8 left-8 text-foreground/40 pointer-events-none text-lg">
                     <div className="space-y-2">
                       <p className="font-medium">Start typing your message here...</p>
-                      <p className="text-base text-gray-400">
+                      <p className="text-base text-foreground/40">
                         💡 Tip: You can paste formatted text from anywhere!
                       </p>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm text-foreground/40">
                         Your formatting will be preserved automatically
                       </p>
                     </div>
@@ -206,8 +206,8 @@ function TemplateEditorDialog({
                 )}
               </div>
 
-              <div className="flex items-center gap-2 text-sm text-gray-600 bg-gradient-to-r from-purple-50 to-blue-50 p-3 rounded-lg border border-purple-100">
-                <Sparkles className="w-4 h-4 text-purple-600 flex-shrink-0" />
+              <div className="flex items-center gap-2 text-sm text-foreground/70 bg-accent/10 p-3 rounded-lg border border-accent/20">
+                <Sparkles className="w-4 h-4 text-accent flex-shrink-0" />
                 <p>Write naturally - bold, italics, links, and all formatting is automatically preserved!</p>
               </div>
             </div>
@@ -215,12 +215,12 @@ function TemplateEditorDialog({
             {/* Preview */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-base font-bold text-gray-900">Live Preview</label>
+                <label className="text-base font-bold text-foreground">Live Preview</label>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setPreview(!preview)}
-                  className="h-9 gap-2 border-purple-300 hover:bg-purple-50 hover:text-purple-700"
+                  className="h-9 gap-2 border-accent/30 hover:bg-accent/10 hover:text-accent"
                 >
                   <Eye className="w-4 h-4" />
                   {preview ? "Hide Preview" : "Show Preview"}
@@ -228,27 +228,27 @@ function TemplateEditorDialog({
               </div>
 
               {preview && htmlContent ? (
-                <div className="border-2 border-gray-300 rounded-2xl overflow-hidden shadow-lg">
-                  <div className="bg-gradient-to-r from-gray-100 to-gray-200 px-4 py-2.5 border-b border-gray-300 flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">How it looks in emails</span>
+                <div className="border border-border/50 rounded-xl overflow-hidden bg-card/50 backdrop-blur-sm">
+                  <div className="bg-card/80 px-4 py-2.5 border-b border-border/50 flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">How it looks in emails</span>
                   </div>
-                  <div className="bg-white p-8 overflow-y-auto min-h-[500px] max-h-[600px]">
+                  <div className="bg-background/50 p-8 overflow-y-auto min-h-[500px] max-h-[600px]">
                     <div dangerouslySetInnerHTML={{ __html: htmlContent }} className="text-lg leading-relaxed" />
                   </div>
                 </div>
               ) : (
-                <div className="border-2 border-dashed border-purple-300 rounded-2xl min-h-[500px] flex items-center justify-center bg-gradient-to-br from-purple-50/50 via-blue-50/50 to-purple-50/50">
+                <div className="border border-dashed border-border/50 rounded-xl min-h-[500px] flex items-center justify-center bg-card/30 backdrop-blur-sm">
                   <div className="text-center px-6 py-8">
-                    <div className="inline-block p-4 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full mb-4">
-                      <Eye className="w-12 h-12 text-purple-600" />
+                    <div className="inline-block p-4 bg-gradient-to-br from-accent/20 to-purple-500/20 rounded-2xl mb-4 border border-accent/30">
+                      <Eye className="w-12 h-12 text-accent" />
                     </div>
-                    <p className="text-lg font-semibold text-gray-700 mb-2">Preview Your Message</p>
-                    <p className="text-base text-gray-500 mb-4">See exactly how your email will look</p>
+                    <p className="text-lg font-semibold text-foreground mb-2">Preview Your Message</p>
+                    <p className="text-base text-muted-foreground mb-4">See exactly how your email will look</p>
                     <Button
                       onClick={() => setPreview(true)}
                       variant="outline"
-                      className="gap-2 border-purple-300 hover:bg-purple-50"
+                      className="gap-2 border-accent/30 hover:bg-accent/10"
                     >
                       <Eye className="w-4 h-4" />
                       Show Preview
@@ -260,9 +260,9 @@ function TemplateEditorDialog({
           </div>
         </div>
 
-        <div className="flex gap-4 justify-between items-center mt-8 pt-6 border-t-2 border-gray-200">
-          <p className="text-sm text-gray-500 flex items-center gap-1">
-            <Sparkles className="w-4 h-4 text-purple-600" />
+        <div className="flex gap-4 justify-between items-center mt-8 pt-6 border-t border-border/50">
+          <p className="text-sm text-muted-foreground flex items-center gap-1">
+            <Sparkles className="w-4 h-4 text-accent" />
             Changes are saved automatically as you type
           </p>
           <div className="flex gap-3">
@@ -446,39 +446,39 @@ function CampaignComposerDialog({
               <div className="grid grid-cols-3 gap-3">
                 <button
                   onClick={() => setContentType("event")}
-                  className={`p-6 rounded-xl border-2 transition-all ${
+                  className={`p-6 rounded-xl border transition-all ${
                     contentType === "event"
-                      ? "border-purple-500 bg-purple-50 shadow-lg"
-                      : "border-gray-200 hover:border-purple-300"
+                      ? "border-accent/50 bg-gradient-to-br from-accent/20 to-purple-500/20 shadow-lg"
+                      : "border-border/50 bg-card/50 backdrop-blur-sm hover:border-accent/50"
                   }`}
                 >
                   <div className="text-4xl mb-2">🎉</div>
                   <div className="font-semibold">Events</div>
-                  <div className="text-xs text-gray-500 mt-1">Parties, workshops, socials</div>
+                  <div className="text-xs text-muted-foreground mt-1">Parties, workshops, socials</div>
                 </button>
                 <button
                   onClick={() => setContentType("course")}
-                  className={`p-6 rounded-xl border-2 transition-all ${
+                  className={`p-6 rounded-xl border transition-all ${
                     contentType === "course"
-                      ? "border-purple-500 bg-purple-50 shadow-lg"
-                      : "border-gray-200 hover:border-purple-300"
+                      ? "border-blue-500/50 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 shadow-lg"
+                      : "border-border/50 bg-card/50 backdrop-blur-sm hover:border-blue-500/50"
                   }`}
                 >
                   <div className="text-4xl mb-2">🎓</div>
                   <div className="font-semibold">Courses</div>
-                  <div className="text-xs text-gray-500 mt-1">Online video courses</div>
+                  <div className="text-xs text-muted-foreground mt-1">Online video courses</div>
                 </button>
                 <button
                   onClick={() => setContentType("class")}
-                  className={`p-6 rounded-xl border-2 transition-all ${
+                  className={`p-6 rounded-xl border transition-all ${
                     contentType === "class"
-                      ? "border-purple-500 bg-purple-50 shadow-lg"
-                      : "border-gray-200 hover:border-purple-300"
+                      ? "border-purple-500/50 bg-gradient-to-br from-purple-500/20 to-pink-500/20 shadow-lg"
+                      : "border-border/50 bg-card/50 backdrop-blur-sm hover:border-purple-500/50"
                   }`}
                 >
                   <div className="text-4xl mb-2">💃</div>
                   <div className="font-semibold">Classes</div>
-                  <div className="text-xs text-gray-500 mt-1">In-person dance classes</div>
+                  <div className="text-xs text-muted-foreground mt-1">In-person dance classes</div>
                 </button>
               </div>
             </div>
@@ -493,7 +493,7 @@ function CampaignComposerDialog({
                     <button
                       key={item.id}
                       onClick={() => handleItemSelect(item)}
-                      className="text-left p-4 rounded-lg border-2 border-gray-200 hover:border-purple-400 hover:shadow-md transition-all group"
+                      className="text-left p-4 rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm hover:border-accent/50 hover:shadow-xl transition-all group"
                     >
                       {item.imageUrl && (
                         <img
@@ -502,21 +502,21 @@ function CampaignComposerDialog({
                           className="w-full h-32 object-cover rounded-lg mb-3"
                         />
                       )}
-                      <h3 className="font-semibold text-base group-hover:text-purple-600 transition-colors">
+                      <h3 className="font-semibold text-base group-hover:text-accent transition-colors">
                         {item.title || item.name}
                       </h3>
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                         {item.description || "Click to promote this!"}
                       </p>
                       {item.price && (
-                        <p className="text-purple-600 font-bold mt-2">£{item.price}</p>
+                        <p className="text-accent font-bold mt-2">£{item.price}</p>
                       )}
                     </button>
                   ))
                 ) : (
                   <div className="col-span-2 text-center py-12">
-                    <p className="text-gray-400">No {contentType}s available yet</p>
-                    <p className="text-sm text-gray-400 mt-1">Create one first to promote it!</p>
+                    <p className="text-muted-foreground">No {contentType}s available yet</p>
+                    <p className="text-sm text-muted-foreground mt-1">Create one first to promote it!</p>
                   </div>
                 )}
               </div>
@@ -585,10 +585,10 @@ function CampaignComposerDialog({
 
               <div>
                 <label className="text-sm font-medium mb-2 block">Email Preview</label>
-                <div className="border-2 border-gray-200 rounded-lg overflow-hidden bg-gray-50 h-96 overflow-y-auto">
+                <div className="border border-border/50 rounded-lg overflow-hidden bg-card/50 backdrop-blur-sm h-96 overflow-y-auto">
                   <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
                 </div>
-                <p className="text-xs text-gray-500 mt-2">This is how your email will look!</p>
+                <p className="text-xs text-muted-foreground mt-2">This is how your email will look!</p>
               </div>
             </div>
           </div>
@@ -640,15 +640,15 @@ function TemplatesTab() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
+          <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-accent to-[#FD4D43]">
             Email Templates
           </h2>
           <p className="text-base text-foreground/70 mt-1">Ready-to-use designs for your email campaigns</p>
         </div>
         <div className="flex gap-3">
           {(!templates || templates.length === 0) && (
-            <Button variant="outline" onClick={() => seedMutation.mutate()} disabled={seedMutation.isPending} className="gap-2 border-purple-200 hover:bg-purple-50">
-              {seedMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4 text-purple-600" />}
+            <Button variant="outline" onClick={() => seedMutation.mutate()} disabled={seedMutation.isPending} className="gap-2 border-accent/30 hover:bg-accent/10">
+              {seedMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4 text-accent" />}
               Get Started Templates
             </Button>
           )}
@@ -661,17 +661,17 @@ function TemplatesTab() {
 
       {/* Empty State */}
       {templates && templates.length === 0 && (
-        <Card className="border-2 border-dashed border-purple-200 bg-gradient-to-br from-purple-50/50 to-blue-50/50">
+        <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="py-20 text-center">
-            <div className="inline-block p-4 bg-gradient-to-br from-purple-100 to-blue-100 rounded-2xl mb-6">
-              <LayoutTemplate className="h-16 w-16 text-purple-600" />
+            <div className="inline-block p-4 bg-gradient-to-br from-accent/20 to-purple-500/20 rounded-2xl mb-6 border border-accent/30">
+              <LayoutTemplate className="h-16 w-16 text-accent" />
             </div>
-            <h3 className="text-xl font-bold text-gray-800 mb-2">Start with Professional Templates</h3>
-            <p className="text-base text-gray-600 mb-6 max-w-md mx-auto">
+            <h3 className="text-xl font-bold text-foreground mb-2">Start with Professional Templates</h3>
+            <p className="text-base text-muted-foreground mb-6 max-w-md mx-auto">
               Load our 5 beautifully designed templates or create your own from scratch
             </p>
             <div className="flex gap-3 justify-center">
-              <Button onClick={() => seedMutation.mutate()} disabled={seedMutation.isPending} className="btn-vibrant gap-2 px-6">
+              <Button onClick={() => seedMutation.mutate()} disabled={seedMutation.isPending} className="btn-vibrant gap-2 px-6 shadow-lg">
                 {seedMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
                 Load Starter Templates
               </Button>
@@ -685,12 +685,12 @@ function TemplatesTab() {
       )}
 
       {/* Templates Grid */}
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {templates?.map((tpl) => (
-          <Card key={tpl.id} className="border-0 shadow-lg hover:shadow-2xl transition-all duration-300 group overflow-hidden bg-white">
+          <Card key={tpl.id} className="border border-border/50 bg-card/50 backdrop-blur-sm hover:border-accent/50 hover:shadow-xl transition-all duration-300 group overflow-hidden">
             <CardContent className="p-0">
               {/* Premium Preview thumbnail */}
-              <div className="relative h-48 bg-gradient-to-br from-purple-500 via-purple-600 to-blue-600 overflow-hidden">
+              <div className="relative h-48 bg-gradient-to-br from-accent via-accent/90 to-[#FD4D43] overflow-hidden">
                 {/* Animated background pattern */}
                 <div className="absolute inset-0 opacity-20">
                   <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')]"></div>
@@ -710,7 +710,7 @@ function TemplatesTab() {
                       ⭐ Starter
                     </Badge>
                   )}
-                  <Badge className="bg-white/95 backdrop-blur-sm text-purple-600 border-0 shadow-md font-semibold">
+                  <Badge className="bg-white/95 backdrop-blur-sm text-accent border-0 shadow-md font-semibold">
                     {CATEGORY_ICONS[tpl.category || "custom"]} {tpl.category}
                   </Badge>
                 </div>
@@ -720,12 +720,12 @@ function TemplatesTab() {
               </div>
 
               {/* Content */}
-              <div className="p-6 space-y-4 bg-gradient-to-b from-white to-gray-50">
+              <div className="p-6 space-y-4">
                 <div>
-                  <h3 className="font-bold text-xl text-gray-900 group-hover:text-purple-600 transition-colors mb-2 line-clamp-1">
+                  <h3 className="font-bold text-lg text-foreground group-hover:text-accent transition-colors mb-2 line-clamp-1">
                     {tpl.name}
                   </h3>
-                  <p className="text-sm text-gray-600 line-clamp-2 min-h-[40px] leading-relaxed">
+                  <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px] leading-relaxed">
                     {tpl.subject}
                   </p>
                 </div>
@@ -734,14 +734,14 @@ function TemplatesTab() {
                 <div className="flex gap-3">
                   <Button
                     onClick={() => setPreviewTemplate(tpl)}
-                    className="flex-1 gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-md hover:shadow-lg transition-all"
+                    className="flex-1 gap-2 bg-gradient-to-r from-accent to-accent/90 hover:from-accent/90 hover:to-accent text-white shadow-md hover:shadow-lg transition-all"
                   >
                     <Eye className="h-4 w-4" />
                     Preview
                   </Button>
                   <Button
                     onClick={() => { setEditingTemplate(tpl); setShowEditor(true); }}
-                    className="flex-1 gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all"
+                    className="flex-1 gap-2 bg-gradient-to-r from-[#FD4D43] to-[#FD4D43]/90 hover:from-[#FD4D43]/90 hover:to-[#FD4D43] text-white shadow-md hover:shadow-lg transition-all"
                   >
                     <Edit2 className="h-4 w-4" />
                     Edit
@@ -797,9 +797,9 @@ function TemplatesTab() {
       {/* Preview Dialog - Ultra Premium */}
       {previewTemplate && (
         <Dialog open={!!previewTemplate} onOpenChange={(o) => !o && setPreviewTemplate(null)}>
-          <DialogContent className="max-w-5xl max-h-[95vh] bg-gradient-to-br from-white via-gray-50 to-purple-50/30 border-0 shadow-2xl p-0 gap-0">
+          <DialogContent className="max-w-5xl max-h-[95vh] bg-card/95 backdrop-blur-xl border border-border/50 shadow-2xl p-0 gap-0">
             {/* Premium Header */}
-            <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-blue-600 px-8 py-6 text-white">
+            <div className="bg-gradient-to-r from-accent to-[#FD4D43] px-8 py-6 text-white">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
@@ -815,7 +815,7 @@ function TemplatesTab() {
                     Subject: {previewTemplate.subject}
                   </DialogDescription>
                 </div>
-                <Badge className="bg-white/90 text-purple-700 border-0 shadow-md font-semibold px-3 py-1">
+                <Badge className="bg-white/90 text-accent border-0 shadow-md font-semibold px-3 py-1">
                   {CATEGORY_ICONS[previewTemplate.category || "custom"]} {previewTemplate.category}
                 </Badge>
               </div>
@@ -823,9 +823,9 @@ function TemplatesTab() {
 
             {/* Email Preview Container */}
             <div className="p-8">
-              <div className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-gray-200">
+              <div className="bg-card/50 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-border/50">
                 {/* Email Client Header */}
-                <div className="bg-gradient-to-r from-gray-100 to-gray-200 px-6 py-4 border-b-2 border-gray-300">
+                <div className="bg-card/80 backdrop-blur-sm px-6 py-4 border-b border-border/50">
                   <div className="flex items-center gap-3">
                     <div className="flex gap-2">
                       <div className="w-3 h-3 rounded-full bg-red-500"></div>
@@ -833,22 +833,22 @@ function TemplatesTab() {
                       <div className="w-3 h-3 rounded-full bg-green-500"></div>
                     </div>
                     <div className="flex-1 text-center">
-                      <span className="text-sm font-semibold text-gray-700">Email Preview</span>
+                      <span className="text-sm font-semibold text-foreground">Email Preview</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Email Content */}
-                <div className="bg-white p-10 overflow-y-auto" style={{ maxHeight: '55vh' }}>
-                  <div dangerouslySetInnerHTML={{ __html: previewTemplate.htmlContent }} className="prose prose-lg max-w-none" />
+                <div className="bg-background/50 backdrop-blur-sm p-10 overflow-y-auto" style={{ maxHeight: '55vh' }}>
+                  <div dangerouslySetInnerHTML={{ __html: previewTemplate.htmlContent }} className="prose prose-lg max-w-none prose-invert" />
                 </div>
               </div>
             </div>
 
             {/* Premium Footer */}
-            <div className="px-8 pb-8 flex gap-4 justify-between items-center">
-              <p className="text-sm text-gray-500 flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-purple-600" />
+            <div className="px-8 pb-8 flex gap-4 justify-between items-center border-t border-border/50 pt-6">
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-accent" />
                 This is how your email will look in inboxes
               </p>
               <div className="flex gap-3">
@@ -861,7 +861,7 @@ function TemplatesTab() {
                     setPreviewTemplate(null);
                     setShowEditor(true);
                   }}
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white gap-2 px-6 shadow-lg"
+                  className="bg-gradient-to-r from-accent to-[#FD4D43] hover:from-accent/90 hover:to-[#FD4D43]/90 text-white gap-2 px-6 shadow-lg"
                 >
                   <Edit2 className="h-4 w-4" />
                   Edit Template
@@ -899,7 +899,7 @@ function CampaignsTab() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
+          <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-accent to-[#FD4D43]">
             Email Campaigns
           </h2>
           <p className="text-base text-foreground/70 mt-1">Create and manage your promotional email campaigns</p>
@@ -912,16 +912,16 @@ function CampaignsTab() {
 
       {/* Empty State */}
       {(!campaigns || campaigns.length === 0) && (
-        <Card className="border-2 border-dashed border-purple-200 bg-gradient-to-br from-purple-50/50 to-blue-50/50">
+        <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="py-20 text-center">
-            <div className="inline-block p-4 bg-gradient-to-br from-purple-100 to-blue-100 rounded-2xl mb-6">
-              <Send className="h-16 w-16 text-purple-600" />
+            <div className="inline-block p-4 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-2xl mb-6 border border-blue-500/50">
+              <Send className="h-16 w-16 text-blue-400" />
             </div>
-            <h3 className="text-xl font-bold text-gray-800 mb-2">Start Reaching Your Audience</h3>
-            <p className="text-base text-gray-600 mb-6 max-w-md mx-auto">
+            <h3 className="text-xl font-bold text-foreground mb-2">Start Reaching Your Audience</h3>
+            <p className="text-base text-muted-foreground mb-6 max-w-md mx-auto">
               Create beautiful email campaigns to promote your events, courses, and classes
             </p>
-            <Button onClick={() => setShowComposer(true)} className="btn-vibrant gap-2 px-8 h-11">
+            <Button onClick={() => setShowComposer(true)} className="btn-vibrant gap-2 px-8 h-11 shadow-lg">
               <Sparkles className="h-5 w-5" />
               Create Your First Campaign
             </Button>
@@ -931,36 +931,36 @@ function CampaignsTab() {
 
       <div className="space-y-4">
         {campaigns?.map((campaign) => (
-          <Card key={campaign.id} className="border-2 border-gray-200 hover:border-purple-400 hover:shadow-lg transition-all group">
+          <Card key={campaign.id} className="border border-border/50 bg-card/50 backdrop-blur-sm hover:border-accent/50 hover:shadow-xl transition-all group">
             <CardContent className="p-6">
               <div className="flex items-start justify-between gap-6">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-2 flex-wrap">
-                    <h3 className="text-lg font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
+                    <h3 className="text-lg font-bold text-foreground group-hover:text-accent transition-colors">
                       {campaign.name}
                     </h3>
                     <StatusBadge status={campaign.status || "draft"} />
                     {campaign.segment !== "all" && (
-                      <Badge variant="outline" className="text-xs capitalize bg-purple-50 text-purple-600 border-purple-200">
+                      <Badge variant="outline" className="text-xs capitalize bg-accent/10 text-accent border-accent/30">
                         {campaign.segment}
                       </Badge>
                     )}
                   </div>
-                  <p className="text-base text-gray-600 mb-3 line-clamp-1">{campaign.subject}</p>
-                  <div className="flex items-center gap-6 text-sm text-gray-500">
+                  <p className="text-base text-foreground/70 mb-3 line-clamp-1">{campaign.subject}</p>
+                  <div className="flex items-center gap-6 text-sm text-foreground/60">
                     {campaign.status === "sent" && (
                       <>
                         <span className="flex items-center gap-1.5 font-medium">
-                          <Users className="h-4 w-4 text-purple-600" />
-                          <span className="text-gray-900">{campaign.totalSent}</span> sent
+                          <Users className="h-4 w-4 text-accent" />
+                          <span className="text-foreground">{campaign.totalSent}</span> sent
                         </span>
                         <span className="flex items-center gap-1.5 font-medium">
-                          <Eye className="h-4 w-4 text-blue-600" />
-                          <span className="text-gray-900">{campaign.totalOpened}</span> opened
+                          <Eye className="h-4 w-4 text-[#0ADCF4]" />
+                          <span className="text-foreground">{campaign.totalOpened}</span> opened
                         </span>
                         <span className="flex items-center gap-1.5 font-medium">
-                          <MousePointer className="h-4 w-4 text-green-600" />
-                          <span className="text-gray-900">{campaign.totalClicked}</span> clicked
+                          <MousePointer className="h-4 w-4 text-green-500" />
+                          <span className="text-foreground">{campaign.totalClicked}</span> clicked
                         </span>
                       </>
                     )}
@@ -985,7 +985,7 @@ function CampaignsTab() {
                         variant="outline"
                         size="sm"
                         onClick={() => setDetailCampaignId(campaign.id)}
-                        className="gap-1.5 hover:bg-purple-50 hover:text-purple-600 hover:border-purple-300"
+                        className="gap-1.5 hover:bg-accent/10 hover:text-accent hover:border-accent/30"
                       >
                         <BarChart2 className="h-4 w-4" /> Stats
                       </Button>
@@ -993,7 +993,7 @@ function CampaignsTab() {
                         asChild
                         variant="outline"
                         size="sm"
-                        className="gap-1.5 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+                        className="gap-1.5 hover:bg-accent/10 hover:text-accent hover:border-accent/30"
                       >
                         <Link href={`/email-marketing/campaigns/${campaign.id}`}>
                           <Eye className="h-4 w-4" /> View
@@ -1155,11 +1155,13 @@ function AnalyticsTab() {
 
   if (!analytics || analytics.totalCampaigns === 0) {
     return (
-      <Card className="border-dashed border-border/30">
+      <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
         <CardContent className="py-16 text-center">
-          <BarChart2 className="h-12 w-12 text-foreground/20 mx-auto mb-4" />
-          <h3 className="font-semibold text-foreground/60 mb-2">No analytics yet</h3>
-          <p className="text-sm text-foreground/40">Send your first campaign to see engagement metrics here</p>
+          <div className="inline-block p-4 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl mb-4 border border-purple-500/50">
+            <BarChart2 className="h-12 w-12 text-purple-400" />
+          </div>
+          <h3 className="font-semibold text-foreground mb-2">No analytics yet</h3>
+          <p className="text-sm text-muted-foreground">Send your first campaign to see engagement metrics here</p>
         </CardContent>
       </Card>
     );
@@ -1187,7 +1189,7 @@ function AnalyticsTab() {
       </div>
 
       {/* Per-campaign table */}
-      <Card className="border-border/50">
+      <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="text-base">Campaign Performance</CardTitle>
         </CardHeader>
@@ -1242,7 +1244,7 @@ function AnalyticsTab() {
       </Card>
 
       {/* Benchmark reference */}
-      <Card className="border-border/30 bg-foreground/5">
+      <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
         <CardContent className="pt-4 pb-4">
           <h4 className="text-sm font-semibold mb-2 flex items-center gap-1">
             <TrendingUp className="h-4 w-4 text-accent" /> Industry Benchmarks
@@ -1294,64 +1296,67 @@ export default function EmailMarketing() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-blue-50/30">
-      <div className="container py-8 pt-24">
-        {/* Page Header */}
-        <div className="mb-10">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl shadow-lg">
-                <Mail className="h-8 w-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600">
-                  Email Marketing
-                </h1>
-                <p className="text-base text-gray-600 mt-1">Create beautiful campaigns and reach your community</p>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
+      {/* Modern Header - Same as AdminDashboard */}
+      <div className="border-b border-border/50 bg-card/80 backdrop-blur-xl sticky top-0 z-40 shadow-lg">
+        <div className="container h-20 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-accent/20 to-purple-500/20 flex items-center justify-center border border-accent/30">
+              <Mail className="h-6 w-6 text-accent" />
             </div>
-            <Link href="/admin">
-              <Button variant="outline" className="gap-2 border-purple-200 hover:bg-purple-50">
-                <ChevronRight className="h-4 w-4 rotate-180" />
-                Back to Admin
-              </Button>
-            </Link>
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                Email Marketing
+              </h1>
+              <p className="text-xs text-muted-foreground">
+                Create beautiful campaigns and reach your community
+              </p>
+            </div>
           </div>
+          <Link href="/admin">
+            <Button size="sm" variant="outline" className="gap-2">
+              <ChevronRight className="h-4 w-4 rotate-180" />
+              <span className="hidden sm:inline">Back to Admin</span>
+            </Button>
+          </Link>
         </div>
+      </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="templates" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-3 max-w-2xl h-14 bg-white border-2 border-gray-200 shadow-sm p-1">
+      {/* Main Content */}
+      <div className="container py-8">
+        {/* Tabs - Same style as AdminDashboard */}
+        <Tabs defaultValue="templates" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 gap-2 mb-8 h-auto p-2 bg-card/50 backdrop-blur-sm border border-border/50">
             <TabsTrigger
               value="templates"
-              className="flex items-center gap-2 text-base font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white"
+              className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-accent/20 data-[state=active]:to-purple-500/20 data-[state=active]:border-accent/50"
             >
-              <LayoutTemplate className="h-5 w-5" />
-              <span>Templates</span>
+              <LayoutTemplate className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Templates</span>
             </TabsTrigger>
             <TabsTrigger
               value="campaigns"
-              className="flex items-center gap-2 text-base font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white"
+              className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-500/20 data-[state=active]:to-cyan-500/20 data-[state=active]:border-blue-500/50"
             >
-              <Send className="h-5 w-5" />
-              <span>Campaigns</span>
+              <Send className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Campaigns</span>
             </TabsTrigger>
             <TabsTrigger
               value="analytics"
-              className="flex items-center gap-2 text-base font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white"
+              className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:border-purple-500/50"
             >
-              <BarChart2 className="h-5 w-5" />
-              <span>Analytics</span>
+              <BarChart2 className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Analytics</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="templates" className="mt-8">
+          <TabsContent value="templates">
             <TemplatesTab />
           </TabsContent>
-          <TabsContent value="campaigns" className="mt-8">
+          <TabsContent value="campaigns">
             <CampaignsTab />
           </TabsContent>
-          <TabsContent value="analytics" className="mt-8">
+          <TabsContent value="analytics">
             <AnalyticsTab />
           </TabsContent>
         </Tabs>
