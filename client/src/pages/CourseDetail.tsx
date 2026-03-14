@@ -103,11 +103,43 @@ export default function CourseDetail() {
 
   const handleComplete = useCallback(() => {
     if (!activeLessonId) return;
+    const activeIdx = lessons.findIndex(l => l.id === activeLessonId);
+    const nextLesson = lessons[activeIdx + 1];
+
     updateProgressMutation.mutate({ lessonId: activeLessonId, watchPercent: 100 });
-    toast.success("✅ ¡Lección completada! La siguiente ha sido desbloqueada.", {
-      duration: 4000,
-    });
-  }, [activeLessonId, updateProgressMutation]);
+
+    if (nextLesson) {
+      toast.success("🎉 ¡Lección completada! La siguiente ha sido desbloqueada.", {
+        duration: 4000,
+        description: `Siguiente: ${nextLesson.title}`,
+      });
+    } else {
+      toast.success("🎊 ¡Felicitaciones! Has completado todas las lecciones del curso.", {
+        duration: 5000,
+        description: "¡Curso finalizado con éxito!",
+      });
+    }
+  }, [activeLessonId, updateProgressMutation, lessons]);
+
+  // Manual toggle complete/incomplete
+  const toggleComplete = useCallback(() => {
+    if (!activeLessonId) return;
+    const isCurrentlyCompleted = progress[activeLessonId]?.completed;
+
+    if (isCurrentlyCompleted) {
+      // Mark as incomplete
+      updateProgressMutation.mutate({ lessonId: activeLessonId, watchPercent: 0 });
+      toast.info("🔄 Lección marcada como incompleta", {
+        duration: 2500,
+      });
+    } else {
+      // Mark as complete
+      updateProgressMutation.mutate({ lessonId: activeLessonId, watchPercent: 100 });
+      toast.success("✅ ¡Lección marcada como completada!", {
+        duration: 2500,
+      });
+    }
+  }, [activeLessonId, progress, updateProgressMutation]);
 
   // ── Compute overall progress ──────────────────────────────────────────────
   const totalLessons = lessons.length;
@@ -192,15 +224,74 @@ export default function CourseDetail() {
                     onProgress={handleProgress}
                     onComplete={handleComplete}
                   />
-                  {/* Lesson title bar */}
-                  <div className="px-4 py-3 bg-card/80 border-t border-border/30 flex items-center gap-3">
-                    <Play size={14} className="text-[#FA3698]" />
-                    <p className="text-sm font-medium text-foreground/80 truncate">
-                      Lección {activeLesson.position}: {activeLesson.title}
-                    </p>
-                    {progress[activeLesson.id]?.completed && (
-                      <CheckCircle2 size={14} className="text-green-400 ml-auto flex-shrink-0" />
-                    )}
+                  {/* Lesson title bar with progress and complete button */}
+                  <div className="px-4 py-3 bg-card/80 border-t border-border/30">
+                    {/* Title row */}
+                    <div className="flex items-center gap-3 mb-2">
+                      <Play size={14} className="text-[#FA3698]" />
+                      <p className="text-sm font-medium text-foreground/80 truncate flex-1">
+                        Lección {activeLesson.position}: {activeLesson.title}
+                      </p>
+                      {progress[activeLesson.id]?.completed && (
+                        <Badge variant="outline" className="text-green-400 border-green-400/50 bg-green-400/10 gap-1 flex-shrink-0">
+                          <CheckCircle2 size={12} />
+                          Completada
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Progress bar and complete button */}
+                    <div className="flex items-center gap-3">
+                      {/* Progress bar */}
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between text-xs text-foreground/60 mb-1">
+                          <span>Progreso</span>
+                          <span className="font-semibold">
+                            {Math.round(progress[activeLesson.id]?.watchPercent || 0)}%
+                          </span>
+                        </div>
+                        <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{
+                              width: `${progress[activeLesson.id]?.watchPercent || 0}%`,
+                              background: progress[activeLesson.id]?.completed
+                                ? "linear-gradient(90deg, #10b981, #059669)"
+                                : "linear-gradient(90deg, #FA3698, #FD4D43)",
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Toggle complete button - responsive */}
+                      <Button
+                        size="sm"
+                        variant={progress[activeLesson.id]?.completed ? "outline" : "default"}
+                        onClick={toggleComplete}
+                        disabled={updateProgressMutation.isPending}
+                        className={
+                          progress[activeLesson.id]?.completed
+                            ? "border-green-400/50 text-green-400 hover:bg-green-400/10 gap-1.5 flex-shrink-0"
+                            : "btn-vibrant gap-1.5 flex-shrink-0"
+                        }
+                      >
+                        {updateProgressMutation.isPending ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : progress[activeLesson.id]?.completed ? (
+                          <>
+                            <CheckCircle2 size={14} />
+                            <span className="hidden sm:inline">Completada</span>
+                            <span className="sm:hidden">Visto</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 size={14} />
+                            <span className="hidden sm:inline">Marcar completada</span>
+                            <span className="sm:hidden">Completar</span>
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </Card>

@@ -145,18 +145,29 @@ export default function LessonList({
                                     )}
                                 </div>
 
-                                {/* Mini progress bar */}
+                                {/* Mini progress bar with animation */}
                                 {watchPct > 0 && (
-                                    <div className="mt-1.5 h-0.5 w-full rounded-full bg-white/10">
+                                    <div className="mt-1.5 h-0.5 w-full rounded-full bg-white/10 overflow-hidden">
                                         <div
-                                            className="h-full rounded-full transition-all"
+                                            className={cn(
+                                                "h-full rounded-full transition-all duration-500",
+                                                isCompleted && "animate-pulse"
+                                            )}
                                             style={{
                                                 width: `${watchPct}%`,
                                                 background: isCompleted
-                                                    ? "#22c55e"
+                                                    ? "linear-gradient(90deg, #10b981, #059669)"
                                                     : "linear-gradient(90deg, #FA3698, #FD4D43)",
                                             }}
                                         />
+                                    </div>
+                                )}
+
+                                {/* Completed badge with animation */}
+                                {isCompleted && (
+                                    <div className="mt-1.5 flex items-center gap-1 text-xs text-green-400 font-medium animate-in fade-in slide-in-from-left-2 duration-500">
+                                        <CheckCircle2 size={11} />
+                                        <span>Completada</span>
                                     </div>
                                 )}
                             </div>
