@@ -35,6 +35,7 @@ export function useLessonsManager(courseId: number | null) {
 
   // Mutations
   const uploadVideoMutation = trpc.uploads.uploadVideoToBunny.useMutation();
+
   const createLessonMutation = trpc.lessons.create.useMutation({
     onSuccess: () => {
       toast.success("✅ Lección creada exitosamente");
@@ -43,6 +44,17 @@ export function useLessonsManager(courseId: number | null) {
     },
     onError: (err) => {
       toast.error(`Error al crear lección: ${err.message}`);
+    },
+  });
+
+  const updateLessonMutation = trpc.lessons.update.useMutation({
+    onSuccess: () => {
+      toast.success("✅ Lección actualizada exitosamente");
+      utils.lessons.getByCourseId.invalidate();
+      resetForm();
+    },
+    onError: (err) => {
+      toast.error(`Error al actualizar lección: ${err.message}`);
     },
   });
 
@@ -152,20 +164,54 @@ export function useLessonsManager(courseId: number | null) {
       return;
     }
 
-    if (!formData.bunnyVideoId || !formData.bunnyLibraryId) {
+    // Video is required only when creating, not when editing
+    if (!editingLessonId && (!formData.bunnyVideoId || !formData.bunnyLibraryId)) {
       toast.error("Por favor sube un video antes de crear la lección");
       return;
     }
 
-    await createLessonMutation.mutateAsync({
-      courseId: formData.courseId,
-      title: formData.title,
-      description: formData.description,
-      bunnyVideoId: formData.bunnyVideoId,
-      bunnyLibraryId: formData.bunnyLibraryId,
-      position: formData.position,
-      durationSeconds: formData.durationSeconds,
-      isPreview: formData.isPreview,
+    if (editingLessonId) {
+      // Update existing lesson
+      await updateLessonMutation.mutateAsync({
+        id: editingLessonId,
+        title: formData.title,
+        description: formData.description,
+        position: formData.position,
+        durationSeconds: formData.durationSeconds,
+        isPreview: formData.isPreview,
+        // Only update video if a new one was uploaded
+        ...(formData.videoFile && {
+          bunnyVideoId: formData.bunnyVideoId,
+          bunnyLibraryId: formData.bunnyLibraryId,
+        }),
+      });
+    } else {
+      // Create new lesson
+      await createLessonMutation.mutateAsync({
+        courseId: formData.courseId,
+        title: formData.title,
+        description: formData.description,
+        bunnyVideoId: formData.bunnyVideoId,
+        bunnyLibraryId: formData.bunnyLibraryId,
+        position: formData.position,
+        durationSeconds: formData.durationSeconds,
+        isPreview: formData.isPreview,
+      });
+    }
+  };
+
+  const loadLessonForEdit = (lesson: any) => {
+    setEditingLessonId(lesson.id);
+    setFormData({
+      courseId: lesson.courseId,
+      title: lesson.title || "",
+      description: lesson.description || "",
+      bunnyVideoId: lesson.bunnyVideoId || "",
+      bunnyLibraryId: lesson.bunnyLibraryId || "",
+      position: lesson.position || 1,
+      durationSeconds: lesson.durationSeconds,
+      isPreview: lesson.isPreview || false,
+      videoFile: null, // Don't load existing video file
     });
   };
 
@@ -178,7 +224,8 @@ export function useLessonsManager(courseId: number | null) {
     setEditingLessonId,
     handleVideoUpload,
     handleCreateLesson,
+    loadLessonForEdit,
     resetForm,
-    isCreating: createLessonMutation.isPending,
+    isCreating: createLessonMutation.isPending || updateLessonMutation.isPending,
   };
 }

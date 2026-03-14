@@ -67,8 +67,10 @@ export default function MyCoursesDashboard({
     uploadProgress,
     handleVideoUpload,
     handleCreateLesson,
+    loadLessonForEdit,
     resetForm,
     isCreating,
+    editingLessonId,
   } = useLessonsManager(selectedCourse?.id || null);
 
   // Query lessons for selected course
@@ -503,8 +505,8 @@ export default function MyCoursesDashboard({
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          // TODO: Implement edit
-                          toast.info("Edición próximamente");
+                          loadLessonForEdit(lesson);
+                          setShowLessonDialog(true);
                         }}
                       >
                         <Edit2 className="h-4 w-4" />
@@ -551,10 +553,12 @@ export default function MyCoursesDashboard({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-2xl">
               <Sparkles className="h-6 w-6 text-accent" />
-              {editingLesson ? "Editar Lección" : "Nueva Lección"}
+              {editingLessonId ? "Editar Lección" : "Nueva Lección"}
             </DialogTitle>
             <DialogDescription>
-              Sube un video y completa la información de la lección
+              {editingLessonId
+                ? "Actualiza la información de la lección (el video es opcional)"
+                : "Sube un video y completa la información de la lección"}
             </DialogDescription>
           </DialogHeader>
 
@@ -733,18 +737,18 @@ export default function MyCoursesDashboard({
             </Button>
             <Button
               onClick={handleSaveLesson}
-              disabled={isCreating || uploading || !formData.bunnyVideoId || !formData.title}
+              disabled={isCreating || uploading || (!editingLessonId && !formData.bunnyVideoId) || !formData.title}
               className="btn-vibrant flex-1"
             >
               {isCreating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Guardando...
+                  {editingLessonId ? "Actualizando..." : "Guardando..."}
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="mr-2 h-4 w-4" />
-                  Guardar Lección
+                  {editingLessonId ? "Actualizar Lección" : "Guardar Lección"}
                 </>
               )}
             </Button>
