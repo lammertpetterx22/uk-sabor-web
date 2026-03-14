@@ -107,7 +107,7 @@ export function useLessonsManager(courseId: number | null) {
 
       setUploadProgress(30);
 
-      // Upload to Bunny.net
+      // Upload video
       const result = await uploadVideoMutation.mutateAsync({
         videoBase64: base64,
         fileName: file.name,
@@ -125,10 +125,13 @@ export function useLessonsManager(courseId: number | null) {
         videoFile: file,
       }));
 
-      // Clean success - UI handles the display
+      toast.success("Video cargado exitosamente", {
+        description: "Ahora puedes completar la información de la lección",
+        duration: 3000,
+      });
     } catch (err: any) {
-      toast.error("Error al subir el video", {
-        description: "Por favor, intenta de nuevo",
+      toast.error("Error al procesar el video", {
+        description: "Por favor, verifica el archivo e intenta de nuevo",
         duration: 5000,
       });
       console.error("[Video Upload] Error:", err);

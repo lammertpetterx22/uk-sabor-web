@@ -19,6 +19,7 @@ import DashboardOverview from "@/components/admin/DashboardOverview";
 import QuickActions from "@/components/admin/QuickActions";
 import InstructorOverview from "@/components/instructor/InstructorOverview";
 import LessonsManager from "@/components/admin/LessonsManager";
+import MyCoursesDashboard from "@/components/instructor/MyCoursesDashboard";
 import { useTranslations } from "@/hooks/useTranslations";
 
 export default function AdminDashboard() {
@@ -120,13 +121,12 @@ export default function AdminDashboard() {
               <TabsTrigger value="settings">{t("admin.tabs.settings")}</TabsTrigger>
             </TabsList>
           ) : isInstructor ? (
-            // Instructors: Overview + Events + Classes + Courses + Lessons + Profile
-            <TabsList className="grid w-full grid-cols-6 mb-8">
+            // Instructors: Overview + Events + Classes + My Courses (unified) + Profile
+            <TabsList className="grid w-full grid-cols-5 mb-8">
               <TabsTrigger value="overview">{t("admin.tabs.overview")}</TabsTrigger>
               <TabsTrigger value="events">{t("admin.tabs.myEvents")}</TabsTrigger>
               <TabsTrigger value="classes">{t("admin.tabs.myClasses")}</TabsTrigger>
-              <TabsTrigger value="courses">{t("admin.tabs.myCourses")}</TabsTrigger>
-              <TabsTrigger value="lessons">Lecciones</TabsTrigger>
+              <TabsTrigger value="my-courses">Mis Cursos</TabsTrigger>
               <TabsTrigger value="profile">{t("admin.tabs.myProfile")}</TabsTrigger>
             </TabsList>
           ) : (
@@ -161,17 +161,32 @@ export default function AdminDashboard() {
             </TabsContent>
           )}
 
-          {/* COURSES TAB - Admin and Instructor only (not promoters) */}
-          {canManageCourses && (
+          {/* COURSES TAB - Admin only (old interface for admins) */}
+          {isAdmin && (
             <TabsContent value="courses">
               <CoursesTab />
             </TabsContent>
           )}
 
-          {/* LESSONS TAB - Admin and Instructor only */}
-          {canManageCourses && (
+          {/* LESSONS TAB - Admin only (old interface for admins) */}
+          {isAdmin && (
             <TabsContent value="lessons">
               <LessonsManager courses={courses || []} isLoadingCourses={isLoadingCourses} />
+            </TabsContent>
+          )}
+
+          {/* MY COURSES TAB - Instructor only (new unified interface) */}
+          {isInstructor && (
+            <TabsContent value="my-courses">
+              <MyCoursesDashboard
+                courses={courses || []}
+                isLoadingCourses={isLoadingCourses}
+                onRefresh={() => {
+                  if (coursesQuery && 'refetch' in coursesQuery) {
+                    (coursesQuery as any).refetch();
+                  }
+                }}
+              />
             </TabsContent>
           )}
 
