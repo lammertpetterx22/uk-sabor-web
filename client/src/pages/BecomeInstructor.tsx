@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Clock, XCircle, Loader2, Music, Calendar, GraduationCap, Star } from "lucide-react";
+import { CheckCircle2, Clock, XCircle, Loader2, Music, Calendar, GraduationCap, Star, Mail, Bell, Sparkles } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 
@@ -28,6 +28,10 @@ const applicationSchema = z.object({
   interestedInEvents: z.boolean(),
   interestedInClasses: z.boolean(),
   interestedInCourses: z.boolean(),
+  // Email Marketing Preferences
+  emailUpdates: z.boolean(),
+  emailPromotions: z.boolean(),
+  emailCommunity: z.boolean(),
 }).refine((data) => data.interestedInEvents || data.interestedInClasses || data.interestedInCourses, {
   message: "You must select at least one option of what you'd like to publish",
   path: ["interestedInEvents"], // Will show error on first checkbox
@@ -60,12 +64,18 @@ export default function BecomeInstructor() {
       interestedInEvents: false,
       interestedInClasses: false,
       interestedInCourses: false,
+      emailUpdates: true,
+      emailPromotions: false,
+      emailCommunity: true,
     },
   });
 
   const interestedInEvents = watch("interestedInEvents");
   const interestedInClasses = watch("interestedInClasses");
   const interestedInCourses = watch("interestedInCourses");
+  const emailUpdates = watch("emailUpdates");
+  const emailPromotions = watch("emailPromotions");
+  const emailCommunity = watch("emailCommunity");
 
   const submitApplication = trpc.admin.submitInstructorApplication.useMutation({
     onSuccess: () => {
@@ -601,6 +611,109 @@ export default function BecomeInstructor() {
                     <XCircle className="w-4 h-4" /> {errors.interestedInEvents.message}
                   </p>
                 )}
+              </div>
+
+              {/* Email Marketing Preferences */}
+              <div className="space-y-5">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-1 bg-gradient-to-b from-purple-600 to-blue-600 rounded-full" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                      <Mail className="w-5 h-5 text-purple-600" />
+                      Stay in touch
+                    </h3>
+                    <p className="text-sm text-gray-600">Let us know what you'd like to hear about</p>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-6 space-y-4 border border-purple-100">
+                  <div className={`bg-white rounded-lg p-5 transition-all border-2 ${
+                    emailUpdates
+                      ? "border-purple-600 shadow-md"
+                      : "border-gray-200 hover:border-purple-300"
+                  }`}>
+                    <div className="flex items-start space-x-4">
+                      <Checkbox
+                        id="emailUpdates"
+                        checked={emailUpdates}
+                        onCheckedChange={(checked) => setValue("emailUpdates", checked as boolean)}
+                        className="mt-1"
+                      />
+                      <Label htmlFor="emailUpdates" className="cursor-pointer flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="p-2 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg">
+                            <Bell className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <span className="font-semibold text-gray-900">What's new</span>
+                          <Badge variant="secondary" className="ml-auto">Recommended</Badge>
+                        </div>
+                        <p className="text-sm text-gray-600 leading-relaxed">
+                          Get the latest news and updates about cool new features we're adding to help you succeed
+                        </p>
+                      </Label>
+                    </div>
+                  </div>
+
+                  <div className={`bg-white rounded-lg p-5 transition-all border-2 ${
+                    emailPromotions
+                      ? "border-purple-600 shadow-md"
+                      : "border-gray-200 hover:border-purple-300"
+                  }`}>
+                    <div className="flex items-start space-x-4">
+                      <Checkbox
+                        id="emailPromotions"
+                        checked={emailPromotions}
+                        onCheckedChange={(checked) => setValue("emailPromotions", checked as boolean)}
+                        className="mt-1"
+                      />
+                      <Label htmlFor="emailPromotions" className="cursor-pointer flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="p-2 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg">
+                            <Sparkles className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <span className="font-semibold text-gray-900">Tips to grow</span>
+                        </div>
+                        <p className="text-sm text-gray-600 leading-relaxed">
+                          Helpful ideas and special opportunities to reach more students and make the most of your classes
+                        </p>
+                      </Label>
+                    </div>
+                  </div>
+
+                  <div className={`bg-white rounded-lg p-5 transition-all border-2 ${
+                    emailCommunity
+                      ? "border-purple-600 shadow-md"
+                      : "border-gray-200 hover:border-purple-300"
+                  }`}>
+                    <div className="flex items-start space-x-4">
+                      <Checkbox
+                        id="emailCommunity"
+                        checked={emailCommunity}
+                        onCheckedChange={(checked) => setValue("emailCommunity", checked as boolean)}
+                        className="mt-1"
+                      />
+                      <Label htmlFor="emailCommunity" className="cursor-pointer flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="p-2 bg-gradient-to-br from-green-100 to-green-200 rounded-lg">
+                            <Star className="w-5 h-5 text-green-600" />
+                          </div>
+                          <span className="font-semibold text-gray-900">Inspiring stories</span>
+                          <Badge variant="secondary" className="ml-auto">Recommended</Badge>
+                        </div>
+                        <p className="text-sm text-gray-600 leading-relaxed">
+                          Real stories from other instructors, what's happening in the community, and cool events you might enjoy
+                        </p>
+                      </Label>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2 pt-2 text-xs text-gray-500">
+                    <Mail className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <p className="leading-relaxed">
+                      You can change these anytime in your settings. We'll keep your email safe and never share it with anyone.
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Error Messages */}
