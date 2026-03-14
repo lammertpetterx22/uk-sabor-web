@@ -69,7 +69,7 @@ function MetricCard({ title, value, description, icon, trend, loading }: MetricC
 
 export default function DashboardOverview() {
   // Fetch all metrics
-  const { data: users, isLoading: usersLoading } = trpc.admin.listUsers.useQuery({ limit: 1000, offset: 0 });
+  const { data: users, isLoading: usersLoading } = trpc.admin.listUsers.useQuery();
   const { data: events, isLoading: eventsLoading } = trpc.events.listAll.useQuery({ limit: 1000, offset: 0 });
   const { data: courses, isLoading: coursesLoading } = trpc.courses.listAll.useQuery({ limit: 1000, offset: 0 });
   const { data: classes, isLoading: classesLoading } = trpc.classes.listAll.useQuery({ limit: 1000, offset: 0 });

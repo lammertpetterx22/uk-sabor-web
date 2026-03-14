@@ -190,7 +190,7 @@ export default function CourseDetail() {
               <EnhancedVideoPlayer
                 bunnyVideoId={(course as any).bunnyVideoId}
                 bunnyLibraryId={(course as any).bunnyLibraryId}
-                videoUrl={course.videoUrl}
+                videoUrl={course.videoUrl || undefined}
                 poster={course.imageUrl || undefined}
                 title={course.title}
                 isLocked={!hasPurchased}

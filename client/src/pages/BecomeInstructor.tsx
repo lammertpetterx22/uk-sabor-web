@@ -25,9 +25,9 @@ const applicationSchema = z.object({
   specialties: z.string().optional(), // Comma-separated dance styles
   instagramHandle: z.string().optional(),
   websiteUrl: z.string().optional(),
-  interestedInEvents: z.boolean().default(false),
-  interestedInClasses: z.boolean().default(false),
-  interestedInCourses: z.boolean().default(false),
+  interestedInEvents: z.boolean(),
+  interestedInClasses: z.boolean(),
+  interestedInCourses: z.boolean(),
 });
 
 type ApplicationFormData = z.infer<typeof applicationSchema>;
