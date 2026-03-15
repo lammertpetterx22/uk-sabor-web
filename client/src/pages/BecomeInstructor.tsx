@@ -298,7 +298,7 @@ export default function BecomeInstructor() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           <Card
             className={`cursor-pointer card-modern hover-lift ${
-              selectedType === "instructor" ? "shadow-2xl scale-[1.02] brand-card-selected-pink" : ""
+              selectedType === "instructor" ? "shadow-2xl brand-card-selected-pink" : ""
             }`}
             onClick={() => {
               setSelectedType("instructor");
@@ -338,7 +338,7 @@ export default function BecomeInstructor() {
 
           <Card
             className={`cursor-pointer card-modern hover-lift ${
-              selectedType === "promoter" ? "shadow-2xl scale-[1.02] brand-card-selected-red" : ""
+              selectedType === "promoter" ? "shadow-2xl brand-card-selected-red" : ""
             }`}
             onClick={() => {
               setSelectedType("promoter");
