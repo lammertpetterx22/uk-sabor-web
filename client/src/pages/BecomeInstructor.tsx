@@ -306,12 +306,11 @@ export default function BecomeInstructor() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           <Card
             className={`cursor-pointer card-modern hover-lift ${
-              selectedType === "instructor" ? "ring-2 shadow-2xl scale-[1.02]" : ""
+              selectedType === "instructor" ? "shadow-2xl scale-[1.02]" : ""
             }`}
             style={selectedType === "instructor" ? {
-              ringColor: '#FA3698',
               borderColor: '#FA3698',
-              boxShadow: '0 25px 50px -12px rgba(250, 54, 152, 0.2)'
+              boxShadow: '0 0 0 2px #FA3698, 0 25px 50px -12px rgba(250, 54, 152, 0.2)'
             } : undefined}
             onClick={() => {
               setSelectedType("instructor");
@@ -353,12 +352,11 @@ export default function BecomeInstructor() {
 
           <Card
             className={`cursor-pointer card-modern hover-lift ${
-              selectedType === "promoter" ? "ring-2 shadow-2xl scale-[1.02]" : ""
+              selectedType === "promoter" ? "shadow-2xl scale-[1.02]" : ""
             }`}
             style={selectedType === "promoter" ? {
-              ringColor: '#FD4D43',
               borderColor: '#FD4D43',
-              boxShadow: '0 25px 50px -12px rgba(253, 77, 67, 0.2)'
+              boxShadow: '0 0 0 2px #FD4D43, 0 25px 50px -12px rgba(253, 77, 67, 0.2)'
             } : undefined}
             onClick={() => {
               setSelectedType("promoter");
