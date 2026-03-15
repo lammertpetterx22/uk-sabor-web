@@ -133,9 +133,14 @@ export default function BecomeInstructor() {
       <div className="min-h-screen bg-background p-4 md:p-8">
         <div className="max-w-3xl mx-auto">
           <Card className="shadow-2xl glass-dark">
-            <CardHeader className="bg-gradient-to-r from-[#FA3698]/10 to-[#FD4D43]/10 border-b border-[#FA3698]/20">
+            <CardHeader className="border-b" style={{
+              background: 'linear-gradient(to right, rgba(250, 54, 152, 0.1), rgba(253, 77, 67, 0.1))',
+              borderBottomColor: 'rgba(250, 54, 152, 0.2)'
+            }}>
               <CardTitle className="text-2xl flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-r from-[#FA3698] to-[#FD4D43] rounded-lg">
+                <div className="p-2 rounded-lg" style={{
+                  background: 'linear-gradient(to right, #FA3698, #FD4D43)'
+                }}>
                   <Star className="w-6 h-6 text-white" />
                 </div>
                 Your Application Status
@@ -282,7 +287,10 @@ export default function BecomeInstructor() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-10 animate-fade-in">
-          <div className="inline-block p-4 bg-gradient-to-r from-[#FA3698] to-[#FD4D43] rounded-full mb-6 shadow-2xl shadow-[#FA3698]/20">
+          <div className="inline-block p-4 rounded-full mb-6 shadow-2xl" style={{
+            background: 'linear-gradient(to right, #FA3698, #FD4D43)',
+            boxShadow: '0 25px 50px -12px rgba(250, 54, 152, 0.2)'
+          }}>
             <Star className="w-12 h-12 text-white" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -298,10 +306,13 @@ export default function BecomeInstructor() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           <Card
             className={`cursor-pointer card-modern hover-lift ${
-              selectedType === "instructor"
-                ? "ring-2 ring-[#FA3698] border-[#FA3698] shadow-2xl shadow-[#FA3698]/20 scale-[1.02]"
-                : ""
+              selectedType === "instructor" ? "ring-2 shadow-2xl scale-[1.02]" : ""
             }`}
+            style={selectedType === "instructor" ? {
+              ringColor: '#FA3698',
+              borderColor: '#FA3698',
+              boxShadow: '0 25px 50px -12px rgba(250, 54, 152, 0.2)'
+            } : undefined}
             onClick={() => {
               setSelectedType("instructor");
               setValue("requestType", "instructor");
@@ -309,14 +320,12 @@ export default function BecomeInstructor() {
           >
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className={`p-3 rounded-lg transition-colors ${
-                  selectedType === "instructor"
-                    ? "bg-gradient-to-br from-[#FA3698] to-[#FD4D43]"
-                    : "bg-[#FA3698]/20"
-                }`}>
-                  <Star className={`w-6 h-6 ${
-                    selectedType === "instructor" ? "text-white" : "text-[#FA3698]"
-                  }`} />
+                <div className="p-3 rounded-lg transition-colors" style={selectedType === "instructor"
+                  ? { background: 'linear-gradient(to bottom right, #FA3698, #FD4D43)' }
+                  : { background: 'rgba(250, 54, 152, 0.2)' }
+                }>
+                  <Star className={`w-6 h-6 ${selectedType === "instructor" ? "text-white" : ""}`}
+                    style={selectedType === "instructor" ? undefined : { color: '#FA3698' }} />
                 </div>
                 <div>
                   <CardTitle className="text-xl">Instructor</CardTitle>
@@ -344,10 +353,13 @@ export default function BecomeInstructor() {
 
           <Card
             className={`cursor-pointer card-modern hover-lift ${
-              selectedType === "promoter"
-                ? "ring-2 ring-[#FD4D43] border-[#FD4D43] shadow-2xl shadow-[#FD4D43]/20 scale-[1.02]"
-                : ""
+              selectedType === "promoter" ? "ring-2 shadow-2xl scale-[1.02]" : ""
             }`}
+            style={selectedType === "promoter" ? {
+              ringColor: '#FD4D43',
+              borderColor: '#FD4D43',
+              boxShadow: '0 25px 50px -12px rgba(253, 77, 67, 0.2)'
+            } : undefined}
             onClick={() => {
               setSelectedType("promoter");
               setValue("requestType", "promoter");
@@ -355,14 +367,12 @@ export default function BecomeInstructor() {
           >
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className={`p-3 rounded-lg transition-colors ${
-                  selectedType === "promoter"
-                    ? "bg-gradient-to-br from-[#FD4D43] to-[#FCC500]"
-                    : "bg-[#FD4D43]/20"
-                }`}>
-                  <Calendar className={`w-6 h-6 ${
-                    selectedType === "promoter" ? "text-white" : "text-[#FD4D43]"
-                  }`} />
+                <div className="p-3 rounded-lg transition-colors" style={selectedType === "promoter"
+                  ? { background: 'linear-gradient(to bottom right, #FD4D43, #FCC500)' }
+                  : { background: 'rgba(253, 77, 67, 0.2)' }
+                }>
+                  <Calendar className={`w-6 h-6 ${selectedType === "promoter" ? "text-white" : ""}`}
+                    style={selectedType === "promoter" ? undefined : { color: '#FD4D43' }} />
                 </div>
                 <div>
                   <CardTitle className="text-xl">Promoter</CardTitle>
@@ -390,8 +400,11 @@ export default function BecomeInstructor() {
         </div>
 
         {/* Application Form */}
-        <Card className="shadow-2xl glass-dark border-t-4 border-t-[#FA3698]">
-          <CardHeader className="bg-gradient-to-r from-[#FA3698]/10 to-[#FD4D43]/10 border-b border-[#FA3698]/20">
+        <Card className="shadow-2xl glass-dark border-t-4" style={{ borderTopColor: '#FA3698' }}>
+          <CardHeader className="border-b" style={{
+            background: 'linear-gradient(to right, rgba(250, 54, 152, 0.1), rgba(253, 77, 67, 0.1))',
+            borderBottomColor: 'rgba(250, 54, 152, 0.2)'
+          }}>
             <CardTitle className="text-2xl">Application Form</CardTitle>
             <CardDescription className="text-base">
               Complete all fields to submit your application. We'll review your information and contact you soon.
@@ -405,7 +418,9 @@ export default function BecomeInstructor() {
               {/* Personal Info */}
               <div className="space-y-5">
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-1 bg-gradient-to-b from-[#FA3698] to-[#FD4D43] rounded-full" />
+                  <div className="h-8 w-1 rounded-full" style={{
+                    background: 'linear-gradient(to bottom, #FA3698, #FD4D43)'
+                  }} />
                   <h3 className="text-lg font-semibold">Personal Information</h3>
                 </div>
 
@@ -482,7 +497,9 @@ export default function BecomeInstructor() {
               {/* About You */}
               <div className="space-y-5">
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-1 bg-gradient-to-b from-[#FA3698] to-[#FD4D43] rounded-full" />
+                  <div className="h-8 w-1 rounded-full" style={{
+                    background: 'linear-gradient(to bottom, #FA3698, #FD4D43)'
+                  }} />
                   <h3 className="text-lg font-semibold">Tell us about yourself</h3>
                 </div>
 
@@ -538,7 +555,9 @@ export default function BecomeInstructor() {
               {/* Interests */}
               <div className="space-y-5">
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-1 bg-gradient-to-b from-[#FA3698] to-[#FD4D43] rounded-full" />
+                  <div className="h-8 w-1 rounded-full" style={{
+                    background: 'linear-gradient(to bottom, #FA3698, #FD4D43)'
+                  }} />
                   <div>
                     <h3 className="text-lg font-semibold">What would you like to publish?</h3>
                     <p className="text-sm text-muted-foreground">Select at least one option</p>
@@ -546,11 +565,10 @@ export default function BecomeInstructor() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className={`border-2 rounded-lg p-4 transition-all cursor-pointer ${
-                    interestedInEvents
-                      ? "border-[#FA3698] bg-[#FA3698]/10 shadow-md"
-                      : "border-border hover:border-[#FA3698]/50"
-                  }`}
+                  <div className="border-2 rounded-lg p-4 transition-all cursor-pointer"
+                    style={interestedInEvents
+                      ? { borderColor: '#FA3698', background: 'rgba(250, 54, 152, 0.1)' }
+                      : { borderColor: 'rgba(255,255,255,0.1)' }}
                     onClick={() => setValue("interestedInEvents", !interestedInEvents)}
                   >
                     <div className="flex items-start space-x-3">
@@ -561,7 +579,7 @@ export default function BecomeInstructor() {
                       />
                       <Label htmlFor="interestedInEvents" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <Calendar className="w-5 h-5 text-[#FA3698]" />
+                          <Calendar className="w-5 h-5" style={{ color: '#FA3698' }} />
                           <span className="font-semibold">Events and workshops</span>
                         </div>
                         <p className="text-xs text-muted-foreground">Organize social events and parties</p>
@@ -569,11 +587,10 @@ export default function BecomeInstructor() {
                     </div>
                   </div>
 
-                  <div className={`border-2 rounded-lg p-4 transition-all cursor-pointer ${
-                    interestedInClasses
-                      ? "border-[#FA3698] bg-[#FA3698]/10 shadow-md"
-                      : "border-border hover:border-[#FA3698]/50"
-                  }`}
+                  <div className="border-2 rounded-lg p-4 transition-all cursor-pointer"
+                    style={interestedInClasses
+                      ? { borderColor: '#FA3698', background: 'rgba(250, 54, 152, 0.1)' }
+                      : { borderColor: 'rgba(255,255,255,0.1)' }}
                     onClick={() => setValue("interestedInClasses", !interestedInClasses)}
                   >
                     <div className="flex items-start space-x-3">
@@ -584,7 +601,7 @@ export default function BecomeInstructor() {
                       />
                       <Label htmlFor="interestedInClasses" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <Music className="w-5 h-5 text-[#FA3698]" />
+                          <Music className="w-5 h-5" style={{ color: '#FA3698' }} />
                           <span className="font-semibold">In-person classes</span>
                         </div>
                         <p className="text-xs text-muted-foreground">Teach live classes</p>
@@ -592,11 +609,10 @@ export default function BecomeInstructor() {
                     </div>
                   </div>
 
-                  <div className={`border-2 rounded-lg p-4 transition-all cursor-pointer ${
-                    interestedInCourses
-                      ? "border-[#FA3698] bg-[#FA3698]/10 shadow-md"
-                      : "border-border hover:border-[#FA3698]/50"
-                  }`}
+                  <div className="border-2 rounded-lg p-4 transition-all cursor-pointer"
+                    style={interestedInCourses
+                      ? { borderColor: '#FA3698', background: 'rgba(250, 54, 152, 0.1)' }
+                      : { borderColor: 'rgba(255,255,255,0.1)' }}
                     onClick={() => setValue("interestedInCourses", !interestedInCourses)}
                   >
                     <div className="flex items-start space-x-3">
@@ -607,7 +623,7 @@ export default function BecomeInstructor() {
                       />
                       <Label htmlFor="interestedInCourses" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <GraduationCap className="w-5 h-5 text-[#FA3698]" />
+                          <GraduationCap className="w-5 h-5" style={{ color: '#FA3698' }} />
                           <span className="font-semibold">Online courses</span>
                         </div>
                         <p className="text-xs text-muted-foreground">Create recorded courses</p>
@@ -625,10 +641,12 @@ export default function BecomeInstructor() {
               {/* Email Marketing Preferences */}
               <div className="space-y-5">
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-1 bg-gradient-to-b from-[#FA3698] to-[#FD4D43] rounded-full" />
+                  <div className="h-8 w-1 rounded-full" style={{
+                    background: 'linear-gradient(to bottom, #FA3698, #FD4D43)'
+                  }} />
                   <div>
                     <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <Mail className="w-5 h-5 text-[#FA3698]" />
+                      <Mail className="w-5 h-5" style={{ color: '#FA3698' }} />
                       Stay in touch
                     </h3>
                     <p className="text-sm text-muted-foreground">Let us know what you'd like to hear about</p>
@@ -636,11 +654,9 @@ export default function BecomeInstructor() {
                 </div>
 
                 <div className="bg-card/50 rounded-xl p-6 space-y-4 border border-border/50">
-                  <div className={`bg-card rounded-lg p-5 transition-all border-2 ${
-                    emailUpdates
-                      ? "border-[#FA3698] shadow-md"
-                      : "border-border hover:border-[#FA3698]/50"
-                  }`}>
+                  <div className="bg-card rounded-lg p-5 transition-all border-2" style={emailUpdates
+                    ? { borderColor: '#FA3698' }
+                    : { borderColor: 'rgba(255,255,255,0.1)' }}>
                     <div className="flex items-start space-x-4">
                       <Checkbox
                         id="emailUpdates"
@@ -650,8 +666,8 @@ export default function BecomeInstructor() {
                       />
                       <Label htmlFor="emailUpdates" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="p-2 bg-[#FA3698]/20 rounded-lg">
-                            <Bell className="w-5 h-5 text-[#FA3698]" />
+                          <div className="p-2 rounded-lg" style={{ background: 'rgba(250, 54, 152, 0.2)' }}>
+                            <Bell className="w-5 h-5" style={{ color: '#FA3698' }} />
                           </div>
                           <span className="font-semibold">What's new</span>
                           <Badge variant="secondary" className="ml-auto">Recommended</Badge>
@@ -663,11 +679,9 @@ export default function BecomeInstructor() {
                     </div>
                   </div>
 
-                  <div className={`bg-card rounded-lg p-5 transition-all border-2 ${
-                    emailPromotions
-                      ? "border-[#FA3698] shadow-md"
-                      : "border-border hover:border-[#FA3698]/50"
-                  }`}>
+                  <div className="bg-card rounded-lg p-5 transition-all border-2" style={emailPromotions
+                    ? { borderColor: '#FA3698' }
+                    : { borderColor: 'rgba(255,255,255,0.1)' }}>
                     <div className="flex items-start space-x-4">
                       <Checkbox
                         id="emailPromotions"
@@ -677,8 +691,8 @@ export default function BecomeInstructor() {
                       />
                       <Label htmlFor="emailPromotions" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="p-2 bg-[#FCC500]/20 rounded-lg">
-                            <Sparkles className="w-5 h-5 text-[#FCC500]" />
+                          <div className="p-2 rounded-lg" style={{ background: 'rgba(252, 197, 0, 0.2)' }}>
+                            <Sparkles className="w-5 h-5" style={{ color: '#FCC500' }} />
                           </div>
                           <span className="font-semibold">Tips to grow</span>
                         </div>
@@ -689,11 +703,9 @@ export default function BecomeInstructor() {
                     </div>
                   </div>
 
-                  <div className={`bg-card rounded-lg p-5 transition-all border-2 ${
-                    emailCommunity
-                      ? "border-[#FA3698] shadow-md"
-                      : "border-border hover:border-[#FA3698]/50"
-                  }`}>
+                  <div className="bg-card rounded-lg p-5 transition-all border-2" style={emailCommunity
+                    ? { borderColor: '#FA3698' }
+                    : { borderColor: 'rgba(255,255,255,0.1)' }}>
                     <div className="flex items-start space-x-4">
                       <Checkbox
                         id="emailCommunity"
@@ -703,8 +715,8 @@ export default function BecomeInstructor() {
                       />
                       <Label htmlFor="emailCommunity" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="p-2 bg-[#0ADCF4]/20 rounded-lg">
-                            <Star className="w-5 h-5 text-[#0ADCF4]" />
+                          <div className="p-2 rounded-lg" style={{ background: 'rgba(10, 220, 244, 0.2)' }}>
+                            <Star className="w-5 h-5" style={{ color: '#0ADCF4' }} />
                           </div>
                           <span className="font-semibold">Inspiring stories</span>
                           <Badge variant="secondary" className="ml-auto">Recommended</Badge>
