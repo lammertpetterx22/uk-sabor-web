@@ -543,7 +543,7 @@ export default function BecomeInstructor() {
                       <Checkbox
                         id="interestedInEvents"
                         checked={interestedInEvents}
-                        onCheckedChange={(checked) => setValue("interestedInEvents", checked as boolean)}
+                        onCheckedChange={(checked) => setValue("interestedInEvents", checked === true)}
                       />
                       <Label htmlFor="interestedInEvents" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -564,7 +564,7 @@ export default function BecomeInstructor() {
                       <Checkbox
                         id="interestedInClasses"
                         checked={interestedInClasses}
-                        onCheckedChange={(checked) => setValue("interestedInClasses", checked as boolean)}
+                        onCheckedChange={(checked) => setValue("interestedInClasses", checked === true)}
                       />
                       <Label htmlFor="interestedInClasses" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -585,7 +585,7 @@ export default function BecomeInstructor() {
                       <Checkbox
                         id="interestedInCourses"
                         checked={interestedInCourses}
-                        onCheckedChange={(checked) => setValue("interestedInCourses", checked as boolean)}
+                        onCheckedChange={(checked) => setValue("interestedInCourses", checked === true)}
                       />
                       <Label htmlFor="interestedInCourses" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -625,7 +625,7 @@ export default function BecomeInstructor() {
                       <Checkbox
                         id="emailUpdates"
                         checked={emailUpdates}
-                        onCheckedChange={(checked) => setValue("emailUpdates", checked as boolean)}
+                        onCheckedChange={(checked) => setValue("emailUpdates", checked === true)}
                         className="mt-1"
                       />
                       <Label htmlFor="emailUpdates" className="cursor-pointer flex-1">
@@ -650,7 +650,7 @@ export default function BecomeInstructor() {
                       <Checkbox
                         id="emailPromotions"
                         checked={emailPromotions}
-                        onCheckedChange={(checked) => setValue("emailPromotions", checked as boolean)}
+                        onCheckedChange={(checked) => setValue("emailPromotions", checked === true)}
                         className="mt-1"
                       />
                       <Label htmlFor="emailPromotions" className="cursor-pointer flex-1">
@@ -674,7 +674,7 @@ export default function BecomeInstructor() {
                       <Checkbox
                         id="emailCommunity"
                         checked={emailCommunity}
-                        onCheckedChange={(checked) => setValue("emailCommunity", checked as boolean)}
+                        onCheckedChange={(checked) => setValue("emailCommunity", checked === true)}
                         className="mt-1"
                       />
                       <Label htmlFor="emailCommunity" className="cursor-pointer flex-1">
