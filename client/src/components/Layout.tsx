@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import {
@@ -50,10 +50,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         return saved ? saved === "true" : false;
     });
 
-    const handleSetDrawerOpen = (open: boolean) => {
+    const handleSetDrawerOpen = useCallback((open: boolean) => {
         setDrawerOpen(open);
         localStorage.setItem("sidebar-state", String(open));
-    };
+    }, []);
+
+    const handleCloseDrawer = useCallback(() => {
+        handleSetDrawerOpen(false);
+    }, [handleSetDrawerOpen]);
 
     const [location] = useLocation();
     const { user, isAuthenticated, logout } = useAuth();
@@ -64,11 +68,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         user?.role === "instructor" ||
         user?.role === "promoter";
 
-    const handleLogout = async () => {
+    const handleLogout = useCallback(async () => {
         await logout();
         handleSetDrawerOpen(false);
         window.location.href = "/";
-    };
+    }, [logout, handleSetDrawerOpen]);
 
     const NavLink = ({
         href,
@@ -106,7 +110,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     // ──────────────────────────────────────────────────────────────────────────
     // Sidebar content shared between desktop sidebar and mobile drawer
     // ──────────────────────────────────────────────────────────────────────────
-    const SidebarContent = ({ onClose }: { onClose?: () => void }) => (
+    const SidebarContent = useCallback(({ onClose }: { onClose?: () => void }) => (
         <div className="flex flex-col h-full">
             {/* Logo */}
             <div className="flex items-center gap-3 px-4 py-6 border-b border-white/5">
@@ -263,7 +267,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 )}
             </div>
         </div>
-    );
+    ), [isAuthenticated, isCreator, isAdmin, user, handleLogout]);
 
     return (
         <div className="min-h-screen bg-black flex">
@@ -280,7 +284,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         className="relative w-64 xl:w-72 max-w-[85vw] h-full bg-[#0a0a0a] border-r border-white/10 animate-slide-in-left shadow-2xl"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <SidebarContent onClose={() => handleSetDrawerOpen(false)} />
+                        <SidebarContent onClose={handleCloseDrawer} />
                     </aside>
                 </div>
             )}
