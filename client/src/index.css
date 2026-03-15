@@ -161,19 +161,29 @@
   
   /* Gradient text for vibrant effect - Con Sabor palette */
   .gradient-text {
-    @apply bg-gradient-to-r from-[#FA3698] via-[#FD4D43] to-[#FCC500] bg-clip-text text-transparent;
+    background: linear-gradient(to right, #FA3698, #FD4D43, #FCC500);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
-  
+
   /* Modern button styles with smooth transitions */
   .btn-vibrant {
-    @apply bg-gradient-to-r from-[#FA3698] to-[#FD4D43] text-white font-bold py-3 px-6 rounded-xl hover:shadow-2xl hover:shadow-[#FA3698]/40 transition-all duration-300 transform hover:scale-105 active:scale-95;
+    background: linear-gradient(to right, #FA3698, #FD4D43);
+    @apply text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95;
+    box-shadow: 0 25px 50px -12px rgba(250, 54, 152, 0);
   }
-  
+
+  .btn-vibrant:hover {
+    box-shadow: 0 25px 50px -12px rgba(250, 54, 152, 0.4);
+  }
+
   /* Modern focus states */
   input:focus,
   select:focus,
   textarea:focus {
-    @apply ring-2 ring-offset-2 ring-[#FA3698] ring-offset-background;
+    @apply ring-2 ring-offset-2 ring-offset-background;
+    --tw-ring-color: #FA3698;
   }
   
   /* ========== MODERN ANIMATIONS ========== */
@@ -403,7 +413,11 @@
   }
   
   .hover-glow {
-    @apply transition-all duration-300 hover:shadow-lg hover:shadow-[#FA3698]/50;
+    @apply transition-all duration-300 hover:shadow-lg;
+  }
+
+  .hover-glow:hover {
+    box-shadow: 0 10px 15px -3px rgba(250, 54, 152, 0.5), 0 4px 6px -4px rgba(250, 54, 152, 0.5);
   }
   
   /* Modern card styling */
