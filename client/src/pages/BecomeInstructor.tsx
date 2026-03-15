@@ -289,7 +289,7 @@ export default function BecomeInstructor() {
             <span className="gradient-text">Become an Instructor or Promoter</span>
           </h1>
           <p className="text-lg md:text-xl text-foreground/80 max-w-2xl mx-auto leading-relaxed">
-            Share your passion for dance with our community. Publish events, classes and courses on our
+            Share your passion for dance with our community. Publish events, classes, and courses on our
             platform and grow your business.
           </p>
         </div>
