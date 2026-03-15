@@ -8,7 +8,7 @@ import type { Instructor } from "@shared/types";
 function InstructorCard({ instructor }: { instructor: Instructor }) {
   const specialties = instructor.specialties
     ? typeof instructor.specialties === "string"
-      ? JSON.parse(instructor.specialties)
+      ? (() => { try { return JSON.parse(instructor.specialties); } catch { return []; } })()
       : Array.isArray(instructor.specialties)
         ? instructor.specialties
         : []

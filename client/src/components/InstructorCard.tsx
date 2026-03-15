@@ -12,7 +12,7 @@ interface InstructorCardProps {
 const InstructorCard = memo(function InstructorCard({ instructor }: InstructorCardProps) {
   const specialties = instructor.specialties
     ? typeof instructor.specialties === "string"
-      ? JSON.parse(instructor.specialties)
+      ? (() => { try { return JSON.parse(instructor.specialties); } catch { return []; } })()
       : Array.isArray(instructor.specialties)
         ? instructor.specialties
         : []
