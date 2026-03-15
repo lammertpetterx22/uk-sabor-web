@@ -264,26 +264,37 @@ export function canCreateCourse(plan: string, totalCourses: number): Entitlement
 }
 
 /**
- * Calculate the total checkout amount including platform fee and Stripe processing fee.
- * Stripe processing fee in UK: 1.5% + £0.20 for European cards (we use 1.5% + £0.25 as safe estimate).
- * We add fees on top so the platform owner receives the full ticket price.
+ * Calculate the total checkout amount with NEW MODEL:
+ * - Client pays: Ticket price + Stripe fee ONLY
+ * - Platform fee is deducted from instructor's earnings
+ * - Stripe fee is NOT deducted from instructor (client already pays it)
+ *
+ * Stripe processing fee in UK: 1.5% + £0.20 for European cards (we use 1.5% + £0.20 as safe estimate).
  *
  * Returns all amounts in pence (integer).
  */
 export function calculateCheckoutAmounts(ticketPricePence: number, plan: PlanKey, isCourse: boolean = false) {
   const planDef = PLANS[plan] ?? PLANS.starter;
   const commissionRate = isCourse ? planDef.courseCommissionRate : planDef.commissionRate;
+
+  // Stripe UK processing: 1.5% + 20p (European cards) - PAID BY CLIENT
+  const stripeFeePence = Math.round(ticketPricePence * 0.015) + 20;
+
+  // NEW MODEL: Client only pays ticket price + Stripe fee
+  const totalPence = ticketPricePence + stripeFeePence;
+
+  // Platform fee is deducted from instructor's earnings
   const platformFeePence = Math.round(ticketPricePence * commissionRate);
-  // Stripe UK processing: 1.5% + 20p (European cards) — we pass this to buyer
-  const subtotalPence = ticketPricePence + platformFeePence;
-  const stripeFeePence = Math.round(subtotalPence * 0.015) + 20;
-  const totalPence = subtotalPence + stripeFeePence;
+
+  // What the instructor actually receives (only platform fee deducted, NOT Stripe fee)
+  const instructorEarningsPence = ticketPricePence - platformFeePence;
 
   return {
-    ticketPricePence,
-    platformFeePence,
-    stripeFeePence,
-    totalPence,
+    ticketPricePence,        // Original ticket price
+    platformFeePence,        // Platform commission (deducted from instructor)
+    stripeFeePence,          // Stripe fee (paid by client, NOT deducted from instructor)
+    totalPence,              // What client pays (ticket + Stripe fee only)
+    instructorEarningsPence, // What instructor receives (price - platform fee)
     commissionRate,
   };
 }

@@ -160,6 +160,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
           commissionRate = planDef.commissionRate; // Event/class commission rate
         }
 
+        // NEW MODEL: Only deduct platform fee from instructor (client already paid Stripe fee)
         const commissionPence = Math.round(netEarningsPence * commissionRate);
         const platformFeeGBP = commissionPence / 100;
         const instructorEarningsGBP = (netEarningsPence - commissionPence) / 100;
@@ -177,7 +178,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         (metadata as any)._calculated_instructor_earnings = instructorEarningsGBP;
         (metadata as any)._creator_user_id = creatorUserId;
 
-        console.log(`[Webhook] ✅ Allocated £${instructorEarningsGBP.toFixed(2)} to creator ${creatorUserId} for ${itemType} (Commission: ${(commissionRate * 100).toFixed(1)}%, Fee: £${platformFeeGBP.toFixed(2)})`);
+        console.log(`[Webhook] ✅ NEW MODEL - Item: ${itemType} | Price: £${(netEarningsPence/100).toFixed(2)} | Platform Fee: £${platformFeeGBP.toFixed(2)} (${(commissionRate*100).toFixed(1)}%) | Instructor receives: £${instructorEarningsGBP.toFixed(2)}`);
       } else {
         console.warn(`[Webhook] ⚠️ No earnings recorded - creatorUserId: ${creatorUserId}, netEarnings: ${netEarningsPence}p, itemType: ${itemType}`);
       }

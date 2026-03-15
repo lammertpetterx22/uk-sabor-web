@@ -93,19 +93,8 @@ export const paymentsRouter = router({
             price_data: {
               currency: "gbp",
               product_data: {
-                name: "Platform fee",
-                description: `${Math.round(fees.commissionRate * 100)}% platform commission`,
-              },
-              unit_amount: fees.platformFeePence,
-            },
-            quantity: input.quantity,
-          },
-          {
-            price_data: {
-              currency: "gbp",
-              product_data: {
                 name: "Processing fee",
-                description: "Stripe card processing fee (passed to buyer)",
+                description: "Stripe card processing fee",
               },
               unit_amount: fees.stripeFeePence,
             },
@@ -194,19 +183,8 @@ export const paymentsRouter = router({
             price_data: {
               currency: "gbp",
               product_data: {
-                name: "Platform fee",
-                description: `${Math.round(fees.commissionRate * 100)}% platform commission`,
-              },
-              unit_amount: fees.platformFeePence,
-            },
-            quantity: 1,
-          },
-          {
-            price_data: {
-              currency: "gbp",
-              product_data: {
                 name: "Processing fee",
-                description: "Stripe card processing fee (passed to buyer)",
+                description: "Stripe card processing fee",
               },
               unit_amount: fees.stripeFeePence,
             },
@@ -300,19 +278,8 @@ export const paymentsRouter = router({
             price_data: {
               currency: "gbp",
               product_data: {
-                name: "Platform fee",
-                description: `${Math.round(fees.commissionRate * 100)}% platform commission`,
-              },
-              unit_amount: fees.platformFeePence,
-            },
-            quantity: 1,
-          },
-          {
-            price_data: {
-              currency: "gbp",
-              product_data: {
                 name: "Processing fee",
-                description: "Stripe card processing fee (passed to buyer)",
+                description: "Stripe card processing fee",
               },
               unit_amount: fees.stripeFeePence,
             },
