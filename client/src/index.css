@@ -523,6 +523,14 @@
   .brand-gradient-bar {
     background: linear-gradient(to bottom, #FA3698, #FD4D43);
   }
+
+  .brand-bg-yellow-light {
+    background: rgba(252, 197, 0, 0.2);
+  }
+
+  .brand-bg-cyan-light {
+    background: rgba(10, 220, 244, 0.2);
+  }
 }
 
 @layer components {

@@ -655,7 +655,7 @@ export default function BecomeInstructor() {
                       />
                       <Label htmlFor="emailPromotions" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="p-2 rounded-lg bg-yellow-500/20">
+                          <div className="p-2 rounded-lg brand-bg-yellow-light">
                             <Sparkles className="w-5 h-5 brand-text-yellow" />
                           </div>
                           <span className="font-semibold">Tips to grow</span>
@@ -679,7 +679,7 @@ export default function BecomeInstructor() {
                       />
                       <Label htmlFor="emailCommunity" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="p-2 rounded-lg bg-cyan-500/20">
+                          <div className="p-2 rounded-lg brand-bg-cyan-light">
                             <Star className="w-5 h-5 brand-text-cyan" />
                           </div>
                           <span className="font-semibold">Inspiring stories</span>
