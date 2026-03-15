@@ -128,6 +128,7 @@ export const instructorsRouter = router({
             instagramHandle: input.instagramHandle,
             websiteUrl: input.websiteUrl,
             specialties: input.specialties,
+            updatedAt: new Date(),
           })
           .where(eq(instructors.id, existing.id));
         return { id: existing.id, created: false };
@@ -200,7 +201,10 @@ export const instructorsRouter = router({
       if (!db) throw new Error("Database not available");
 
       const { id, ...updateData } = input;
-      const result = await db.update(instructors).set(updateData).where(eq(instructors.id, id));
+      const result = await db.update(instructors).set({
+        ...updateData,
+        updatedAt: new Date(),
+      }).where(eq(instructors.id, id));
 
       return result;
     }),

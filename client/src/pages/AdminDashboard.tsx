@@ -3072,12 +3072,13 @@ function InstructorsTab() {
           ) : instructors && instructors.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {instructors.map((instructor) => (
-                <div key={instructor.id} className="border border-border/50 rounded-lg p-4">
+                <div key={`${instructor.id}-${instructor.updatedAt || instructor.createdAt}`} className="border border-border/50 rounded-lg p-4">
                   {instructor.photoUrl && (
                     <img
                       src={instructor.photoUrl}
                       alt={instructor.name}
                       className="w-full h-40 object-cover rounded-lg mb-4"
+                      key={instructor.updatedAt || instructor.createdAt}
                     />
                   )}
                   <h3 className="font-semibold text-foreground">{instructor.name}</h3>
