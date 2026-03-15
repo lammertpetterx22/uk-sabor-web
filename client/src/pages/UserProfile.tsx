@@ -40,6 +40,12 @@ export default function UserProfile() {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (!loading && (!isAuthenticated || !user)) {
+      setLocation("/login");
+    }
+  }, [loading, isAuthenticated, user, setLocation]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -49,7 +55,6 @@ export default function UserProfile() {
   }
 
   if (!isAuthenticated || !user) {
-    setLocation("/login");
     return null;
   }
 

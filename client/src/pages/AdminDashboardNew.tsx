@@ -43,7 +43,11 @@ export default function AdminDashboard() {
   // Redirect unauthenticated users
   useEffect(() => {
     if (loading) return;
-    if (!isAuthenticated) setLocation("/login");
+    useEffect(() => {
+        if (!isAuthenticated) {
+            setLocation("/login");
+        }
+    }, [isAuthenticated, setLocation]);
   }, [loading, isAuthenticated, setLocation]);
 
   // Show loading spinner
