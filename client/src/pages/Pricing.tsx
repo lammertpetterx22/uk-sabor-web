@@ -343,27 +343,32 @@ export default function Pricing() {
           </div>
         )}
 
-        {/* Fee transparency note */}
+        {/* Fee transparency note - NEW MODEL */}
         <div className="mt-8 max-w-3xl mx-auto bg-card border border-border/40 rounded-xl p-6">
           <h3 className="text-foreground font-semibold mb-3">How ticket fees work</h3>
           <p className="text-foreground/50 text-sm mb-4">
-            At checkout, buyers see a transparent breakdown of all fees. The platform fee is based on your current plan's commission rate. The processing fee covers Stripe's card processing cost — neither fee is absorbed by you.
+            Buyers only pay the ticket price plus a small processing fee. The platform commission is deducted from your earnings, making prices more competitive for buyers. The processing fee covers Stripe's card processing cost.
           </p>
           <div className="bg-black/10 dark:bg-white/5 rounded-lg p-4 font-mono text-sm space-y-1">
             <div className="flex justify-between text-foreground/70">
               <span>Ticket price</span><span>£10.00</span>
             </div>
             <div className="flex justify-between text-foreground/50">
-              <span>Platform fee (8% Starter)</span><span>£0.80</span>
-            </div>
-            <div className="flex justify-between text-foreground/50">
-              <span>Processing fee</span><span>£0.36</span>
+              <span>Processing fee</span><span>£0.35</span>
             </div>
             <div className="border-t border-border/30 pt-1 flex justify-between text-foreground font-semibold">
-              <span>Total charged to buyer</span><span>£11.16</span>
+              <span>Total charged to buyer</span><span>£10.35</span>
             </div>
-            <div className="flex justify-between text-green-400 text-xs">
-              <span>You receive</span><span>£10.00</span>
+            <div className="border-t border-border/30 mt-2 pt-2 space-y-1">
+              <div className="flex justify-between text-foreground/60 text-xs">
+                <span>Ticket price</span><span>£10.00</span>
+              </div>
+              <div className="flex justify-between text-red-400/60 text-xs">
+                <span>Platform fee (8% Starter)</span><span>-£0.80</span>
+              </div>
+              <div className="flex justify-between text-green-400 font-semibold">
+                <span>You receive</span><span>£9.20</span>
+              </div>
             </div>
           </div>
         </div>
