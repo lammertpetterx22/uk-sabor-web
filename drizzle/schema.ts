@@ -583,6 +583,11 @@ export const instructorApplications = pgTable("instructorApplications", {
   interestedInClasses: boolean("interestedInClasses").default(false),
   interestedInCourses: boolean("interestedInCourses").default(false),
 
+  // Email Marketing Preferences
+  emailUpdates: boolean("emailUpdates").default(true),
+  emailPromotions: boolean("emailPromotions").default(false),
+  emailCommunity: boolean("emailCommunity").default(true),
+
   // Admin review
   adminNotes: text("adminNotes"),
   reviewedBy: integer("reviewedBy"), // Admin user ID who reviewed

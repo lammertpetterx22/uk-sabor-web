@@ -616,13 +616,17 @@ export const adminRouter = router({
         interestedInEvents: z.boolean().default(false),
         interestedInClasses: z.boolean().default(false),
         interestedInCourses: z.boolean().default(false),
+        // Email Marketing Preferences
+        emailUpdates: z.boolean().default(true),
+        emailPromotions: z.boolean().default(false),
+        emailCommunity: z.boolean().default(true),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
-      // Check if user already has a pending application
+      // Check if user already has a pending or approved application
       const [existingApp] = await db
         .select()
         .from(instructorApplications)
@@ -634,6 +638,13 @@ export const adminRouter = router({
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "You already have a pending application. Please wait for admin review."
+        });
+      }
+
+      if (existingApp && existingApp.status === "approved") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You already have an approved application."
         });
       }
 
@@ -652,6 +663,9 @@ export const adminRouter = router({
         interestedInEvents: input.interestedInEvents,
         interestedInClasses: input.interestedInClasses,
         interestedInCourses: input.interestedInCourses,
+        emailUpdates: input.emailUpdates,
+        emailPromotions: input.emailPromotions,
+        emailCommunity: input.emailCommunity,
         status: "pending",
       });
 

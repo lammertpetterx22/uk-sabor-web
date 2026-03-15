@@ -43,6 +43,8 @@ export default function BecomeInstructor() {
   const { user, loading: userLoading } = useAuth();
   const [, setLocation] = useLocation();
   const [selectedType, setSelectedType] = useState<"instructor" | "promoter">("instructor");
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [allowReapply, setAllowReapply] = useState(false);
 
   // Get user's application status
   const { data: existingApplication, isLoading: appLoading } = trpc.admin.getMyApplication.useQuery(undefined, {
@@ -79,8 +81,12 @@ export default function BecomeInstructor() {
 
   const submitApplication = trpc.admin.submitInstructorApplication.useMutation({
     onSuccess: () => {
-      // Refetch application status
-      window.location.reload();
+      // Show success message
+      setShowSuccessMessage(true);
+      // Reload after a short delay to show the success message
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     },
   });
 
@@ -121,8 +127,8 @@ export default function BecomeInstructor() {
     );
   }
 
-  // If user already has an application, show status
-  if (existingApplication) {
+  // If user already has an application, show status (unless they want to reapply after rejection)
+  if (existingApplication && !allowReapply) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-4 md:p-8">
         <div className="max-w-3xl mx-auto">
@@ -251,7 +257,10 @@ export default function BecomeInstructor() {
                       Your application was rejected. You can submit a new application when you're ready.
                     </AlertDescription>
                   </Alert>
-                  <Button onClick={() => window.location.reload()} className="w-full">
+                  <Button
+                    onClick={() => setAllowReapply(true)}
+                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                  >
                     Submit New Application
                   </Button>
                 </div>
@@ -715,6 +724,16 @@ export default function BecomeInstructor() {
                   </div>
                 </div>
               </div>
+
+              {/* Success Message */}
+              {showSuccessMessage && (
+                <Alert className="border-green-200 bg-green-50 animate-in fade-in slide-in-from-top-2 duration-500">
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-800">
+                    <strong>Application submitted successfully!</strong> We'll review your information and get back to you soon.
+                  </AlertDescription>
+                </Alert>
+              )}
 
               {/* Error Messages */}
               {submitApplication.error && (
