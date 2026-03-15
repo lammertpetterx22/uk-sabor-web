@@ -311,7 +311,7 @@ export default function BecomeInstructor() {
             style={selectedType === "instructor" ? {
               borderColor: '#FA3698',
               boxShadow: '0 0 0 2px #FA3698, 0 25px 50px -12px rgba(250, 54, 152, 0.2)'
-            } : undefined}
+            } : {}}
             onClick={() => {
               setSelectedType("instructor");
               setValue("requestType", "instructor");
@@ -324,7 +324,7 @@ export default function BecomeInstructor() {
                   : { background: 'rgba(250, 54, 152, 0.2)' }
                 }>
                   <Star className={`w-6 h-6 ${selectedType === "instructor" ? "text-white" : ""}`}
-                    style={selectedType === "instructor" ? undefined : { color: '#FA3698' }} />
+                    style={selectedType === "instructor" ? {} : { color: '#FA3698' }} />
                 </div>
                 <div>
                   <CardTitle className="text-xl">Instructor</CardTitle>
@@ -357,7 +357,7 @@ export default function BecomeInstructor() {
             style={selectedType === "promoter" ? {
               borderColor: '#FD4D43',
               boxShadow: '0 0 0 2px #FD4D43, 0 25px 50px -12px rgba(253, 77, 67, 0.2)'
-            } : undefined}
+            } : {}}
             onClick={() => {
               setSelectedType("promoter");
               setValue("requestType", "promoter");
@@ -370,7 +370,7 @@ export default function BecomeInstructor() {
                   : { background: 'rgba(253, 77, 67, 0.2)' }
                 }>
                   <Calendar className={`w-6 h-6 ${selectedType === "promoter" ? "text-white" : ""}`}
-                    style={selectedType === "promoter" ? undefined : { color: '#FD4D43' }} />
+                    style={selectedType === "promoter" ? {} : { color: '#FD4D43' }} />
                 </div>
                 <div>
                   <CardTitle className="text-xl">Promoter</CardTitle>
