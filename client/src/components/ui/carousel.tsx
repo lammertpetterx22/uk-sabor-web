@@ -89,7 +89,7 @@ function Carousel({
   React.useEffect(() => {
     if (!api || !setApi) return;
     setApi(api);
-  }, [api, setApi]);
+  }, [api]); // Removed setApi from dependencies to prevent infinite loop
 
   React.useEffect(() => {
     if (!api) return;
