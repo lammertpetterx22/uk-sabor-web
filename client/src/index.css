@@ -454,6 +454,75 @@
     background: #FA3698;
     color: #FFFFFF;
   }
+
+  /* Brand-specific utility classes for BecomeInstructor page */
+  .brand-gradient-header {
+    background: linear-gradient(to right, #FA3698, #FD4D43);
+    box-shadow: 0 25px 50px -12px rgba(250, 54, 152, 0.2);
+  }
+
+  .brand-gradient-bg {
+    background: linear-gradient(to right, rgba(250, 54, 152, 0.1), rgba(253, 77, 67, 0.1));
+  }
+
+  .brand-border-pink {
+    border-bottom-color: rgba(250, 54, 152, 0.2);
+  }
+
+  .brand-border-top-pink {
+    border-top-color: #FA3698;
+  }
+
+  .brand-card-selected-pink {
+    border-color: #FA3698;
+    box-shadow: 0 0 0 2px #FA3698, 0 25px 50px -12px rgba(250, 54, 152, 0.2);
+  }
+
+  .brand-card-selected-red {
+    border-color: #FD4D43;
+    box-shadow: 0 0 0 2px #FD4D43, 0 25px 50px -12px rgba(253, 77, 67, 0.2);
+  }
+
+  .brand-bg-pink-gradient {
+    background: linear-gradient(to bottom right, #FA3698, #FD4D43);
+  }
+
+  .brand-bg-red-gradient {
+    background: linear-gradient(to bottom right, #FD4D43, #FCC500);
+  }
+
+  .brand-bg-pink-light {
+    background: rgba(250, 54, 152, 0.2);
+  }
+
+  .brand-bg-red-light {
+    background: rgba(253, 77, 67, 0.2);
+  }
+
+  .brand-text-pink {
+    color: #FA3698;
+  }
+
+  .brand-text-red {
+    color: #FD4D43;
+  }
+
+  .brand-text-yellow {
+    color: #FCC500;
+  }
+
+  .brand-text-cyan {
+    color: #0ADCF4;
+  }
+
+  .brand-border-selected {
+    border-color: #FA3698;
+    background: rgba(250, 54, 152, 0.1);
+  }
+
+  .brand-gradient-bar {
+    background: linear-gradient(to bottom, #FA3698, #FD4D43);
+  }
 }
 
 @layer components {

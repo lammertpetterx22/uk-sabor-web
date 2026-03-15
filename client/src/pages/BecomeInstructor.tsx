@@ -133,14 +133,9 @@ export default function BecomeInstructor() {
       <div className="min-h-screen bg-background p-4 md:p-8">
         <div className="max-w-3xl mx-auto">
           <Card className="shadow-2xl glass-dark">
-            <CardHeader className="border-b" style={{
-              background: 'linear-gradient(to right, rgba(250, 54, 152, 0.1), rgba(253, 77, 67, 0.1))',
-              borderBottomColor: 'rgba(250, 54, 152, 0.2)'
-            }}>
+            <CardHeader className="border-b brand-gradient-bg brand-border-pink">
               <CardTitle className="text-2xl flex items-center gap-3">
-                <div className="p-2 rounded-lg" style={{
-                  background: 'linear-gradient(to right, #FA3698, #FD4D43)'
-                }}>
+                <div className="p-2 rounded-lg brand-gradient-header">
                   <Star className="w-6 h-6 text-white" />
                 </div>
                 Your Application Status
@@ -287,10 +282,7 @@ export default function BecomeInstructor() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-10 animate-fade-in">
-          <div className="inline-block p-4 rounded-full mb-6 shadow-2xl" style={{
-            background: 'linear-gradient(to right, #FA3698, #FD4D43)',
-            boxShadow: '0 25px 50px -12px rgba(250, 54, 152, 0.2)'
-          }}>
+          <div className="inline-block p-4 rounded-full mb-6 shadow-2xl brand-gradient-header">
             <Star className="w-12 h-12 text-white" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -306,12 +298,8 @@ export default function BecomeInstructor() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           <Card
             className={`cursor-pointer card-modern hover-lift ${
-              selectedType === "instructor" ? "shadow-2xl scale-[1.02]" : ""
+              selectedType === "instructor" ? "shadow-2xl scale-[1.02] brand-card-selected-pink" : ""
             }`}
-            style={selectedType === "instructor" ? {
-              borderColor: '#FA3698',
-              boxShadow: '0 0 0 2px #FA3698, 0 25px 50px -12px rgba(250, 54, 152, 0.2)'
-            } : {}}
             onClick={() => {
               setSelectedType("instructor");
               setValue("requestType", "instructor");
@@ -319,12 +307,10 @@ export default function BecomeInstructor() {
           >
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg transition-colors" style={selectedType === "instructor"
-                  ? { background: 'linear-gradient(to bottom right, #FA3698, #FD4D43)' }
-                  : { background: 'rgba(250, 54, 152, 0.2)' }
-                }>
-                  <Star className={`w-6 h-6 ${selectedType === "instructor" ? "text-white" : ""}`}
-                    style={selectedType === "instructor" ? {} : { color: '#FA3698' }} />
+                <div className={`p-3 rounded-lg transition-colors ${
+                  selectedType === "instructor" ? "brand-bg-pink-gradient" : "brand-bg-pink-light"
+                }`}>
+                  <Star className={`w-6 h-6 ${selectedType === "instructor" ? "text-white" : "brand-text-pink"}`} />
                 </div>
                 <div>
                   <CardTitle className="text-xl">Instructor</CardTitle>
@@ -352,12 +338,8 @@ export default function BecomeInstructor() {
 
           <Card
             className={`cursor-pointer card-modern hover-lift ${
-              selectedType === "promoter" ? "shadow-2xl scale-[1.02]" : ""
+              selectedType === "promoter" ? "shadow-2xl scale-[1.02] brand-card-selected-red" : ""
             }`}
-            style={selectedType === "promoter" ? {
-              borderColor: '#FD4D43',
-              boxShadow: '0 0 0 2px #FD4D43, 0 25px 50px -12px rgba(253, 77, 67, 0.2)'
-            } : {}}
             onClick={() => {
               setSelectedType("promoter");
               setValue("requestType", "promoter");
@@ -365,12 +347,10 @@ export default function BecomeInstructor() {
           >
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg transition-colors" style={selectedType === "promoter"
-                  ? { background: 'linear-gradient(to bottom right, #FD4D43, #FCC500)' }
-                  : { background: 'rgba(253, 77, 67, 0.2)' }
-                }>
-                  <Calendar className={`w-6 h-6 ${selectedType === "promoter" ? "text-white" : ""}`}
-                    style={selectedType === "promoter" ? {} : { color: '#FD4D43' }} />
+                <div className={`p-3 rounded-lg transition-colors ${
+                  selectedType === "promoter" ? "brand-bg-red-gradient" : "brand-bg-red-light"
+                }`}>
+                  <Calendar className={`w-6 h-6 ${selectedType === "promoter" ? "text-white" : "brand-text-red"}`} />
                 </div>
                 <div>
                   <CardTitle className="text-xl">Promoter</CardTitle>
@@ -398,11 +378,8 @@ export default function BecomeInstructor() {
         </div>
 
         {/* Application Form */}
-        <Card className="shadow-2xl glass-dark border-t-4" style={{ borderTopColor: '#FA3698' }}>
-          <CardHeader className="border-b" style={{
-            background: 'linear-gradient(to right, rgba(250, 54, 152, 0.1), rgba(253, 77, 67, 0.1))',
-            borderBottomColor: 'rgba(250, 54, 152, 0.2)'
-          }}>
+        <Card className="shadow-2xl glass-dark border-t-4 brand-border-top-pink">
+          <CardHeader className="border-b brand-gradient-bg brand-border-pink">
             <CardTitle className="text-2xl">Application Form</CardTitle>
             <CardDescription className="text-base">
               Complete all fields to submit your application. We'll review your information and contact you soon.
@@ -416,9 +393,7 @@ export default function BecomeInstructor() {
               {/* Personal Info */}
               <div className="space-y-5">
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-1 rounded-full" style={{
-                    background: 'linear-gradient(to bottom, #FA3698, #FD4D43)'
-                  }} />
+                  <div className="h-8 w-1 rounded-full brand-gradient-bar" />
                   <h3 className="text-lg font-semibold">Personal Information</h3>
                 </div>
 
@@ -495,9 +470,7 @@ export default function BecomeInstructor() {
               {/* About You */}
               <div className="space-y-5">
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-1 rounded-full" style={{
-                    background: 'linear-gradient(to bottom, #FA3698, #FD4D43)'
-                  }} />
+                  <div className="h-8 w-1 rounded-full brand-gradient-bar" />
                   <h3 className="text-lg font-semibold">Tell us about yourself</h3>
                 </div>
 
@@ -553,9 +526,7 @@ export default function BecomeInstructor() {
               {/* Interests */}
               <div className="space-y-5">
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-1 rounded-full" style={{
-                    background: 'linear-gradient(to bottom, #FA3698, #FD4D43)'
-                  }} />
+                  <div className="h-8 w-1 rounded-full brand-gradient-bar" />
                   <div>
                     <h3 className="text-lg font-semibold">What would you like to publish?</h3>
                     <p className="text-sm text-muted-foreground">Select at least one option</p>
@@ -563,10 +534,9 @@ export default function BecomeInstructor() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="border-2 rounded-lg p-4 transition-all cursor-pointer"
-                    style={interestedInEvents
-                      ? { borderColor: '#FA3698', background: 'rgba(250, 54, 152, 0.1)' }
-                      : { borderColor: 'rgba(255,255,255,0.1)' }}
+                  <div className={`border-2 rounded-lg p-4 transition-all cursor-pointer ${
+                    interestedInEvents ? "brand-border-selected" : "border-border"
+                  }`}
                     onClick={() => setValue("interestedInEvents", !interestedInEvents)}
                   >
                     <div className="flex items-start space-x-3">
@@ -577,7 +547,7 @@ export default function BecomeInstructor() {
                       />
                       <Label htmlFor="interestedInEvents" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <Calendar className="w-5 h-5" style={{ color: '#FA3698' }} />
+                          <Calendar className="w-5 h-5 brand-text-pink" />
                           <span className="font-semibold">Events and workshops</span>
                         </div>
                         <p className="text-xs text-muted-foreground">Organize social events and parties</p>
@@ -585,10 +555,9 @@ export default function BecomeInstructor() {
                     </div>
                   </div>
 
-                  <div className="border-2 rounded-lg p-4 transition-all cursor-pointer"
-                    style={interestedInClasses
-                      ? { borderColor: '#FA3698', background: 'rgba(250, 54, 152, 0.1)' }
-                      : { borderColor: 'rgba(255,255,255,0.1)' }}
+                  <div className={`border-2 rounded-lg p-4 transition-all cursor-pointer ${
+                    interestedInClasses ? "brand-border-selected" : "border-border"
+                  }`}
                     onClick={() => setValue("interestedInClasses", !interestedInClasses)}
                   >
                     <div className="flex items-start space-x-3">
@@ -599,7 +568,7 @@ export default function BecomeInstructor() {
                       />
                       <Label htmlFor="interestedInClasses" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <Music className="w-5 h-5" style={{ color: '#FA3698' }} />
+                          <Music className="w-5 h-5 brand-text-pink" />
                           <span className="font-semibold">In-person classes</span>
                         </div>
                         <p className="text-xs text-muted-foreground">Teach live classes</p>
@@ -607,10 +576,9 @@ export default function BecomeInstructor() {
                     </div>
                   </div>
 
-                  <div className="border-2 rounded-lg p-4 transition-all cursor-pointer"
-                    style={interestedInCourses
-                      ? { borderColor: '#FA3698', background: 'rgba(250, 54, 152, 0.1)' }
-                      : { borderColor: 'rgba(255,255,255,0.1)' }}
+                  <div className={`border-2 rounded-lg p-4 transition-all cursor-pointer ${
+                    interestedInCourses ? "brand-border-selected" : "border-border"
+                  }`}
                     onClick={() => setValue("interestedInCourses", !interestedInCourses)}
                   >
                     <div className="flex items-start space-x-3">
@@ -621,7 +589,7 @@ export default function BecomeInstructor() {
                       />
                       <Label htmlFor="interestedInCourses" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <GraduationCap className="w-5 h-5" style={{ color: '#FA3698' }} />
+                          <GraduationCap className="w-5 h-5 brand-text-pink" />
                           <span className="font-semibold">Online courses</span>
                         </div>
                         <p className="text-xs text-muted-foreground">Create recorded courses</p>
@@ -639,12 +607,10 @@ export default function BecomeInstructor() {
               {/* Email Marketing Preferences */}
               <div className="space-y-5">
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-1 rounded-full" style={{
-                    background: 'linear-gradient(to bottom, #FA3698, #FD4D43)'
-                  }} />
+                  <div className="h-8 w-1 rounded-full brand-gradient-bar" />
                   <div>
                     <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <Mail className="w-5 h-5" style={{ color: '#FA3698' }} />
+                      <Mail className="w-5 h-5 brand-text-pink" />
                       Stay in touch
                     </h3>
                     <p className="text-sm text-muted-foreground">Let us know what you'd like to hear about</p>
@@ -652,9 +618,9 @@ export default function BecomeInstructor() {
                 </div>
 
                 <div className="bg-card/50 rounded-xl p-6 space-y-4 border border-border/50">
-                  <div className="bg-card rounded-lg p-5 transition-all border-2" style={emailUpdates
-                    ? { borderColor: '#FA3698' }
-                    : { borderColor: 'rgba(255,255,255,0.1)' }}>
+                  <div className={`bg-card rounded-lg p-5 transition-all border-2 ${
+                    emailUpdates ? "border-accent" : "border-border"
+                  }`}>
                     <div className="flex items-start space-x-4">
                       <Checkbox
                         id="emailUpdates"
@@ -664,8 +630,8 @@ export default function BecomeInstructor() {
                       />
                       <Label htmlFor="emailUpdates" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="p-2 rounded-lg" style={{ background: 'rgba(250, 54, 152, 0.2)' }}>
-                            <Bell className="w-5 h-5" style={{ color: '#FA3698' }} />
+                          <div className="p-2 rounded-lg brand-bg-pink-light">
+                            <Bell className="w-5 h-5 brand-text-pink" />
                           </div>
                           <span className="font-semibold">What's new</span>
                           <Badge variant="secondary" className="ml-auto">Recommended</Badge>
@@ -677,9 +643,9 @@ export default function BecomeInstructor() {
                     </div>
                   </div>
 
-                  <div className="bg-card rounded-lg p-5 transition-all border-2" style={emailPromotions
-                    ? { borderColor: '#FA3698' }
-                    : { borderColor: 'rgba(255,255,255,0.1)' }}>
+                  <div className={`bg-card rounded-lg p-5 transition-all border-2 ${
+                    emailPromotions ? "border-accent" : "border-border"
+                  }`}>
                     <div className="flex items-start space-x-4">
                       <Checkbox
                         id="emailPromotions"
@@ -689,8 +655,8 @@ export default function BecomeInstructor() {
                       />
                       <Label htmlFor="emailPromotions" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="p-2 rounded-lg" style={{ background: 'rgba(252, 197, 0, 0.2)' }}>
-                            <Sparkles className="w-5 h-5" style={{ color: '#FCC500' }} />
+                          <div className="p-2 rounded-lg bg-yellow-500/20">
+                            <Sparkles className="w-5 h-5 brand-text-yellow" />
                           </div>
                           <span className="font-semibold">Tips to grow</span>
                         </div>
@@ -701,9 +667,9 @@ export default function BecomeInstructor() {
                     </div>
                   </div>
 
-                  <div className="bg-card rounded-lg p-5 transition-all border-2" style={emailCommunity
-                    ? { borderColor: '#FA3698' }
-                    : { borderColor: 'rgba(255,255,255,0.1)' }}>
+                  <div className={`bg-card rounded-lg p-5 transition-all border-2 ${
+                    emailCommunity ? "border-accent" : "border-border"
+                  }`}>
                     <div className="flex items-start space-x-4">
                       <Checkbox
                         id="emailCommunity"
@@ -713,8 +679,8 @@ export default function BecomeInstructor() {
                       />
                       <Label htmlFor="emailCommunity" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="p-2 rounded-lg" style={{ background: 'rgba(10, 220, 244, 0.2)' }}>
-                            <Star className="w-5 h-5" style={{ color: '#0ADCF4' }} />
+                          <div className="p-2 rounded-lg bg-cyan-500/20">
+                            <Star className="w-5 h-5 brand-text-cyan" />
                           </div>
                           <span className="font-semibold">Inspiring stories</span>
                           <Badge variant="secondary" className="ml-auto">Recommended</Badge>
