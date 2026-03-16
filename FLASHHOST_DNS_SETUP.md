@@ -2,18 +2,23 @@
 
 ## Dominio: consabor.uk
 
-### A Records - ACCIÓN REQUERIDA
+### ⚠️ ALIAS Records - ACCIÓN CRÍTICA REQUERIDA
 
-**❌ BORRAR estos registros:**
+**Koyeb requiere un ALIAS record para el dominio raíz (no un A record)**
+
+**✅ AGREGAR este registro ALIAS:**
+```
+Host: @ (dejar en blanco o poner @)
+Points To: 0f046ddc-e64b-4870-b678-b5acea874f43.cname.koyeb.app
+```
+
+### A Records - BORRAR TODOS
+
+**❌ BORRAR estos registros A (ya no necesarios):**
 ```
 Host: @  →  104.18.26.246  (Cloudflare viejo - REMOVE)
 Host: @  →  104.18.27.246  (Cloudflare viejo - REMOVE)
-```
-
-**✅ AGREGAR este registro:**
-```
-Host: @
-Points To: 81.99.162.48
+Host: @  →  81.99.162.48   (REMOVE también - usar ALIAS en su lugar)
 ```
 
 ### CNAME Records
@@ -36,21 +41,23 @@ Points To: 0f046ddc-e64b-4870-b678-b5acea874f43.cname.koyeb.app
 
 1. Ve a **Advanced DNS** para `consabor.uk`
 
-2. En **A Records**:
-   - Click **Remove** en el registro `@ → 104.18.26.246`
-   - Click **Remove** en el registro `@ → 104.18.27.246`
-   - Click **Add A Record**
-     - Host Name: `@`
-     - Points To: `81.99.162.48`
+2. ⚠️ **PRIMERO - ALIAS Records** (CRÍTICO):
+   - Click **Add ALIAS Record**
+     - Points To: `0f046ddc-e64b-4870-b678-b5acea874f43.cname.koyeb.app`
      - Click **Add**
 
-3. En **CNAME Records**:
+3. En **A Records** - BORRAR TODOS:
+   - Click **Remove** en el registro `@ → 104.18.26.246`
+   - Click **Remove** en el registro `@ → 104.18.27.246`
+   - Click **Remove** en el registro `@ → 81.99.162.48` (si existe)
+
+4. En **CNAME Records** - AGREGAR www:
    - Click **Add CNAME Record**
      - Host Name: `www`
      - Points To: `0f046ddc-e64b-4870-b678-b5acea874f43.cname.koyeb.app`
      - Click **Add**
 
-4. **Guardar** todos los cambios
+5. **Guardar** todos los cambios
 
 ---
 
@@ -85,8 +92,10 @@ Probar en navegador:
 - Service ID: `27a2455a`
 - Status: HEALTHY ✅
 - Domain ID: `d40863c4`
-- Domain Status: PENDING (esperando DNS)
+- Domain Status: **ERROR** (necesita ALIAS record, no A record)
 - Koyeb CNAME: `0f046ddc-e64b-4870-b678-b5acea874f43.cname.koyeb.app`
-- Koyeb IP: `81.99.162.48`
+- Error actual: "CNAME record for this domain is not correctly configured"
 
-Una vez que cambies el DNS, Koyeb detectará automáticamente el dominio y emitirá el certificado SSL. El dominio pasará de PENDING a ACTIVE.
+**Solución**: Usar ALIAS record en lugar de A record para el dominio raíz (@).
+
+Una vez que agregues el ALIAS record, Koyeb detectará automáticamente el dominio y emitirá el certificado SSL. El dominio pasará de ERROR → ACTIVE.
