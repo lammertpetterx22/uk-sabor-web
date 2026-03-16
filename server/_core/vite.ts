@@ -48,18 +48,44 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const distPath =
-    process.env.NODE_ENV === "development"
-      ? path.resolve(import.meta.dirname, "../..", "dist", "public")
-      : path.resolve(import.meta.dirname, "public");
+  // In production, node dist/index.js runs from project root
+  // So dist/public is accessible via process.cwd() + dist/public
+  const possiblePaths = [
+    path.resolve(process.cwd(), "dist", "public"),         // Primary: from project root (Koyeb, Docker)
+    path.resolve(import.meta.dirname, "public"),           // Secondary: when running from dist/
+    path.resolve(import.meta.dirname, "../..", "dist", "public"), // Fallback: development
+  ];
 
-  console.log(`[Static Files] Serving from: ${distPath}`);
+  let distPath = possiblePaths[0];
+
+  // Find the first path that exists
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      distPath = p;
+      break;
+    }
+  }
+
+  console.log(`[Static Files] NODE_ENV: ${process.env.NODE_ENV}`);
+  console.log(`[Static Files] import.meta.dirname: ${import.meta.dirname}`);
+  console.log(`[Static Files] process.cwd(): ${process.cwd()}`);
+  console.log(`[Static Files] Checked paths:`, possiblePaths);
+  console.log(`[Static Files] Selected path: ${distPath}`);
   console.log(`[Static Files] Directory exists: ${fs.existsSync(distPath)}`);
 
   if (!fs.existsSync(distPath)) {
     console.error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`
+      `❌ Could not find the build directory: ${distPath}, make sure to build the client first`
     );
+    // List what's actually in import.meta.dirname
+    try {
+      const files = fs.readdirSync(import.meta.dirname);
+      console.log(`[Static Files] Contents of ${import.meta.dirname}:`, files);
+    } catch (e) {
+      console.error('[Static Files] Could not read directory:', e);
+    }
+  } else {
+    console.log(`✅ [Static Files] Successfully found build directory`);
   }
 
   // Serve static files with proper MIME types
