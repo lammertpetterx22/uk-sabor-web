@@ -3715,9 +3715,11 @@ function InstructorProfileTab() {
   const { data: profile, isLoading } = trpc.instructors.getMyProfile.useQuery();
   const uploadFileMutation = trpc.uploads.uploadFile.useMutation();
   const updateProfileMutation = trpc.instructors.updateMyProfile.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success(t("admin.profile.toastUpdated"));
-      utils.instructors.getMyProfile.invalidate();
+      // Invalidate and refetch the profile to get updated data
+      await utils.instructors.getMyProfile.invalidate();
+      // Don't clear photoPreview here - let it update from the refetched profile
     },
     onError: (err) => toast.error(err.message),
   });
@@ -3750,7 +3752,10 @@ function InstructorProfileTab() {
         websiteUrl: (profile as any).websiteUrl || "",
         specialties: profile.specialties || "",
       });
-      if (profile.photoUrl) setPhotoPreview(profile.photoUrl);
+      // Always update preview when profile loads with a photo
+      if (profile.photoUrl) {
+        setPhotoPreview(profile.photoUrl);
+      }
     } else if (user?.name) {
       setForm((f) => ({ ...f, name: user.name || "" }));
     }
