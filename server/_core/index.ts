@@ -57,6 +57,37 @@ async function startServer() {
     res.status(200).json({ status: "ok", timestamp: Date.now() });
   });
 
+  // Debug endpoint to check if static files exist
+  app.get("/api/debug/static", async (req, res) => {
+    const fs = await import("fs");
+    const path = await import("path");
+
+    const paths = {
+      cwd: process.cwd(),
+      dirname: import.meta.dirname,
+      distPublic: path.resolve(process.cwd(), "dist", "public"),
+      distPublicExists: fs.existsSync(path.resolve(process.cwd(), "dist", "public")),
+    };
+
+    if (paths.distPublicExists) {
+      try {
+        const files = fs.readdirSync(path.resolve(process.cwd(), "dist", "public"));
+        paths.distPublicContents = files;
+
+        const assetsPath = path.resolve(process.cwd(), "dist", "public", "assets");
+        if (fs.existsSync(assetsPath)) {
+          const assetFiles = fs.readdirSync(assetsPath);
+          paths.assetsCount = assetFiles.length;
+          paths.sampleAssets = assetFiles.slice(0, 5);
+        }
+      } catch (e: any) {
+        paths.error = e.message;
+      }
+    }
+
+    res.json(paths);
+  });
+
   app.get("/", (req, res, next) => {
     // If this is an API health check request, respond with JSON
     if (req.accepts("json") && !req.accepts("html")) {
