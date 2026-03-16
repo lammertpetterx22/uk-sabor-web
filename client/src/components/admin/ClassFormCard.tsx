@@ -176,9 +176,15 @@ export default function ClassFormCard({
     setFormData(prev => ({ ...prev, imagePreview: croppedDataUrl, imageUrl: "" }));
     setUploading(true);
     try {
+      // Generate unique filename: class-{id}-{timestamp}.jpg
+      const timestamp = Date.now();
+      const uniqueFileName = editingClass?.id
+        ? `class-${editingClass.id}-${timestamp}.jpg`
+        : `class-new-${timestamp}.jpg`;
+
       const result = await uploadFileMutation.mutateAsync({
         fileBase64: croppedDataUrl,
-        fileName: "class-cover.jpg",
+        fileName: uniqueFileName,
         mimeType: "image/jpeg",
         folder: "classes",
       });

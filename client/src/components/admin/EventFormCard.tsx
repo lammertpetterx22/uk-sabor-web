@@ -133,9 +133,15 @@ export default function EventFormCard({
     setFormData(prev => ({ ...prev, imagePreview: croppedDataUrl, imageUrl: "" }));
     setUploading(true);
     try {
+      // Generate unique filename: event-{id}-{timestamp}.jpg
+      const timestamp = Date.now();
+      const uniqueFileName = editingEvent?.id
+        ? `event-${editingEvent.id}-${timestamp}.jpg`
+        : `event-new-${timestamp}.jpg`;
+
       const result = await uploadFileMutation.mutateAsync({
         fileBase64: croppedDataUrl,
-        fileName: "event-flyer.jpg",
+        fileName: uniqueFileName,
         mimeType: "image/jpeg",
         folder: "events",
       });

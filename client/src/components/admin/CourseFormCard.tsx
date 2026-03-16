@@ -173,9 +173,15 @@ export default function CourseFormCard({
     setFormData(prev => ({ ...prev, imagePreview: croppedDataUrl, imageUrl: "" }));
     setImageUploading(true);
     try {
+      // Generate unique filename: course-{id}-{timestamp}.jpg
+      const timestamp = Date.now();
+      const uniqueFileName = editingCourse?.id
+        ? `course-${editingCourse.id}-${timestamp}.jpg`
+        : `course-new-${timestamp}.jpg`;
+
       const result = await uploadFileMutation.mutateAsync({
         fileBase64: croppedDataUrl,
-        fileName: "course-cover.jpg",
+        fileName: uniqueFileName,
         mimeType: "image/jpeg",
         folder: "courses",
       });
