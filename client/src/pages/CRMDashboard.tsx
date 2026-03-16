@@ -653,7 +653,7 @@ function ContactsTab() {
 // ===== STATISTICS TAB =====
 function StatisticsTab() {
   const { data: stats, isLoading } = trpc.crm.getStats.useQuery();
-  const { data: contacts } = trpc.crm.listContacts.useQuery({ limit: 1000, offset: 0 });
+  const { data: contacts } = trpc.crm.listContacts.useQuery({ limit: 100, offset: 0 });
   const utils = trpc.useUtils();
 
   const refreshScoresMutation = trpc.crm.refreshAllScores.useMutation({

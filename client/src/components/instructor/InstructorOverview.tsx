@@ -113,10 +113,10 @@ export default function InstructorOverview({ onTabChange }: { onTabChange: (tab:
   const isPromoter = user?.role === "promoter";
 
   // Fetch data
-  const { data: events, isLoading: eventsLoading } = trpc.events.listAll.useQuery({ limit: 1000, offset: 0 });
-  const { data: classes, isLoading: classesLoading } = trpc.classes.listAll.useQuery({ limit: 1000, offset: 0 });
+  const { data: events, isLoading: eventsLoading } = trpc.events.listAll.useQuery({ limit: 100, offset: 0 });
+  const { data: classes, isLoading: classesLoading } = trpc.classes.listAll.useQuery({ limit: 100, offset: 0 });
   const { data: courses, isLoading: coursesLoading } = isInstructor
-    ? trpc.courses.listAll.useQuery({ limit: 1000, offset: 0 })
+    ? trpc.courses.listAll.useQuery({ limit: 100, offset: 0 })
     : { data: null, isLoading: false };
   const { data: wallet, isLoading: walletLoading } = trpc.financials.getWallet.useQuery();
 
