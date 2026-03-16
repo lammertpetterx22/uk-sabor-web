@@ -357,14 +357,15 @@ npm run db:push    # Drizzle migrations
 - Total build time: ~2 min
 
 ### Deployment (Koyeb)
-**✅ DEPLOYADO Y FUNCIONANDO**
-- URL: https://uk-sabor-web-sabor-c8545126.koyeb.app
-- App ID: a6a18fd4
-- Service ID: fa07fced
+**✅ DEPLOYADO Y FUNCIONANDO EN PLAN FREE**
+- URL: https://uk-sabor-web-sabor-065320b7.koyeb.app
+- App ID: a1723595
+- Service ID: 7bfb2a63
 - Status: HEALTHY ✅
-- Region: Washington DC (default)
-- Instance: nano (plan más bajo disponible)
-- Health check endpoint: `/health`
+- Region: Frankfurt (fra) 🇩🇪
+- Instance: **FREE** (0.1 vCPU, 512MB RAM, 2GB disk) - $0.00/mes
+- Scale-to-zero: Automático después de 1 hora sin tráfico
+- Health check endpoint: `/health` ✅ FUNCIONANDO
 - Build command: `pnpm install && npm run build`
 - Start command: `npm run start`
 - Todas las variables de entorno configuradas automáticamente
@@ -381,14 +382,16 @@ npm run db:push    # Drizzle migrations
 4. **Git cleanup** - Archivos skills/ removidos del tracking
 5. **Type check** - ✅ Sin errores TypeScript
 6. **Build** - ✅ Compilación exitosa sin warnings
-7. **Koyeb deployment** - ✅ COMPLETAMENTE DESPLEGADO:
-   - Koyeb CLI instalado y configurado
-   - App creada automáticamente (ID: a6a18fd4)
-   - Service deployado y HEALTHY (ID: fa07fced)
-   - Todas las variables de entorno configuradas automáticamente
-   - Health check en `/health` funcionando
-   - URL: https://uk-sabor-web-sabor-c8545126.koyeb.app
-   - Instance: nano (plan más bajo disponible)
+7. **Koyeb deployment** - ✅ COMPLETAMENTE DESPLEGADO EN PLAN FREE:
+   - Koyeb CLI instalado y configurado (v5.10.0)
+   - App creada automáticamente (ID: a1723595)
+   - Service deployado y HEALTHY (ID: 7bfb2a63)
+   - Todas las variables de entorno configuradas automáticamente vía CLI
+   - Health check en `/health` ✅ FUNCIONANDO
+   - URL: https://uk-sabor-web-sabor-065320b7.koyeb.app
+   - Region: Frankfurt 🇩🇪
+   - Instance: **FREE** (0.1 vCPU, 512MB RAM) - $0.00/mes
+   - Scale-to-zero automático (ahorro de recursos)
    - Procfile, documentación y scripts listos
 
 ### 🔧 Configuración Actual
