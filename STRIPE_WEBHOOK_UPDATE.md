@@ -29,7 +29,7 @@ Ve a: https://dashboard.stripe.com/
 2. Click **"..."** (menú) → **"Update details"**
 3. Cambia la **Endpoint URL** a:
    ```
-   https://www.consabor.uk/api/trpc/stripeWebhook
+   https://www.consabor.uk/api/stripe/webhook
    ```
 4. Save
 
@@ -37,7 +37,7 @@ Ve a: https://dashboard.stripe.com/
 1. Click **"Add endpoint"**
 2. **Endpoint URL**:
    ```
-   https://www.consabor.uk/api/trpc/stripeWebhook
+   https://www.consabor.uk/api/stripe/webhook
    ```
 3. **Events to send**: Selecciona estos eventos:
    - `checkout.session.completed`
@@ -110,8 +110,8 @@ Una vez configurado, verifica:
 curl https://www.consabor.uk/health
 # Debe retornar: {"status":"ok","timestamp":...}
 
-# 2. Webhook endpoint (debe retornar 405 Method Not Allowed, es normal)
-curl https://www.consabor.uk/api/trpc/stripeWebhook
+# 2. Webhook endpoint (debe retornar error Stripe signature, es normal)
+curl https://www.consabor.uk/api/stripe/webhook
 # Cualquier respuesta que no sea 404 significa que la ruta existe
 ```
 
@@ -137,7 +137,7 @@ BUNNY_ALLOWED_REFERRER=https://www.consabor.uk ✅
 ## 🆘 Troubleshooting
 
 ### Webhook falla con 404:
-- Verifica que la URL sea exactamente: `https://www.consabor.uk/api/trpc/stripeWebhook`
+- Verifica que la URL sea exactamente: `https://www.consabor.uk/api/stripe/webhook`
 - Verifica que el servicio esté HEALTHY en Koyeb
 
 ### Webhook falla con 401/403:
