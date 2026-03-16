@@ -43,11 +43,9 @@ export default function AdminDashboard() {
   // Redirect unauthenticated users
   useEffect(() => {
     if (loading) return;
-    useEffect(() => {
-        if (!isAuthenticated) {
-            setLocation("/login");
-        }
-    }, [isAuthenticated, setLocation]);
+    if (!isAuthenticated) {
+        setLocation("/login");
+    }
   }, [loading, isAuthenticated, setLocation]);
 
   // Show loading spinner
@@ -171,21 +169,21 @@ export default function AdminDashboard() {
           {/* Events Tab */}
           <TabsContent value="events">
             <Suspense fallback={<TabLoading />}>
-              <EventsTab user={user} isAdmin={isAdmin} />
+              <EventsTab />
             </Suspense>
           </TabsContent>
 
           {/* Courses Tab */}
           <TabsContent value="courses">
             <Suspense fallback={<TabLoading />}>
-              <CoursesTab user={user} isAdmin={isAdmin} />
+              <CoursesTab />
             </Suspense>
           </TabsContent>
 
           {/* Classes Tab */}
           <TabsContent value="classes">
             <Suspense fallback={<TabLoading />}>
-              <ClassesTab user={user} isAdmin={isAdmin} />
+              <ClassesTab />
             </Suspense>
           </TabsContent>
 

@@ -106,9 +106,9 @@ export default function MyEventsDashboard({
   };
 
   const handleDownloadQR = (event: any) => {
-    if (!eventQRCodes?.qrCodeUrl) return;
+    if (!eventQRCodes?.qrData) return;
     const link = document.createElement("a");
-    link.href = eventQRCodes.qrCodeUrl;
+    link.href = eventQRCodes.qrData;
     link.download = `qr-event-${event.id}.png`;
     link.click();
   };
@@ -332,10 +332,10 @@ export default function MyEventsDashboard({
                         Descargar
                       </Button>
                     </div>
-                    {eventQRCodes.qrCodeUrl && (
+                    {eventQRCodes.qrData && (
                       <div className="flex justify-center p-4 bg-muted rounded-lg">
                         <img
-                          src={eventQRCodes.qrCodeUrl}
+                          src={eventQRCodes.qrData}
                           alt="QR Code"
                           className="w-32 h-32 border-2 border-white shadow-lg rounded"
                         />

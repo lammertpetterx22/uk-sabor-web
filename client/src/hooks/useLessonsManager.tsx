@@ -47,16 +47,16 @@ export function useLessonsManager(courseId: number | null) {
     },
   });
 
-  const updateLessonMutation = trpc.lessons.update.useMutation({
-    onSuccess: () => {
-      toast.success("✅ Lección actualizada exitosamente");
-      utils.lessons.getByCourseId.invalidate();
-      resetForm();
-    },
-    onError: (err) => {
-      toast.error(`Error al actualizar lección: ${err.message}`);
-    },
-  });
+  // const updateLessonMutation = trpc.lessons.update.useMutation({
+  //   onSuccess: () => {
+  //     toast.success("✅ Lección actualizada exitosamente");
+  //     utils.lessons.getByCourseId.invalidate();
+  //     resetForm();
+  //   },
+  //   onError: (err: any) => {
+  //     toast.error(`Error al actualizar lección: ${err.message}`);
+  //   },
+  // });
 
   const resetForm = () => {
     setFormData({
@@ -172,19 +172,20 @@ export function useLessonsManager(courseId: number | null) {
 
     if (editingLessonId) {
       // Update existing lesson
-      await updateLessonMutation.mutateAsync({
-        id: editingLessonId,
-        title: formData.title,
-        description: formData.description,
-        position: formData.position,
-        durationSeconds: formData.durationSeconds,
-        isPreview: formData.isPreview,
-        // Only update video if a new one was uploaded
-        ...(formData.videoFile && {
-          bunnyVideoId: formData.bunnyVideoId,
-          bunnyLibraryId: formData.bunnyLibraryId,
-        }),
-      });
+      // await updateLessonMutation.mutateAsync({
+      //   id: editingLessonId,
+      //   title: formData.title,
+      //   description: formData.description,
+      //   position: formData.position,
+      //   durationSeconds: formData.durationSeconds,
+      //   isPreview: formData.isPreview,
+      //   // Only update video if a new one was uploaded
+      //   ...(formData.videoFile && {
+      //     bunnyVideoId: formData.bunnyVideoId,
+      //     bunnyLibraryId: formData.bunnyLibraryId,
+      //   }),
+      // });
+      toast.error("Updating lessons is not implemented yet");
     } else {
       // Create new lesson
       await createLessonMutation.mutateAsync({
@@ -226,6 +227,6 @@ export function useLessonsManager(courseId: number | null) {
     handleCreateLesson,
     loadLessonForEdit,
     resetForm,
-    isCreating: createLessonMutation.isPending || updateLessonMutation.isPending,
+    isCreating: createLessonMutation.isPending,
   };
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Plyr } from 'plyr-react';
+import { Plyr, APITypes } from 'plyr-react';
 import 'plyr-react/plyr.css';
 import { Lock, Loader2, AlertCircle } from 'lucide-react';
 
@@ -68,7 +68,7 @@ export function EnhancedVideoPlayer({
   initialTime = 0,
   className = '',
 }: EnhancedVideoPlayerProps) {
-  const playerRef = useRef<Plyr>(null);
+  const playerRef = useRef<APITypes>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 

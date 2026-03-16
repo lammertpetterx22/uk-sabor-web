@@ -24,7 +24,8 @@ import {
   Loader2, Mail, BarChart2, FileText, Plus, Send, Trash2,
   Edit2, Eye, Calendar, Users, MousePointer, TrendingUp,
   Clock, CheckCircle, AlertCircle, ChevronRight, Sparkles,
-  Copy, LayoutTemplate
+  Copy, LayoutTemplate,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -363,9 +364,9 @@ function CampaignComposerDialog({
   const [sendNow, setSendNow] = useState(true);
 
   // Fetch available content
-  const { data: events } = trpc.events.list.useQuery(undefined, { enabled: contentType === "event" });
-  const { data: courses } = trpc.courses.list.useQuery(undefined, { enabled: contentType === "course" });
-  const { data: classes } = trpc.classes.list.useQuery(undefined, { enabled: contentType === "class" });
+  const { data: events } = trpc.events.list.useQuery({}, { enabled: contentType === "event" });
+  const { data: courses } = trpc.courses.list.useQuery({}, { enabled: contentType === "course" });
+  const { data: classes } = trpc.classes.list.useQuery({}, { enabled: contentType === "class" });
 
   const { data: templates } = trpc.emailMarketing.listTemplates.useQuery();
 

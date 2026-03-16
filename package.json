@@ -10,7 +10,14 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
-    "db:push": "drizzle-kit generate && drizzle-kit migrate"
+    "db:push": "drizzle-kit generate && drizzle-kit migrate",
+    "monitor": "tsx dev-monitor.ts",
+    "debug": "tsx debug-helper.ts",
+    "health": "curl -s http://localhost:3000/api/trpc/health.check | jq",
+    "mcp:list": "cd skills && ./mcp-manager.sh list",
+    "mcp:test": "cd skills && ./mcp-manager.sh test",
+    "mcp:show": "cd skills && ./mcp-manager.sh show",
+    "mcp:update": "cd skills && ./mcp-manager.sh update"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

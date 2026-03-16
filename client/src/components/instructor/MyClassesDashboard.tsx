@@ -113,9 +113,9 @@ export default function MyClassesDashboard({
   };
 
   const handleDownloadQR = (cls: any) => {
-    if (!classQRCodes?.qrCodeUrl) return;
+    if (!classQRCodes?.qrData) return;
     const link = document.createElement("a");
-    link.href = classQRCodes.qrCodeUrl;
+    link.href = classQRCodes.qrData;
     link.download = `qr-class-${cls.id}.png`;
     link.click();
   };
@@ -398,10 +398,10 @@ export default function MyClassesDashboard({
                         Descargar
                       </Button>
                     </div>
-                    {classQRCodes.qrCodeUrl && (
+                    {classQRCodes.qrData && (
                       <div className="flex justify-center p-4 bg-muted rounded-lg">
                         <img
-                          src={classQRCodes.qrCodeUrl}
+                          src={classQRCodes.qrData}
                           alt="QR Code"
                           className="w-32 h-32 border-2 border-white shadow-lg rounded"
                         />

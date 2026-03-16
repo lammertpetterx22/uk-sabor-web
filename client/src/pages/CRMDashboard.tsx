@@ -18,11 +18,9 @@ export default function CRMDashboard() {
 
   useEffect(() => {
     if (loading) return;
-  useEffect(() => {
     if (!isAuthenticated) {
       setLocation("/login");
     }
-  }, [isAuthenticated, setLocation]);
   }, [loading, isAuthenticated, setLocation]);
 
   if (loading) {
