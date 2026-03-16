@@ -3738,6 +3738,10 @@ function InstructorProfileTab() {
   // Populate form when profile loads
   useEffect(() => {
     if (profile) {
+      console.log("[AdminDashboard] Profile loaded from server:", {
+        name: profile.name,
+        photoUrl: profile.photoUrl,
+      });
       setForm({
         name: profile.name || "",
         bio: profile.bio || "",
@@ -3770,10 +3774,12 @@ function InstructorProfileTab() {
         mimeType: "image/jpeg",
         folder: "instructors",
       });
+      console.log("[AdminDashboard] Photo uploaded successfully:", result.url);
       setForm((f) => ({ ...f, photoUrl: result.url }));
       setPhotoPreview(result.url);
       toast.success(t("admin.profile.toastPhotoUploaded"));
     } catch (err: any) {
+      console.error("[AdminDashboard] Photo upload failed:", err);
       toast.error(t("admin.profile.errorUploadFailed", { message: err.message }));
     } finally {
       setUploading(false);
@@ -3782,6 +3788,11 @@ function InstructorProfileTab() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[AdminDashboard] Submitting profile update with data:", {
+      name: form.name,
+      photoUrl: form.photoUrl,
+      bio: form.bio?.substring(0, 50),
+    });
     updateProfileMutation.mutate({
       name: form.name,
       bio: form.bio || undefined,
