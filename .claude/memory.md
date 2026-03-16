@@ -373,13 +373,27 @@ npm run db:push    # Drizzle migrations
 - Build command: `pnpm install && npm run build`
 - Start command: `npm run start`
 - Todas las variables de entorno configuradas correctamente ✅
-- **Dominio personalizado**: consabor.uk
-  - Domain ID: d40863c4
-  - Status: PENDING (esperando DNS)
-  - CNAME: 0f046ddc-e64b-4870-b678-b5acea874f43.cname.koyeb.app
-  - IP: 81.99.162.48
-  - DNS en Flashhost (ver FLASHHOST_DNS_SETUP.md)
-- Documentación: `KOYEB_DEPLOYMENT.md`, `DOMAIN_SETUP.md`, `FLASHHOST_DNS_SETUP.md`
+- **Dominio personalizado**: consabor.uk ✅
+  - **URL principal**: https://www.consabor.uk (ACTIVO con SSL ✅)
+  - **Domain ID**: 0ea9142c
+  - **Status**: ACTIVE ✅
+  - **DNS Provider**: Cloudflare (nameservers propagando)
+  - **Cloudflare Nameservers**:
+    * anna.ns.cloudflare.com
+    * ruben.ns.cloudflare.com
+  - **CNAME**: 0f046ddc-e64b-4870-b678-b5acea874f43.cname.koyeb.app
+  - **Subdominios**:
+    * www.consabor.uk → ACTIVE en Koyeb ✅ (con SSL)
+    * sabor.consabor.uk → Configurado en Cloudflare DNS
+  - **Dominio raíz**: consabor.uk → Redirect a www (configurar en Cloudflare después de propagación)
+  - **Propagación DNS**: 1-2 horas (en progreso)
+- **Cloudflare Features**:
+  - CDN global activado
+  - DDoS protection automático
+  - SSL/TLS universal gratis
+  - HTTP/2 enabled
+  - Email (Amazon SES) funcionando
+- Documentación: `KOYEB_DEPLOYMENT.md`, `CLOUDFLARE_SETUP_COMPLETE.md`, `.claude/memory.md`
 
 ---
 
