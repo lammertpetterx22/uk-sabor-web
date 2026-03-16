@@ -534,11 +534,9 @@ export default function BecomeInstructor() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className={`border-2 rounded-lg p-4 transition-all cursor-pointer ${
+                  <div className={`border-2 rounded-lg p-4 transition-all ${
                     interestedInEvents ? "brand-border-selected" : "border-border"
-                  }`}
-                    onClick={() => setValue("interestedInEvents", !interestedInEvents)}
-                  >
+                  }`}>
                     <div className="flex items-start space-x-3">
                       <Checkbox
                         id="interestedInEvents"
@@ -555,11 +553,9 @@ export default function BecomeInstructor() {
                     </div>
                   </div>
 
-                  <div className={`border-2 rounded-lg p-4 transition-all cursor-pointer ${
+                  <div className={`border-2 rounded-lg p-4 transition-all ${
                     interestedInClasses ? "brand-border-selected" : "border-border"
-                  }`}
-                    onClick={() => setValue("interestedInClasses", !interestedInClasses)}
-                  >
+                  }`}>
                     <div className="flex items-start space-x-3">
                       <Checkbox
                         id="interestedInClasses"
@@ -576,11 +572,9 @@ export default function BecomeInstructor() {
                     </div>
                   </div>
 
-                  <div className={`border-2 rounded-lg p-4 transition-all cursor-pointer ${
+                  <div className={`border-2 rounded-lg p-4 transition-all ${
                     interestedInCourses ? "brand-border-selected" : "border-border"
-                  }`}
-                    onClick={() => setValue("interestedInCourses", !interestedInCourses)}
-                  >
+                  }`}>
                     <div className="flex items-start space-x-3">
                       <Checkbox
                         id="interestedInCourses"
