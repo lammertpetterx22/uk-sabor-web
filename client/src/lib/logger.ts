@@ -17,8 +17,8 @@ class Logger {
   constructor() {
     // In production, only log errors and warnings
     this.enabledLevels = this.isDevelopment
-      ? new Set(['info', 'warn', 'error', 'debug'])
-      : new Set(['error', 'warn']);
+      ? new Set<LogLevel>(['info', 'warn', 'error', 'debug'])
+      : new Set<LogLevel>(['error', 'warn']);
   }
 
   /**

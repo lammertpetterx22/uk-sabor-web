@@ -62,7 +62,16 @@ async function startServer() {
     const fs = await import("fs");
     const path = await import("path");
 
-    const paths = {
+    const paths: {
+      cwd: string;
+      dirname: string;
+      distPublic: string;
+      distPublicExists: boolean;
+      distPublicContents?: string[];
+      assetsCount?: number;
+      sampleAssets?: string[];
+      error?: string;
+    } = {
       cwd: process.cwd(),
       dirname: import.meta.dirname,
       distPublic: path.resolve(process.cwd(), "dist", "public"),

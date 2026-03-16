@@ -191,6 +191,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         console.log(`[Webhook] ✅ ${livemode ? 'LIVE' : 'TEST'} EARNINGS - Item: ${itemType} | Ticket Price: £${(netEarningsPence/100).toFixed(2)} | Platform Fee: £${platformFeeGBP.toFixed(2)} (${(commissionRate*100).toFixed(1)}%) | Instructor Earnings: £${instructorEarningsGBP.toFixed(2)} | NOTE: Stripe fee (${metadata.stripe_fee_pence ? '£' + (parseInt(metadata.stripe_fee_pence)/100).toFixed(2) : 'N/A'}) was paid by client`);
       } else {
         console.error(`[Webhook] ❌ No earnings recorded - Mode: ${livemode ? 'LIVE' : 'TEST'}, creatorUserId: ${creatorUserId}, netEarnings: ${netEarningsPence}p, itemType: ${itemType}, metadata: ${JSON.stringify(metadata)}`);
+      }
     } catch (finError) {
       console.error("[Webhook] Error allocating earnings:", finError);
       // We don't throw here to avoid blocking ticket delivery, but logging is crucial

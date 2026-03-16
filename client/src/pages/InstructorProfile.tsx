@@ -196,7 +196,7 @@ export default function InstructorProfile() {
               <BookOpen className="h-7 w-7 text-accent" />
               Courses de {instructor.name}
             </h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {publishedCourses.map((course) => (
                 <Link key={course.id} href={`/courses/${course.id}`}>
                   <Card className="overflow-hidden hover:shadow-lg hover:shadow-accent/20 transition-all duration-300 hover:scale-[1.02] cursor-pointer h-full">
@@ -246,7 +246,7 @@ export default function InstructorProfile() {
               <Calendar className="h-7 w-7 text-accent" />
               Upcoming Classes by {instructor.name}
             </h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {upcomingClasses.map((cls) => {
                 const classDate = new Date(cls.classDate);
                 const isPast = classDate < new Date();

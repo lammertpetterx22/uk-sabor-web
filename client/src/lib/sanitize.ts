@@ -9,6 +9,7 @@
 
 // DOMPurify installed and active ✅
 import DOMPurify from 'dompurify';
+import type { Config } from 'dompurify';
 
 /**
  * Sanitize HTML content to prevent XSS attacks
@@ -29,7 +30,7 @@ export function sanitizeHTML(
     allowedAttributes?: string[];
   }
 ): string {
-  const config: DOMPurify.Config = {
+  const config: Config = {
     ALLOWED_TAGS: options?.allowedTags || [
       'p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li',
       'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
@@ -47,7 +48,7 @@ export function sanitizeHTML(
     SAFE_FOR_TEMPLATES: true,
   };
 
-  return DOMPurify.sanitize(dirty, config);
+  return DOMPurify.sanitize(dirty, config) as string;
 }
 
 /**
@@ -69,7 +70,7 @@ export function sanitizeEmailHTML(dirty: string): string {
       'cellpadding', 'cellspacing', 'border',
     ],
     ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
-  });
+  }) as string;
 }
 
 /**
@@ -77,7 +78,7 @@ export function sanitizeEmailHTML(dirty: string): string {
  * Useful for previews, meta descriptions, etc.
  */
 export function stripHTML(html: string): string {
-  return DOMPurify.sanitize(html, { ALLOWED_TAGS: [] });
+  return DOMPurify.sanitize(html, { ALLOWED_TAGS: [] }) as string;
 }
 
 /**

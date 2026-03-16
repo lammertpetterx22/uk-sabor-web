@@ -112,7 +112,7 @@ export default function Courses() {
               <div className="mb-6 text-foreground/70">
                 Showing {filteredCourses.length} course{filteredCourses.length !== 1 ? "s" : ""}
               </div>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredCourses.map((course) => (
                   <CourseCard key={course.id} course={course} instructorName={instructorMap[course.instructorId]?.name} />
                 ))}

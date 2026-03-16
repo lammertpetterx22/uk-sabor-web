@@ -229,7 +229,7 @@ export default function PromoterProfile() {
               </Button>
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {profile.courses.map((course) => (
                 <Link key={course.id} href={`/courses/${course.id}`}>
                   <Card className="overflow-hidden hover:shadow-lg hover:shadow-accent/20 transition-all duration-300 hover:scale-[1.02] cursor-pointer h-full flex flex-col">
@@ -305,7 +305,7 @@ export default function PromoterProfile() {
               </Button>
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {profile.classes.map((cls) => {
                 const classDate = new Date(cls.classDate);
                 const formattedDate = classDate.toLocaleDateString("en-GB", {
@@ -398,7 +398,7 @@ export default function PromoterProfile() {
               </Button>
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {profile.events.map((event) => {
                 const eventDate = new Date(event.eventDate);
                 const formattedDate = eventDate.toLocaleDateString("en-GB", {

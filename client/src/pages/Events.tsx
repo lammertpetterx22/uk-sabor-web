@@ -73,7 +73,7 @@ export default function Events() {
               <div className="mb-6 text-foreground/70">
                 Showing {filteredEvents.length} event{filteredEvents.length !== 1 ? "s" : ""}
               </div>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredEvents.map((event) => (
                   <EventCard key={event.id} event={event} />
                 ))}

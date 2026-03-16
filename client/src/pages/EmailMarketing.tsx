@@ -355,6 +355,7 @@ function CampaignComposerDialog({
   onClose: () => void;
   onSent: () => void;
 }) {
+  const { user } = useAuth();
   const [step, setStep] = useState<"select" | "preview" | "send">("select");
   const [contentType, setContentType] = useState<"event" | "course" | "class" | "custom">("event");
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
@@ -702,7 +703,7 @@ function TemplatesTab() {
       )}
 
       {/* Templates Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {templates?.map((tpl) => (
           <Card key={tpl.id} className="border border-border/50 bg-card/50 backdrop-blur-sm hover:border-accent/50 hover:shadow-xl transition-all duration-300 group overflow-hidden">
             <CardContent className="p-0">
