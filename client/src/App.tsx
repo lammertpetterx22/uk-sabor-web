@@ -36,6 +36,8 @@ const PromoterProfile = lazy(() => import("./pages/PromoterProfile"));
 const Promoters = lazy(() => import("./pages/Promoters"));
 const StaffScanner = lazy(() => import("./pages/StaffScanner"));
 const BecomeInstructor = lazy(() => import("./pages/BecomeInstructor"));
+const ImageCropperDemo = lazy(() => import("./components/ImageCropperDemo"));
+const ImageCropperProDemo = lazy(() => import("./components/ImageCropperProDemo"));
 
 // Loading fallback
 function PageLoader() {
@@ -73,6 +75,8 @@ function Router() {
           <Route path="/promoters" component={Promoters} />
           <Route path="/promoters/:id" component={PromoterProfile} />
           <Route path="/pricing" component={Pricing} />
+          <Route path="/image-cropper-demo" component={ImageCropperDemo} />
+          <Route path="/image-cropper-pro" component={ImageCropperProDemo} />
           <Route path="/login" component={Login} />
           <Route path="/payment-success" component={PaymentSuccess} />
 
