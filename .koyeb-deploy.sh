@@ -50,16 +50,15 @@ else
   koyeb app init "$APP_NAME" \
     --git "$GIT_REPO" \
     --git-branch "$GIT_BRANCH" \
-    --git-build-command "$BUILD_COMMAND" \
-    --git-run-command "$RUN_COMMAND" \
+    --git-buildpack-build-command "$BUILD_COMMAND" \
+    --git-buildpack-run-command "$RUN_COMMAND" \
     --ports "$PORT:http" \
     --routes "/:$PORT" \
     --instance-type "$INSTANCE_TYPE" \
     --env "NODE_ENV=production" \
     --env "NODE_VERSION=20" \
-    --health-check-http-path "/health" \
-    --health-check-http-port "$PORT" \
-    --health-check-grace-period 120
+    --checks "$PORT:http:/health" \
+    --checks-grace-period "$PORT=120"
 
   echo ""
   echo "⚠️  IMPORTANTE: Configura las variables de entorno sensibles en Koyeb dashboard:"
