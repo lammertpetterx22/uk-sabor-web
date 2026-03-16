@@ -358,7 +358,8 @@ npm run db:push    # Drizzle migrations
 
 ### Deployment (Koyeb)
 **✅ DEPLOYADO Y FUNCIONANDO EN PLAN FREE**
-- URL: https://uk-sabor-web-sabor-065320b7.koyeb.app
+- **Dominio personalizado**: consabor.uk (configurando DNS en Flashhost)
+- URL temporal: https://uk-sabor-web-sabor-065320b7.koyeb.app
 - App ID: a1723595
 - Service ID: 7bfb2a63
 - Status: HEALTHY ✅
@@ -369,7 +370,8 @@ npm run db:push    # Drizzle migrations
 - Build command: `pnpm install && npm run build`
 - Start command: `npm run start`
 - Todas las variables de entorno configuradas automáticamente
-- Documentación completa: `KOYEB_DEPLOYMENT.md`
+- **CNAME Koyeb**: 0f046ddc-e64b-4870-b678-b5acea874f43.cname.koyeb.app
+- Documentación: `KOYEB_DEPLOYMENT.md`, `DOMAIN_SETUP.md`
 
 ---
 
