@@ -6,10 +6,20 @@ import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App";
 import { getLoginUrl } from "./const";
+import { logger } from "./lib/logger";
 import "./index.css";
 import "./i18n/config"; // ← Initialize i18n
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes - data considered fresh
+      gcTime: 1000 * 60 * 10, // 10 minutes - cache time (formerly cacheTime)
+      retry: 1, // Retry failed requests once
+      refetchOnWindowFocus: false, // Prevent unnecessary refetches
+    },
+  },
+});
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
@@ -26,7 +36,7 @@ queryClient.getQueryCache().subscribe(event => {
   if (event.type === "updated" && event.action.type === "error") {
     const error = event.query.state.error;
     redirectToLoginIfUnauthorized(error);
-    console.error("[API Query Error]", error);
+    logger.apiError("Query", error);
   }
 });
 
@@ -34,7 +44,7 @@ queryClient.getMutationCache().subscribe(event => {
   if (event.type === "updated" && event.action.type === "error") {
     const error = event.mutation.state.error;
     redirectToLoginIfUnauthorized(error);
-    console.error("[API Mutation Error]", error);
+    logger.apiError("Mutation", error);
   }
 });
 

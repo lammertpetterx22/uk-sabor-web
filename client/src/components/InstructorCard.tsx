@@ -24,12 +24,14 @@ const InstructorCard = memo(function InstructorCard({ instructor }: InstructorCa
       <div className="relative h-96 overflow-hidden bg-gradient-to-br from-[#E91E8C]/20 via-[#FF4500]/10 to-[#FFD700]/20">
         {instructor.photoUrl ? (
           <>
-            <img 
-              src={instructor.photoUrl} 
-              alt={instructor.name} 
+            <img
+              src={instructor.photoUrl}
+              alt={instructor.name}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
               loading="lazy"
               decoding="async"
+              width="400"
+              height="384"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent opacity-70" />
           </>

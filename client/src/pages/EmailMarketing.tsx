@@ -30,6 +30,8 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link, useLocation } from "wouter";
+import { sanitizeEmailHTML } from "@/lib/sanitize";
+import { emailRateLimiter } from "@/lib/rate-limiter";
 
 // ─── Category badge colors ────────────────────────────────────────────────────
 const CATEGORY_COLORS: Record<string, string> = {
@@ -188,7 +190,7 @@ function TemplateEditorDialog({
                   contentEditable
                   suppressContentEditableWarning
                   onInput={(e) => setHtmlContent(e.currentTarget.innerHTML)}
-                  dangerouslySetInnerHTML={{ __html: htmlContent || '' }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeEmailHTML(htmlContent || '') }}
                   className="p-8 min-h-[500px] focus:outline-none text-foreground text-lg leading-relaxed"
                   style={{ maxHeight: '600px', overflowY: 'auto' }}
                 />
@@ -235,7 +237,7 @@ function TemplateEditorDialog({
                     <span className="text-sm font-medium text-foreground">How it looks in emails</span>
                   </div>
                   <div className="bg-background/50 p-8 overflow-y-auto min-h-[500px] max-h-[600px]">
-                    <div dangerouslySetInnerHTML={{ __html: htmlContent }} className="text-lg leading-relaxed" />
+                    <div dangerouslySetInnerHTML={{ __html: sanitizeEmailHTML(htmlContent) }} className="text-lg leading-relaxed" />
                   </div>
                 </div>
               ) : (
@@ -391,6 +393,20 @@ function CampaignComposerDialog({
     },
     onError: (e) => toast.error(e.message),
   });
+
+  // Rate limit check before sending
+  const handleSendWithRateLimit = (data: any) => {
+    const userId = user?.id || 'anonymous';
+
+    if (!emailRateLimiter.check(`email-send-${userId}`)) {
+      const resetTime = emailRateLimiter.getResetTime(`email-send-${userId}`);
+      const seconds = Math.ceil(resetTime / 1000);
+      toast.error(`Rate limit exceeded. Please wait ${seconds} seconds before sending another email.`);
+      return;
+    }
+
+    sendMutation.mutate(data);
+  };
 
   // Handle item selection and auto-generate email
   const handleItemSelect = (item: any) => {
@@ -587,7 +603,7 @@ function CampaignComposerDialog({
               <div>
                 <label className="text-sm font-medium mb-2 block">Email Preview</label>
                 <div className="border border-border/50 rounded-lg overflow-hidden bg-card/50 backdrop-blur-sm h-96 overflow-y-auto">
-                  <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
+                  <div dangerouslySetInnerHTML={{ __html: sanitizeEmailHTML(htmlContent) }} />
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">This is how your email will look!</p>
               </div>
@@ -853,7 +869,7 @@ function TemplatesTab() {
 
                 {/* Email Content */}
                 <div className="bg-background/50 backdrop-blur-sm p-10 overflow-y-auto" style={{ maxHeight: '55vh' }}>
-                  <div dangerouslySetInnerHTML={{ __html: previewTemplate.htmlContent }} className="prose prose-lg max-w-none prose-invert" />
+                  <div dangerouslySetInnerHTML={{ __html: sanitizeEmailHTML(previewTemplate.htmlContent) }} className="prose prose-lg max-w-none prose-invert" />
                 </div>
               </div>
             </div>

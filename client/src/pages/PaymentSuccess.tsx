@@ -5,10 +5,12 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle2, Loader2, PartyPopper, Ticket, BookOpen, Users } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function PaymentSuccess() {
   const { isAuthenticated } = useAuth();
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -19,6 +21,16 @@ export default function PaymentSuccess() {
     { sessionId: sessionId || "" },
     { enabled: !!sessionId && isAuthenticated }
   );
+
+  // Invalidate earnings queries when payment is verified successfully
+  useEffect(() => {
+    if (verification?.success) {
+      // Invalidate all earnings-related queries to show updated income immediately
+      queryClient.invalidateQueries({ queryKey: ['earnings'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+    }
+  }, [verification?.success, queryClient]);
 
   const getIcon = () => {
     if (!verification) return <PartyPopper className="h-16 w-16 text-accent" />;

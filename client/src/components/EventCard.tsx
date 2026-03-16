@@ -23,7 +23,15 @@ const EventCard = memo(function EventCard({ event }: EventCardProps) {
       {/* Event Image */}
       {event.imageUrl && (
         <div className="relative h-48 overflow-hidden bg-gradient-to-br from-[#E91E8C]/20 to-[#FF4500]/20">
-          <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+          <img
+            src={event.imageUrl}
+            alt={event.title}
+            className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
+            width="400"
+            height="192"
+          />
         </div>
       )}
 
@@ -49,7 +57,7 @@ const EventCard = memo(function EventCard({ event }: EventCardProps) {
 
           <div className="flex items-center gap-2 text-accent font-semibold">
             <DollarSign size={16} />
-            <span>£{parseFloat(event.ticketPrice as any).toFixed(2)}</span>
+            <span>£{typeof event.ticketPrice === 'string' ? parseFloat(event.ticketPrice).toFixed(2) : Number(event.ticketPrice).toFixed(2)}</span>
           </div>
         </div>
 

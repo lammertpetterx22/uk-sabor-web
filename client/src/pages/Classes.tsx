@@ -148,7 +148,7 @@ export default function Classes() {
                               </span>
                             </div>
 
-                            <div className="text-accent font-bold text-lg">£{parseFloat(cls.price as any).toFixed(2)}</div>
+                            <div className="text-accent font-bold text-lg">£{typeof cls.price === 'string' ? parseFloat(cls.price).toFixed(2) : Number(cls.price).toFixed(2)}</div>
                           </div>
 
                           <Link href={`/classes/${cls.id}`}>

@@ -2,8 +2,9 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, ReactNode } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
+import RouteErrorBoundary from "./components/RouteErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
@@ -57,61 +58,110 @@ function PageLoader() {
 /** Roles que pueden acceder al panel admin/creator */
 const CREATOR_ROLES = ["admin", "instructor", "promoter"];
 
+/** Wrapper to easily add error boundaries to routes */
+function SafeRoute({ children, name }: { children: ReactNode; name?: string }) {
+  return <RouteErrorBoundary routeName={name}>{children}</RouteErrorBoundary>;
+}
+
 function Router() {
   return (
     <Layout>
       <Suspense fallback={<PageLoader />}>
         <Switch>
           {/* ── Rutas públicas ─────────────────────────────────── */}
-          <Route path="/" component={Home} />
-          <Route path="/events" component={Events} />
-          <Route path="/events/:id" component={EventDetail} />
-          <Route path="/courses" component={Courses} />
-          <Route path="/courses/:id" component={CourseDetail} />
-          <Route path="/classes" component={Classes} />
-          <Route path="/classes/:id" component={ClassDetail} />
-          <Route path="/instructors" component={Instructors} />
-          <Route path="/instructors/:id" component={InstructorProfile} />
-          <Route path="/promoters" component={Promoters} />
-          <Route path="/promoters/:id" component={PromoterProfile} />
-          <Route path="/pricing" component={Pricing} />
-          <Route path="/image-cropper-demo" component={ImageCropperDemo} />
-          <Route path="/image-cropper-pro" component={ImageCropperProDemo} />
-          <Route path="/login" component={Login} />
-          <Route path="/payment-success" component={PaymentSuccess} />
+          <Route path="/">
+            <SafeRoute name="Home"><Home /></SafeRoute>
+          </Route>
+          <Route path="/events">
+            <SafeRoute name="Events"><Events /></SafeRoute>
+          </Route>
+          <Route path="/events/:id">
+            <SafeRoute name="Event Details"><EventDetail /></SafeRoute>
+          </Route>
+          <Route path="/courses">
+            <SafeRoute name="Courses"><Courses /></SafeRoute>
+          </Route>
+          <Route path="/courses/:id">
+            <SafeRoute name="Course Details"><CourseDetail /></SafeRoute>
+          </Route>
+          <Route path="/classes">
+            <SafeRoute name="Classes"><Classes /></SafeRoute>
+          </Route>
+          <Route path="/classes/:id">
+            <SafeRoute name="Class Details"><ClassDetail /></SafeRoute>
+          </Route>
+          <Route path="/instructors">
+            <SafeRoute name="Instructors"><Instructors /></SafeRoute>
+          </Route>
+          <Route path="/instructors/:id">
+            <SafeRoute name="Instructor Profile"><InstructorProfile /></SafeRoute>
+          </Route>
+          <Route path="/promoters">
+            <SafeRoute name="Promoters"><Promoters /></SafeRoute>
+          </Route>
+          <Route path="/promoters/:id">
+            <SafeRoute name="Promoter Profile"><PromoterProfile /></SafeRoute>
+          </Route>
+          <Route path="/pricing">
+            <SafeRoute name="Pricing"><Pricing /></SafeRoute>
+          </Route>
+          <Route path="/image-cropper-demo">
+            <SafeRoute name="Image Cropper"><ImageCropperDemo /></SafeRoute>
+          </Route>
+          <Route path="/image-cropper-pro">
+            <SafeRoute name="Image Cropper Pro"><ImageCropperProDemo /></SafeRoute>
+          </Route>
+          <Route path="/login">
+            <SafeRoute name="Login"><Login /></SafeRoute>
+          </Route>
+          <Route path="/payment-success">
+            <SafeRoute name="Payment Success"><PaymentSuccess /></SafeRoute>
+          </Route>
 
           {/* ── Rutas autenticadas ─────────────────────────────── */}
           <Route path="/profile">
-            <ProtectedRoute>
-              <UserProfile />
-            </ProtectedRoute>
+            <SafeRoute name="Profile">
+              <ProtectedRoute>
+                <UserProfile />
+              </ProtectedRoute>
+            </SafeRoute>
           </Route>
           <Route path="/dashboard">
-            <ProtectedRoute>
-              <UserDashboard />
-            </ProtectedRoute>
+            <SafeRoute name="Dashboard">
+              <ProtectedRoute>
+                <UserDashboard />
+              </ProtectedRoute>
+            </SafeRoute>
           </Route>
           <Route path="/become-instructor">
-            <ProtectedRoute>
-              <BecomeInstructor />
-            </ProtectedRoute>
+            <SafeRoute name="Become Instructor">
+              <ProtectedRoute>
+                <BecomeInstructor />
+              </ProtectedRoute>
+            </SafeRoute>
           </Route>
 
           {/* ── Admin / Instructor / Promoter ─────────────────── */}
           <Route path="/admin">
-            <ProtectedRoute allowedRoles={CREATOR_ROLES}>
-              <AdminDashboard />
-            </ProtectedRoute>
+            <SafeRoute name="Admin Dashboard">
+              <ProtectedRoute allowedRoles={CREATOR_ROLES}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            </SafeRoute>
           </Route>
           <Route path="/attendance">
-            <ProtectedRoute allowedRoles={CREATOR_ROLES}>
-              <AttendanceDashboard />
-            </ProtectedRoute>
+            <SafeRoute name="Attendance">
+              <ProtectedRoute allowedRoles={CREATOR_ROLES}>
+                <AttendanceDashboard />
+              </ProtectedRoute>
+            </SafeRoute>
           </Route>
           <Route path="/earnings">
-            <ProtectedRoute allowedRoles={CREATOR_ROLES}>
-              <Earnings />
-            </ProtectedRoute>
+            <SafeRoute name="Earnings">
+              <ProtectedRoute allowedRoles={CREATOR_ROLES}>
+                <Earnings />
+              </ProtectedRoute>
+            </SafeRoute>
           </Route>
 
           {/* ── Solo Admin ─────────────────────────────────────── */}

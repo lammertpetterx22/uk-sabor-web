@@ -3,7 +3,23 @@
 
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://maps.googleapis.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' https://fonts.gstatic.com;
+      img-src 'self' https: data: blob:;
+      media-src 'self' https: data: blob:;
+      connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://maps.googleapis.com;
+      frame-src 'self';
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+      upgrade-insecure-requests;
+    ">
 
     <!-- Primary SEO -->
     <title>UK Sabor - Latin Dance Events, Courses & Classes</title>
@@ -31,9 +47,10 @@
     <!-- Theme -->
     <meta name="theme-color" content="#E91E8C" />
 
-    <!-- Fonts - preconnect for performance -->
+    <!-- Fonts - preconnect and preload for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" as="style" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
     <!-- Favicon -->

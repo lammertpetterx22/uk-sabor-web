@@ -29,7 +29,15 @@ const CourseCard = memo(function CourseCard({ course, instructorName }: CourseCa
       {/* Course Image */}
       <div className="relative h-48 overflow-hidden bg-gradient-to-br from-[#00D4FF]/20 to-[#9D4EDD]/20 flex items-center justify-center">
         {course.imageUrl ? (
-          <img src={course.imageUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" decoding="async" />
+          <img
+            src={course.imageUrl}
+            alt={course.title}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            loading="lazy"
+            decoding="async"
+            width="400"
+            height="192"
+          />
         ) : (
           <div className="flex flex-col items-center gap-2 opacity-40">
             <BookOpen size={40} className="text-accent" />
@@ -75,7 +83,7 @@ const CourseCard = memo(function CourseCard({ course, instructorName }: CourseCa
 
           <div className="flex items-center gap-2 text-accent font-semibold pt-2 border-t border-border/50">
             <DollarSign size={16} />
-            <span>£{parseFloat(course.price as any).toFixed(2)}</span>
+            <span>£{typeof course.price === 'string' ? parseFloat(course.price).toFixed(2) : Number(course.price).toFixed(2)}</span>
           </div>
         </div>
 

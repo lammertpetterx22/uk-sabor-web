@@ -277,7 +277,7 @@ export default function PromoterProfile() {
                         )}
                         <div className="flex items-center justify-between pt-2">
                           <span className="text-accent font-bold text-lg">
-                            £{parseFloat(course.price as any).toFixed(2)}
+                            £{typeof course.price === 'string' ? parseFloat(course.price).toFixed(2) : Number(course.price).toFixed(2)}
                           </span>
                           <Button size="sm" className="btn-vibrant text-xs">
                             Enroll Now
@@ -369,7 +369,7 @@ export default function PromoterProfile() {
                           )}
                           <div className="flex items-center justify-between pt-2">
                             <span className="text-accent font-bold text-lg">
-                              £{parseFloat(cls.price as any).toFixed(2)}
+                              £{typeof cls.price === 'string' ? parseFloat(cls.price).toFixed(2) : Number(cls.price).toFixed(2)}
                             </span>
                             <Button size="sm" className="btn-vibrant text-xs">
                               Book Now
@@ -446,7 +446,7 @@ export default function PromoterProfile() {
                           )}
                           <div className="flex items-center justify-between pt-2">
                             <span className="text-accent font-bold text-lg">
-                              £{parseFloat(event.ticketPrice as any).toFixed(2)}
+                              £{typeof event.ticketPrice === 'string' ? parseFloat(event.ticketPrice).toFixed(2) : Number(event.ticketPrice).toFixed(2)}
                             </span>
                             <Button size="sm" className="btn-vibrant text-xs">
                               Get Tickets
