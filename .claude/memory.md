@@ -12,9 +12,10 @@
   3. `git push origin main`
   4. Esto triggerea auto-deploy en Koyeb (si está configurado)
 - ✅ **Hacer TODO sin preguntar** - El usuario confía en que harás lo correcto
-- ⚠️ **LIMITACIÓN**: No tengo acceso a Koyeb dashboard (requiere login manual)
-  - El push a git triggerea auto-deploy SI el usuario ya conectó GitHub a Koyeb
-  - Si algo falla, el usuario debe compartir los logs de Koyeb para que los analice
+- ⚠️ **KOYEB DEPLOYMENT**: Automatizado con CLI
+  - Usuario debe configurar `KOYEB_TOKEN` UNA VEZ (ver KOYEB_SETUP.md)
+  - Después, ejecutar `./.koyeb-deploy.sh` para deployar
+  - El script maneja todo automáticamente (crear app, redeploy, health checks)
 
 ---
 
