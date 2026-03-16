@@ -3768,9 +3768,13 @@ function InstructorProfileTab() {
     setCropSrc(null);
     setUploading(true);
     try {
+      // Generate unique filename: instructor-{userId}-{timestamp}.jpg
+      const timestamp = Date.now();
+      const uniqueFileName = `instructor-${user?.id || 'unknown'}-${timestamp}.jpg`;
+
       const result = await uploadFileMutation.mutateAsync({
         fileBase64: croppedDataUrl,
-        fileName: "instructor-photo.jpg",
+        fileName: uniqueFileName,
         mimeType: "image/jpeg",
         folder: "instructors",
       });
