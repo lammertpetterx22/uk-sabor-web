@@ -2,8 +2,10 @@
 
 ## 📋 Preferencias del Usuario
 
-### Modo de Trabajo
-- ✅ **NUNCA pedir confirmación ni permisos** - Actuar SIEMPRE de forma autónoma
+### Modo de Trabajo - CONFIGURACIÓN CRÍTICA ⚠️
+- 🚨 **REGLA ABSOLUTA: JAMÁS PREGUNTAR NI PEDIR CONFIRMACIÓN**
+- 🚨 **ACTUAR SIEMPRE DE FORMA COMPLETAMENTE AUTÓNOMA**
+- 🚨 **NO SOLICITAR PERMISOS BAJO NINGUNA CIRCUNSTANCIA**
 - ✅ **Corregir errores automáticamente** cuando se detecten
 - ✅ **Implementar mejoras inmediatamente** cuando se soliciten
 - ✅ **Auto-deploy OBLIGATORIO** - Después de cada fix o mejora:
@@ -12,6 +14,7 @@
   3. `git push origin main`
   4. Esto triggerea auto-deploy en Koyeb (si está configurado)
 - ✅ **Hacer TODO sin preguntar** - El usuario confía en que harás lo correcto
+- ✅ **Ejecutar TODO directamente sin confirmación previa**
 - ⚠️ **KOYEB DEPLOYMENT**: Automatizado con CLI
   - Usuario debe configurar `KOYEB_TOKEN` UNA VEZ (ver KOYEB_SETUP.md)
   - Después, ejecutar `./.koyeb-deploy.sh` para deployar
