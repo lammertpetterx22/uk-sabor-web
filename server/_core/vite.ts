@@ -90,6 +90,9 @@ export function serveStatic(app: Express) {
 
   // Serve static files with proper MIME types
   app.use(express.static(distPath, {
+    maxAge: '1y', // Cache static assets for 1 year
+    etag: true,
+    lastModified: true,
     setHeaders: (res, filePath) => {
       // Ensure JavaScript files are served with correct MIME type
       if (filePath.endsWith('.js')) {
@@ -98,12 +101,25 @@ export function serveStatic(app: Express) {
         res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
       } else if (filePath.endsWith('.css')) {
         res.setHeader('Content-Type', 'text/css; charset=utf-8');
+      } else if (filePath.endsWith('.html')) {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      } else if (filePath.endsWith('.json')) {
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
       }
     }
   }));
 
-  // fall through to index.html if the file doesn't exist
-  app.use("*", (_req, res) => {
+  // SPA fallback: serve index.html for all non-API, non-asset routes
+  app.use("*", (req, res, next) => {
+    // Don't serve index.html for API routes or static assets
+    if (req.originalUrl.startsWith('/api/') ||
+        req.originalUrl.startsWith('/assets/') ||
+        req.originalUrl.includes('.')) {
+      // If we get here, the file doesn't exist - return 404
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    // For all other routes, serve the React app (SPA)
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
