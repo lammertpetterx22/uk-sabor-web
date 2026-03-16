@@ -8,11 +8,11 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCw,
-  Upload,
   X,
   Check,
   Image as ImageIcon,
-  Maximize2
+  Maximize2,
+  User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -229,20 +229,20 @@ export default function ImageCropper({
         />
 
         {!imageSrc ? (
-          // Upload Area
+          // Upload Area - Neutral Placeholder
           <div className="space-y-4">
             <div
               onClick={() => fileInputRef.current?.click()}
               className="relative border-2 border-dashed border-border hover:border-accent rounded-xl p-12 text-center cursor-pointer transition-all hover:bg-accent/5 group"
             >
               <div className="flex flex-col items-center gap-4">
-                <div className="p-4 rounded-full bg-accent/10 group-hover:bg-accent/20 transition-colors">
-                  <Upload className="w-12 h-12 text-accent" />
+                <div className="w-32 h-32 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center group-hover:bg-gray-200 dark:group-hover:bg-gray-700 transition-colors">
+                  <User className="w-16 h-16 text-gray-400 dark:text-gray-500" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Upload an Image</h3>
+                  <h3 className="text-lg font-semibold mb-2">Click to upload picture</h3>
                   <p className="text-sm text-muted-foreground">
-                    Click to browse or drag and drop
+                    Choose an image from your device
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Supports: JPG, PNG, WEBP (max 10MB)
