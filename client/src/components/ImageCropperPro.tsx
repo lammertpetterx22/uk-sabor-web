@@ -21,6 +21,7 @@ import {
   GraduationCap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -285,7 +286,7 @@ export default function ImageCropperPro({
         onCropComplete(croppedImageBlob, croppedImageUrl, selectedPreset);
       }
     } catch (e) {
-      console.error("Error cropping image:", e);
+      logger.error('Error cropping image', e);
       alert("Failed to crop image. Please try again.");
     } finally {
       setIsProcessing(false);

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Download, Copy, Eye } from "lucide-react";
 import { toast } from "sonner";
 import QRCode from "qrcode";
+import { logger } from "@/lib/logger";
 
 interface QRCodeDisplayProps {
   itemType: "event" | "class";
@@ -49,7 +50,7 @@ export default function QRCodeDisplay({
         });
         setQrImage(dataUrl);
       } catch (error) {
-        console.error("Failed to generate QR code image:", error);
+        logger.error('Failed to generate QR code image', error);
       }
     };
 

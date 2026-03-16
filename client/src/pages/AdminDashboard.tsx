@@ -24,6 +24,7 @@ import MyEventsDashboard from "@/components/instructor/MyEventsDashboard";
 import MyClassesDashboard from "@/components/instructor/MyClassesDashboard";
 import InstructorApplicationsManager from "@/components/admin/InstructorApplicationsManager";
 import { useTranslations } from "@/hooks/useTranslations";
+import { logger } from "@/lib/logger";
 
 export default function AdminDashboard() {
   const { t } = useTranslations();
@@ -1334,14 +1335,18 @@ function CoursesTab() {
       reader.onprogress = (e) => {
         if (e.lengthComputable) {
           const percentLoaded = Math.round((e.loaded / e.total) * 100);
-          console.log(`[Video Upload] Reading file: ${percentLoaded}% (${(e.loaded / 1024 / 1024).toFixed(1)}MB / ${fileSizeMB.toFixed(1)}MB)`);
+          logger.debug('[Video Upload] Reading file', {
+            percentLoaded,
+            loadedMB: (e.loaded / 1024 / 1024).toFixed(1),
+            totalMB: fileSizeMB.toFixed(1)
+          });
         }
       };
 
       reader.onload = async (e) => {
         const base64 = e.target?.result as string;
         const readTime = ((Date.now() - uploadStartTime) / 1000).toFixed(1);
-        console.log(`[Video Upload] ✅ File read complete in ${readTime}s. Starting Bunny.net upload...`);
+        logger.info('[Video Upload] File read complete', { readTime: `${readTime}s` });
 
         // Show file name as preview indicator
         setFormData(prev => ({ ...prev, videoFile: file, videoPreview: file.name }));
@@ -1378,9 +1383,9 @@ function CoursesTab() {
             { duration: 10000 }
           );
 
-          console.log(`[Video Upload] ✅ SUCCESS - Bunny Video ID: ${result.bunnyVideoId}`);
+          logger.info('[Video Upload] SUCCESS', { bunnyVideoId: result.bunnyVideoId });
         } catch (uploadErr: any) {
-          console.error('[Video Upload] ❌ Bunny.net upload failed:', uploadErr);
+          logger.error('[Video Upload] Bunny.net upload failed', uploadErr);
           toast.error(
             `❌ Error al subir el video al servidor:\n\n` +
             `${uploadErr.message}\n\n` +
@@ -1392,14 +1397,14 @@ function CoursesTab() {
       };
 
       reader.onerror = () => {
-        console.error('[Video Upload] ❌ File read error');
+        logger.error('[Video Upload] File read error');
         toast.error('❌ Error al leer el archivo. Por favor intenta de nuevo.');
         setUploading(false);
       };
 
       reader.readAsDataURL(file);
     } catch (error) {
-      console.error('[Video Upload] ❌ Unexpected error:', error);
+      logger.error('[Video Upload] Unexpected error', error);
       toast.error('❌ Error inesperado al procesar el video. Intenta de nuevo.');
     } finally {
       setUploading(false);
@@ -3746,9 +3751,9 @@ function InstructorProfileTab() {
   // Populate form when profile loads
   useEffect(() => {
     if (profile) {
-      console.log("[AdminDashboard] Profile loaded from server:", {
+      logger.debug('[AdminDashboard] Profile loaded', {
         name: profile.name,
-        photoUrl: profile.photoUrl,
+        hasPhoto: !!profile.photoUrl
       });
       setForm({
         name: profile.name || "",
@@ -3789,12 +3794,12 @@ function InstructorProfileTab() {
         mimeType: "image/jpeg",
         folder: "instructors",
       });
-      console.log("[AdminDashboard] Photo uploaded successfully:", result.url);
+      logger.info('[AdminDashboard] Photo uploaded successfully', { url: result.url });
       setForm((f) => ({ ...f, photoUrl: result.url }));
       setPhotoPreview(result.url);
       toast.success(t("admin.profile.toastPhotoUploaded"));
     } catch (err: any) {
-      console.error("[AdminDashboard] Photo upload failed:", err);
+      logger.error('[AdminDashboard] Photo upload failed', err);
       toast.error(t("admin.profile.errorUploadFailed", { message: err.message }));
     } finally {
       setUploading(false);
@@ -3803,10 +3808,10 @@ function InstructorProfileTab() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("[AdminDashboard] Submitting profile update with data:", {
+    logger.debug('[AdminDashboard] Submitting profile update', {
       name: form.name,
-      photoUrl: form.photoUrl,
-      bio: form.bio?.substring(0, 50),
+      hasPhoto: !!form.photoUrl,
+      hasBio: !!form.bio
     });
     updateProfileMutation.mutate({
       name: form.name,

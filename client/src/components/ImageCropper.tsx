@@ -15,6 +15,7 @@ import {
   User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 // Utility function to create image from URL
 const createImage = (url: string): Promise<HTMLImageElement> =>
@@ -193,7 +194,7 @@ export default function ImageCropper({
         onCropComplete(croppedImageBlob, croppedImageUrl);
       }
     } catch (e) {
-      console.error("Error cropping image:", e);
+      logger.error('Error cropping image', e);
     } finally {
       setIsProcessing(false);
     }

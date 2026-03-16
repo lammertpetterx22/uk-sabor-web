@@ -7,8 +7,16 @@ import superjson from "superjson";
 import App from "./App";
 import { getLoginUrl } from "./const";
 import { logger } from "./lib/logger";
+import { initSentry } from "./lib/sentry";
+import { initWebVitals } from "./lib/monitoring";
 import "./index.css";
 import "./i18n/config"; // ← Initialize i18n
+
+// Initialize error tracking and performance monitoring
+initSentry();
+if (import.meta.env.PROD) {
+  initWebVitals();
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {

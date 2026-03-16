@@ -8,9 +8,8 @@
  * 4. Uncomment the implementation below
  */
 
-// TODO: Uncomment when @sentry/react is installed
-// import * as Sentry from "@sentry/react";
-// import { BrowserTracing } from "@sentry/tracing";
+// Sentry installed and ready ✅
+import * as Sentry from "@sentry/react";
 
 /**
  * Initialize Sentry for error tracking
@@ -30,15 +29,13 @@ export function initSentry() {
     return;
   }
 
-  // TODO: Uncomment when @sentry/react is installed
-  /*
   Sentry.init({
     dsn,
     environment: import.meta.env.MODE,
     integrations: [
-      new BrowserTracing(),
+      Sentry.browserTracingIntegration(),
       // Replay integration for session recording
-      new Sentry.Replay({
+      Sentry.replayIntegration({
         maskAllText: true,
         blockAllMedia: true,
       }),
@@ -82,7 +79,6 @@ export function initSentry() {
       'Failed to fetch',
     ],
   });
-  */
 
   console.log('[Sentry] Initialized successfully');
 }
@@ -96,12 +92,9 @@ export function captureException(error: Error, context?: Record<string, any>) {
     return;
   }
 
-  // TODO: Uncomment when @sentry/react is installed
-  /*
   Sentry.captureException(error, {
     extra: context,
   });
-  */
 }
 
 /**
@@ -113,10 +106,7 @@ export function captureMessage(message: string, level: 'info' | 'warning' | 'err
     return;
   }
 
-  // TODO: Uncomment when @sentry/react is installed
-  /*
   Sentry.captureMessage(message, level);
-  */
 }
 
 /**
@@ -128,8 +118,6 @@ export function setUser(user: { id: number; email?: string; username?: string } 
     return;
   }
 
-  // TODO: Uncomment when @sentry/react is installed
-  /*
   if (user) {
     Sentry.setUser({
       id: String(user.id),
@@ -139,7 +127,6 @@ export function setUser(user: { id: number; email?: string; username?: string } 
   } else {
     Sentry.setUser(null);
   }
-  */
 }
 
 /**
@@ -151,33 +138,28 @@ export function addBreadcrumb(message: string, category: string, data?: Record<s
     return;
   }
 
-  // TODO: Uncomment when @sentry/react is installed
-  /*
   Sentry.addBreadcrumb({
     message,
     category,
     data,
     level: 'info',
   });
-  */
 }
 
 /**
- * Create a transaction for performance monitoring
+ * Create a span for performance monitoring
+ * Note: Sentry v8+ uses spans instead of transactions
  */
 export function startTransaction(name: string, op: string) {
   if (import.meta.env.DEV) {
-    console.log(`[Sentry] Start transaction: ${name} (${op})`);
+    console.log(`[Sentry] Start span: ${name} (${op})`);
     return null;
   }
 
-  // TODO: Uncomment when @sentry/react is installed
-  /*
-  return Sentry.startTransaction({
+  return Sentry.startSpan({
     name,
     op,
+  }, (span) => {
+    return span;
   });
-  */
-
-  return null;
 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 interface LessonFormData {
   courseId: number;
@@ -146,7 +147,7 @@ export function useLessonsManager(courseId: number | null) {
         description: "Por favor, verifica el archivo e intenta de nuevo",
         duration: 5000,
       });
-      console.error("[Video Upload] Error:", err);
+      logger.error('[Video Upload] Error', err);
     } finally {
       setUploading(false);
       setTimeout(() => setUploadProgress(0), 1000);

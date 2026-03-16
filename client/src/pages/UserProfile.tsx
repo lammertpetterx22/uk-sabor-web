@@ -11,6 +11,7 @@ import { trpc } from "@/lib/trpc";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BillingSection from "@/components/profile/BillingSection";
 import { UserCoursesTab } from "@/components/dashboard/CoursesTab";
+import { logger } from "@/lib/logger";
 
 export default function UserProfile() {
   const [, setLocation] = useLocation();
@@ -82,7 +83,7 @@ export default function UserProfile() {
       setFormData(prev => ({ ...prev, avatarUrl: result.url }));
       toast.success('Foto de perfil subida correctamente');
     } catch (err: any) {
-      console.error(err);
+      logger.error('Image upload failed', err);
       toast.error('Error al subir: ' + err.message);
     } finally {
       setIsUploading(false);

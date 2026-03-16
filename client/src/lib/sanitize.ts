@@ -7,8 +7,8 @@
  * npm install --save-dev @types/dompurify
  */
 
-// Once DOMPurify is installed, uncomment this:
-// import DOMPurify from 'dompurify';
+// DOMPurify installed and active ✅
+import DOMPurify from 'dompurify';
 
 /**
  * Sanitize HTML content to prevent XSS attacks
@@ -29,8 +29,6 @@ export function sanitizeHTML(
     allowedAttributes?: string[];
   }
 ): string {
-  // TODO: Uncomment when DOMPurify is installed
-  /*
   const config: DOMPurify.Config = {
     ALLOWED_TAGS: options?.allowedTags || [
       'p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li',
@@ -50,17 +48,6 @@ export function sanitizeHTML(
   };
 
   return DOMPurify.sanitize(dirty, config);
-  */
-
-  // Temporary implementation (BASIC - replace with DOMPurify)
-  console.warn('[SECURITY] Using basic HTML sanitization. Install DOMPurify for production!');
-
-  // Very basic sanitization - NOT SAFE for production
-  return dirty
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '') // Remove event handlers
-    .replace(/javascript:/gi, '');
 }
 
 /**
@@ -68,8 +55,6 @@ export function sanitizeHTML(
  * More permissive than general HTML sanitization
  */
 export function sanitizeEmailHTML(dirty: string): string {
-  // TODO: Uncomment when DOMPurify is installed
-  /*
   return DOMPurify.sanitize(dirty, {
     ALLOWED_TAGS: [
       'p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li',
@@ -85,10 +70,6 @@ export function sanitizeEmailHTML(dirty: string): string {
     ],
     ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
   });
-  */
-
-  // Temporary implementation
-  return sanitizeHTML(dirty);
 }
 
 /**
@@ -96,10 +77,7 @@ export function sanitizeEmailHTML(dirty: string): string {
  * Useful for previews, meta descriptions, etc.
  */
 export function stripHTML(html: string): string {
-  // TODO: Use DOMPurify when installed
-  // return DOMPurify.sanitize(html, { ALLOWED_TAGS: [] });
-
-  return html.replace(/<[^>]*>/g, '').trim();
+  return DOMPurify.sanitize(html, { ALLOWED_TAGS: [] });
 }
 
 /**

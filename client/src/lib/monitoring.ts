@@ -4,6 +4,8 @@
  */
 
 import { logger } from './logger';
+import { onCLS, onLCP, onFCP, onTTFB, onINP } from 'web-vitals';
+import type { Metric } from 'web-vitals';
 
 /**
  * Core Web Vitals Metrics
@@ -44,19 +46,9 @@ export interface CustomMetrics {
 export function initWebVitals() {
   if (typeof window === 'undefined') return;
 
-  // TODO: Install web-vitals library
-  // npm install web-vitals
-  /*
-  import { onCLS, onFID, onLCP, onFCP, onTTFB, onINP } from 'web-vitals';
-
   onCLS((metric) => {
     logger.info('Web Vital: CLS', { value: metric.value, rating: metric.rating });
     sendToAnalytics('CLS', metric.value);
-  });
-
-  onFID((metric) => {
-    logger.info('Web Vital: FID', { value: metric.value, rating: metric.rating });
-    sendToAnalytics('FID', metric.value);
   });
 
   onLCP((metric) => {
@@ -78,9 +70,8 @@ export function initWebVitals() {
     logger.info('Web Vital: INP', { value: metric.value, rating: metric.rating });
     sendToAnalytics('INP', metric.value);
   });
-  */
 
-  // Manual tracking for now
+  // Additional manual tracking
   trackPageLoad();
   trackNavigationTiming();
 }
