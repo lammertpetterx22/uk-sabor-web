@@ -362,7 +362,7 @@ npm run db:push    # Drizzle migrations
 ### Deployment (Koyeb)
 **✅ DEPLOYADO Y FUNCIONANDO EN PLAN FREE**
 - **App Name**: parliamentary-bunnie
-- **URL actual**: https://parliamentary-bunor-e1ecec33.koyeb.app
+- **URL actual**: https://parliamentary-bunnie-sabor-e1ecec33.koyeb.app
 - App ID: 85f38331
 - Service ID: 27a2455a
 - Status: HEALTHY ✅
@@ -373,8 +373,13 @@ npm run db:push    # Drizzle migrations
 - Build command: `pnpm install && npm run build`
 - Start command: `npm run start`
 - Todas las variables de entorno configuradas correctamente ✅
-- **Dominio personalizado**: consabor.uk (Domain ID: 96e10bb8, STATUS: ERROR - necesita DNS config)
-- Documentación: `KOYEB_DEPLOYMENT.md`, `DOMAIN_SETUP.md`
+- **Dominio personalizado**: consabor.uk
+  - Domain ID: d40863c4
+  - Status: PENDING (esperando DNS)
+  - CNAME: 0f046ddc-e64b-4870-b678-b5acea874f43.cname.koyeb.app
+  - IP: 81.99.162.48
+  - DNS en Flashhost (ver FLASHHOST_DNS_SETUP.md)
+- Documentación: `KOYEB_DEPLOYMENT.md`, `DOMAIN_SETUP.md`, `FLASHHOST_DNS_SETUP.md`
 
 ---
 
