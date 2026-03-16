@@ -83,10 +83,10 @@ export default function BecomeInstructor() {
     onSuccess: () => {
       // Show success message
       setShowSuccessMessage(true);
-      // Reload after a short delay to show the success message
+      // Redirect to dashboard after showing success message
       setTimeout(() => {
-        window.location.reload();
-      }, 2000);
+        setLocation("/dashboard");
+      }, 3000);
     },
   });
 
