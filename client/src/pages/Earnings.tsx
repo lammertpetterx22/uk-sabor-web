@@ -36,6 +36,7 @@ export default function Earnings() {
   const { t } = useTranslations();
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [showTestData, setShowTestData] = useState(true); // Toggle to show/hide test earnings
 
   const { data: wallet, isLoading: walletLoading, refetch: refetchWallet } = trpc.financials.getWallet.useQuery();
   const { data: ledger, isLoading: ledgerLoading, refetch: refetchLedger } = trpc.financials.getLedger.useQuery({ limit: 50 });
@@ -101,13 +102,31 @@ export default function Earnings() {
           <h1 className="text-3xl font-bold text-white tracking-tight">{t('earnings.title')}</h1>
           <p className="text-white/40 mt-1">{t('earnings.subtitle')}</p>
         </div>
-        <button
-          onClick={() => setIsWithdrawModalOpen(true)}
-          className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#FA3698] to-[#FD4D43] text-white font-bold rounded-xl shadow-lg hover:shadow-[#FA3698]/20 transition-all active:scale-95"
-        >
-          <Banknote size={20} />
-          {t('earnings.withdrawFunds')}
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Test Mode Toggle - Show during development */}
+          <button
+            onClick={() => setShowTestData(!showTestData)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${
+              showTestData
+                ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'
+                : 'bg-white/5 border-white/10 text-white/40 hover:border-white/20'
+            }`}
+            title={showTestData ? 'Hide test earnings' : 'Show test earnings'}
+          >
+            <AlertCircle size={16} />
+            <span className="text-xs font-bold uppercase tracking-wider">
+              {showTestData ? 'Test Mode: ON' : 'Test Mode: OFF'}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setIsWithdrawModalOpen(true)}
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#FA3698] to-[#FD4D43] text-white font-bold rounded-xl shadow-lg hover:shadow-[#FA3698]/20 transition-all active:scale-95"
+          >
+            <Banknote size={20} />
+            {t('earnings.withdrawFunds')}
+          </button>
+        </div>
       </div>
 
       {/* Metrics Grid */}

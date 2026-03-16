@@ -163,6 +163,7 @@ export const orders = pgTable("orders", {
   status: varchar("status", { length: 255 }).default("pending"),
   itemType: varchar("itemType", { length: 255 }).notNull(),
   itemId: integer("itemId").notNull(),
+  livemode: boolean("livemode").default(true).notNull(), // Track test vs production transactions
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });

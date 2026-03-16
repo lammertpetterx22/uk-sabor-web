@@ -86,9 +86,12 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   const metadata = session.metadata || {};
   const itemType = metadata[PRODUCT_METADATA.ITEM_TYPE];
   const itemId = metadata[PRODUCT_METADATA.ITEM_ID] ? parseInt(metadata[PRODUCT_METADATA.ITEM_ID]) : null;
+  const livemode = session.livemode; // Capture test vs production mode
+
+  console.log(`[Webhook] 🔍 Processing checkout - Mode: ${livemode ? 'LIVE' : 'TEST'}, User: ${userId}, Type: ${itemType}, Item: ${itemId}`);
 
   if (!userId || !itemType || !itemId) {
-    console.error("[Webhook] Missing required metadata:", { userId, itemType, itemId });
+    console.error("[Webhook] ❌ Missing required metadata:", { userId, itemType, itemId, livemode });
     return;
   }
 
@@ -105,9 +108,11 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       status: "completed",
       itemType: itemType as "event" | "course" | "class",
       itemId,
+      livemode, // Store test vs production mode
     }).returning({ id: orders.id });
 
     const orderId = order.id;
+    console.log(`[Webhook] ✅ Order created #${orderId} - ${livemode ? 'LIVE' : 'TEST'} - ${itemType} - £${amount}`);
 
     // ─── Financial Payout Logic ──────────────────────────────────────────────
     try {
@@ -122,6 +127,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
           const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan }).from(users).where(eq(users.id, creatorUserId)).limit(1);
           sellerPlan = u?.subscriptionPlan || "starter";
         }
+        // Precio del ticket SIN incluir el Stripe fee (el cliente ya lo pagó aparte)
         const ticketPricePence = parseInt(metadata.ticket_price_pence || "0");
         const quantity = metadata.quantity ? parseInt(metadata.quantity) : 1;
         netEarningsPence = ticketPricePence * quantity;
@@ -134,6 +140,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
             const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan }).from(users).where(eq(users.id, creatorUserId)).limit(1);
             sellerPlan = u?.subscriptionPlan || "starter";
           }
+          // Precio del curso SIN incluir el Stripe fee (el cliente ya lo pagó aparte)
           netEarningsPence = parseInt(metadata.ticket_price_pence || "0");
         }
       } else if (itemType === "class") {
@@ -145,6 +152,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
             const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan }).from(users).where(eq(users.id, creatorUserId)).limit(1);
             sellerPlan = u?.subscriptionPlan || "starter";
           }
+          // Precio de la clase SIN incluir el Stripe fee (el cliente ya lo pagó aparte)
           netEarningsPence = parseInt(metadata.ticket_price_pence || "0");
         }
       }
@@ -165,11 +173,13 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         const platformFeeGBP = commissionPence / 100;
         const instructorEarningsGBP = (netEarningsPence - commissionPence) / 100;
 
+        console.log(`[Webhook] 💰 Calculating earnings - Mode: ${livemode ? 'LIVE' : 'TEST'}, Creator: ${creatorUserId}, Plan: ${sellerPlan}, Ticket Price: £${(netEarningsPence/100).toFixed(2)}, Commission: ${(commissionRate*100).toFixed(1)}%`);
+
         // Record earnings in balance and ledger for ALL types (events, courses, classes)
         await addEarnings({
           userId: creatorUserId,
           amount: instructorEarningsGBP,
-          description: `Sale: ${metadata.item_name || itemType} (#${orderId})`,
+          description: `${livemode ? 'Sale' : 'Test Sale'}: ${metadata.item_name || itemType} (#${orderId})`,
           orderId: orderId,
         });
 
@@ -178,10 +188,9 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         (metadata as any)._calculated_instructor_earnings = instructorEarningsGBP;
         (metadata as any)._creator_user_id = creatorUserId;
 
-        console.log(`[Webhook] ✅ NEW MODEL - Item: ${itemType} | Price: £${(netEarningsPence/100).toFixed(2)} | Platform Fee: £${platformFeeGBP.toFixed(2)} (${(commissionRate*100).toFixed(1)}%) | Instructor receives: £${instructorEarningsGBP.toFixed(2)}`);
+        console.log(`[Webhook] ✅ ${livemode ? 'LIVE' : 'TEST'} EARNINGS - Item: ${itemType} | Ticket Price: £${(netEarningsPence/100).toFixed(2)} | Platform Fee: £${platformFeeGBP.toFixed(2)} (${(commissionRate*100).toFixed(1)}%) | Instructor Earnings: £${instructorEarningsGBP.toFixed(2)} | NOTE: Stripe fee (${metadata.stripe_fee_pence ? '£' + (parseInt(metadata.stripe_fee_pence)/100).toFixed(2) : 'N/A'}) was paid by client`);
       } else {
-        console.warn(`[Webhook] ⚠️ No earnings recorded - creatorUserId: ${creatorUserId}, netEarnings: ${netEarningsPence}p, itemType: ${itemType}`);
-      }
+        console.error(`[Webhook] ❌ No earnings recorded - Mode: ${livemode ? 'LIVE' : 'TEST'}, creatorUserId: ${creatorUserId}, netEarnings: ${netEarningsPence}p, itemType: ${itemType}, metadata: ${JSON.stringify(metadata)}`);
     } catch (finError) {
       console.error("[Webhook] Error allocating earnings:", finError);
       // We don't throw here to avoid blocking ticket delivery, but logging is crucial

@@ -1,0 +1,1 @@
+ALTER TABLE "orders" ADD COLUMN "livemode" boolean DEFAULT true NOT NULL;
