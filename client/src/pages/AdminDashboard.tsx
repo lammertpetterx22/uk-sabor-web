@@ -2833,9 +2833,15 @@ function InstructorsTab() {
     setFormData(prev => ({ ...prev, photoPreview: croppedDataUrl, photoUrl: "" }));
     setUploading(true);
     try {
+      // Generate unique filename: instructor-{id}-{timestamp}.jpg
+      const timestamp = Date.now();
+      const uniqueFileName = editingId
+        ? `instructor-${editingId}-${timestamp}.jpg`
+        : `instructor-new-${timestamp}.jpg`;
+
       const result = await uploadFileMutation.mutateAsync({
         fileBase64: croppedDataUrl,
-        fileName: "instructor-photo.jpg",
+        fileName: uniqueFileName,
         mimeType: "image/jpeg",
         folder: "instructors",
       });
