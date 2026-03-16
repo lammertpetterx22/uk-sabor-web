@@ -52,6 +52,20 @@ async function startServer() {
     res.setTimeout(600000); // 10 minutes
     next();
   });
+  // Health check endpoint for Koyeb and other hosting providers
+  app.get("/health", (req, res) => {
+    res.status(200).json({ status: "ok", timestamp: Date.now() });
+  });
+
+  app.get("/", (req, res, next) => {
+    // If this is an API health check request, respond with JSON
+    if (req.accepts("json") && !req.accepts("html")) {
+      return res.status(200).json({ status: "ok", timestamp: Date.now() });
+    }
+    // Otherwise, let it continue to serve the React app
+    next();
+  });
+
   // Email open/click tracking endpoints (public, no auth required)
   registerEmailTrackingRoutes(app);
   // OAuth callback under /api/oauth/callback
@@ -255,8 +269,11 @@ async function startServer() {
     serveStatic(app);
   }
 
+  // Koyeb and other hosting providers set PORT environment variable
+  // In production, use PORT directly without searching for alternative ports
   const preferredPort = parseInt(process.env.PORT || "3000");
-  const port = await findAvailablePort(preferredPort);
+  const isProduction = process.env.NODE_ENV === "production";
+  const port = isProduction ? preferredPort : await findAvailablePort(preferredPort);
 
   // Set server timeout to 10 minutes for video uploads
   server.timeout = 600000; // 10 minutes
