@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
+import CartButton from "@/components/cart/CartButton";
 import {
     Home,
     BookOpen,
@@ -304,28 +305,60 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         <img src={SABOR_LOGO} alt="Con Sabor" className="h-8 w-auto" />
                         <span className="font-bold text-sm gradient-text">CON SABOR</span>
                     </Link>
-                    {/* Right action — login/avatar */}
-                    {isAuthenticated ? (
-                        <Link
-                            href="/profile"
-                            className="w-8 h-8 rounded-full bg-[#FA3698]/20 border border-[#FA3698]/40 flex items-center justify-center"
-                        >
-                            <span className="text-[#FA3698] text-xs font-bold uppercase">
-                                {user?.name?.charAt(0) || user?.email?.charAt(0) || "U"}
-                            </span>
-                        </Link>
-                    ) : (
-                        <Link
-                            href="/login"
-                            className="text-xs font-semibold text-[#FA3698] hover:text-[#FA3698]/80 transition-colors"
-                        >
-                            Login
-                        </Link>
-                    )}
+                    {/* Right actions — cart, login/avatar */}
+                    <div className="flex items-center gap-2">
+                        <CartButton />
+                        {isAuthenticated ? (
+                            <Link
+                                href="/profile"
+                                className="w-8 h-8 rounded-full bg-[#FA3698]/20 border border-[#FA3698]/40 flex items-center justify-center"
+                            >
+                                <span className="text-[#FA3698] text-xs font-bold uppercase">
+                                    {user?.name?.charAt(0) || user?.email?.charAt(0) || "U"}
+                                </span>
+                            </Link>
+                        ) : (
+                            <Link
+                                href="/login"
+                                className="text-xs font-semibold text-[#FA3698] hover:text-[#FA3698]/80 transition-colors"
+                            >
+                                Login
+                            </Link>
+                        )}
+                    </div>
                 </header>
 
                 {/* Page content */}
-                <main className="flex-1 pb-20 lg:pb-0">{children}</main>
+                <main className="flex-1 pb-20 lg:pb-4">{children}</main>
+
+                {/* Footer - Desktop only (mobile has bottom tab bar) */}
+                <footer className="hidden lg:block border-t border-white/5 bg-black/50 backdrop-blur-sm py-6 px-4">
+                    <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
+                        <p className="text-white/40">
+                            © {new Date().getFullYear()} UK Sabor. All rights reserved.
+                        </p>
+                        <nav className="flex items-center gap-6">
+                            <Link
+                                href="/terms"
+                                className="text-white/50 hover:text-accent transition-colors font-medium"
+                            >
+                                Terms of Service
+                            </Link>
+                            <Link
+                                href="/privacy"
+                                className="text-white/50 hover:text-accent transition-colors font-medium"
+                            >
+                                Privacy Policy
+                            </Link>
+                            <a
+                                href="mailto:support@uksabor.com"
+                                className="text-white/50 hover:text-accent transition-colors font-medium"
+                            >
+                                Contact
+                            </a>
+                        </nav>
+                    </div>
+                </footer>
             </div>
 
             {/* ── MOBILE: Bottom Tab Bar ──────────────────────────────────────────── */}

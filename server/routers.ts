@@ -20,6 +20,7 @@ import { promotersRouter } from "./features/promoters";
 import { lessonsRouter } from "./features/lessons";
 import { ticketsRouter } from "./features/tickets";
 import { financialsRouter } from "./features/financials";
+import { checkoutRouter } from "./features/checkout";
 
 export const appRouter = router({
   // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -37,6 +38,7 @@ export const appRouter = router({
   crm: crmRouter,
   uploads: uploadsRouter,
   payments: paymentsRouter,
+  checkout: checkoutRouter,
   qrcode: qrcodeRouter,
   emailMarketing: emailMarketingRouter,
   subscriptions: subscriptionsRouter,

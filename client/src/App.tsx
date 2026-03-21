@@ -12,6 +12,8 @@ import Layout from "./components/Layout";
 // Eagerly loaded pages (critical path - needed immediately on first load)
 import Home from "./pages/Home";
 import Login from "./pages/Login";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 // Lazily loaded pages (code splitting - loaded only when navigated to)
 const Events = lazy(() => import("./pages/Events"));
@@ -40,17 +42,16 @@ const BecomeInstructor = lazy(() => import("./pages/BecomeInstructor"));
 const ImageCropperDemo = lazy(() => import("./components/ImageCropperDemo"));
 const ImageCropperProDemo = lazy(() => import("./components/ImageCropperProDemo"));
 
-// Loading fallback
+// Loading fallback - Discrete top progress bar (non-blocking)
 function PageLoader() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black">
-      <div className="flex flex-col items-center gap-4">
-        <div
-          className="w-10 h-10 border-4 border-[#FA3698]/30 border-t-[#FA3698] rounded-full animate-spin"
-          aria-label="Loading"
-        />
-        <p className="text-white/50 text-sm">Cargando...</p>
+    <div className="fixed top-0 inset-x-0 z-50">
+      {/* Animated gradient progress bar */}
+      <div className="h-1 bg-gradient-to-r from-[#FA3698] via-[#FD4D43] to-[#FFD700] animate-pulse">
+        <div className="h-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
       </div>
+      {/* Optional: Subtle backdrop blur at top only */}
+      <div className="absolute top-0 inset-x-0 h-20 bg-gradient-to-b from-black/50 to-transparent pointer-events-none" />
     </div>
   );
 }
@@ -113,6 +114,12 @@ function Router() {
           </Route>
           <Route path="/login">
             <SafeRoute name="Login"><Login /></SafeRoute>
+          </Route>
+          <Route path="/terms">
+            <SafeRoute name="Terms of Service"><TermsOfService /></SafeRoute>
+          </Route>
+          <Route path="/privacy">
+            <SafeRoute name="Privacy Policy"><PrivacyPolicy /></SafeRoute>
           </Route>
           <Route path="/payment-success">
             <SafeRoute name="Payment Success"><PaymentSuccess /></SafeRoute>

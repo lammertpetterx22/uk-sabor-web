@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Clock, XCircle, Loader2, Music, Calendar, GraduationCap, Star, Mail, Bell, Sparkles } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
+import { toast } from "sonner";
 
 const applicationSchema = z.object({
   requestType: z.enum(["instructor", "promoter"]),
@@ -43,7 +44,6 @@ export default function BecomeInstructor() {
   const { user, loading: userLoading } = useAuth();
   const [, setLocation] = useLocation();
   const [selectedType, setSelectedType] = useState<"instructor" | "promoter">("instructor");
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [allowReapply, setAllowReapply] = useState(false);
 
   // Get user's application status
@@ -57,8 +57,10 @@ export default function BecomeInstructor() {
     formState: { errors },
     setValue,
     watch,
+    trigger,
   } = useForm<ApplicationFormData>({
     resolver: zodResolver(applicationSchema),
+    mode: "onChange", // Enable onChange validation
     defaultValues: {
       requestType: "instructor",
       fullName: user?.name || "",
@@ -81,12 +83,20 @@ export default function BecomeInstructor() {
 
   const submitApplication = trpc.admin.submitInstructorApplication.useMutation({
     onSuccess: () => {
-      // Show success message
-      setShowSuccessMessage(true);
+      // Show success toast
+      toast.success("Application submitted successfully!", {
+        description: "We'll review your information and get back to you soon. Redirecting to dashboard...",
+        duration: 4000,
+      });
       // Redirect to dashboard after showing success message
       setTimeout(() => {
         setLocation("/dashboard");
-      }, 3000);
+      }, 4000);
+    },
+    onError: (error) => {
+      toast.error("Failed to submit application", {
+        description: error.message,
+      });
     },
   });
 
@@ -303,6 +313,7 @@ export default function BecomeInstructor() {
             onClick={() => {
               setSelectedType("instructor");
               setValue("requestType", "instructor");
+              trigger("requestType");
             }}
           >
             <CardHeader>
@@ -343,6 +354,7 @@ export default function BecomeInstructor() {
             onClick={() => {
               setSelectedType("promoter");
               setValue("requestType", "promoter");
+              trigger("requestType");
             }}
           >
             <CardHeader>
@@ -541,7 +553,10 @@ export default function BecomeInstructor() {
                       <Checkbox
                         id="interestedInEvents"
                         checked={interestedInEvents}
-                        onCheckedChange={(checked) => setValue("interestedInEvents", checked === true)}
+                        onCheckedChange={(checked) => {
+                          setValue("interestedInEvents", checked === true);
+                          trigger("interestedInEvents");
+                        }}
                       />
                       <Label htmlFor="interestedInEvents" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -560,7 +575,10 @@ export default function BecomeInstructor() {
                       <Checkbox
                         id="interestedInClasses"
                         checked={interestedInClasses}
-                        onCheckedChange={(checked) => setValue("interestedInClasses", checked === true)}
+                        onCheckedChange={(checked) => {
+                          setValue("interestedInClasses", checked === true);
+                          trigger("interestedInClasses");
+                        }}
                       />
                       <Label htmlFor="interestedInClasses" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -579,7 +597,10 @@ export default function BecomeInstructor() {
                       <Checkbox
                         id="interestedInCourses"
                         checked={interestedInCourses}
-                        onCheckedChange={(checked) => setValue("interestedInCourses", checked === true)}
+                        onCheckedChange={(checked) => {
+                          setValue("interestedInCourses", checked === true);
+                          trigger("interestedInCourses");
+                        }}
                       />
                       <Label htmlFor="interestedInCourses" className="cursor-pointer flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -619,7 +640,10 @@ export default function BecomeInstructor() {
                       <Checkbox
                         id="emailUpdates"
                         checked={emailUpdates}
-                        onCheckedChange={(checked) => setValue("emailUpdates", checked === true)}
+                        onCheckedChange={(checked) => {
+                          setValue("emailUpdates", checked === true);
+                          trigger("emailUpdates");
+                        }}
                         className="mt-1"
                       />
                       <Label htmlFor="emailUpdates" className="cursor-pointer flex-1">
@@ -644,7 +668,10 @@ export default function BecomeInstructor() {
                       <Checkbox
                         id="emailPromotions"
                         checked={emailPromotions}
-                        onCheckedChange={(checked) => setValue("emailPromotions", checked === true)}
+                        onCheckedChange={(checked) => {
+                          setValue("emailPromotions", checked === true);
+                          trigger("emailPromotions");
+                        }}
                         className="mt-1"
                       />
                       <Label htmlFor="emailPromotions" className="cursor-pointer flex-1">
@@ -668,7 +695,10 @@ export default function BecomeInstructor() {
                       <Checkbox
                         id="emailCommunity"
                         checked={emailCommunity}
-                        onCheckedChange={(checked) => setValue("emailCommunity", checked === true)}
+                        onCheckedChange={(checked) => {
+                          setValue("emailCommunity", checked === true);
+                          trigger("emailCommunity");
+                        }}
                         className="mt-1"
                       />
                       <Label htmlFor="emailCommunity" className="cursor-pointer flex-1">
@@ -695,23 +725,20 @@ export default function BecomeInstructor() {
                 </div>
               </div>
 
-              {/* Success Message */}
-              {showSuccessMessage && (
-                <Alert className="border-green-200 bg-green-50 animate-in fade-in slide-in-from-top-2 duration-500">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-800">
-                    <strong>Application submitted successfully!</strong> We'll review your information and get back to you soon.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {/* Error Messages */}
-              {submitApplication.error && (
-                <Alert variant="destructive">
-                  <XCircle className="h-4 w-4" />
-                  <AlertDescription>{submitApplication.error.message}</AlertDescription>
-                </Alert>
-              )}
+              {/* Legal Disclaimer */}
+              <div className="text-xs text-foreground/50 leading-relaxed bg-card/30 p-4 rounded-lg border border-border/30">
+                <p>
+                  By submitting this application, you confirm that all information provided is accurate and agree to our{" "}
+                  <Link href="/terms" className="text-accent hover:text-accent/80 underline font-medium">
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link href="/privacy" className="text-accent hover:text-accent/80 underline font-medium">
+                    Privacy Policy
+                  </Link>.
+                  We will review your application and contact you via email within 3-5 business days.
+                </p>
+              </div>
 
               {/* Submit Button */}
               <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t">
