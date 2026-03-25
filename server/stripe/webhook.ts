@@ -137,13 +137,15 @@ async function handleMultiItemCartCheckout(
 
       try {
         let sellerPlan: string = "starter";
+        let sellerRole: string = "user";
 
         if (itemType === "event") {
           const [event] = await db.select({ creatorId: events.creatorId }).from(events).where(eq(events.id, itemId)).limit(1);
           creatorUserId = event?.creatorId || null;
           if (creatorUserId) {
-            const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan }).from(users).where(eq(users.id, creatorUserId)).limit(1);
+            const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan, role: users.role }).from(users).where(eq(users.id, creatorUserId)).limit(1);
             sellerPlan = u?.subscriptionPlan || "starter";
+            sellerRole = u?.role || "user";
           }
         } else if (itemType === "course") {
           const [course] = await db.select({ instructorId: courses.instructorId }).from(courses).where(eq(courses.id, itemId)).limit(1);
@@ -151,8 +153,9 @@ async function handleMultiItemCartCheckout(
             const [instr] = await db.select({ userId: instructors.userId }).from(instructors).where(eq(instructors.id, course.instructorId)).limit(1);
             creatorUserId = instr?.userId || null;
             if (creatorUserId) {
-              const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan }).from(users).where(eq(users.id, creatorUserId)).limit(1);
+              const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan, role: users.role }).from(users).where(eq(users.id, creatorUserId)).limit(1);
               sellerPlan = u?.subscriptionPlan || "starter";
+              sellerRole = u?.role || "user";
             }
           }
         } else if (itemType === "class") {
@@ -161,28 +164,36 @@ async function handleMultiItemCartCheckout(
             const [instr] = await db.select({ userId: instructors.userId }).from(instructors).where(eq(instructors.id, classItem.instructorId)).limit(1);
             creatorUserId = instr?.userId || null;
             if (creatorUserId) {
-              const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan }).from(users).where(eq(users.id, creatorUserId)).limit(1);
+              const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan, role: users.role }).from(users).where(eq(users.id, creatorUserId)).limit(1);
               sellerPlan = u?.subscriptionPlan || "starter";
+              sellerRole = u?.role || "user";
             }
           }
         }
 
         if (creatorUserId && netEarningsPence > 0) {
-          const planDef = PLANS[sellerPlan as PlanKey] || PLANS.starter;
-
-          // Calculate commission based on item type and plan
+          // ADMIN USERS PAY ZERO PLATFORM FEE (only Stripe fees)
           let commissionRate = 0;
-          if (itemType === "course") {
-            commissionRate = planDef.courseCommissionRate;
-          } else if (itemType === "event" || itemType === "class") {
-            commissionRate = planDef.commissionRate;
+
+          if (sellerRole === "admin") {
+            // Admins pay 0% platform commission
+            commissionRate = 0;
+            console.log(`[Webhook] 👑 ADMIN detected - Zero platform fee for ${itemType} #${itemId}`);
+          } else {
+            // Regular users pay commission based on their plan
+            const planDef = PLANS[sellerPlan as PlanKey] || PLANS.starter;
+            if (itemType === "course") {
+              commissionRate = planDef.courseCommissionRate;
+            } else if (itemType === "event" || itemType === "class") {
+              commissionRate = planDef.commissionRate;
+            }
           }
 
           const commissionPence = Math.round(netEarningsPence * commissionRate);
           platformFeeGBP = commissionPence / 100;
           instructorEarningsGBP = (netEarningsPence - commissionPence) / 100;
 
-          console.log(`[Webhook] 💰 ${livemode ? 'LIVE' : 'TEST'} EARNINGS - ${itemType} #${itemId} | Price: £${(netEarningsPence/100).toFixed(2)} | Fee: £${platformFeeGBP.toFixed(2)} (${(commissionRate*100).toFixed(1)}%) | Instructor: £${instructorEarningsGBP.toFixed(2)}`);
+          console.log(`[Webhook] 💰 ${livemode ? 'LIVE' : 'TEST'} EARNINGS - ${itemType} #${itemId} | Role: ${sellerRole} | Price: £${(netEarningsPence/100).toFixed(2)} | Fee: £${platformFeeGBP.toFixed(2)} (${(commissionRate*100).toFixed(1)}%) | Instructor: £${instructorEarningsGBP.toFixed(2)}`);
 
           // Record earnings in balance
           await addEarnings({
@@ -397,13 +408,15 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       let creatorUserId: number | null = null;
       let netEarningsPence = 0;
       let sellerPlan: string = "starter";
+      let sellerRole: string = "user";
 
       if (itemType === "event") {
         const [event] = await db.select({ creatorId: events.creatorId }).from(events).where(eq(events.id, itemId)).limit(1);
         creatorUserId = event?.creatorId || null;
         if (creatorUserId) {
-          const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan }).from(users).where(eq(users.id, creatorUserId)).limit(1);
+          const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan, role: users.role }).from(users).where(eq(users.id, creatorUserId)).limit(1);
           sellerPlan = u?.subscriptionPlan || "starter";
+          sellerRole = u?.role || "user";
         }
         // Precio del ticket SIN incluir el Stripe fee (el cliente ya lo pagó aparte)
         const ticketPricePence = parseInt(metadata.ticket_price_pence || "0");
@@ -415,8 +428,9 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
           const [instr] = await db.select({ userId: instructors.userId }).from(instructors).where(eq(instructors.id, course.instructorId)).limit(1);
           creatorUserId = instr?.userId || null;
           if (creatorUserId) {
-            const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan }).from(users).where(eq(users.id, creatorUserId)).limit(1);
+            const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan, role: users.role }).from(users).where(eq(users.id, creatorUserId)).limit(1);
             sellerPlan = u?.subscriptionPlan || "starter";
+            sellerRole = u?.role || "user";
           }
           // Precio del curso SIN incluir el Stripe fee (el cliente ya lo pagó aparte)
           netEarningsPence = parseInt(metadata.ticket_price_pence || "0");
@@ -427,8 +441,9 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
           const [instr] = await db.select({ userId: instructors.userId }).from(instructors).where(eq(instructors.id, classItem.instructorId)).limit(1);
           creatorUserId = instr?.userId || null;
           if (creatorUserId) {
-            const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan }).from(users).where(eq(users.id, creatorUserId)).limit(1);
+            const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan, role: users.role }).from(users).where(eq(users.id, creatorUserId)).limit(1);
             sellerPlan = u?.subscriptionPlan || "starter";
+            sellerRole = u?.role || "user";
           }
           // Precio de la clase SIN incluir el Stripe fee (el cliente ya lo pagó aparte)
           netEarningsPence = parseInt(metadata.ticket_price_pence || "0");
@@ -436,14 +451,21 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       }
 
       if (creatorUserId && netEarningsPence > 0) {
-        const planDef = PLANS[sellerPlan as PlanKey] || PLANS.starter;
-
-        // Calculate commission based on item type and plan
+        // ADMIN USERS PAY ZERO PLATFORM FEE (only Stripe fees)
         let commissionRate = 0;
-        if (itemType === "course") {
-          commissionRate = planDef.courseCommissionRate;
-        } else if (itemType === "event" || itemType === "class") {
-          commissionRate = planDef.commissionRate; // Event/class commission rate
+
+        if (sellerRole === "admin") {
+          // Admins pay 0% platform commission
+          commissionRate = 0;
+          console.log(`[Webhook] 👑 ADMIN detected - Zero platform fee for ${itemType} #${itemId}`);
+        } else {
+          // Regular users pay commission based on their plan
+          const planDef = PLANS[sellerPlan as PlanKey] || PLANS.starter;
+          if (itemType === "course") {
+            commissionRate = planDef.courseCommissionRate;
+          } else if (itemType === "event" || itemType === "class") {
+            commissionRate = planDef.commissionRate; // Event/class commission rate
+          }
         }
 
         // NEW MODEL: Only deduct platform fee from instructor (client already paid Stripe fee)
@@ -451,7 +473,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         const platformFeeGBP = commissionPence / 100;
         const instructorEarningsGBP = (netEarningsPence - commissionPence) / 100;
 
-        console.log(`[Webhook] 💰 Calculating earnings - Mode: ${livemode ? 'LIVE' : 'TEST'}, Creator: ${creatorUserId}, Plan: ${sellerPlan}, Ticket Price: £${(netEarningsPence/100).toFixed(2)}, Commission: ${(commissionRate*100).toFixed(1)}%`);
+        console.log(`[Webhook] 💰 ${livemode ? 'LIVE' : 'TEST'} EARNINGS - ${itemType} #${itemId} | Role: ${sellerRole} | Plan: ${sellerPlan} | Price: £${(netEarningsPence/100).toFixed(2)} | Fee: £${platformFeeGBP.toFixed(2)} (${(commissionRate*100).toFixed(1)}%) | Instructor: £${instructorEarningsGBP.toFixed(2)}`);
 
         // Record earnings in balance and ledger for ALL types (events, courses, classes)
         await addEarnings({
