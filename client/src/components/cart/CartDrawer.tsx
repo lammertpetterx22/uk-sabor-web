@@ -86,7 +86,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         </div>
 
         {/* Cart items */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+        <div className="flex-1 overflow-y-auto px-6 py-8 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center py-12">
               <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center mb-4">
@@ -103,14 +103,14 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               </Link>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {items.map((item) => (
                 <div
                   key={`${item.type}-${item.id}`}
-                  className="flex gap-3 p-3 rounded-xl bg-gradient-to-br from-card/70 to-card/30 border border-white/[0.08] hover:border-accent/30 hover:shadow-md hover:shadow-accent/5 transition-all duration-200"
+                  className="flex gap-4 p-4 rounded-xl bg-gradient-to-br from-card/70 to-card/30 border border-white/[0.08] hover:border-accent/30 hover:shadow-md hover:shadow-accent/5 transition-all duration-200"
                 >
                   {/* Image */}
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-gradient-to-br from-accent/20 to-accent/10 flex-shrink-0">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-gradient-to-br from-accent/20 to-accent/10 flex-shrink-0">
                     {item.imageUrl ? (
                       <img
                         src={item.imageUrl}
@@ -119,16 +119,16 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <ShoppingBag className="w-6 h-6 sm:w-8 sm:h-8 text-accent/40" />
+                        <ShoppingBag className="w-8 h-8 sm:w-10 sm:h-10 text-accent/40" />
                       </div>
                     )}
                   </div>
 
                   {/* Details */}
-                  <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                  <div className="flex-1 min-w-0 flex flex-col gap-2">
                     {/* Title and Remove */}
-                    <div className="flex items-start justify-between gap-2">
-                      <h4 className="text-sm font-semibold text-white line-clamp-2 leading-tight flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <h4 className="text-base font-semibold text-white line-clamp-2 leading-snug flex-1">
                         {item.title}
                       </h4>
                       <button
@@ -136,25 +136,25 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           e.stopPropagation();
                           removeItem(item.type, item.id);
                         }}
-                        className="p-1 rounded-md text-white/30 hover:text-red-400 hover:bg-red-400/10 transition-all flex-shrink-0"
+                        className="p-1.5 rounded-md text-white/30 hover:text-red-400 hover:bg-red-400/10 transition-all flex-shrink-0"
                         aria-label="Remove item"
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={16} />
                       </button>
                     </div>
 
                     {/* Instructor */}
                     {item.instructorName && (
-                      <p className="text-xs text-accent/80 font-medium">{item.instructorName}</p>
+                      <p className="text-sm text-accent/80 font-medium -mt-0.5">{item.instructorName}</p>
                     )}
 
                     {/* Tags */}
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[10px] text-white/40 capitalize px-1.5 py-0.5 bg-white/5 rounded">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs text-white/40 capitalize px-2 py-1 bg-white/5 rounded-md">
                         {item.type === 'class' ? 'Live Class' : item.type}
                       </span>
                       {item.danceStyle && (
-                        <span className="text-[10px] text-accent/70 px-1.5 py-0.5 bg-accent/5 rounded">
+                        <span className="text-xs text-accent/70 px-2 py-1 bg-accent/5 rounded-md">
                           {item.danceStyle}
                         </span>
                       )}
@@ -162,7 +162,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
                     {/* Date */}
                     {item.date && (
-                      <p className="text-[10px] text-white/40">
+                      <p className="text-xs text-white/40">
                         📅 {new Date(item.date).toLocaleDateString('en-GB', {
                           day: 'numeric',
                           month: 'short',
@@ -172,10 +172,10 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     )}
 
                     {/* Quantity and Price Row */}
-                    <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-white/5">
+                    <div className="flex items-center justify-between mt-2 pt-3 border-t border-white/10">
                       {/* Quantity Controls */}
                       {(item.type === 'event' || item.type === 'class') ? (
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-2">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -186,12 +186,12 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                 updateQuantity(item.type, item.id, newQty);
                               }
                             }}
-                            className="w-6 h-6 flex items-center justify-center rounded bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all active:scale-95"
+                            className="w-7 h-7 flex items-center justify-center rounded-md bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all active:scale-95"
                             aria-label="Decrease quantity"
                           >
-                            <Minus size={12} />
+                            <Minus size={14} />
                           </button>
-                          <span className="text-sm font-semibold text-white min-w-[24px] text-center">
+                          <span className="text-base font-semibold text-white min-w-[28px] text-center">
                             {item.quantity || 1}
                           </span>
                           <button
@@ -199,14 +199,14 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                               e.stopPropagation();
                               updateQuantity(item.type, item.id, (item.quantity || 1) + 1);
                             }}
-                            className="w-6 h-6 flex items-center justify-center rounded bg-white/5 hover:bg-accent/20 text-white/60 hover:text-accent transition-all active:scale-95"
+                            className="w-7 h-7 flex items-center justify-center rounded-md bg-white/5 hover:bg-accent/20 text-white/60 hover:text-accent transition-all active:scale-95"
                             aria-label="Increase quantity"
                           >
-                            <Plus size={12} />
+                            <Plus size={14} />
                           </button>
                         </div>
                       ) : (
-                        <span className="text-[10px] text-white/30 px-2 py-1 bg-white/5 rounded">
+                        <span className="text-xs text-white/30 px-2.5 py-1 bg-white/5 rounded-md">
                           1x
                         </span>
                       )}
@@ -214,11 +214,11 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       {/* Price */}
                       <div className="flex flex-col items-end">
                         {item.quantity && item.quantity > 1 && (
-                          <span className="text-[9px] text-white/30 leading-none">
+                          <span className="text-xs text-white/30 leading-none mb-0.5">
                             {formatPrice(item.price)} each
                           </span>
                         )}
-                        <span className="text-sm font-bold gradient-text leading-tight">
+                        <span className="text-base font-bold gradient-text leading-tight">
                           {formatPrice(item.price * (item.quantity || 1))}
                         </span>
                       </div>
@@ -247,13 +247,13 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
         {/* Footer with total and checkout */}
         {items.length > 0 && (
-          <div className="border-t border-white/10 bg-black/90 backdrop-blur-sm px-6 py-5 space-y-3">
+          <div className="border-t border-white/10 bg-black/90 backdrop-blur-sm px-6 py-6 space-y-4">
             {/* Total */}
-            <div className="flex items-center justify-between py-1">
+            <div className="flex items-center justify-between py-2">
               <div>
-                <span className="text-white/60 text-sm">Total</span>
+                <span className="text-white/60 text-base">Total</span>
                 {items.reduce((sum, item) => sum + (item.quantity || 1), 0) > 1 && (
-                  <span className="text-white/40 text-xs ml-2">
+                  <span className="text-white/40 text-sm ml-2">
                     ({items.reduce((sum, item) => sum + (item.quantity || 1), 0)} items)
                   </span>
                 )}
@@ -267,11 +267,11 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             <Button
               onClick={handleCheckout}
               disabled={createCheckout.isPending}
-              className="w-full btn-vibrant h-12 text-base font-bold shadow-lg shadow-accent/20 hover:shadow-accent/30"
+              className="w-full btn-vibrant h-14 text-lg font-bold shadow-lg shadow-accent/20 hover:shadow-accent/30"
             >
               {createCheckout.isPending ? (
                 <span className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Processing...
                 </span>
               ) : (
