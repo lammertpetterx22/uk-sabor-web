@@ -88,23 +88,36 @@ export function serveStatic(app: Express) {
     console.log(`✅ [Static Files] Successfully found build directory`);
   }
 
-  // Serve static files with proper MIME types
+  // Serve static files with proper MIME types and cache control
   app.use(express.static(distPath, {
-    maxAge: '1y', // Cache static assets for 1 year
+    maxAge: 0, // Don't set default maxAge - we'll handle it per file type
     etag: true,
     lastModified: true,
     setHeaders: (res, filePath) => {
-      // Ensure JavaScript files are served with correct MIME type
+      // Set proper MIME types and cache policies
       if (filePath.endsWith('.js')) {
         res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // 1 year for hashed JS
       } else if (filePath.endsWith('.mjs')) {
         res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // 1 year for hashed JS
       } else if (filePath.endsWith('.css')) {
         res.setHeader('Content-Type', 'text/css; charset=utf-8');
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // 1 year for hashed CSS
       } else if (filePath.endsWith('.html')) {
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); // Never cache HTML
+        res.setHeader('Pragma', 'no-cache'); // HTTP/1.0 compatibility
+        res.setHeader('Expires', '0'); // Proxies
       } else if (filePath.endsWith('.json')) {
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache'); // Don't cache JSON
+      } else if (filePath.match(/\.(jpg|jpeg|png|gif|svg|webp|ico)$/i)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // 1 year for images
+      } else if (filePath.match(/\.(woff|woff2|ttf|eot)$/i)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // 1 year for fonts
+      } else {
+        res.setHeader('Cache-Control', 'public, max-age=3600'); // 1 hour default
       }
     }
   }));
@@ -120,6 +133,7 @@ export function serveStatic(app: Express) {
     }
 
     // For all other routes, serve the React app (SPA)
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
