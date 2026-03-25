@@ -71,6 +71,188 @@ export async function handleStripeWebhook(req: Request, res: Response) {
 }
 
 /**
+ * Handle multi-item cart checkout
+ */
+async function handleMultiItemCartCheckout(
+  session: Stripe.Checkout.Session,
+  db: any,
+  userId: number | null,
+  livemode: boolean
+) {
+  if (!userId) {
+    console.error("[Webhook] ❌ No user ID for multi-item cart");
+    return;
+  }
+
+  const metadata = session.metadata || {};
+  const cartItemsJson = metadata.cart_items;
+
+  if (!cartItemsJson) {
+    console.error("[Webhook] ❌ No cart_items in metadata");
+    return;
+  }
+
+  let cartItems: Array<{type: string, id: number, title: string, price: number, quantity?: number}> = [];
+
+  try {
+    cartItems = JSON.parse(cartItemsJson);
+  } catch (e) {
+    console.error("[Webhook] ❌ Failed to parse cart_items:", e);
+    return;
+  }
+
+  console.log(`[Webhook] 🛒 Processing ${cartItems.length} items from cart`);
+
+  const totalAmount = session.amount_total ? (session.amount_total / 100).toFixed(2) : "0";
+  const currency = (session.currency || "gbp").toUpperCase();
+
+  // Process each item in the cart
+  for (const item of cartItems) {
+    const itemType = item.type as "event" | "course" | "class";
+    const itemId = item.id;
+    const quantity = (item.quantity || 1);
+    const itemPrice = item.price;
+
+    try {
+      // Create order record for each item
+      const [order] = await db.insert(orders).values({
+        userId,
+        stripePaymentIntentId: session.payment_intent as string,
+        amount: (itemPrice * quantity).toFixed(2) as any,
+        currency,
+        status: "completed",
+        itemType,
+        itemId,
+        livemode,
+      }).returning({ id: orders.id });
+
+      const orderId = order.id;
+      console.log(`[Webhook] ✅ Order created #${orderId} - ${livemode ? 'LIVE' : 'TEST'} - ${itemType} #${itemId} x${quantity} - £${(itemPrice * quantity).toFixed(2)}`);
+
+      // Create purchase records based on item type
+      let ticketCode: string | undefined;
+      let accessCode: string | undefined;
+
+      switch (itemType) {
+        case "event":
+          ticketCode = generateTicketCode();
+          await db.insert(eventTickets).values({
+            userId,
+            eventId: itemId,
+            orderId,
+            quantity,
+            pricePaid: (itemPrice * quantity).toFixed(2) as any,
+            ticketCode,
+            status: "valid",
+          });
+          console.log(`[Webhook] ✅ Event ticket created for event #${itemId}`);
+          break;
+
+        case "course":
+          await db.insert(coursePurchases).values({
+            userId,
+            courseId: itemId,
+            orderId,
+            pricePaid: itemPrice.toFixed(2) as any,
+            progress: 0,
+            completed: false,
+          });
+          console.log(`[Webhook] ✅ Course purchase created for course #${itemId}`);
+          break;
+
+        case "class":
+          accessCode = generateAccessCode();
+          await db.insert(classPurchases).values({
+            userId,
+            classId: itemId,
+            orderId,
+            pricePaid: itemPrice.toFixed(2) as any,
+            accessCode,
+            status: "active",
+          });
+          console.log(`[Webhook] ✅ Class purchase created for class #${itemId}`);
+          break;
+      }
+
+      // Generate QR codes for events and classes
+      if (itemType === "event" || itemType === "class") {
+        const qrValue = itemType === "event"
+          ? `event-${itemId}-user-${userId}-order-${orderId}`
+          : `class-${itemId}-user-${userId}-order-${orderId}`;
+
+        try {
+          const qrCodeImage = await QRCode.toDataURL(qrValue, {
+            errorCorrectionLevel: "H" as any,
+            margin: 1,
+            width: 300,
+          });
+
+          await db.insert(qrCodes).values({
+            itemType: itemType as "event" | "class",
+            itemId,
+            userId,
+            orderId,
+            code: qrValue,
+            qrData: qrCodeImage,
+          });
+
+          console.log(`[Webhook] ✅ QR code saved for ${itemType} #${itemId}`);
+
+          // Send email with QR code
+          const [userRecord] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+          const userEmail = userRecord?.email;
+          const userName = userRecord?.name || "Customer";
+
+          if (userEmail && qrCodeImage) {
+            let itemName = item.title;
+            let eventDate: string | undefined;
+            let eventTime: string | undefined;
+
+            if (itemType === "event") {
+              const [eventRecord] = await db.select().from(events).where(eq(events.id, itemId)).limit(1);
+              if (eventRecord) {
+                itemName = eventRecord.title;
+                const d = new Date(eventRecord.eventDate);
+                eventDate = d.toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+                eventTime = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+              }
+            } else if (itemType === "class") {
+              const [classRecord] = await db.select().from(classes).where(eq(classes.id, itemId)).limit(1);
+              if (classRecord) {
+                itemName = classRecord.title;
+                const d = new Date(classRecord.classDate);
+                eventDate = d.toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+                eventTime = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+              }
+            }
+
+            await sendQRCodeEmail({
+              to: userEmail,
+              userName,
+              itemType: itemType as "event" | "class",
+              itemName,
+              qrCodeImage,
+              ticketCode: itemType === "event" ? ticketCode : undefined,
+              accessCode: itemType === "class" ? accessCode : undefined,
+              eventDate,
+              eventTime,
+            });
+
+            console.log(`[Webhook] ✅ QR code email sent to ${userEmail} for ${itemType} #${itemId}`);
+          }
+        } catch (qrError) {
+          console.error(`[Webhook] ❌ Error generating/sending QR for ${itemType} #${itemId}:`, qrError);
+        }
+      }
+    } catch (error) {
+      console.error(`[Webhook] ❌ Error processing cart item ${itemType} #${itemId}:`, error);
+    }
+  }
+
+  console.log(`[Webhook] ✅ Multi-item cart processed successfully for user ${userId}`);
+}
+
+/**
  * Handle successful checkout session
  * FIX: Generate personal QR codes per buyer, send correct codes via email,
  * and save with userId so users can retrieve them in their dashboard.
@@ -84,11 +266,20 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
   const userId = session.client_reference_id ? parseInt(session.client_reference_id) : null;
   const metadata = session.metadata || {};
-  const itemType = metadata[PRODUCT_METADATA.ITEM_TYPE];
-  const itemId = metadata[PRODUCT_METADATA.ITEM_ID] ? parseInt(metadata[PRODUCT_METADATA.ITEM_ID]) : null;
   const livemode = session.livemode; // Capture test vs production mode
 
-  console.log(`[Webhook] 🔍 Processing checkout - Mode: ${livemode ? 'LIVE' : 'TEST'}, User: ${userId}, Type: ${itemType}, Item: ${itemId}`);
+  // Check if this is a multi-item cart purchase
+  if (metadata.is_multi_item_cart === "true") {
+    console.log(`[Webhook] 🛒 Processing multi-item cart checkout - Mode: ${livemode ? 'LIVE' : 'TEST'}, User: ${userId}`);
+    await handleMultiItemCartCheckout(session, db, userId, livemode);
+    return;
+  }
+
+  // Single item purchase (legacy flow)
+  const itemType = metadata[PRODUCT_METADATA.ITEM_TYPE];
+  const itemId = metadata[PRODUCT_METADATA.ITEM_ID] ? parseInt(metadata[PRODUCT_METADATA.ITEM_ID]) : null;
+
+  console.log(`[Webhook] 🔍 Processing single-item checkout - Mode: ${livemode ? 'LIVE' : 'TEST'}, User: ${userId}, Type: ${itemType}, Item: ${itemId}`);
 
   if (!userId || !itemType || !itemId) {
     console.error("[Webhook] ❌ Missing required metadata:", { userId, itemType, itemId, livemode });
