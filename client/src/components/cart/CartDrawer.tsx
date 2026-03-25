@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Link } from "wouter";
+import { createPortal } from "react-dom";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -46,8 +47,14 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
+  // Use createPortal to render at document.body level, avoiding any parent
+  // overflow/height constraints from the header
+  const drawerContent = (
+    <div
+      className="fixed inset-0 z-[9999] flex justify-end"
+      style={{ top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100dvh' }}
+      onClick={onClose}
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -56,16 +63,17 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         }}
       />
 
-      {/* Drawer panel - wider */}
+      {/* Drawer panel */}
       <aside
-        className="relative w-full max-w-lg h-full bg-gradient-to-b from-[#0a0a0a] via-[#080808] to-black border-l border-white/10 shadow-2xl flex flex-col"
-        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-lg bg-gradient-to-b from-[#0a0a0a] via-[#080808] to-black border-l border-white/10 shadow-2xl flex flex-col"
         style={{
+          height: '100dvh',
           animation: 'slideInRight 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
         }}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-black/40">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-black/40 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-accent/20 to-accent/10 flex items-center justify-center">
               <ShoppingBag className="w-5 h-5 text-accent" />
@@ -86,8 +94,8 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           </button>
         </div>
 
-        {/* Cart items - scrollable */}
-        <div className="flex-1 overflow-y-auto px-5 py-6 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+        {/* Cart items - scrollable middle section */}
+        <div className="flex-1 overflow-y-auto px-5 py-6 min-h-0">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center py-12">
               <div className="w-24 h-24 rounded-full bg-accent/10 flex items-center justify-center mb-5">
@@ -261,7 +269,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
         {/* Footer with total and checkout */}
         {items.length > 0 && (
-          <div className="border-t border-white/10 bg-black/90 backdrop-blur-sm px-6 py-6">
+          <div className="border-t border-white/10 bg-black/90 backdrop-blur-sm px-6 py-6 flex-shrink-0">
             {/* Order summary */}
             <div className="space-y-3 mb-5">
               <div className="flex items-center justify-between">
@@ -312,4 +320,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       </aside>
     </div>
   );
+
+  // Render via portal to escape any parent overflow/height constraints
+  return createPortal(drawerContent, document.body);
 }
