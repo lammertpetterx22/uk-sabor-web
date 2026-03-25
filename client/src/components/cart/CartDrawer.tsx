@@ -1,4 +1,4 @@
-import { X, Trash2, ShoppingBag, ArrowRight, Plus, Minus } from "lucide-react";
+import { X, Trash2, ShoppingBag, ArrowRight, Plus, Minus, MapPin, Calendar } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
@@ -16,7 +16,6 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const createCheckout = trpc.checkout.createMultiItemSession.useMutation({
     onSuccess: (data) => {
       if (data.url) {
-        // Redirect to Stripe Checkout
         window.location.href = data.url;
       }
     },
@@ -43,6 +42,8 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     }).format(price);
   };
 
+  const totalItems = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+
   if (!isOpen) return null;
 
   return (
@@ -55,9 +56,9 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         }}
       />
 
-      {/* Drawer panel */}
+      {/* Drawer panel - wider */}
       <aside
-        className="relative w-full max-w-md h-full bg-gradient-to-b from-[#0a0a0a] via-[#080808] to-black border-l border-white/10 shadow-2xl flex flex-col"
+        className="relative w-full max-w-lg h-full bg-gradient-to-b from-[#0a0a0a] via-[#080808] to-black border-l border-white/10 shadow-2xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
         style={{
           animation: 'slideInRight 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
@@ -66,34 +67,34 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-black/40">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-accent/10 flex items-center justify-center">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-accent/20 to-accent/10 flex items-center justify-center">
               <ShoppingBag className="w-5 h-5 text-accent" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-white">Shopping Cart</h2>
               <p className="text-xs text-white/40">
-                {items.length} {items.length === 1 ? 'item' : 'items'}
+                {totalItems} {totalItems === 1 ? 'item' : 'items'}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg text-white/30 hover:text-white hover:bg-white/5 transition-all"
+            className="p-2.5 rounded-lg text-white/30 hover:text-white hover:bg-white/5 transition-all"
             aria-label="Close cart"
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* Cart items */}
-        <div className="flex-1 overflow-y-auto px-6 py-8 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+        {/* Cart items - scrollable */}
+        <div className="flex-1 overflow-y-auto px-5 py-6 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center py-12">
-              <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center mb-4">
-                <ShoppingBag className="w-10 h-10 text-accent/50" />
+              <div className="w-24 h-24 rounded-full bg-accent/10 flex items-center justify-center mb-5">
+                <ShoppingBag className="w-12 h-12 text-accent/50" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">Your cart is empty</h3>
-              <p className="text-white/50 text-sm mb-6 max-w-xs">
+              <h3 className="text-xl font-semibold text-white mb-2">Your cart is empty</h3>
+              <p className="text-white/50 text-sm mb-8 max-w-xs leading-relaxed">
                 Explore our courses, classes, and events to get started!
               </p>
               <Link href="/courses" onClick={onClose}>
@@ -103,125 +104,138 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               </Link>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {items.map((item) => (
                 <div
                   key={`${item.type}-${item.id}`}
-                  className="flex gap-4 p-4 rounded-xl bg-gradient-to-br from-card/70 to-card/30 border border-white/[0.08] hover:border-accent/30 hover:shadow-md hover:shadow-accent/5 transition-all duration-200"
+                  className="rounded-2xl bg-gradient-to-br from-card/70 to-card/30 border border-white/[0.08] hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300 overflow-hidden"
                 >
-                  {/* Image */}
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-gradient-to-br from-accent/20 to-accent/10 flex-shrink-0">
-                    {item.imageUrl ? (
-                      <img
-                        src={item.imageUrl}
-                        alt={item.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <ShoppingBag className="w-8 h-8 sm:w-10 sm:h-10 text-accent/40" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Details */}
-                  <div className="flex-1 min-w-0 flex flex-col gap-2">
-                    {/* Title and Remove */}
-                    <div className="flex items-start justify-between gap-3">
-                      <h4 className="text-base font-semibold text-white line-clamp-2 leading-snug flex-1">
-                        {item.title}
-                      </h4>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeItem(item.type, item.id);
-                        }}
-                        className="p-1.5 rounded-md text-white/30 hover:text-red-400 hover:bg-red-400/10 transition-all flex-shrink-0"
-                        aria-label="Remove item"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-
-                    {/* Instructor */}
-                    {item.instructorName && (
-                      <p className="text-sm text-accent/80 font-medium -mt-0.5">{item.instructorName}</p>
-                    )}
-
-                    {/* Tags */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs text-white/40 capitalize px-2 py-1 bg-white/5 rounded-md">
-                        {item.type === 'class' ? 'Live Class' : item.type}
-                      </span>
-                      {item.danceStyle && (
-                        <span className="text-xs text-accent/70 px-2 py-1 bg-accent/5 rounded-md">
-                          {item.danceStyle}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Date */}
-                    {item.date && (
-                      <p className="text-xs text-white/40">
-                        📅 {new Date(item.date).toLocaleDateString('en-GB', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
-                      </p>
-                    )}
-
-                    {/* Quantity and Price Row */}
-                    <div className="flex items-center justify-between mt-2 pt-3 border-t border-white/10">
-                      {/* Quantity Controls */}
-                      {(item.type === 'event' || item.type === 'class') ? (
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const newQty = (item.quantity || 1) - 1;
-                              if (newQty < 1) {
-                                removeItem(item.type, item.id);
-                              } else {
-                                updateQuantity(item.type, item.id, newQty);
-                              }
-                            }}
-                            className="w-7 h-7 flex items-center justify-center rounded-md bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all active:scale-95"
-                            aria-label="Decrease quantity"
-                          >
-                            <Minus size={14} />
-                          </button>
-                          <span className="text-base font-semibold text-white min-w-[28px] text-center">
-                            {item.quantity || 1}
-                          </span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              updateQuantity(item.type, item.id, (item.quantity || 1) + 1);
-                            }}
-                            className="w-7 h-7 flex items-center justify-center rounded-md bg-white/5 hover:bg-accent/20 text-white/60 hover:text-accent transition-all active:scale-95"
-                            aria-label="Increase quantity"
-                          >
-                            <Plus size={14} />
-                          </button>
-                        </div>
+                  {/* Top section: Image + Details */}
+                  <div className="flex gap-4 p-5">
+                    {/* Image - larger */}
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-gradient-to-br from-accent/20 to-accent/10 flex-shrink-0">
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
-                        <span className="text-xs text-white/30 px-2.5 py-1 bg-white/5 rounded-md">
-                          1x
-                        </span>
+                        <div className="w-full h-full flex items-center justify-center">
+                          <ShoppingBag className="w-10 h-10 text-accent/40" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Details */}
+                    <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                      {/* Title and Remove */}
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="text-base sm:text-lg font-semibold text-white leading-snug line-clamp-2 flex-1">
+                          {item.title}
+                        </h4>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeItem(item.type, item.id);
+                          }}
+                          className="p-1.5 rounded-lg text-white/25 hover:text-red-400 hover:bg-red-400/10 transition-all flex-shrink-0"
+                          aria-label="Remove item"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+
+                      {/* Instructor */}
+                      {item.instructorName && (
+                        <p className="text-sm text-accent/80 font-medium">{item.instructorName}</p>
                       )}
 
-                      {/* Price */}
-                      <div className="flex flex-col items-end">
-                        {item.quantity && item.quantity > 1 && (
-                          <span className="text-xs text-white/30 leading-none mb-0.5">
-                            {formatPrice(item.price)} each
+                      {/* Location */}
+                      {item.location && (
+                        <p className="text-xs text-white/50 flex items-center gap-1.5">
+                          <MapPin size={12} className="text-white/30 flex-shrink-0" />
+                          <span className="truncate">{item.location}</span>
+                        </p>
+                      )}
+
+                      {/* Date */}
+                      {item.date && (
+                        <p className="text-xs text-white/50 flex items-center gap-1.5">
+                          <Calendar size={12} className="text-white/30 flex-shrink-0" />
+                          {new Date(item.date).toLocaleDateString('en-GB', {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </p>
+                      )}
+
+                      {/* Tags */}
+                      <div className="flex items-center gap-2 flex-wrap mt-1">
+                        <span className="text-[11px] text-white/40 capitalize px-2 py-0.5 bg-white/5 rounded-md font-medium">
+                          {item.type === 'class' ? 'Live Class' : item.type}
+                        </span>
+                        {item.danceStyle && (
+                          <span className="text-[11px] text-accent/70 px-2 py-0.5 bg-accent/5 rounded-md font-medium">
+                            {item.danceStyle}
                           </span>
                         )}
-                        <span className="text-base font-bold gradient-text leading-tight">
-                          {formatPrice(item.price * (item.quantity || 1))}
-                        </span>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom section: Quantity + Price */}
+                  <div className="flex items-center justify-between px-5 py-3.5 border-t border-white/[0.06] bg-white/[0.02]">
+                    {/* Quantity Controls */}
+                    {(item.type === 'event' || item.type === 'class') ? (
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const newQty = (item.quantity || 1) - 1;
+                            if (newQty < 1) {
+                              removeItem(item.type, item.id);
+                            } else {
+                              updateQuantity(item.type, item.id, newQty);
+                            }
+                          }}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all active:scale-90"
+                          aria-label="Decrease quantity"
+                        >
+                          <Minus size={14} />
+                        </button>
+                        <span className="text-base font-bold text-white min-w-[36px] text-center tabular-nums">
+                          {item.quantity || 1}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateQuantity(item.type, item.id, (item.quantity || 1) + 1);
+                          }}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-accent/20 text-white/60 hover:text-accent transition-all active:scale-90"
+                          aria-label="Increase quantity"
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-white/30 px-3 py-1.5 bg-white/5 rounded-lg font-medium">
+                        Qty: 1
+                      </span>
+                    )}
+
+                    {/* Price */}
+                    <div className="flex flex-col items-end">
+                      {item.quantity && item.quantity > 1 && (
+                        <span className="text-[11px] text-white/30 leading-none mb-1">
+                          {formatPrice(item.price)} each
+                        </span>
+                      )}
+                      <span className="text-lg font-bold gradient-text leading-tight">
+                        {formatPrice(item.price * (item.quantity || 1))}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -236,7 +250,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       toast.success('Cart cleared');
                     }
                   }}
-                  className="w-full py-2 text-sm text-white/50 hover:text-white transition-colors"
+                  className="w-full py-2.5 text-sm text-white/40 hover:text-red-400 transition-colors rounded-lg hover:bg-red-400/5"
                 >
                   Clear all items
                 </button>
@@ -247,27 +261,31 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
         {/* Footer with total and checkout */}
         {items.length > 0 && (
-          <div className="border-t border-white/10 bg-black/90 backdrop-blur-sm px-6 py-6 space-y-4">
-            {/* Total */}
-            <div className="flex items-center justify-between py-2">
-              <div>
-                <span className="text-white/60 text-base">Total</span>
-                {items.reduce((sum, item) => sum + (item.quantity || 1), 0) > 1 && (
-                  <span className="text-white/40 text-sm ml-2">
-                    ({items.reduce((sum, item) => sum + (item.quantity || 1), 0)} items)
-                  </span>
-                )}
+          <div className="border-t border-white/10 bg-black/90 backdrop-blur-sm px-6 py-6">
+            {/* Order summary */}
+            <div className="space-y-3 mb-5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-white/40">
+                  Subtotal ({totalItems} {totalItems === 1 ? 'item' : 'items'})
+                </span>
+                <span className="text-sm text-white/60">
+                  {formatPrice(getTotal())}
+                </span>
               </div>
-              <span className="text-3xl font-bold gradient-text">
-                {formatPrice(getTotal())}
-              </span>
+              <div className="border-t border-white/[0.06]" />
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-base font-semibold text-white">Total</span>
+                <span className="text-2xl sm:text-3xl font-bold gradient-text">
+                  {formatPrice(getTotal())}
+                </span>
+              </div>
             </div>
 
             {/* Checkout button */}
             <Button
               onClick={handleCheckout}
               disabled={createCheckout.isPending}
-              className="w-full btn-vibrant h-14 text-lg font-bold shadow-lg shadow-accent/20 hover:shadow-accent/30"
+              className="w-full btn-vibrant h-14 text-lg font-bold shadow-lg shadow-accent/20 hover:shadow-accent/30 hover:scale-[1.01] active:scale-[0.99] transition-all"
             >
               {createCheckout.isPending ? (
                 <span className="flex items-center justify-center gap-2">
@@ -283,7 +301,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             </Button>
 
             {/* Secure badge */}
-            <div className="flex items-center justify-center gap-2 text-xs text-white/40 pt-1">
+            <div className="flex items-center justify-center gap-2 text-xs text-white/40 pt-4">
               <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 1l6 2v6c0 5.55-3.84 7.74-6 8-2.16-.26-6-2.45-6-8V3l6-2zm0 2.3L5 4.7v4.8c0 3.84 2.44 5.7 5 6 2.56-.3 5-2.16 5-6V4.7l-5-1.4z"/>
               </svg>
