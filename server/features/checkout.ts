@@ -94,20 +94,37 @@ export const checkoutRouter = router({
       );
 
       // Create Stripe line items
-      const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = validatedItems.map((item) => ({
-        price_data: {
-          currency: "gbp",
-          product_data: {
-            name: `${item.type === "event" ? "🎉" : item.type === "class" ? "💃" : "📚"} ${item.title}`,
-            description: item.instructorName
-              ? `by ${item.instructorName}${item.danceStyle ? ` • ${item.danceStyle}` : ""}`
-              : item.danceStyle || "",
-            ...(item.imageUrl ? { images: [item.imageUrl] } : {}),
+      const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = validatedItems.map((item) => {
+        // Build description - only include if we have actual content
+        let description = "";
+        if (item.instructorName) {
+          description = `by ${item.instructorName}`;
+          if (item.danceStyle) {
+            description += ` • ${item.danceStyle}`;
+          }
+        } else if (item.danceStyle) {
+          description = item.danceStyle;
+        }
+
+        const productData: Stripe.Checkout.SessionCreateParams.LineItem.PriceData.ProductData = {
+          name: `${item.type === "event" ? "🎉" : item.type === "class" ? "💃" : "📚"} ${item.title}`,
+          ...(item.imageUrl ? { images: [item.imageUrl] } : {}),
+        };
+
+        // Only add description if it's not empty
+        if (description) {
+          productData.description = description;
+        }
+
+        return {
+          price_data: {
+            currency: "gbp",
+            product_data: productData,
+            unit_amount: Math.round(item.price * 100), // Convert to pence
           },
-          unit_amount: Math.round(item.price * 100), // Convert to pence
-        },
-        quantity: item.quantity || 1,
-      }));
+          quantity: item.quantity || 1,
+        };
+      });
 
       // Create Stripe checkout session
       const session = await stripe.checkout.sessions.create({
