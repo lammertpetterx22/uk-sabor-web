@@ -20,6 +20,7 @@ interface CartState {
   // Actions
   addItem: (item: CartItem) => void;
   removeItem: (type: CartItem['type'], id: number) => void;
+  updateQuantity: (type: CartItem['type'], id: number, quantity: number) => void;
   clearCart: () => void;
   isInCart: (type: CartItem['type'], id: number) => boolean;
   getItemCount: () => number;
@@ -56,6 +57,20 @@ export const useCartStore = create<CartState>()(
         set((state) => ({
           items: state.items.filter(
             (item) => !(item.type === type && item.id === id)
+          ),
+        }));
+      },
+
+      updateQuantity: (type, id, quantity) => {
+        if (quantity < 1) {
+          get().removeItem(type, id);
+          return;
+        }
+        set((state) => ({
+          items: state.items.map((item) =>
+            item.type === type && item.id === id
+              ? { ...item, quantity }
+              : item
           ),
         }));
       },
