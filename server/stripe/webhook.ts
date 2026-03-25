@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import { Request, Response } from "express";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { getDb } from "../db";
 import {
   orders,
@@ -146,6 +146,14 @@ async function handleMultiItemCartCheckout(
             status: "valid",
           });
           console.log(`[Webhook] ✅ Event ticket created for event #${itemId}`);
+
+          // Update ticketsSold count in events table
+          await db.update(events)
+            .set({
+              ticketsSold: sql`COALESCE(${events.ticketsSold}, 0) + ${quantity}`
+            })
+            .where(eq(events.id, itemId));
+          console.log(`[Webhook] ✅ Updated ticketsSold for event #${itemId} (+${quantity})`);
           break;
 
         case "course":
@@ -397,19 +405,28 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     switch (itemType) {
       case "event":
         ticketCode = generateTicketCode();
+        const eventQuantity = metadata.quantity ? parseInt(metadata.quantity) : 1;
         await db.insert(eventTickets).values({
           userId,
           eventId: itemId,
           orderId,
-          quantity: metadata.quantity ? parseInt(metadata.quantity) : 1,
+          quantity: eventQuantity,
           instructorId: (metadata as any)._creator_user_id,
-          pricePaid: (parseInt(metadata.ticket_price_pence || "0") * (metadata.quantity ? parseInt(metadata.quantity) : 1) / 100).toFixed(2) as any,
+          pricePaid: (parseInt(metadata.ticket_price_pence || "0") * eventQuantity / 100).toFixed(2) as any,
           platformFee: ((metadata as any)._calculated_platform_fee || 0).toFixed(2) as any,
           instructorEarnings: ((metadata as any)._calculated_instructor_earnings || 0).toFixed(2) as any,
           ticketCode,
           status: "valid",
         });
         console.log(`[Webhook] Event ticket created for user ${userId}, event ${itemId}`);
+
+        // Update ticketsSold count in events table
+        await db.update(events)
+          .set({
+            ticketsSold: sql`COALESCE(${events.ticketsSold}, 0) + ${eventQuantity}`
+          })
+          .where(eq(events.id, itemId));
+        console.log(`[Webhook] ✅ Updated ticketsSold for event #${itemId} (+${eventQuantity})`);
         break;
 
       case "course":
