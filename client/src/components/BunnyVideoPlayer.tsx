@@ -232,7 +232,7 @@ export default function BunnyVideoPlayer({
             </div>
           </div>
           <p className="mt-6 text-white/90 text-sm font-medium tracking-wide">
-            Cargando video...
+            Loading video...
           </p>
         </div>
       )}

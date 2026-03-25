@@ -218,7 +218,7 @@ export default function ResponsiveBunnyPlayer({
       {isLoading && !locked && (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm">
           <Loader2 className="h-12 w-12 text-[#FA3698] animate-spin" />
-          <p className="mt-3 text-white/80 text-sm">Cargando video...</p>
+          <p className="mt-3 text-white/80 text-sm">Loading video...</p>
         </div>
       )}
 

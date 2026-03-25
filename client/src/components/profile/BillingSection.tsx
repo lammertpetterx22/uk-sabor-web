@@ -120,7 +120,7 @@ export default function BillingSection() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="text-zinc-400">Cargando información de facturación...</div>
+        <div className="text-zinc-400">Loading billing information...</div>
       </div>
     );
   }

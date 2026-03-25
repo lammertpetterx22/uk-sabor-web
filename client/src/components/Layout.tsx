@@ -46,10 +46,8 @@ const PUBLIC_NAV = [
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-    const [drawerOpen, setDrawerOpen] = useState(() => {
-        const saved = localStorage.getItem("sidebar-state");
-        return saved ? saved === "true" : false;
-    });
+    // Always start closed - sidebar should only open when user clicks menu button
+    const [drawerOpen, setDrawerOpen] = useState(false);
 
     const handleSetDrawerOpen = useCallback((open: boolean) => {
         setDrawerOpen(open);

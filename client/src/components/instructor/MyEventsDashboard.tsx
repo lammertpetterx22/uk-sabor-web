@@ -163,7 +163,7 @@ export default function MyEventsDashboard({
         <div className="flex justify-center py-16">
           <div className="text-center">
             <Loader2 className="h-12 w-12 animate-spin text-accent mx-auto mb-4" />
-            <p className="text-foreground/60">Cargando eventos...</p>
+            <p className="text-foreground/60">Loading events...</p>
           </div>
         </div>
       ) : events && events.length > 0 ? (
