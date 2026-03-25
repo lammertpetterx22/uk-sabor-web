@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useState, useCallback } from "react";
 import { EnhancedVideoPlayer } from "@/../components/video/EnhancedVideoPlayer";
 import LessonList, { isLessonUnlocked } from "@/components/LessonList";
+import AddToCartButton from "@/components/cart/AddToCartButton";
 
 // ─── Types (mirrors tRPC lesson shape) ─────────────────────────────────────
 interface LessonItem {
@@ -69,7 +70,7 @@ export default function CourseDetail() {
   const checkoutMutation = trpc.payments.createCourseCheckout.useMutation({
     onSuccess: data => {
       if (data.checkoutUrl) {
-        toast.success("Redirigiendo al pago...");
+        toast.success("Redirecting to checkout...");
         window.open(data.checkoutUrl, "_blank");
       }
     },
@@ -86,7 +87,7 @@ export default function CourseDetail() {
   const handleSelectLesson = (lesson: LessonItem) => {
     const unlocked = isLessonUnlocked(lesson, lessons, progress, hasPurchased);
     if (!unlocked) {
-      toast.error("Completa la lección anterior para desbloquear esta.");
+      toast.error("Complete the previous lesson to unlock this one.");
       return;
     }
     setActiveLessonId(lesson.id);
@@ -109,14 +110,14 @@ export default function CourseDetail() {
     updateProgressMutation.mutate({ lessonId: activeLessonId, watchPercent: 100 });
 
     if (nextLesson) {
-      toast.success("🎉 ¡Lección completada! La siguiente ha sido desbloqueada.", {
+      toast.success("🎉 Lesson completed! The next one has been unlocked.", {
         duration: 4000,
-        description: `Siguiente: ${nextLesson.title}`,
+        description: `Next: ${nextLesson.title}`,
       });
     } else {
-      toast.success("🎊 ¡Felicitaciones! Has completado todas las lecciones del curso.", {
+      toast.success("🎊 Congratulations! You've completed all lessons in this course.", {
         duration: 5000,
-        description: "¡Curso finalizado con éxito!",
+        description: "Course finished successfully!",
       });
     }
   }, [activeLessonId, updateProgressMutation, lessons]);
@@ -129,13 +130,13 @@ export default function CourseDetail() {
     if (isCurrentlyCompleted) {
       // Mark as incomplete
       updateProgressMutation.mutate({ lessonId: activeLessonId, watchPercent: 0 });
-      toast.info("🔄 Lección marcada como incompleta", {
+      toast.info("🔄 Lesson marked as incomplete", {
         duration: 2500,
       });
     } else {
       // Mark as complete
       updateProgressMutation.mutate({ lessonId: activeLessonId, watchPercent: 100 });
-      toast.success("✅ ¡Lección marcada como completada!", {
+      toast.success("✅ Lesson marked as complete!", {
         duration: 2500,
       });
     }
@@ -160,8 +161,8 @@ export default function CourseDetail() {
       <div className="min-h-screen bg-background">
         <div className="container py-16 text-center">
           <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-          <h1 className="text-2xl font-bold mb-4">Curso no encontrado</h1>
-          <Link href="/courses"><Button variant="outline">Volver a Cursos</Button></Link>
+          <h1 className="text-2xl font-bold mb-4">Course not found</h1>
+          <Link href="/courses"><Button variant="outline">Back to Courses</Button></Link>
         </div>
       </div>
     );
@@ -180,7 +181,7 @@ export default function CourseDetail() {
         {/* Breadcrumb */}
         <Link href="/courses" className="inline-flex items-center gap-2 text-foreground/60 hover:text-accent mb-6 transition-colors">
           <ArrowLeft className="h-4 w-4" />
-          Volver a Cursos
+          Back to Courses
         </Link>
 
         {/* Course-level Video Fallback (if no lessons) */}
@@ -199,7 +200,7 @@ export default function CourseDetail() {
               <div className="px-4 py-3 bg-card/80 border-t border-border/30 flex items-center gap-3">
                 <Play size={14} className="text-[#FA3698]" />
                 <p className="text-sm font-medium text-foreground/80 truncate">
-                  {course.title} - Video del Curso
+                  {course.title} - Course Video
                 </p>
               </div>
             </div>
@@ -230,12 +231,12 @@ export default function CourseDetail() {
                     <div className="flex items-center gap-3 mb-2">
                       <Play size={14} className="text-[#FA3698]" />
                       <p className="text-sm font-medium text-foreground/80 truncate flex-1">
-                        Lección {activeLesson.position}: {activeLesson.title}
+                        Lesson {activeLesson.position}: {activeLesson.title}
                       </p>
                       {progress[activeLesson.id]?.completed && (
                         <Badge variant="outline" className="text-green-400 border-green-400/50 bg-green-400/10 gap-1 flex-shrink-0">
                           <CheckCircle2 size={12} />
-                          Completada
+                          Completed
                         </Badge>
                       )}
                     </div>
@@ -245,7 +246,7 @@ export default function CourseDetail() {
                       {/* Progress bar */}
                       <div className="flex-1">
                         <div className="flex items-center justify-between text-xs text-foreground/60 mb-1">
-                          <span>Progreso</span>
+                          <span>Progress</span>
                           <span className="font-semibold">
                             {Math.round(progress[activeLesson.id]?.watchPercent || 0)}%
                           </span>
@@ -280,14 +281,14 @@ export default function CourseDetail() {
                         ) : progress[activeLesson.id]?.completed ? (
                           <>
                             <CheckCircle2 size={14} />
-                            <span className="hidden sm:inline">Completada</span>
-                            <span className="sm:hidden">Visto</span>
+                            <span className="hidden sm:inline">Completed</span>
+                            <span className="sm:hidden">Done</span>
                           </>
                         ) : (
                           <>
                             <CheckCircle2 size={14} />
-                            <span className="hidden sm:inline">Marcar completada</span>
-                            <span className="sm:hidden">Completar</span>
+                            <span className="hidden sm:inline">Mark as complete</span>
+                            <span className="sm:hidden">Complete</span>
                           </>
                         )}
                       </Button>
@@ -303,13 +304,13 @@ export default function CourseDetail() {
                     <Play size={28} className="text-[#FA3698] ml-1" />
                   </div>
                   <p className="text-foreground/70 text-center">
-                    Selecciona una lección de la lista para comenzar
+                    Select a lesson from the list to begin
                   </p>
                   <Button
                     onClick={() => handleSelectLesson(lessons.find(l => l.position === 1)!)}
                     className="btn-vibrant"
                   >
-                    Empezar Lección 1
+                    Start Lesson 1
                   </Button>
                 </CardContent>
               </Card>
@@ -317,11 +318,11 @@ export default function CourseDetail() {
               /* No lessons at all - fallback info card if video played above */
               <Card className="border-border/30 bg-card/50">
                 <CardContent className="py-8">
-                  <h3 className="text-lg font-semibold mb-2">Acerca de este curso</h3>
+                  <h3 className="text-lg font-semibold mb-2">About this course</h3>
                   <p className="text-foreground/70 mb-4">{course.description}</p>
                   <div className="flex items-center gap-2 text-sm text-foreground/50">
                     <BookOpen size={16} />
-                    <span>Pronto añadiremos lecciones detalladas</span>
+                    <span>Detailed lessons coming soon</span>
                   </div>
                 </CardContent>
               </Card>
@@ -341,8 +342,8 @@ export default function CourseDetail() {
                       <BookOpen size={28} className="text-accent" />
                     </div>
                     <div className="text-center">
-                      <h3 className="text-lg font-semibold mb-1">Contenido bloqueado</h3>
-                      <p className="text-foreground/60 text-sm">Compra este curso para acceder a las lecciones</p>
+                      <h3 className="text-lg font-semibold mb-1">Content locked</h3>
+                      <p className="text-foreground/60 text-sm">Purchase this course to access the lessons</p>
                     </div>
                   </div>
                 </div>
@@ -354,9 +355,9 @@ export default function CourseDetail() {
               <Card className="border-border/50">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">Lecciones del curso</CardTitle>
+                    <CardTitle className="text-lg">Course lessons</CardTitle>
                     <span className="text-sm text-foreground/50">
-                      {completedCount}/{totalLessons} completadas
+                      {completedCount}/{totalLessons} completed
                     </span>
                   </div>
 
@@ -390,16 +391,16 @@ export default function CourseDetail() {
                   <div>
                     <CardTitle className="text-3xl mb-2">{course.title}</CardTitle>
                     <CardDescription className="text-base">
-                      Impartido por{" "}
+                      Taught by{" "}
                       <span className="text-accent font-semibold">{instructor?.name || "Instructor"}</span>
                     </CardDescription>
                   </div>
                   <Badge variant="outline" className="text-accent border-accent/50 shrink-0">
                     {course.level
-                      ? { beginner: "Principiante", intermediate: "Intermedio", advanced: "Avanzado" }[
+                      ? { beginner: "Beginner", intermediate: "Intermediate", advanced: "Advanced" }[
                       course.level as "beginner" | "intermediate" | "advanced"
                       ] ?? course.level
-                      : "Todos los niveles"}
+                      : "All levels"}
                   </Badge>
                 </div>
               </CardHeader>
@@ -410,30 +411,30 @@ export default function CourseDetail() {
                   <div className="bg-card/50 rounded-lg p-4">
                     <div className="flex items-center gap-2 text-foreground/60 mb-1">
                       <Clock className="h-4 w-4" />
-                      <span className="text-xs uppercase tracking-wide">Duración</span>
+                      <span className="text-xs uppercase tracking-wide">Duration</span>
                     </div>
-                    <p className="font-semibold">{course.duration || "A tu ritmo"}</p>
+                    <p className="font-semibold">{course.duration || "At your own pace"}</p>
                   </div>
                   <div className="bg-card/50 rounded-lg p-4">
                     <div className="flex items-center gap-2 text-foreground/60 mb-1">
                       <BookOpen className="h-4 w-4" />
-                      <span className="text-xs uppercase tracking-wide">Lecciones</span>
+                      <span className="text-xs uppercase tracking-wide">Lessons</span>
                     </div>
-                    <p className="font-semibold">{totalLessons || course.lessonsCount || "Múltiples"}</p>
+                    <p className="font-semibold">{totalLessons || course.lessonsCount || "Multiple"}</p>
                   </div>
                   <div className="bg-card/50 rounded-lg p-4">
                     <div className="flex items-center gap-2 text-foreground/60 mb-1">
                       <Star className="h-4 w-4" />
-                      <span className="text-xs uppercase tracking-wide">Estilo</span>
+                      <span className="text-xs uppercase tracking-wide">Style</span>
                     </div>
-                    <p className="font-semibold">{course.danceStyle || "Mixto"}</p>
+                    <p className="font-semibold">{course.danceStyle || "Mixed"}</p>
                   </div>
                 </div>
 
                 {/* Description */}
                 {course.description && (
                   <div>
-                    <h3 className="font-semibold mb-2">Sobre este curso</h3>
+                    <h3 className="font-semibold mb-2">About this course</h3>
                     <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap">{course.description}</p>
                   </div>
                 )}
@@ -441,7 +442,7 @@ export default function CourseDetail() {
                 {/* Instructor */}
                 {instructor && (
                   <div className="border-t border-border/50 pt-6">
-                    <h3 className="font-semibold mb-3">Tu instructor</h3>
+                    <h3 className="font-semibold mb-3">Your instructor</h3>
                     <div className="flex items-center gap-4">
                       {instructor.photoUrl ? (
                         <img
@@ -456,7 +457,7 @@ export default function CourseDetail() {
                       )}
                       <div>
                         <p className="font-semibold">{instructor.name}</p>
-                        <p className="text-sm text-foreground/60">{instructor.bio || "Instructor profesional de danza"}</p>
+                        <p className="text-sm text-foreground/60">{instructor.bio || "Professional dance instructor"}</p>
                       </div>
                     </div>
                   </div>
@@ -470,7 +471,7 @@ export default function CourseDetail() {
             <Card className="sticky top-24 border-accent/20">
               <CardContent className="pt-6 space-y-6">
                 <div className="text-center">
-                  <p className="text-sm text-foreground/60 mb-1">Precio del curso</p>
+                  <p className="text-sm text-foreground/60 mb-1">Course price</p>
                   <p className="text-4xl font-bold text-accent">£{price.toFixed(2)}</p>
                 </div>
 
@@ -479,7 +480,7 @@ export default function CourseDetail() {
                     {/* Overall progress */}
                     <div className="bg-card/50 rounded-lg p-4">
                       <div className="flex justify-between text-sm mb-2">
-                        <span className="text-foreground/60">Tu progreso</span>
+                        <span className="text-foreground/60">Your progress</span>
                         <span className="font-semibold text-accent">{overallPct}%</span>
                       </div>
                       <div className="h-2 bg-white/10 rounded-full">
@@ -492,14 +493,14 @@ export default function CourseDetail() {
                         />
                       </div>
                       <p className="text-xs text-foreground/50 mt-2">
-                        {completedCount} de {totalLessons} lecciones completadas
+                        {completedCount} of {totalLessons} lessons completed
                       </p>
                     </div>
 
                     {overallPct === 100 && (
                       <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 text-center">
                         <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                        <p className="font-semibold text-green-400">¡Curso completado!</p>
+                        <p className="font-semibold text-green-400">Course completed!</p>
                       </div>
                     )}
                   </div>
@@ -507,10 +508,10 @@ export default function CourseDetail() {
                   <div className="space-y-4">
                     <ul className="space-y-2.5">
                       {[
-                        "Acceso ilimitado",
-                        "Todas las lecciones incluidas",
-                        "Aprende a tu ritmo",
-                        "Instructor profesional",
+                        "Unlimited access",
+                        "All lessons included",
+                        "Learn at your own pace",
+                        "Professional instructor",
                       ].map(item => (
                         <li key={item} className="flex items-center gap-3">
                           <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
@@ -520,22 +521,21 @@ export default function CourseDetail() {
                     </ul>
 
                     {isAuthenticated ? (
-                      <Button
-                        className="w-full btn-vibrant text-base py-5"
-                        onClick={() => checkoutMutation.mutate({ courseId: course.id })}
-                        disabled={checkoutMutation.isPending}
-                      >
-                        {checkoutMutation.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        ) : (
-                          <BookOpen className="h-4 w-4 mr-2" />
-                        )}
-                        Comprar — £{price.toFixed(2)}
-                      </Button>
+                      <AddToCartButton 
+                        item={{
+                          type: "course",
+                          id: course.id,
+                          title: course.title,
+                          price: price,
+                          imageUrl: course.imageUrl || undefined,
+                          instructorName: instructor?.name,
+                        }}
+                        className="w-full py-5 text-base"
+                      />
                     ) : (
                       <Link href="/login">
                         <Button className="w-full btn-vibrant text-base py-5">
-                          Inicia sesión para comprar
+                          Sign in to purchase
                         </Button>
                       </Link>
                     )}

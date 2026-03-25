@@ -233,9 +233,9 @@ export default function StaffScanner() {
         return (
             <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6 p-8">
                 <ShieldAlert size={48} className="text-[#FA3698]" />
-                <h1 className="text-2xl font-bold text-center">Acceso Restringido</h1>
-                <p className="text-foreground/60 text-center">Inicia sesión para acceder al scanner de Staff</p>
-                <Link href="/login"><Button className="btn-vibrant">Iniciar sesión</Button></Link>
+                <h1 className="text-2xl font-bold text-center">Access Restricted</h1>
+                <p className="text-foreground/60 text-center">Sign in to access the Staff Scanner</p>
+                <Link href="/login"><Button className="btn-vibrant">Sign In</Button></Link>
             </div>
         );
     }
@@ -244,11 +244,11 @@ export default function StaffScanner() {
         return (
             <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6 p-8">
                 <ShieldAlert size={48} className="text-[#FD4D43]" />
-                <h1 className="text-2xl font-bold text-center">Sin Permisos</h1>
+                <h1 className="text-2xl font-bold text-center">No Permission</h1>
                 <p className="text-foreground/60 text-center max-w-sm">
-                    Esta página solo está disponible para <strong>instructores</strong> y <strong>promotores</strong> de Con Sabor.
+                    This page is only available for <strong>instructors</strong> and <strong>promoters</strong> of Con Sabor.
                 </p>
-                <Link href="/"><Button variant="outline"><ArrowLeft size={16} className="mr-2" />Volver al inicio</Button></Link>
+                <Link href="/"><Button variant="outline"><ArrowLeft size={16} className="mr-2" />Back to Home</Button></Link>
             </div>
         );
     }

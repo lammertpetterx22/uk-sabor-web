@@ -38,10 +38,8 @@ class Logger {
 
     console.warn(`[WARN] ${message}`, context || '');
 
-    // TODO: Send to external service in production
-    // if (!this.isDevelopment) {
-    //   this.sendToSentry('warning', message, context);
-    // }
+    // External logging service integration placeholder
+    // Enable Sentry integration in sentry.ts if needed
   }
 
   /**
@@ -52,10 +50,8 @@ class Logger {
 
     console.error(`[ERROR] ${message}`, error || '', context || '');
 
-    // TODO: Send to external service in production
-    // if (!this.isDevelopment) {
-    //   this.sendToSentry('error', message, { error, ...context });
-    // }
+    // External logging service integration placeholder
+    // Enable Sentry integration in sentry.ts if needed
   }
 
   /**
@@ -85,22 +81,18 @@ class Logger {
   apiError(endpoint: string, error: unknown) {
     console.error(`[API Error] ${endpoint}`, error);
 
-    // TODO: Send to external service
-    // if (!this.isDevelopment) {
-    //   this.sendToSentry('error', `API Error: ${endpoint}`, { error });
-    // }
+    // External logging service integration placeholder
+    // Enable Sentry integration in sentry.ts if needed
   }
 
   /**
    * Send logs to external service (placeholder)
-   * Implement with Sentry, LogRocket, or other service
+   * Sentry integration is already available in sentry.ts
+   * Enable it by setting VITE_SENTRY_DSN in .env
    */
   private sendToSentry(level: 'error' | 'warning', message: string, context?: any) {
-    // TODO: Implement Sentry integration
-    // Sentry.captureMessage(message, {
-    //   level,
-    //   extra: context,
-    // });
+    // Sentry is already configured in sentry.ts
+    // Use captureException() or captureMessage() directly when needed
   }
 }
 

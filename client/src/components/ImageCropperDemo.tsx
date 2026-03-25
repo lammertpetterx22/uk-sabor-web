@@ -23,7 +23,6 @@ export default function ImageCropperDemo() {
     setProfileImage(url);
     setShowProfileCropper(false);
     // Here you would typically upload the blob to your server
-    console.log("Profile image blob:", blob);
   };
 
   // Handle cover image crop
@@ -31,7 +30,6 @@ export default function ImageCropperDemo() {
     setCoverImage(url);
     setShowCoverCropper(false);
     // Here you would typically upload the blob to your server
-    console.log("Cover image blob:", blob);
   };
 
   return (
@@ -227,7 +225,6 @@ const [showCropper, setShowCropper] = useState(false);
 
 const handleCrop = (blob: Blob, url: string) => {
   // Upload blob to server or use URL for preview
-  console.log("Cropped image:", blob);
   setShowCropper(false);
 };
 

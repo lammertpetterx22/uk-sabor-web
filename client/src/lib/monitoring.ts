@@ -187,11 +187,11 @@ function sendToAnalytics(
   properties?: Record<string, any>
 ) {
   if (import.meta.env.DEV) {
-    // console.log('[Analytics]', eventName, value, properties);
     return;
   }
 
-  // TODO: Integrate with your analytics service
+  // Analytics integration placeholder
+  // Integrate with Google Analytics, Umami, or other analytics service as needed
   // Examples:
 
   // Google Analytics 4
