@@ -129,6 +129,76 @@ async function handleMultiItemCartCheckout(
       const orderId = order.id;
       console.log(`[Webhook] ✅ Order created #${orderId} - ${livemode ? 'LIVE' : 'TEST'} - ${itemType} #${itemId} x${quantity} - £${(itemPrice * quantity).toFixed(2)}`);
 
+      // ─── Calculate Earnings ──────────────────────────────────────────────
+      let creatorUserId: number | null = null;
+      let platformFeeGBP = 0;
+      let instructorEarningsGBP = 0;
+      let netEarningsPence = Math.round(itemPrice * quantity * 100);
+
+      try {
+        let sellerPlan: string = "starter";
+
+        if (itemType === "event") {
+          const [event] = await db.select({ creatorId: events.creatorId }).from(events).where(eq(events.id, itemId)).limit(1);
+          creatorUserId = event?.creatorId || null;
+          if (creatorUserId) {
+            const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan }).from(users).where(eq(users.id, creatorUserId)).limit(1);
+            sellerPlan = u?.subscriptionPlan || "starter";
+          }
+        } else if (itemType === "course") {
+          const [course] = await db.select({ instructorId: courses.instructorId }).from(courses).where(eq(courses.id, itemId)).limit(1);
+          if (course) {
+            const [instr] = await db.select({ userId: instructors.userId }).from(instructors).where(eq(instructors.id, course.instructorId)).limit(1);
+            creatorUserId = instr?.userId || null;
+            if (creatorUserId) {
+              const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan }).from(users).where(eq(users.id, creatorUserId)).limit(1);
+              sellerPlan = u?.subscriptionPlan || "starter";
+            }
+          }
+        } else if (itemType === "class") {
+          const [classItem] = await db.select({ instructorId: classes.instructorId }).from(classes).where(eq(classes.id, itemId)).limit(1);
+          if (classItem) {
+            const [instr] = await db.select({ userId: instructors.userId }).from(instructors).where(eq(instructors.id, classItem.instructorId)).limit(1);
+            creatorUserId = instr?.userId || null;
+            if (creatorUserId) {
+              const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan }).from(users).where(eq(users.id, creatorUserId)).limit(1);
+              sellerPlan = u?.subscriptionPlan || "starter";
+            }
+          }
+        }
+
+        if (creatorUserId && netEarningsPence > 0) {
+          const planDef = PLANS[sellerPlan as PlanKey] || PLANS.starter;
+
+          // Calculate commission based on item type and plan
+          let commissionRate = 0;
+          if (itemType === "course") {
+            commissionRate = planDef.courseCommissionRate;
+          } else if (itemType === "event" || itemType === "class") {
+            commissionRate = planDef.commissionRate;
+          }
+
+          const commissionPence = Math.round(netEarningsPence * commissionRate);
+          platformFeeGBP = commissionPence / 100;
+          instructorEarningsGBP = (netEarningsPence - commissionPence) / 100;
+
+          console.log(`[Webhook] 💰 ${livemode ? 'LIVE' : 'TEST'} EARNINGS - ${itemType} #${itemId} | Price: £${(netEarningsPence/100).toFixed(2)} | Fee: £${platformFeeGBP.toFixed(2)} (${(commissionRate*100).toFixed(1)}%) | Instructor: £${instructorEarningsGBP.toFixed(2)}`);
+
+          // Record earnings in balance
+          await addEarnings({
+            userId: creatorUserId,
+            amount: instructorEarningsGBP,
+            description: `${livemode ? 'Sale' : 'Test Sale'}: ${item.title} (#${orderId})`,
+            orderId: orderId,
+          });
+        } else {
+          console.log(`[Webhook] ⚠️  No earnings - Mode: ${livemode ? 'LIVE' : 'TEST'}, Creator: ${creatorUserId || 'NULL'}, ${itemType} #${itemId}`);
+        }
+      } catch (earningsError) {
+        console.error(`[Webhook] ❌ Error calculating earnings for ${itemType} #${itemId}:`, earningsError);
+      }
+      // ─────────────────────────────────────────────────────────────────────
+
       // Create purchase records based on item type
       let ticketCode: string | undefined;
       let accessCode: string | undefined;
@@ -141,7 +211,10 @@ async function handleMultiItemCartCheckout(
             eventId: itemId,
             orderId,
             quantity,
+            instructorId: creatorUserId,
             pricePaid: (itemPrice * quantity).toFixed(2) as any,
+            platformFee: platformFeeGBP.toFixed(2) as any,
+            instructorEarnings: instructorEarningsGBP.toFixed(2) as any,
             ticketCode,
             status: "valid",
           });
@@ -160,8 +233,11 @@ async function handleMultiItemCartCheckout(
           await db.insert(coursePurchases).values({
             userId,
             courseId: itemId,
+            instructorId: creatorUserId,
             orderId,
             pricePaid: itemPrice.toFixed(2) as any,
+            platformFee: platformFeeGBP.toFixed(2) as any,
+            instructorEarnings: instructorEarningsGBP.toFixed(2) as any,
             progress: 0,
             completed: false,
           });
@@ -173,8 +249,11 @@ async function handleMultiItemCartCheckout(
           await db.insert(classPurchases).values({
             userId,
             classId: itemId,
+            instructorId: creatorUserId,
             orderId,
             pricePaid: itemPrice.toFixed(2) as any,
+            platformFee: platformFeeGBP.toFixed(2) as any,
+            instructorEarnings: instructorEarningsGBP.toFixed(2) as any,
             accessCode,
             status: "active",
           });
