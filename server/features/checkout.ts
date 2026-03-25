@@ -23,6 +23,7 @@ const cartItemSchema = z.object({
   danceStyle: z.string().optional(),
   date: z.string().optional(),
   location: z.string().optional(),
+  quantity: z.number().int().min(1).optional(),
 });
 
 export const checkoutRouter = router({
@@ -105,7 +106,7 @@ export const checkoutRouter = router({
           },
           unit_amount: Math.round(item.price * 100), // Convert to pence
         },
-        quantity: 1,
+        quantity: item.quantity || 1,
       }));
 
       // Create Stripe checkout session

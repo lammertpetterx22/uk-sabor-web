@@ -230,6 +230,26 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         />
                     </>
                 )}
+
+                {/* Legal / Resources */}
+                <p className="px-4 pt-4 pb-2 text-[10px] uppercase tracking-widest text-white/25 font-semibold">
+                    Legal
+                </p>
+                <Link
+                    href="/terms"
+                    onClick={onClose}
+                    className="flex items-center gap-3 px-4 py-2 rounded-xl font-medium transition-all text-white/50 hover:text-white"
+                >
+                    <span className="text-sm">Terms of Service</span>
+                </Link>
+                <Link
+                    href="/privacy"
+                    onClick={onClose}
+                    className="flex items-center gap-3 px-4 py-2 rounded-xl font-medium transition-all text-white/50 hover:text-white"
+                >
+                    <span className="text-sm">Privacy Policy</span>
+                </Link>
+                
             </nav>
 
             {/* Footer */}

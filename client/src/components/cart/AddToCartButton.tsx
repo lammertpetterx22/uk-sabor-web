@@ -22,7 +22,9 @@ export default function AddToCartButton({
   const inCart = isInCart(item.type, item.id);
 
   const handleAddToCart = () => {
-    if (inCart) {
+    // If it's a course, we don't want to buy it twice.
+    // If it's a class/event, you might want to buy multiple tickets.
+    if (inCart && item.type === 'course') {
       toast.info("Already in cart", {
         description: `"${item.title}" is already in your cart`,
       });
@@ -46,19 +48,19 @@ export default function AddToCartButton({
   return (
     <Button
       onClick={handleAddToCart}
-      variant={inCart ? "outline" : variant}
+      variant={inCart ? "outline" : (variant === "vibrant" ? "default" : variant)}
       size={size}
       className={`${inCart ? "border-accent text-accent" : "btn-vibrant"} ${className}`}
-      disabled={inCart}
+      disabled={inCart && item.type === 'course'}
     >
       {showIcon && (
-        inCart ? (
+        inCart && item.type === 'course' ? (
           <Check className="w-4 h-4 mr-2" />
         ) : (
           <ShoppingCart className="w-4 h-4 mr-2" />
         )
       )}
-      {inCart ? "In Cart" : "Add to Cart"}
+      {inCart && item.type === 'course' ? "In Cart" : "Add to Cart"}
     </Button>
   );
 }

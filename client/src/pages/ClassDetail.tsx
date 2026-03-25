@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import BunnyVideoPlayer from "@/components/BunnyVideoPlayer";
 import ProtectedVideoPlayer from "@/components/ProtectedVideoPlayer";
 import { Play, BookOpen } from "lucide-react";
+import AddToCartButton from "@/components/cart/AddToCartButton";
 
 
 export default function ClassDetail() {
@@ -227,16 +228,19 @@ export default function ClassDetail() {
                     </ul>
 
                     {isAuthenticated ? (
-                      <Button
-                        className="w-full btn-vibrant text-lg py-6"
-                        onClick={() => checkoutMutation.mutate({ classId: classItem.id })}
-                        disabled={checkoutMutation.isPending}
-                      >
-                        {checkoutMutation.isPending ? (
-                          <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                        ) : null}
-                        Enroll - £{price.toFixed(2)}
-                      </Button>
+                      <AddToCartButton 
+                        item={{
+                          type: "class",
+                          id: classItem.id,
+                          title: classItem.title,
+                          price: price,
+                          imageUrl: classItem.imageUrl || undefined,
+                          instructorName: instructor?.name,
+                          danceStyle: classItem.danceStyle || undefined,
+                          date: classDate.toISOString(),
+                        }}
+                        className="w-full py-6 text-lg"
+                      />
                     ) : (
                       <Link href="/login">
                         <Button className="w-full btn-vibrant text-lg py-6">

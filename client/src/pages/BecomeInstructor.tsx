@@ -13,7 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Clock, XCircle, Loader2, Music, Calendar, GraduationCap, Star, Mail, Bell, Sparkles } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { toast } from "sonner";
 
 const applicationSchema = z.object({
@@ -60,7 +60,8 @@ export default function BecomeInstructor() {
     trigger,
   } = useForm<ApplicationFormData>({
     resolver: zodResolver(applicationSchema),
-    mode: "onChange", // Enable onChange validation
+    mode: "all", // Enable continuous validation (onChange+onBlur)
+    shouldFocusError: true,
     defaultValues: {
       requestType: "instructor",
       fullName: user?.name || "",

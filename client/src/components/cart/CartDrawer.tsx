@@ -141,7 +141,10 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         {item.danceStyle && ` • ${item.danceStyle}`}
                       </span>
                       <span className="text-sm font-bold text-white">
-                        {formatPrice(item.price)}
+                        {item.quantity && item.quantity > 1 && (
+                          <span className="text-white/60 font-normal mr-2 text-xs">x{item.quantity}</span>
+                        )}
+                        {formatPrice(item.price * (item.quantity || 1))}
                       </span>
                     </div>
 

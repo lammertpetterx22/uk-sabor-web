@@ -12,6 +12,7 @@ export interface CartItem {
   // For events/classes
   date?: string;
   location?: string;
+  quantity?: number;
 }
 
 interface CartState {
@@ -32,17 +33,23 @@ export const useCartStore = create<CartState>()(
 
       addItem: (item) => {
         const { items } = get();
-        // Check if item already exists
-        const exists = items.some(
+        const existingItem = items.find(
           (i) => i.type === item.type && i.id === item.id
         );
 
-        if (exists) {
-          // Item already in cart, do nothing or show message
+        if (existingItem) {
+          // Increment quantity if it already exists
+          set({
+            items: items.map((i) => 
+              i.type === item.type && i.id === item.id 
+                ? { ...i, quantity: (i.quantity || 1) + (item.quantity || 1) }
+                : i
+            )
+          });
           return;
         }
 
-        set({ items: [...items, item] });
+        set({ items: [...items, { ...item, quantity: item.quantity || 1 }] });
       },
 
       removeItem: (type, id) => {
@@ -62,11 +69,11 @@ export const useCartStore = create<CartState>()(
       },
 
       getItemCount: () => {
-        return get().items.length;
+        return get().items.reduce((total, item) => total + (item.quantity || 1), 0);
       },
 
       getTotal: () => {
-        return get().items.reduce((total, item) => total + item.price, 0);
+        return get().items.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0);
       },
     }),
     {

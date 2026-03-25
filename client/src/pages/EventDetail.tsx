@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Calendar, MapPin, Clock, Users, Ticket, ArrowLeft, Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
+import AddToCartButton from "@/components/cart/AddToCartButton";
 
 export default function EventDetail() {
   const [, params] = useRoute("/events/:id");
@@ -189,18 +190,19 @@ export default function EventDetail() {
                           <p className="text-sm text-foreground/60">No online payment required. Please bring cash to the event.</p>
                         </div>
                       ) : isAuthenticated ? (
-                        <Button
-                          className="w-full btn-vibrant text-lg py-6"
-                          onClick={() => checkoutMutation.mutate({ eventId: event.id, quantity })}
-                          disabled={checkoutMutation.isPending}
-                        >
-                          {checkoutMutation.isPending ? (
-                            <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                          ) : (
-                            <Ticket className="h-5 w-5 mr-2" />
-                          )}
-                          Buy Ticket{quantity > 1 ? "s" : ""}
-                        </Button>
+                        <AddToCartButton 
+                          item={{
+                            type: "event",
+                            id: event.id,
+                            title: event.title,
+                            price: price,
+                            imageUrl: event.imageUrl || undefined,
+                            date: eventDate.toISOString(),
+                            location: event.venue,
+                            quantity: quantity,
+                          }}
+                          className="w-full py-6 text-lg"
+                        />
                       ) : (
                         <Link href="/login">
                           <Button className="w-full btn-vibrant text-lg py-6">

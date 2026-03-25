@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
+import { Input } from "@/components/ui/input";
 import { ClassesCalendar } from "@/components/ClassesCalendar";
-import { Loader2, Calendar, Clock, Users, Image as ImageIcon } from "lucide-react";
+import { Loader2, Calendar, Clock, Users, Image as ImageIcon, Search } from "lucide-react";
 import type { Class, Instructor } from "@shared/types";
 
 export default function Classes() {
   const [classes, setClasses] = useState<Class[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [instructorMap, setInstructorMap] = useState<Record<number, Instructor>>({});
   const [loading, setLoading] = useState(true);
 
@@ -33,6 +35,11 @@ export default function Classes() {
 
   const upcomingClasses = classes
     .filter((c) => new Date(c.classDate) >= new Date())
+    .filter((c) => 
+      c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.danceStyle?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
     .sort((a, b) => new Date(a.classDate).getTime() - new Date(b.classDate).getTime());
 
   const groupedByDate = upcomingClasses.reduce(
@@ -65,12 +72,23 @@ export default function Classes() {
       {/* Weekly Classes Calendar */}
       <section className="py-16 bg-card/30 border-y border-border/50">
         <div className="container">
-          <div className="mb-12">
+          <div className="mb-8">
             <h2 className="text-4xl font-bold mb-4 flex items-center gap-3">
               <Calendar className="text-accent" size={32} />
               Class Calendar
             </h2>
             <p className="text-lg text-foreground/70">Our live dance classes every week</p>
+          </div>
+          
+          <div className="mb-8 relative max-w-md">
+            <Search className="absolute left-3 top-3 text-accent" size={20} />
+            <Input
+              type="text"
+              placeholder="Search classes by name, style, or description..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 h-12 bg-card/60 border-white/10"
+            />
           </div>
           {loading ? (
             <div className="flex justify-center py-20">
