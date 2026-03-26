@@ -93,8 +93,10 @@ export const checkoutRouter = router({
         })
       );
 
-      // Create Stripe line items
-      const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = validatedItems.map((item) => {
+      // Create Stripe line items (product + processing fee per item)
+      const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+
+      for (const item of validatedItems) {
         // Build description - only include if we have actual content
         let description = "";
         if (item.instructorName) {
@@ -116,15 +118,35 @@ export const checkoutRouter = router({
           productData.description = description;
         }
 
-        return {
+        const itemPricePence = Math.round(item.price * 100);
+        const quantity = item.quantity || 1;
+
+        // Calculate Stripe fee: 1.5% + 20p per item (UK cards)
+        const stripeFeePence = Math.round(itemPricePence * 0.015) + 20;
+
+        // Add product line item
+        lineItems.push({
           price_data: {
             currency: "gbp",
             product_data: productData,
-            unit_amount: Math.round(item.price * 100), // Convert to pence
+            unit_amount: itemPricePence,
           },
-          quantity: item.quantity || 1,
-        };
-      });
+          quantity: quantity,
+        });
+
+        // Add processing fee line item (customer pays Stripe fee)
+        lineItems.push({
+          price_data: {
+            currency: "gbp",
+            product_data: {
+              name: "Processing fee",
+              description: `Stripe card processing fee for ${item.title}`,
+            },
+            unit_amount: stripeFeePence,
+          },
+          quantity: quantity,
+        });
+      }
 
       // Create Stripe checkout session
       const session = await stripe.checkout.sessions.create({
@@ -142,12 +164,19 @@ export const checkoutRouter = router({
           customer_name: ctx.user.name || "",
           // Store cart items as JSON for webhook processing
           cart_items: JSON.stringify(
-            validatedItems.map((item) => ({
-              type: item.type,
-              id: item.id,
-              title: item.title,
-              price: item.price,
-            }))
+            validatedItems.map((item) => {
+              const itemPricePence = Math.round(item.price * 100);
+              const stripeFeePence = Math.round(itemPricePence * 0.015) + 20;
+
+              return {
+                type: item.type,
+                id: item.id,
+                title: item.title,
+                price: item.price,
+                quantity: item.quantity || 1,
+                stripe_fee_pence: stripeFeePence,
+              };
+            })
           ),
           is_multi_item_cart: "true",
         },
