@@ -200,10 +200,13 @@ export default function UserDashboard() {
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Classes</span>
             </TabsTrigger>
-            <TabsTrigger value="subscriptions" className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4" />
-              <span className="hidden sm:inline">Subs</span>
-            </TabsTrigger>
+            {/* Only show Subscriptions tab for instructors, promoters, and admins */}
+            {(user?.role === "admin" || user?.role === "instructor" || user?.role === "promoter") && (
+              <TabsTrigger value="subscriptions" className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4" />
+                <span className="hidden sm:inline">Subs</span>
+              </TabsTrigger>
+            )}
             <TabsTrigger value="orders" className="flex items-center gap-2">
               <ShoppingBag className="h-4 w-4" />
               <span className="hidden sm:inline">Orders</span>
@@ -219,9 +222,12 @@ export default function UserDashboard() {
           <TabsContent value="classes">
             <ClassesTab />
           </TabsContent>
-          <TabsContent value="subscriptions">
-            <SubscriptionsTab />
-          </TabsContent>
+          {/* Only show Subscriptions content for instructors, promoters, and admins */}
+          {(user?.role === "admin" || user?.role === "instructor" || user?.role === "promoter") && (
+            <TabsContent value="subscriptions">
+              <SubscriptionsTab />
+            </TabsContent>
+          )}
           <TabsContent value="orders">
             <OrdersTab />
           </TabsContent>

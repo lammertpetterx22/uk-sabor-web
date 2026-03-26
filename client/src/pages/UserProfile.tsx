@@ -113,16 +113,19 @@ export default function UserProfile() {
       <div className="container max-w-2xl">
         {/* Tabs for Profile and Billing */}
         <Tabs defaultValue="perfil" className="w-full">
-          <TabsList className="w-full grid grid-cols-3 bg-card/60 backdrop-blur-xl border border-border/40 mb-8 p-1 h-12 rounded-xl">
+          <TabsList className={`w-full ${(user?.role === "admin" || user?.role === "instructor" || user?.role === "promoter") ? 'grid-cols-3' : 'grid-cols-2'} grid bg-card/60 backdrop-blur-xl border border-border/40 mb-8 p-1 h-12 rounded-xl`}>
             <TabsTrigger value="perfil" className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-white">
               Perfil
             </TabsTrigger>
             <TabsTrigger value="cursos" className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-white">
               Cursos
             </TabsTrigger>
-            <TabsTrigger value="billing" className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-white">
-              Facturación
-            </TabsTrigger>
+            {/* Only show Billing tab for instructors, promoters, and admins */}
+            {(user?.role === "admin" || user?.role === "instructor" || user?.role === "promoter") && (
+              <TabsTrigger value="billing" className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-white">
+                Facturación
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="perfil" className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300 outline-none">
@@ -289,9 +292,12 @@ export default function UserProfile() {
             <UserCoursesTab />
           </TabsContent>
 
-          <TabsContent value="billing" className="animate-in fade-in slide-in-from-bottom-2 duration-300 outline-none">
-            <BillingSection />
-          </TabsContent>
+          {/* Only show Billing content for instructors, promoters, and admins */}
+          {(user?.role === "admin" || user?.role === "instructor" || user?.role === "promoter") && (
+            <TabsContent value="billing" className="animate-in fade-in slide-in-from-bottom-2 duration-300 outline-none">
+              <BillingSection />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>
