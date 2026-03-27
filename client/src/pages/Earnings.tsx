@@ -36,6 +36,9 @@ export default function Earnings() {
   const { t } = useTranslations();
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [accountHolderName, setAccountHolderName] = useState("");
+  const [sortCode, setSortCode] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
   const [showTestData, setShowTestData] = useState(true); // Toggle to show/hide test earnings
 
   const { data: wallet, isLoading: walletLoading, refetch: refetchWallet } = trpc.financials.getWallet.useQuery();
@@ -50,6 +53,9 @@ export default function Earnings() {
       toast.success(t('earnings.withdrawalRequested'));
       setIsWithdrawModalOpen(false);
       setWithdrawAmount("");
+      setAccountHolderName("");
+      setSortCode("");
+      setAccountNumber("");
       refetchWallet();
       refetchLedger();
     },
@@ -64,7 +70,33 @@ export default function Earnings() {
       toast.error(t('earnings.invalidAmount'));
       return;
     }
-    requestWithdrawal.mutate({ amount });
+
+    // Validate bank details
+    if (!accountHolderName.trim()) {
+      toast.error("Account holder name is required");
+      return;
+    }
+
+    // Validate and format sort code
+    const sortCodeClean = sortCode.replace(/[^0-9]/g, '');
+    if (sortCodeClean.length !== 6) {
+      toast.error("Sort code must be 6 digits (XX-XX-XX)");
+      return;
+    }
+    const sortCodeFormatted = `${sortCodeClean.slice(0,2)}-${sortCodeClean.slice(2,4)}-${sortCodeClean.slice(4,6)}`;
+
+    // Validate account number
+    if (!/^\d{8}$/.test(accountNumber)) {
+      toast.error("Account number must be 8 digits");
+      return;
+    }
+
+    requestWithdrawal.mutate({
+      amount,
+      accountHolderName: accountHolderName.trim(),
+      sortCode: sortCodeFormatted,
+      accountNumber: accountNumber,
+    });
   };
 
   const formatCurrency = (val: string | number | null | undefined) => {
@@ -489,6 +521,64 @@ export default function Earnings() {
                 >
                   {t('earnings.withdrawAll')}
                 </button>
+              </div>
+            </div>
+
+            {/* Bank Details Section */}
+            <div className="pt-4 border-t border-white/10 space-y-4">
+              <div className="flex items-center gap-2 text-white/60 text-sm mb-2">
+                <Banknote size={16} />
+                <span className="font-medium">UK Bank Account Details</span>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white/60 ml-1">Account Holder Name</label>
+                <Input
+                  type="text"
+                  placeholder="John Smith"
+                  value={accountHolderName}
+                  onChange={(e) => setAccountHolderName(e.target.value)}
+                  className="bg-white/5 border-white/10 focus:border-[#FA3698]/50 h-11 rounded-xl"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-white/60 ml-1">Sort Code</label>
+                  <Input
+                    type="text"
+                    placeholder="12-34-56"
+                    value={sortCode}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9-]/g, '');
+                      setSortCode(val);
+                    }}
+                    maxLength={8}
+                    className="bg-white/5 border-white/10 focus:border-[#FA3698]/50 h-11 rounded-xl"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-white/60 ml-1">Account Number</label>
+                  <Input
+                    type="text"
+                    placeholder="12345678"
+                    value={accountNumber}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 8);
+                      setAccountNumber(val);
+                    }}
+                    maxLength={8}
+                    className="bg-white/5 border-white/10 focus:border-[#FA3698]/50 h-11 rounded-xl"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-3 flex gap-2">
+                <AlertCircle size={16} className="text-yellow-400 flex-shrink-0 mt-0.5" />
+                <p className="text-[11px] text-yellow-200/80">
+                  Your bank details will be securely shared with the admin to process your manual transfer.
+                </p>
               </div>
             </div>
           </div>

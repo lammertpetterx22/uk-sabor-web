@@ -97,7 +97,12 @@ export const financialsRouter = router({
 
   /** Request a withdrawal - user can ONLY withdraw their OWN funds */
   requestWithdrawal: protectedProcedure
-    .input(z.object({ amount: z.number().positive() }))
+    .input(z.object({
+      amount: z.number().positive(),
+      accountHolderName: z.string().min(2, "Account holder name is required"),
+      sortCode: z.string().regex(/^\d{2}-\d{2}-\d{2}$/, "Sort code must be in format XX-XX-XX"),
+      accountNumber: z.string().regex(/^\d{8}$/, "Account number must be 8 digits"),
+    }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
@@ -123,11 +128,14 @@ export const financialsRouter = router({
         })
         .where(eq(balances.userId, ctx.user.id));
 
-      // 2. Create withdrawal request
+      // 2. Create withdrawal request with bank details
       const [request] = await db.insert(withdrawalRequests).values({
         userId: ctx.user.id,
         amount: input.amount.toFixed(2) as any,
         status: "pending",
+        accountHolderName: input.accountHolderName,
+        sortCode: input.sortCode,
+        accountNumber: input.accountNumber,
       }).returning();
 
       // 3. Optional: Add a pending ledger entry

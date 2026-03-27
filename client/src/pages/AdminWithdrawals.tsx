@@ -204,6 +204,41 @@ export default function AdminWithdrawals() {
                 </div>
               </div>
 
+              {/* Bank Details Section */}
+              {selectedRequest.request.accountHolderName && (
+                <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 space-y-3">
+                  <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm uppercase tracking-wider">
+                    <Banknote size={16} />
+                    <span>Bank Account Details</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3 bg-black/20 rounded-lg p-3">
+                    <div>
+                      <p className="text-white/40 text-[10px] uppercase tracking-wider mb-1">Account Holder</p>
+                      <p className="text-white font-bold text-lg">{selectedRequest.request.accountHolderName}</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-white/40 text-[10px] uppercase tracking-wider mb-1">Sort Code</p>
+                        <p className="text-white font-mono font-bold text-lg tracking-wider">{selectedRequest.request.sortCode}</p>
+                      </div>
+                      <div>
+                        <p className="text-white/40 text-[10px] uppercase tracking-wider mb-1">Account Number</p>
+                        <p className="text-white font-mono font-bold text-lg tracking-wider">{selectedRequest.request.accountNumber}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                    <AlertCircle size={14} className="text-yellow-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-yellow-200 text-[10px]">
+                      Transfer <strong>{formatCurrency(selectedRequest.request.amount)}</strong> to this account via your bank. Mark as "Paid" after completing the transfer.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <label className="text-sm font-medium text-white/60 ml-1">{t('withdrawals.adminNotes')} ({t('common.optional')})</label>
                 <Textarea
