@@ -250,12 +250,21 @@ interface EmailOptions {
  * Falls back to console logging if RESEND_API_KEY is not configured.
  */
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
+  console.log("[EMAIL] sendEmail called with:", { to: options.to, subject: options.subject });
+
   const client = getResendClient();
   const fromAddress = options.from || process.env.RESEND_FROM_EMAIL || "UK Sabor <noreply@consabor.uk>";
 
+  console.log("[EMAIL] Resend client status:", { hasClient: !!client, fromAddress });
+  console.log("[EMAIL] Environment check:", {
+    hasApiKey: !!process.env.RESEND_API_KEY,
+    hasFromEmail: !!process.env.RESEND_FROM_EMAIL,
+    apiKeyPreview: process.env.RESEND_API_KEY ? `${process.env.RESEND_API_KEY.substring(0, 10)}...` : 'NOT SET'
+  });
+
   if (!client) {
     // Fallback: log email for debugging when no API key is set
-    console.log("[EMAIL] No RESEND_API_KEY configured - logging email instead:");
+    console.log("[EMAIL] ❌ No RESEND_API_KEY configured - logging email instead:");
     console.log(`[EMAIL] To: ${options.to}`);
     console.log(`[EMAIL] From: ${fromAddress}`);
     console.log(`[EMAIL] Subject: ${options.subject}`);
@@ -264,6 +273,8 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
   }
 
   try {
+    console.log("[EMAIL] ✅ Resend client found - attempting to send email");
+
     const emailPayload: Parameters<typeof client.emails.send>[0] = {
       from: fromAddress,
       to: options.to,
@@ -281,6 +292,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
       }));
     }
 
+    console.log("[EMAIL] Sending email via Resend API...");
     const { error } = await client.emails.send(emailPayload);
 
     if (error) {

@@ -85,12 +85,22 @@ export const customAuthRouter = router({
       ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_DAY_MS });
 
       // Send welcome email (async, don't wait for it)
+      console.log("[REGISTRATION] User created:", { email: userRecord.email, name: userRecord.name, id: userRecord.id });
+
       if (userRecord.email && userRecord.name) {
+        console.log("[REGISTRATION] Attempting to send welcome email to:", userRecord.email);
         sendWelcomeEmail({
           to: userRecord.email,
           userName: userRecord.name,
+        }).then(() => {
+          console.log("[REGISTRATION] Welcome email sent successfully to:", userRecord.email);
         }).catch((error) => {
           console.error("[REGISTRATION] Failed to send welcome email:", error);
+        });
+      } else {
+        console.error("[REGISTRATION] Email or name missing - cannot send welcome email", {
+          hasEmail: !!userRecord.email,
+          hasName: !!userRecord.name
         });
       }
 
