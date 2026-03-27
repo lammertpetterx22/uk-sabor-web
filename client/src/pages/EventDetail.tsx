@@ -189,8 +189,8 @@ export default function EventDetail() {
                           <p className="text-blue-400 font-semibold text-base">💵 Payment in cash at the door</p>
                           <p className="text-sm text-foreground/60">No online payment required. Please bring cash to the event.</p>
                         </div>
-                      ) : isAuthenticated ? (
-                        <AddToCartButton 
+                      ) : (
+                        <AddToCartButton
                           item={{
                             type: "event",
                             id: event.id,
@@ -201,14 +201,10 @@ export default function EventDetail() {
                             location: event.venue,
                             quantity: quantity,
                           }}
+                          maxStock={event.maxTickets || undefined}
+                          currentlySold={event.ticketsSold || 0}
                           className="w-full py-6 text-lg"
                         />
-                      ) : (
-                        <Link href="/login">
-                          <Button className="w-full btn-vibrant text-lg py-6">
-                            Sign in to buy tickets
-                          </Button>
-                        </Link>
                       )}
 
                       {spotsLeft !== null && spotsLeft <= 20 && (

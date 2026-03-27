@@ -520,25 +520,17 @@ export default function CourseDetail() {
                       ))}
                     </ul>
 
-                    {isAuthenticated ? (
-                      <AddToCartButton 
-                        item={{
-                          type: "course",
-                          id: course.id,
-                          title: course.title,
-                          price: price,
-                          imageUrl: course.imageUrl || undefined,
-                          instructorName: instructor?.name,
-                        }}
-                        className="w-full py-5 text-base"
-                      />
-                    ) : (
-                      <Link href="/login">
-                        <Button className="w-full btn-vibrant text-base py-5">
-                          Sign in to purchase
-                        </Button>
-                      </Link>
-                    )}
+                    <AddToCartButton
+                      item={{
+                        type: "course",
+                        id: course.id,
+                        title: course.title,
+                        price: price,
+                        imageUrl: course.imageUrl || undefined,
+                        instructorName: instructor?.name,
+                      }}
+                      className="w-full py-5 text-base"
+                    />
                   </div>
                 )}
               </CardContent>

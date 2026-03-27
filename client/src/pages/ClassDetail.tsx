@@ -227,27 +227,21 @@ export default function ClassDetail() {
                       </li>
                     </ul>
 
-                    {isAuthenticated ? (
-                      <AddToCartButton 
-                        item={{
-                          type: "class",
-                          id: classItem.id,
-                          title: classItem.title,
-                          price: price,
-                          imageUrl: classItem.imageUrl || undefined,
-                          instructorName: instructor?.name,
-                          danceStyle: classItem.danceStyle || undefined,
-                          date: classDate.toISOString(),
-                        }}
-                        className="w-full py-6 text-lg"
-                      />
-                    ) : (
-                      <Link href="/login">
-                        <Button className="w-full btn-vibrant text-lg py-6">
-                          Sign in to enrol
-                        </Button>
-                      </Link>
-                    )}
+                    <AddToCartButton
+                      item={{
+                        type: "class",
+                        id: classItem.id,
+                        title: classItem.title,
+                        price: price,
+                        imageUrl: classItem.imageUrl || undefined,
+                        instructorName: instructor?.name,
+                        danceStyle: classItem.danceStyle || undefined,
+                        date: classDate.toISOString(),
+                      }}
+                      maxStock={classItem.maxParticipants || undefined}
+                      currentlySold={classItem.currentParticipants || 0}
+                      className="w-full py-6 text-lg"
+                    />
 
                     {spotsLeft !== null && spotsLeft <= 5 && (
                       <p className="text-sm text-center text-orange-400">
