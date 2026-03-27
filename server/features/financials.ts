@@ -318,8 +318,8 @@ export const financialsRouter = router({
       return { success: true };
     }),
 
-  /** Admin: Upload payment proof and complete payout */
-  adminCompletePayoutWithProof: adminProcedure
+  /** Admin: Upload payment proof and complete payout - TEMPORARILY DISABLED UNTIL MIGRATION RUNS */
+  /* adminCompletePayoutWithProof: adminProcedure
     .input(z.object({
       requestId: z.number(),
       paymentProofUrl: z.string().url(),
@@ -399,10 +399,10 @@ export const financialsRouter = router({
       console.log(`[PAYOUT] 💸 Payout #\${input.requestId} completed by admin \${ctx.user.id}`);
 
       return { success: true };
-    }),
+    }), */
 
-  /** Admin: Get decrypted bank details for approved withdrawal */
-  adminGetBankDetails: adminProcedure
+  /** Admin: Get decrypted bank details for approved withdrawal - TEMPORARILY DISABLED UNTIL MIGRATION RUNS */
+  /* adminGetBankDetails: adminProcedure
     .input(z.object({ userId: z.number() }))
     .query(async ({ input }) => {
       const db = await getDb();
@@ -432,5 +432,5 @@ export const financialsRouter = router({
         accountNumber: decrypt(user.bankAccountNumber),
         verified: user.bankDetailsVerified,
       };
-    }),
+    }), */
 });
