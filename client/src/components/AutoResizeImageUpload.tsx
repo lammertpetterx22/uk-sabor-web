@@ -80,11 +80,14 @@ export default function AutoResizeImageUpload({
           sourceX = (img.width - sourceWidth) / 2;
           sourceY = 0;
         } else {
-          // Image is taller - crop top/bottom
+          // Image is taller - crop top/bottom with bias towards TOP
+          // (keeps faces visible in portrait photos)
           sourceWidth = img.width;
           sourceHeight = img.width / targetAspect;
           sourceX = 0;
-          sourceY = (img.height - sourceHeight) / 2;
+          // Top-weighted crop: keep more of the top (where faces usually are)
+          // Crop 20% from top, 80% from bottom (instead of 50%/50%)
+          sourceY = (img.height - sourceHeight) * 0.20;
         }
 
         // Draw the cropped portion to fill entire canvas (no white background!)
