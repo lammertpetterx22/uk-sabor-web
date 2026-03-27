@@ -39,12 +39,23 @@ export function registerOAuthRoutes(app: Express) {
 
       // Send welcome email to new users (async, don't wait for it)
       if (isNewUser && userInfo.email && userInfo.name) {
+        console.log("[OAuth] 📧 New user registered, sending welcome email to:", userInfo.email);
+        console.log("[OAuth] 🔑 RESEND_API_KEY present:", !!process.env.RESEND_API_KEY);
+
         sendWelcomeEmail({
           to: userInfo.email,
           userName: userInfo.name,
+        }).then((success) => {
+          if (success) {
+            console.log("[OAuth] ✅ Welcome email sent successfully to:", userInfo.email);
+          } else {
+            console.error("[OAuth] ❌ Welcome email returned false for:", userInfo.email);
+          }
         }).catch((error) => {
-          console.error("[OAuth] Failed to send welcome email:", error);
+          console.error("[OAuth] ❌ Failed to send welcome email:", error);
         });
+      } else if (!isNewUser) {
+        console.log("[OAuth] ℹ️  Existing user logged in, no welcome email sent:", userInfo.email);
       }
 
       const sessionToken = await sdk.createSessionToken(userInfo.openId, {
