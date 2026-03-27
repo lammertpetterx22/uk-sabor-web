@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { MapPin, Calendar, DollarSign } from "lucide-react";
 import type { Event } from "@shared/types";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 interface EventCardProps {
   event: Event;
 }
 
 const EventCard = memo(function EventCard({ event }: EventCardProps) {
+  const { user } = useAuth();
   const eventDate = new Date(event.eventDate);
   const formattedDate = eventDate.toLocaleDateString("en-GB", {
     weekday: "short",
@@ -61,8 +63,8 @@ const EventCard = memo(function EventCard({ event }: EventCardProps) {
           </div>
         </div>
 
-        {/* Tickets Sold */}
-        {event.maxTickets && (
+        {/* Tickets Sold - Only visible to event creator */}
+        {event.maxTickets && user?.id === event.creatorId && (
           <div className="mb-4 text-xs text-foreground/60">
             {event.ticketsSold} / {event.maxTickets} tickets sold
           </div>
