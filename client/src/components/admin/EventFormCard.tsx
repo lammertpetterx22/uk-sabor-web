@@ -78,6 +78,7 @@ export default function EventFormCard({
         imageUrl: editingEvent.imageUrl || "",
         imagePreview: editingEvent.imageUrl || "",
         paymentMethod: (editingEvent.paymentMethod || "online") as "online" | "cash" | "both",
+        showLowTicketAlert: editingEvent.showLowTicketAlert || false,
       };
     }
     return {
@@ -91,6 +92,7 @@ export default function EventFormCard({
       imageUrl: "",
       imagePreview: "",
       paymentMethod: "online" as "online" | "cash" | "both",
+      showLowTicketAlert: false,
     };
   });
 
@@ -109,6 +111,7 @@ export default function EventFormCard({
       imageUrl: "",
       imagePreview: "",
       paymentMethod: "online",
+      showLowTicketAlert: false,
     });
     if (imageInputRef.current) imageInputRef.current.value = "";
   };
@@ -174,6 +177,7 @@ export default function EventFormCard({
         maxTickets: formData.maxTickets ? parseInt(formData.maxTickets) : undefined,
         imageUrl: formData.imageUrl,
         paymentMethod: formData.paymentMethod,
+        showLowTicketAlert: formData.showLowTicketAlert,
       });
       return;
     }
@@ -202,6 +206,7 @@ export default function EventFormCard({
       maxTickets: formData.maxTickets ? parseInt(formData.maxTickets) : undefined,
       imageUrl: formData.imageUrl,
       paymentMethod: formData.paymentMethod,
+      showLowTicketAlert: formData.showLowTicketAlert,
     });
   };
 
@@ -412,6 +417,20 @@ export default function EventFormCard({
               </p>
               <p className="text-xs text-foreground/50 mt-1">Online y efectivo</p>
             </button>
+          </div>
+
+          {/* Low Ticket Alert Option */}
+          <div className="flex items-center gap-3 p-4 rounded-xl bg-background/30 border border-border/50">
+            <input
+              type="checkbox"
+              id="show-low-ticket-alert"
+              checked={formData.showLowTicketAlert}
+              onChange={(e) => setFormData({ ...formData, showLowTicketAlert: e.target.checked })}
+              className="w-4 h-4 text-accent bg-background border-border/50 rounded focus:ring-accent focus:ring-2"
+            />
+            <label htmlFor="show-low-ticket-alert" className="text-sm text-foreground/80 cursor-pointer">
+              Mostrar alerta "Solo quedan X entradas" cuando queden ≤20 tickets
+            </label>
           </div>
         </div>
 

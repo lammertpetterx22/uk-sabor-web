@@ -96,6 +96,7 @@ export const events = pgTable("events", {
   ticketsSold: integer("ticketsSold").default(0),
   status: varchar("status", { length: 255 }).default("draft"),
   paymentMethod: varchar("paymentMethod", { length: 255 }).default("online"), // Payment method: Stripe online, cash, or both
+  showLowTicketAlert: boolean("showLowTicketAlert").default(false), // Show "Only X tickets left!" message
   creatorId: integer("creatorId"), // User ID of the event creator (instructor/promoter/admin)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
