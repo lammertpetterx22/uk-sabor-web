@@ -3147,7 +3147,7 @@ function UsersTab() {
   const { data: usersList, isLoading, refetch } = trpc.admin.listUsers.useQuery();
   const [searchTerm, setSearchTerm] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
-  const [editingRoles, setEditingRoles] = useState<{ userId: number; role: string; additionalRole?: string } | null>(null);
+  const [editingRoles, setEditingRoles] = useState<{ userId: number; role: string } | null>(null);
   const [editingPlan, setEditingPlan] = useState<{ userId: number; plan: string } | null>(null);
 
   const deleteUserMutation = trpc.admin.deleteUser.useMutation({
@@ -3230,9 +3230,9 @@ function UsersTab() {
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         <Select
-                          value={u.role}
+                          value={editingRoles?.userId === u.id ? editingRoles.role : u.role}
                           onValueChange={(newRole) => {
-                            setEditingRoles({ userId: u.id, role: newRole, additionalRole: undefined });
+                            setEditingRoles({ userId: u.id, role: newRole });
                           }}
                         >
                           <SelectTrigger className="w-[120px] h-8">
@@ -3253,29 +3253,7 @@ function UsersTab() {
                             </SelectItem>
                           </SelectContent>
                         </Select>
-                        <Select
-                          value={editingRoles?.userId === u.id ? (editingRoles.additionalRole || "none") : ((u as any).rolesArray?.find((r: string) => r !== u.role) || "none")}
-                          onValueChange={(newAdditionalRole) => {
-                            const currentRole = editingRoles?.userId === u.id ? editingRoles.role : u.role;
-                            setEditingRoles({ userId: u.id, role: currentRole, additionalRole: newAdditionalRole === "none" ? undefined : newAdditionalRole });
-                          }}
-                        >
-                          <SelectTrigger className="w-[120px] h-8">
-                            <SelectValue placeholder="+ Add role" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">
-                              <span className="text-foreground/50">None</span>
-                            </SelectItem>
-                            <SelectItem value="instructor">
-                              <span className="flex items-center gap-2">🎓 Instructor</span>
-                            </SelectItem>
-                            <SelectItem value="promoter">
-                              <span className="flex items-center gap-2">📣 Promotor</span>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {editingRoles?.userId === u.id && (
+                        {editingRoles?.userId === u.id && editingRoles.role !== u.role && (
                           <Button
                             size="sm"
                             className="h-8 px-2"
@@ -3283,7 +3261,6 @@ function UsersTab() {
                               updateRoleMutation.mutate({
                                 id: u.id,
                                 role: editingRoles.role as "user" | "instructor" | "promoter" | "admin",
-                                additionalRole: editingRoles.additionalRole as "user" | "instructor" | "promoter" | "admin" | undefined,
                               });
                               setEditingRoles(null);
                             }}
