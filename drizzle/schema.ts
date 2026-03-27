@@ -549,11 +549,11 @@ export const withdrawalRequests = pgTable("withdrawalRequests", {
   status: varchar("status", { length: 50 }).default("pending").notNull(), // 'pending', 'approved', 'paid', 'rejected'
   adminNotes: text("adminNotes"),
   requestedAt: timestamp("requestedAt").defaultNow().notNull(),
-  // Bank details provided by user when requesting withdrawal - TEMPORARILY COMMENTED UNTIL MIGRATION RUNS
-  // accountHolderName: varchar("accountHolderName", { length: 255 }), // Full name for bank transfer
-  // sortCode: varchar("sortCode", { length: 20 }), // UK Sort Code (XX-XX-XX format)
-  // accountNumber: varchar("accountNumber", { length: 20 }), // UK Account Number (8 digits)
-  // paymentProofUrl: text("paymentProofUrl"), // Statement/proof of bank transfer (uploaded by admin) - TEMPORARILY COMMENTED UNTIL MIGRATION RUNS
+  // Bank details provided by user when requesting withdrawal
+  accountHolderName: varchar("accountHolderName", { length: 255 }), // Full name for bank transfer
+  sortCode: varchar("sortCode", { length: 20 }), // UK Sort Code (XX-XX-XX format)
+  accountNumber: varchar("accountNumber", { length: 20 }), // UK Account Number (8 digits)
+  // paymentProofUrl: text("paymentProofUrl"), // Statement/proof of bank transfer (uploaded by admin) - NOT YET IMPLEMENTED
   processedAt: timestamp("processedAt"),
   processedBy: integer("processedBy"), // Admin who handled it
 });
