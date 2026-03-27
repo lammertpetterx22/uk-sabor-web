@@ -110,3 +110,6 @@ temp/
 .webdev/
 .vercel
 .env*.local
+
+# Encryption keys (NEVER commit!)
+ENCRYPTION_KEY_SETUP.md

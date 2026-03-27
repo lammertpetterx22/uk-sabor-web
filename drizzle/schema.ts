@@ -25,6 +25,11 @@ export const users = pgTable("users", {
   subscriptionPlan: varchar("subscriptionPlan", { length: 255 }).default("starter").notNull(),
   stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
   stripeAccountId: varchar("stripeAccountId", { length: 255 }), // Stripe Connect ID for receiving split payments
+  // Bank details for payouts (encrypted)
+  bankAccountHolderName: varchar("bankAccountHolderName", { length: 255 }),
+  bankSortCode: varchar("bankSortCode", { length: 255 }), // Encrypted UK Sort Code (e.g., 12-34-56)
+  bankAccountNumber: varchar("bankAccountNumber", { length: 255 }), // Encrypted UK Account Number (8 digits)
+  bankDetailsVerified: boolean("bankDetailsVerified").default(false), // Admin verification flag
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -544,6 +549,7 @@ export const withdrawalRequests = pgTable("withdrawalRequests", {
   status: varchar("status", { length: 50 }).default("pending").notNull(), // 'pending', 'approved', 'paid', 'rejected'
   adminNotes: text("adminNotes"),
   requestedAt: timestamp("requestedAt").defaultNow().notNull(),
+  paymentProofUrl: text("paymentProofUrl"), // Statement/proof of bank transfer (uploaded by admin)
   processedAt: timestamp("processedAt"),
   processedBy: integer("processedBy"), // Admin who handled it
 });

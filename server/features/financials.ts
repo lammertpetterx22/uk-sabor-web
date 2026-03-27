@@ -317,4 +317,120 @@ export const financialsRouter = router({
 
       return { success: true };
     }),
+
+  /** Admin: Upload payment proof and complete payout */
+  adminCompletePayoutWithProof: adminProcedure
+    .input(z.object({
+      requestId: z.number(),
+      paymentProofUrl: z.string().url(),
+      adminNotes: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const [request] = await db
+        .select()
+        .from(withdrawalRequests)
+        .where(eq(withdrawalRequests.id, input.requestId))
+        .limit(1);
+
+      if (!request) throw new TRPCError({ code: "NOT_FOUND" });
+      if (request.status === "paid") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Payout already completed." });
+      }
+
+      // Get user details for email
+      const [userDetails] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, request.userId))
+        .limit(1);
+
+      if (!userDetails) throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+
+      // Mark as paid and save proof
+      await db.update(withdrawalRequests)
+        .set({
+          status: "paid",
+          paymentProofUrl: input.paymentProofUrl,
+          adminNotes: input.adminNotes,
+          processedAt: new Date(),
+          processedBy: ctx.user.id,
+        })
+        .where(eq(withdrawalRequests.id, input.requestId));
+
+      // Update balance totals
+      await db.update(balances)
+        .set({
+          totalWithdrawn: sql`\${balances.totalWithdrawn} + \${request.amount}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(balances.userId, request.userId));
+
+      // Finalize ledger entry
+      await db.update(ledgerTransactions)
+        .set({ status: "completed" })
+        .where(and(
+          eq(ledgerTransactions.userId, request.userId),
+          eq(ledgerTransactions.type, "withdrawal"),
+          eq(ledgerTransactions.status, "pending"),
+          sql`description LIKE ${`Withdrawal request #${request.id}%`}`
+        ));
+
+      // Send confirmation email
+      try {
+        const { sendPayoutConfirmationEmail } = await import("./payoutEmail");
+        if (userDetails.email && userDetails.name) {
+          await sendPayoutConfirmationEmail({
+            to: userDetails.email,
+            userName: userDetails.name,
+            amount: parseFloat(request.amount as string),
+            requestId: request.id,
+            proofUrl: input.paymentProofUrl,
+          });
+          console.log(`[PAYOUT] ✅ Confirmation email sent to \${userDetails.email}`);
+        }
+      } catch (emailError) {
+        console.error("[PAYOUT] Failed to send confirmation email:", emailError);
+        // Don't fail the entire operation if email fails
+      }
+
+      console.log(`[PAYOUT] 💸 Payout #\${input.requestId} completed by admin \${ctx.user.id}`);
+
+      return { success: true };
+    }),
+
+  /** Admin: Get decrypted bank details for approved withdrawal */
+  adminGetBankDetails: adminProcedure
+    .input(z.object({ userId: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, input.userId))
+        .limit(1);
+
+      if (!user) throw new TRPCError({ code: "NOT_FOUND" });
+
+      if (!user.bankSortCode || !user.bankAccountNumber) {
+        return {
+          hasDetails: false,
+          message: "User has not added bank details yet",
+        };
+      }
+
+      const { decrypt } = await import("../utils/encryption");
+
+      return {
+        hasDetails: true,
+        accountHolderName: user.bankAccountHolderName,
+        sortCode: decrypt(user.bankSortCode),
+        accountNumber: decrypt(user.bankAccountNumber),
+        verified: user.bankDetailsVerified,
+      };
+    }),
 });
