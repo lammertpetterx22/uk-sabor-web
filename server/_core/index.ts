@@ -57,6 +57,19 @@ async function startServer() {
     res.status(200).json({ status: "ok", timestamp: Date.now() });
   });
 
+  // Email configuration check endpoint
+  app.get("/api/email-config", (req, res) => {
+    res.status(200).json({
+      hasResendApiKey: !!process.env.RESEND_API_KEY,
+      apiKeyPreview: process.env.RESEND_API_KEY
+        ? `${process.env.RESEND_API_KEY.substring(0, 10)}...`
+        : 'NOT SET',
+      hasResendFromEmail: !!process.env.RESEND_FROM_EMAIL,
+      fromEmail: process.env.RESEND_FROM_EMAIL || 'UK Sabor <onboarding@resend.dev>',
+      nodeEnv: process.env.NODE_ENV,
+    });
+  });
+
   // Debug endpoint to check if static files exist
   app.get("/api/debug/static", async (req, res) => {
     const fs = await import("fs");
