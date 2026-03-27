@@ -66,33 +66,33 @@ export default function AutoResizeImageUpload({
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = "high";
 
-        // Calculate scaling to fit the image within target dimensions
-        // while maintaining aspect ratio
+        // Smart center-crop (like Instagram)
+        // Calculate dimensions to COVER the target area (no white background)
         const imgAspect = img.width / img.height;
         const targetAspect = targetWidth / targetHeight;
 
-        let drawWidth, drawHeight, offsetX, offsetY;
+        let sourceX, sourceY, sourceWidth, sourceHeight;
 
         if (imgAspect > targetAspect) {
-          // Image is wider - fit to width
-          drawWidth = targetWidth;
-          drawHeight = targetWidth / imgAspect;
-          offsetX = 0;
-          offsetY = (targetHeight - drawHeight) / 2;
+          // Image is wider - crop sides
+          sourceHeight = img.height;
+          sourceWidth = img.height * targetAspect;
+          sourceX = (img.width - sourceWidth) / 2;
+          sourceY = 0;
         } else {
-          // Image is taller - fit to height
-          drawHeight = targetHeight;
-          drawWidth = targetHeight * imgAspect;
-          offsetX = (targetWidth - drawWidth) / 2;
-          offsetY = 0;
+          // Image is taller - crop top/bottom
+          sourceWidth = img.width;
+          sourceHeight = img.width / targetAspect;
+          sourceX = 0;
+          sourceY = (img.height - sourceHeight) / 2;
         }
 
-        // Fill background with white (or black if you prefer)
-        ctx.fillStyle = "#FFFFFF";
-        ctx.fillRect(0, 0, targetWidth, targetHeight);
-
-        // Draw the scaled image centered
-        ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+        // Draw the cropped portion to fill entire canvas (no white background!)
+        ctx.drawImage(
+          img,
+          sourceX, sourceY, sourceWidth, sourceHeight,  // Source crop
+          0, 0, targetWidth, targetHeight               // Destination full canvas
+        );
 
         // Convert to high-quality JPEG (95% quality to preserve detail)
         const resizedDataUrl = canvas.toDataURL("image/jpeg", 0.95);
