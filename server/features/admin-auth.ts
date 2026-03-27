@@ -9,6 +9,7 @@ import bcrypt from "bcrypt";
 import { sdk } from "../_core/sdk";
 import { getSessionCookieOptions } from "../_core/cookies";
 import { COOKIE_NAME, ONE_DAY_MS } from "@shared/const";
+import { sendWelcomeEmail } from "./email";
 
 const BCRYPT_ROUNDS = 12;
 
@@ -108,6 +109,41 @@ export const adminAuthRouter = router({
       // Set session cookie (maxAge in ms — 24h)
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_DAY_MS });
+
+      // Send welcome email immediately (wait for it to complete)
+      console.log("[ADMIN-AUTH-REGISTRATION] ✅ User created:", {
+        email: createdUser.email,
+        name: createdUser.name,
+        id: createdUser.id,
+        hasResendKey: !!process.env.RESEND_API_KEY
+      });
+
+      if (createdUser.email && createdUser.name) {
+        console.log("[ADMIN-AUTH-REGISTRATION] 📧 Attempting to send welcome email to:", createdUser.email);
+        console.log("[ADMIN-AUTH-REGISTRATION] 🔑 RESEND_API_KEY present:", !!process.env.RESEND_API_KEY);
+        console.log("[ADMIN-AUTH-REGISTRATION] 📍 About to call sendWelcomeEmail function...");
+
+        try {
+          const emailSuccess = await sendWelcomeEmail({
+            to: createdUser.email,
+            userName: createdUser.name,
+          });
+
+          if (emailSuccess) {
+            console.log("[ADMIN-AUTH-REGISTRATION] ✅ Welcome email sent successfully to:", createdUser.email);
+          } else {
+            console.error("[ADMIN-AUTH-REGISTRATION] ❌ Welcome email returned false for:", createdUser.email);
+          }
+        } catch (error) {
+          console.error("[ADMIN-AUTH-REGISTRATION] ❌ Failed to send welcome email:", error);
+          // Don't throw - continue with registration even if email fails
+        }
+      } else {
+        console.error("[ADMIN-AUTH-REGISTRATION] ⚠️  Email or name missing - cannot send welcome email", {
+          hasEmail: !!createdUser.email,
+          hasName: !!createdUser.name
+        });
+      }
 
       return {
         success: true,

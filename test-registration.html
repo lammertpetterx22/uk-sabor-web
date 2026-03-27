@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Registration</title>
+</head>
+<body>
+    <h1>Test Registration</h1>
+    <button onclick="testRegistration()">Register Test User</button>
+    <pre id="result"></pre>
+
+    <script>
+        async function testRegistration() {
+            const resultEl = document.getElementById('result');
+            resultEl.textContent = 'Registering...';
+
+            const timestamp = Date.now();
+            const email = `test${timestamp}@example.com`;
+
+            try {
+                const response = await fetch('https://www.consabor.uk/api/trpc/auth.register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        json: {
+                            email: email,
+                            password: 'Test123456',
+                            name: `Test User ${timestamp}`
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                resultEl.textContent = JSON.stringify(data, null, 2);
+
+                console.log('Registration response:', data);
+                console.log('Check Koyeb logs for:');
+                console.log(`[REGISTRATION] 📧 Attempting to send welcome email to: ${email}`);
+                console.log(`[EMAIL] 📧 Resend Email ID: ...`);
+            } catch (error) {
+                resultEl.textContent = 'Error: ' + error.message;
+                console.error('Registration error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
