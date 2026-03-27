@@ -99,9 +99,9 @@ export const financialsRouter = router({
   requestWithdrawal: protectedProcedure
     .input(z.object({
       amount: z.number().positive(),
-      accountHolderName: z.string().min(2, "Account holder name is required"),
-      sortCode: z.string().regex(/^\d{2}-\d{2}-\d{2}$/, "Sort code must be in format XX-XX-XX"),
-      accountNumber: z.string().regex(/^\d{8}$/, "Account number must be 8 digits"),
+      accountHolderName: z.string().min(2, "Account holder name is required").optional(),
+      sortCode: z.string().regex(/^\d{2}-\d{2}-\d{2}$/, "Sort code must be in format XX-XX-XX").optional(),
+      accountNumber: z.string().regex(/^\d{8}$/, "Account number must be 8 digits").optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
@@ -128,14 +128,14 @@ export const financialsRouter = router({
         })
         .where(eq(balances.userId, ctx.user.id));
 
-      // 2. Create withdrawal request with bank details
+      // 2. Create withdrawal request (bank details commented until migration runs)
       const [request] = await db.insert(withdrawalRequests).values({
         userId: ctx.user.id,
         amount: input.amount.toFixed(2) as any,
         status: "pending",
-        accountHolderName: input.accountHolderName,
-        sortCode: input.sortCode,
-        accountNumber: input.accountNumber,
+        // accountHolderName: input.accountHolderName, // Temporarily commented until migration
+        // sortCode: input.sortCode, // Temporarily commented until migration
+        // accountNumber: input.accountNumber, // Temporarily commented until migration
       }).returning();
 
       // 3. Optional: Add a pending ledger entry
