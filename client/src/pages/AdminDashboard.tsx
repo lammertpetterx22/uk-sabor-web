@@ -13,7 +13,7 @@ import { Loader2, Plus, Edit2, Trash2, AlertCircle, Upload, X, Image as ImageIco
 import { toast } from "sonner";
 import { useLocation, Link } from "wouter";
 import ImageCropperModal from "@/components/ImageCropperModal";
-import AdjustableImageCropper from "@/components/AdjustableImageCropper";
+import InstagramCropSelector from "@/components/InstagramCropSelector";
 import QRCodeDisplay from "@/components/QRCodeDisplay";
 import UpgradePlanDialog from "@/components/UpgradePlanDialog";
 import DashboardOverview from "@/components/admin/DashboardOverview";
@@ -3043,8 +3043,8 @@ function InstructorsTab() {
             />
           </div>
 
-          {/* Adjustable Image Cropper - Drag to position + Zoom + Auto-resize to 1080x1080 */}
-          <AdjustableImageCropper
+          {/* Instagram-Style Crop Selector - Drag square frame over fixed image */}
+          <InstagramCropSelector
             open={showImageUpload && !!cropSrc}
             onClose={() => {
               setShowImageUpload(false);
@@ -3053,8 +3053,8 @@ function InstructorsTab() {
             onImageReady={handleImageReady}
             targetWidth={1080}
             targetHeight={1080}
-            title="Ajustar Foto del Profesor"
-            description="Arrastra y ajusta el zoom para seleccionar la mejor área"
+            title="Recortar Foto del Profesor"
+            description="Mueve y ajusta el cuadrado para seleccionar el área"
           />
 
           <div className="flex gap-2">
