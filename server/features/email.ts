@@ -333,3 +333,132 @@ Questions? Contact us at info@consabor.uk
 © 2026 UK Sabor. All rights reserved.
   `.trim();
 }
+
+/**
+ * Send welcome email to new user after registration
+ */
+export async function sendWelcomeEmail(options: {
+  to: string;
+  userName: string;
+}): Promise<boolean> {
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background-color: #f5f5f5; margin: 0; padding: 0; }
+          .container { max-width: 600px; margin: 0 auto; background-color: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+          .header { background: linear-gradient(135deg, #ff1493 0%, #ff8c00 100%); color: white; padding: 40px 20px; text-align: center; }
+          .header h1 { margin: 0; font-size: 32px; font-weight: bold; }
+          .header p { margin: 10px 0 0 0; font-size: 16px; opacity: 0.9; }
+          .content { padding: 40px 30px; }
+          .content h2 { color: #ff1493; margin-top: 0; }
+          .content p { margin: 15px 0; font-size: 15px; }
+          .features { background: #f9f9f9; border-radius: 8px; padding: 20px; margin: 25px 0; }
+          .feature { display: flex; align-items: start; margin: 15px 0; }
+          .feature-icon { font-size: 24px; margin-right: 15px; flex-shrink: 0; }
+          .feature-text { flex: 1; }
+          .feature-text h3 { margin: 0 0 5px 0; font-size: 16px; color: #333; }
+          .feature-text p { margin: 0; font-size: 14px; color: #666; }
+          .cta-button { display: inline-block; background: linear-gradient(135deg, #ff1493 0%, #ff8c00 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 20px 0; }
+          .footer { background-color: #f5f5f5; padding: 20px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🎉 ¡Bienvenido a UK Sabor!</h1>
+            <p>Welcome to the UK's hottest Latin dance community</p>
+          </div>
+          <div class="content">
+            <h2>Hola ${options.userName},</h2>
+            <p>¡Gracias por unirte a UK Sabor! Estamos emocionados de tenerte en nuestra comunidad de baile latino.</p>
+            <p>Tu cuenta ha sido creada exitosamente y ya puedes disfrutar de todo lo que tenemos para ti:</p>
+
+            <div class="features">
+              <div class="feature">
+                <div class="feature-icon">🎟️</div>
+                <div class="feature-text">
+                  <h3>Eventos de Baile</h3>
+                  <p>Accede a los mejores eventos de salsa, bachata, y más en todo el UK</p>
+                </div>
+              </div>
+              <div class="feature">
+                <div class="feature-icon">💃</div>
+                <div class="feature-text">
+                  <h3>Clases de Baile</h3>
+                  <p>Aprende con los mejores instructores profesionales</p>
+                </div>
+              </div>
+              <div class="feature">
+                <div class="feature-icon">📚</div>
+                <div class="feature-text">
+                  <h3>Cursos Online</h3>
+                  <p>Mejora tus habilidades con nuestros cursos en video</p>
+                </div>
+              </div>
+              <div class="feature">
+                <div class="feature-icon">🎫</div>
+                <div class="feature-text">
+                  <h3>QR Codes</h3>
+                  <p>Check-in fácil en eventos con tu código QR personal</p>
+                </div>
+              </div>
+            </div>
+
+            <p style="text-align: center;">
+              <a href="https://www.consabor.uk/events" class="cta-button">
+                Ver Próximos Eventos
+              </a>
+            </p>
+
+            <p style="margin-top: 30px; font-size: 14px; color: #666;">
+              Si tienes alguna pregunta, no dudes en contactarnos en <a href="mailto:info@consabor.uk">info@consabor.uk</a>
+            </p>
+
+            <p style="font-size: 14px; color: #666;">
+              ¡Nos vemos en la pista de baile! 💃🕺
+            </p>
+          </div>
+          <div class="footer">
+            <p><strong>UK Sabor</strong> - Tu comunidad de baile latino en el UK</p>
+            <p>© 2026 UK Sabor. All rights reserved.</p>
+            <p><a href="https://www.consabor.uk">www.consabor.uk</a> | <a href="mailto:info@consabor.uk">info@consabor.uk</a></p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const textContent = `
+Hola ${options.userName},
+
+¡Bienvenido a UK Sabor!
+
+Gracias por unirte a nuestra comunidad de baile latino. Tu cuenta ha sido creada exitosamente.
+
+QUÉ PUEDES HACER AHORA:
+- 🎟️ Comprar tickets para eventos de salsa, bachata, y más
+- 💃 Inscribirte en clases de baile con instructores profesionales
+- 📚 Acceder a cursos online para mejorar tus habilidades
+- 🎫 Usar códigos QR para check-in fácil en eventos
+
+Visita nuestra web: https://www.consabor.uk/events
+
+¿Preguntas? Escríbenos a info@consabor.uk
+
+¡Nos vemos en la pista de baile! 💃🕺
+
+UK Sabor - Tu comunidad de baile latino en el UK
+© 2026 UK Sabor. All rights reserved.
+  `.trim();
+
+  return await sendEmail({
+    to: options.to,
+    subject: "🎉 ¡Bienvenido a UK Sabor! Welcome to the dance community",
+    htmlContent,
+    textContent,
+  });
+}

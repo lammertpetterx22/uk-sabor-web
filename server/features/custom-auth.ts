@@ -9,6 +9,7 @@ import { eq } from "drizzle-orm";
 import { COOKIE_NAME, ONE_DAY_MS } from "@shared/const";
 import { sdk } from "../_core/sdk";
 import { getSessionCookieOptions } from "../_core/cookies";
+import { sendWelcomeEmail } from "./email";
 
 const SALT_ROUNDS = 10;
 
@@ -82,6 +83,16 @@ export const customAuthRouter = router({
       // Set session cookie
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_DAY_MS });
+
+      // Send welcome email (async, don't wait for it)
+      if (userRecord.email && userRecord.name) {
+        sendWelcomeEmail({
+          to: userRecord.email,
+          userName: userRecord.name,
+        }).catch((error) => {
+          console.error("[REGISTRATION] Failed to send welcome email:", error);
+        });
+      }
 
       return {
         success: true,
