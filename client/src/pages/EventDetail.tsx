@@ -99,12 +99,6 @@ export default function EventDetail() {
                     <MapPin className="h-5 w-5 text-accent" />
                     <span>{event.venue}{event.city ? `, ${event.city}` : ""}</span>
                   </div>
-                  {event.maxTickets && (
-                    <div className="flex items-center gap-2">
-                      <Users className="h-5 w-5 text-accent" />
-                      <span>{event.ticketsSold || 0} / {event.maxTickets} sold</span>
-                    </div>
-                  )}
                 </div>
               </div>
 
