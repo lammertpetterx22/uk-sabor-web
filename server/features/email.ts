@@ -11,6 +11,227 @@ function getResendClient(): Resend | null {
   return resendClient;
 }
 
+/**
+ * Premium Email Template Base
+ * Consistent design across all UK Sabor emails
+ */
+function getEmailTemplate(content: string): string {
+  return `
+    <!DOCTYPE html>
+    <html lang="es">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            margin: 0;
+            padding: 20px 0;
+          }
+          .email-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(255, 20, 147, 0.15), 0 8px 16px rgba(0, 0, 0, 0.2);
+          }
+          .header {
+            background: linear-gradient(135deg, #ff1493 0%, #ff8c00 100%);
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+          }
+          .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 8s ease-in-out infinite;
+          }
+          @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+          }
+          .logo-container {
+            position: relative;
+            z-index: 1;
+            margin-bottom: 20px;
+          }
+          .logo {
+            width: 120px;
+            height: auto;
+            display: inline-block;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+          }
+          .header-title {
+            position: relative;
+            z-index: 1;
+            margin: 0;
+            font-size: 32px;
+            font-weight: 800;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            letter-spacing: -0.5px;
+          }
+          .header-subtitle {
+            position: relative;
+            z-index: 1;
+            margin: 10px 0 0 0;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 500;
+          }
+          .content {
+            padding: 40px 30px;
+            background: #ffffff;
+          }
+          .content h2 {
+            color: #ff1493;
+            margin: 0 0 20px 0;
+            font-size: 24px;
+            font-weight: 700;
+          }
+          .content p {
+            margin: 15px 0;
+            font-size: 16px;
+            color: #333333;
+            line-height: 1.6;
+          }
+          .feature-box {
+            background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+            border-left: 4px solid #ff1493;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+          }
+          .feature {
+            display: flex;
+            align-items: start;
+            margin: 18px 0;
+          }
+          .feature-icon {
+            font-size: 28px;
+            margin-right: 16px;
+            flex-shrink: 0;
+            line-height: 1;
+          }
+          .feature-content { flex: 1; }
+          .feature h3 {
+            margin: 0 0 6px 0;
+            font-size: 18px;
+            color: #1a1a1a;
+            font-weight: 600;
+          }
+          .feature p {
+            margin: 0;
+            font-size: 14px;
+            color: #666666;
+            line-height: 1.5;
+          }
+          .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #ff1493 0%, #ff8c00 100%);
+            color: #ffffff;
+            padding: 16px 40px;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 16px;
+            margin: 25px 0;
+            box-shadow: 0 8px 20px rgba(255, 20, 147, 0.3);
+            transition: all 0.3s ease;
+            text-align: center;
+          }
+          .cta-button:hover {
+            box-shadow: 0 12px 28px rgba(255, 20, 147, 0.4);
+            transform: translateY(-2px);
+          }
+          .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, #e5e5e5 50%, transparent 100%);
+            margin: 30px 0;
+          }
+          .footer {
+            background: linear-gradient(180deg, #fafafa 0%, #f0f0f0 100%);
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e5e5e5;
+          }
+          .footer-brand {
+            font-weight: 700;
+            font-size: 18px;
+            background: linear-gradient(135deg, #ff1493 0%, #ff8c00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+          }
+          .footer p {
+            font-size: 13px;
+            color: #666666;
+            margin: 8px 0;
+          }
+          .footer a {
+            color: #ff1493;
+            text-decoration: none;
+            font-weight: 600;
+          }
+          .footer a:hover {
+            text-decoration: underline;
+          }
+          .social-links {
+            margin: 20px 0 10px 0;
+          }
+          .social-links a {
+            display: inline-block;
+            margin: 0 8px;
+            font-size: 24px;
+            text-decoration: none;
+          }
+          @media only screen and (max-width: 600px) {
+            .email-wrapper { border-radius: 0; margin: 0; }
+            .header { padding: 30px 20px; }
+            .header-title { font-size: 26px; }
+            .content { padding: 30px 20px; }
+            .cta-button { padding: 14px 30px; font-size: 15px; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="email-wrapper">
+          <div class="header">
+            <div class="logo-container">
+              <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663400274503/DGihaPaJvnMFHruoq9jmVQ/sabor-logo_7c905b38.png" alt="UK Sabor" class="logo" />
+            </div>
+            ${content.includes('HEADER_TITLE') ? '' : '<h1 class="header-title">UK Sabor</h1>'}
+            ${content.includes('HEADER_SUBTITLE') ? '' : '<p class="header-subtitle">Latin Dance Community in the UK</p>'}
+          </div>
+          ${content}
+          <div class="footer">
+            <p class="footer-brand">UK SABOR</p>
+            <p style="margin: 15px 0 5px 0; color: #999; font-size: 12px;">Tu comunidad de baile latino en el UK</p>
+            <div class="divider" style="margin: 20px auto; max-width: 200px;"></div>
+            <p><a href="https://www.consabor.uk">www.consabor.uk</a></p>
+            <p><a href="mailto:info@consabor.uk">info@consabor.uk</a></p>
+            <p style="margin-top: 20px; font-size: 11px; color: #999;">© ${new Date().getFullYear()} UK Sabor. All rights reserved.</p>
+            <p style="font-size: 11px; color: #999; margin-top: 10px;">This is an automated message. Please do not reply directly to this email.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
 interface EmailOptions {
   to: string;
   subject: string;
@@ -341,96 +562,66 @@ export async function sendWelcomeEmail(options: {
   to: string;
   userName: string;
 }): Promise<boolean> {
-  const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background-color: #f5f5f5; margin: 0; padding: 0; }
-          .container { max-width: 600px; margin: 0 auto; background-color: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-          .header { background: linear-gradient(135deg, #ff1493 0%, #ff8c00 100%); color: white; padding: 40px 20px; text-align: center; }
-          .header h1 { margin: 0; font-size: 32px; font-weight: bold; }
-          .header p { margin: 10px 0 0 0; font-size: 16px; opacity: 0.9; }
-          .content { padding: 40px 30px; }
-          .content h2 { color: #ff1493; margin-top: 0; }
-          .content p { margin: 15px 0; font-size: 15px; }
-          .features { background: #f9f9f9; border-radius: 8px; padding: 20px; margin: 25px 0; }
-          .feature { display: flex; align-items: start; margin: 15px 0; }
-          .feature-icon { font-size: 24px; margin-right: 15px; flex-shrink: 0; }
-          .feature-text { flex: 1; }
-          .feature-text h3 { margin: 0 0 5px 0; font-size: 16px; color: #333; }
-          .feature-text p { margin: 0; font-size: 14px; color: #666; }
-          .cta-button { display: inline-block; background: linear-gradient(135deg, #ff1493 0%, #ff8c00 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 20px 0; }
-          .footer { background-color: #f5f5f5; padding: 20px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>🎉 ¡Bienvenido a UK Sabor!</h1>
-            <p>Welcome to the UK's hottest Latin dance community</p>
-          </div>
-          <div class="content">
-            <h2>Hola ${options.userName},</h2>
-            <p>¡Gracias por unirte a UK Sabor! Estamos emocionados de tenerte en nuestra comunidad de baile latino.</p>
-            <p>Tu cuenta ha sido creada exitosamente y ya puedes disfrutar de todo lo que tenemos para ti:</p>
+  const contentHtml = `
+    <!-- Custom header for welcome email -->
+    <h1 class="header-title">HEADER_TITLE🎉 ¡Bienvenido a UK Sabor!</h1>
+    <p class="header-subtitle">HEADER_SUBTITLEWelcome to the UK's hottest Latin dance community</p>
 
-            <div class="features">
-              <div class="feature">
-                <div class="feature-icon">🎟️</div>
-                <div class="feature-text">
-                  <h3>Eventos de Baile</h3>
-                  <p>Accede a los mejores eventos de salsa, bachata, y más en todo el UK</p>
-                </div>
-              </div>
-              <div class="feature">
-                <div class="feature-icon">💃</div>
-                <div class="feature-text">
-                  <h3>Clases de Baile</h3>
-                  <p>Aprende con los mejores instructores profesionales</p>
-                </div>
-              </div>
-              <div class="feature">
-                <div class="feature-icon">📚</div>
-                <div class="feature-text">
-                  <h3>Cursos Online</h3>
-                  <p>Mejora tus habilidades con nuestros cursos en video</p>
-                </div>
-              </div>
-              <div class="feature">
-                <div class="feature-icon">🎫</div>
-                <div class="feature-text">
-                  <h3>QR Codes</h3>
-                  <p>Check-in fácil en eventos con tu código QR personal</p>
-                </div>
-              </div>
-            </div>
+    <div class="content">
+      <h2>Hola ${options.userName},</h2>
+      <p>¡Gracias por unirte a UK Sabor! Estamos emocionados de tenerte en nuestra comunidad de baile latino.</p>
+      <p>Tu cuenta ha sido creada exitosamente y ya puedes disfrutar de todo lo que tenemos para ti:</p>
 
-            <p style="text-align: center;">
-              <a href="https://www.consabor.uk/events" class="cta-button">
-                Ver Próximos Eventos
-              </a>
-            </p>
-
-            <p style="margin-top: 30px; font-size: 14px; color: #666;">
-              Si tienes alguna pregunta, no dudes en contactarnos en <a href="mailto:info@consabor.uk">info@consabor.uk</a>
-            </p>
-
-            <p style="font-size: 14px; color: #666;">
-              ¡Nos vemos en la pista de baile! 💃🕺
-            </p>
-          </div>
-          <div class="footer">
-            <p><strong>UK Sabor</strong> - Tu comunidad de baile latino en el UK</p>
-            <p>© 2026 UK Sabor. All rights reserved.</p>
-            <p><a href="https://www.consabor.uk">www.consabor.uk</a> | <a href="mailto:info@consabor.uk">info@consabor.uk</a></p>
+      <div class="feature-box">
+        <div class="feature">
+          <div class="feature-icon">🎟️</div>
+          <div class="feature-content">
+            <h3>Eventos de Baile</h3>
+            <p>Accede a los mejores eventos de salsa, bachata, y más en todo el UK</p>
           </div>
         </div>
-      </body>
-    </html>
+        <div class="feature">
+          <div class="feature-icon">💃</div>
+          <div class="feature-content">
+            <h3>Clases de Baile</h3>
+            <p>Aprende con los mejores instructores profesionales</p>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">📚</div>
+          <div class="feature-content">
+            <h3>Cursos Online</h3>
+            <p>Mejora tus habilidades con nuestros cursos en video</p>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🎫</div>
+          <div class="feature-content">
+            <h3>QR Codes</h3>
+            <p>Check-in fácil en eventos con tu código QR personal</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center;">
+        <a href="https://www.consabor.uk/events" class="cta-button">
+          Ver Próximos Eventos
+        </a>
+      </div>
+
+      <div class="divider"></div>
+
+      <p style="margin-top: 30px; font-size: 14px; color: #666;">
+        Si tienes alguna pregunta, no dudes en contactarnos en <a href="mailto:info@consabor.uk" style="color: #ff1493; text-decoration: none; font-weight: 600;">info@consabor.uk</a>
+      </p>
+
+      <p style="font-size: 16px; font-weight: 600; color: #ff1493; text-align: center; margin-top: 30px;">
+        ¡Nos vemos en la pista de baile! 💃🕺
+      </p>
+    </div>
   `;
+
+  const htmlContent = getEmailTemplate(contentHtml);
 
   const textContent = `
 Hola ${options.userName},
