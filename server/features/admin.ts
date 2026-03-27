@@ -91,6 +91,7 @@ export const adminRouter = router({
       email: users.email,
       role: users.role,
       roles: users.roles,
+      subscriptionPlan: users.subscriptionPlan,
       loginMethod: users.loginMethod,
       createdAt: users.createdAt,
       lastSignedIn: users.lastSignedIn,
@@ -145,7 +146,22 @@ export const adminRouter = router({
       return { success: true, rolesArray };
     }),
 
+  updateUserPlan: adminProcedure
+    .input(z.object({
+      id: z.number(),
+      plan: z.enum(["starter", "creator", "promoter_plan", "academy"]),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
+      // Update user's subscription plan
+      await db.update(users).set({
+        subscriptionPlan: input.plan
+      }).where(eq(users.id, input.id));
+
+      return { success: true, plan: input.plan };
+    }),
 
 
 

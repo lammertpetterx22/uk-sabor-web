@@ -3148,6 +3148,7 @@ function UsersTab() {
   const [searchTerm, setSearchTerm] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [editingRoles, setEditingRoles] = useState<{ userId: number; role: string; additionalRole?: string } | null>(null);
+  const [editingPlan, setEditingPlan] = useState<{ userId: number; plan: string } | null>(null);
 
   const deleteUserMutation = trpc.admin.deleteUser.useMutation({
     onSuccess: () => {
@@ -3162,6 +3163,15 @@ function UsersTab() {
     onSuccess: () => {
       toast.success(t("admin.users.toastRoleUpdated"));
       refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const updatePlanMutation = trpc.admin.updateUserPlan.useMutation({
+    onSuccess: () => {
+      toast.success("Subscription plan updated successfully");
+      refetch();
+      setEditingPlan(null);
     },
     onError: (err) => toast.error(err.message),
   });
@@ -3205,6 +3215,7 @@ function UsersTab() {
                   <th className="text-left py-3 px-4 font-semibold">Name</th>
                   <th className="text-left py-3 px-4 font-semibold">Email</th>
                   <th className="text-left py-3 px-4 font-semibold">Role</th>
+                  <th className="text-left py-3 px-4 font-semibold">Plan</th>
                   <th className="text-left py-3 px-4 font-semibold">Method</th>
                   <th className="text-left py-3 px-4 font-semibold">Registered</th>
                   <th className="text-left py-3 px-4 font-semibold">Last Access</th>
@@ -3279,6 +3290,49 @@ function UsersTab() {
                             disabled={updateRoleMutation.isPending}
                           >
                             {updateRoleMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        <Select
+                          value={editingPlan?.userId === u.id ? editingPlan.plan : (u.subscriptionPlan || "starter")}
+                          onValueChange={(newPlan) => {
+                            setEditingPlan({ userId: u.id, plan: newPlan });
+                          }}
+                        >
+                          <SelectTrigger className="w-[140px] h-8">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="starter">
+                              <span className="flex items-center gap-2">🆓 Starter</span>
+                            </SelectItem>
+                            <SelectItem value="creator">
+                              <span className="flex items-center gap-2">⭐ Creator</span>
+                            </SelectItem>
+                            <SelectItem value="promoter_plan">
+                              <span className="flex items-center gap-2">🎯 Promoter</span>
+                            </SelectItem>
+                            <SelectItem value="academy">
+                              <span className="flex items-center gap-2">🏆 Academy</span>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {editingPlan?.userId === u.id && editingPlan.plan !== (u.subscriptionPlan || "starter") && (
+                          <Button
+                            size="sm"
+                            className="h-8 px-2"
+                            onClick={() => {
+                              updatePlanMutation.mutate({
+                                id: u.id,
+                                plan: editingPlan.plan as "starter" | "creator" | "promoter_plan" | "academy",
+                              });
+                            }}
+                            disabled={updatePlanMutation.isPending}
+                          >
+                            {updatePlanMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
                           </Button>
                         )}
                       </div>
