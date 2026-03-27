@@ -13,6 +13,7 @@ import { Loader2, Plus, Edit2, Trash2, AlertCircle, Upload, X, Image as ImageIco
 import { toast } from "sonner";
 import { useLocation, Link } from "wouter";
 import ImageCropperModal from "@/components/ImageCropperModal";
+import InstagramStyleImageUpload from "@/components/InstagramStyleImageUpload";
 import QRCodeDisplay from "@/components/QRCodeDisplay";
 import UpgradePlanDialog from "@/components/UpgradePlanDialog";
 import DashboardOverview from "@/components/admin/DashboardOverview";
@@ -2822,20 +2823,27 @@ function InstructorsTab() {
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   // Step 1: read file → open cropper
+  // Instagram-style auto-fit image upload (no cropper needed!)
+  const [showImageUpload, setShowImageUpload] = useState(false);
+
   const handlePhotoSelect = (file: File) => {
     if (!file.type.startsWith('image/')) {
       toast.error('Please select a valid image file');
       return;
     }
+    // Open Instagram-style upload modal
+    setShowImageUpload(true);
+    // Store the file for the modal to process
     const reader = new FileReader();
     reader.onload = (e) => setCropSrc(e.target?.result as string);
     reader.readAsDataURL(file);
   };
 
-  // Step 2: receive cropped data URL → upload to S3
-  const handleCropComplete = async (croppedDataUrl: string) => {
+  // Receive auto-fitted image and upload to S3
+  const handleImageReady = async (autoFittedDataUrl: string) => {
+    setShowImageUpload(false);
     setCropSrc(null);
-    setFormData(prev => ({ ...prev, photoPreview: croppedDataUrl, photoUrl: "" }));
+    setFormData(prev => ({ ...prev, photoPreview: autoFittedDataUrl, photoUrl: "" }));
     setUploading(true);
     try {
       // Generate unique filename: instructor-{id}-{timestamp}.jpg
@@ -2845,7 +2853,7 @@ function InstructorsTab() {
         : `instructor-new-${timestamp}.jpg`;
 
       const result = await uploadFileMutation.mutateAsync({
-        fileBase64: croppedDataUrl,
+        fileBase64: autoFittedDataUrl,
         fileName: uniqueFileName,
         mimeType: "image/jpeg",
         folder: "instructors",
@@ -3035,13 +3043,17 @@ function InstructorsTab() {
             />
           </div>
 
-          {/* Image Cropper Modal */}
-          <ImageCropperModal
-            imageSrc={cropSrc}
-            aspect={1}
-            label={t("admin.instructors.cropPhoto")}
-            onCropComplete={handleCropComplete}
-            onClose={() => setCropSrc(null)}
+          {/* Instagram-Style Auto-Fit Image Upload (Square for Instructors) */}
+          <InstagramStyleImageUpload
+            open={showImageUpload && !!cropSrc}
+            onClose={() => {
+              setShowImageUpload(false);
+              setCropSrc(null);
+            }}
+            onImageReady={handleImageReady}
+            aspectRatio={1}
+            title="Upload Instructor Photo"
+            description="Select any image - it will auto-fit perfectly to square format"
           />
 
           <div className="flex gap-2">
