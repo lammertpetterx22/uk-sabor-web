@@ -276,13 +276,22 @@ export const financialsRouter = router({
 
       // If rejected, refund the balance
       if (input.status === "rejected") {
-        await db.update(balances)
+        console.log(`[Withdrawal] 🔄 Refunding £${request.amount} to user ${request.userId}`);
+
+        const refundResult = await db.update(balances)
           .set({
             currentBalance: sql`${balances.currentBalance} + ${request.amount}`,
             updatedAt: new Date(),
           })
-          .where(eq(balances.userId, request.userId));
-        
+          .where(eq(balances.userId, request.userId))
+          .returning();
+
+        if (refundResult.length > 0) {
+          console.log(`[Withdrawal] ✅ Balance refunded. New balance: £${refundResult[0].currentBalance}`);
+        } else {
+          console.error(`[Withdrawal] ❌ Failed to refund balance for user ${request.userId}`);
+        }
+
         // Mark ledger entry as cancelled too
         await db.update(ledgerTransactions)
           .set({ status: "cancelled", description: sql`${ledgerTransactions.description} || ' (Rejected)'` })
@@ -292,6 +301,8 @@ export const financialsRouter = router({
             eq(ledgerTransactions.status, "pending"), // Find the matching pending withdrawal
             sql`description LIKE ${`Withdrawal request #${request.id}%`}`
           ));
+
+        console.log(`[Withdrawal] 📝 Ledger entry marked as cancelled`);
       }
 
       // If paid, update totalWithdrawn
