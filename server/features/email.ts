@@ -294,14 +294,21 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
     }
 
     console.log("[EMAIL] Sending email via Resend API...");
-    const { error } = await client.emails.send(emailPayload);
+    const result = await client.emails.send(emailPayload);
 
-    if (error) {
-      console.error("[EMAIL] Resend error:", error);
+    if (result.error) {
+      console.error("[EMAIL] ❌ Resend error:", result.error);
       return false;
     }
 
-    console.log(`[EMAIL] Sent successfully to ${options.to}: ${options.subject}`);
+    if (result.data) {
+      console.log(`[EMAIL] ✅ Sent successfully to ${options.to}: ${options.subject}`);
+      console.log(`[EMAIL] 📧 Resend Email ID: ${result.data.id}`);
+      console.log(`[EMAIL] 📊 Check in Resend dashboard: https://resend.com/emails/${result.data.id}`);
+    } else {
+      console.log(`[EMAIL] ⚠️  Email sent but no ID returned`);
+    }
+
     return true;
   } catch (error) {
     console.error("[EMAIL] Failed to send email:", error);
