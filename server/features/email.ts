@@ -577,7 +577,7 @@ export async function sendWelcomeEmail(options: {
 }): Promise<boolean> {
   const htmlContent = `
     <!DOCTYPE html>
-    <html lang="es">
+    <html lang="en">
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -587,15 +587,15 @@ export async function sendWelcomeEmail(options: {
           body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6;
-            color: #1a1a1a;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff;
+            background: #000000;
             margin: 0;
             padding: 20px 0;
           }
           .email-wrapper {
             max-width: 600px;
             margin: 0 auto;
-            background: #ffffff;
+            background: #000000;
             border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 20px 60px rgba(255, 20, 147, 0.15), 0 8px 16px rgba(0, 0, 0, 0.2);
@@ -652,7 +652,7 @@ export async function sendWelcomeEmail(options: {
           }
           .content {
             padding: 40px 30px;
-            background: #ffffff;
+            background: #000000;
           }
           .content h2 {
             color: #ff1493;
@@ -663,11 +663,11 @@ export async function sendWelcomeEmail(options: {
           .content p {
             margin: 15px 0;
             font-size: 16px;
-            color: #333333;
+            color: #e5e5e5;
             line-height: 1.6;
           }
           .feature-box {
-            background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
             border-left: 4px solid #ff1493;
             border-radius: 12px;
             padding: 25px;
@@ -688,13 +688,13 @@ export async function sendWelcomeEmail(options: {
           .feature h3 {
             margin: 0 0 6px 0;
             font-size: 18px;
-            color: #1a1a1a;
+            color: #ffffff;
             font-weight: 600;
           }
           .feature p {
             margin: 0;
             font-size: 14px;
-            color: #666666;
+            color: #b3b3b3;
             line-height: 1.5;
           }
           .cta-button {
@@ -711,14 +711,14 @@ export async function sendWelcomeEmail(options: {
           }
           .divider {
             height: 1px;
-            background: linear-gradient(90deg, transparent 0%, #e5e5e5 50%, transparent 100%);
+            background: linear-gradient(90deg, transparent 0%, #333333 50%, transparent 100%);
             margin: 30px 0;
           }
           .footer {
-            background: linear-gradient(180deg, #fafafa 0%, #f0f0f0 100%);
+            background: #000000;
             padding: 30px;
             text-align: center;
-            border-top: 1px solid #e5e5e5;
+            border-top: 1px solid #1a1a1a;
           }
           .footer-brand {
             font-weight: 700;
@@ -754,69 +754,69 @@ export async function sendWelcomeEmail(options: {
             <div class="logo-container">
               <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663400274503/DGihaPaJvnMFHruoq9jmVQ/sabor-logo_7c905b38.png" alt="UK Sabor" class="logo" />
             </div>
-            <h1 class="header-title">🎉 ¡Bienvenido a UK Sabor!</h1>
-            <p class="header-subtitle">Welcome to the UK's hottest Latin dance community</p>
+            <h1 class="header-title">🎉 Welcome to UK Sabor!</h1>
+            <p class="header-subtitle">The UK's hottest Latin dance community</p>
           </div>
           <div class="content">
-            <h2>Hola ${options.userName},</h2>
-            <p>¡Gracias por unirte a UK Sabor! Estamos emocionados de tenerte en nuestra comunidad de baile latino.</p>
-            <p>Tu cuenta ha sido creada exitosamente y ya puedes disfrutar de todo lo que tenemos para ti:</p>
+            <h2>Hi ${options.userName},</h2>
+            <p>Thanks for joining UK Sabor! We're excited to have you in our Latin dance community.</p>
+            <p>Your account has been successfully created and you can now enjoy everything we have to offer:</p>
 
             <div class="feature-box">
               <div class="feature">
                 <div class="feature-icon">🎟️</div>
                 <div class="feature-content">
-                  <h3>Eventos de Baile</h3>
-                  <p>Accede a los mejores eventos de salsa, bachata, y más en todo el UK</p>
+                  <h3>Dance Events</h3>
+                  <p>Access the best salsa, bachata, and more events across the UK</p>
                 </div>
               </div>
               <div class="feature">
                 <div class="feature-icon">💃</div>
                 <div class="feature-content">
-                  <h3>Clases de Baile</h3>
-                  <p>Aprende con los mejores instructores profesionales</p>
+                  <h3>Dance Classes</h3>
+                  <p>Learn from the best professional instructors</p>
                 </div>
               </div>
               <div class="feature">
                 <div class="feature-icon">📚</div>
                 <div class="feature-content">
-                  <h3>Cursos Online</h3>
-                  <p>Mejora tus habilidades con nuestros cursos en video</p>
+                  <h3>Online Courses</h3>
+                  <p>Improve your skills with our video courses</p>
                 </div>
               </div>
               <div class="feature">
                 <div class="feature-icon">🎫</div>
                 <div class="feature-content">
                   <h3>QR Codes</h3>
-                  <p>Check-in fácil en eventos con tu código QR personal</p>
+                  <p>Easy event check-in with your personal QR code</p>
                 </div>
               </div>
             </div>
 
             <div style="text-align: center;">
               <a href="https://www.consabor.uk/events" class="cta-button">
-                Ver Próximos Eventos
+                View Upcoming Events
               </a>
             </div>
 
             <div class="divider"></div>
 
-            <p style="margin-top: 30px; font-size: 14px; color: #666;">
-              Si tienes alguna pregunta, no dudes en contactarnos en <a href="mailto:info@consabor.uk" style="color: #ff1493; text-decoration: none; font-weight: 600;">info@consabor.uk</a>
+            <p style="margin-top: 30px; font-size: 14px; color: #b3b3b3;">
+              If you have any questions, feel free to contact us at <a href="mailto:info@consabor.uk" style="color: #ff1493; text-decoration: none; font-weight: 600;">info@consabor.uk</a>
             </p>
 
             <p style="font-size: 16px; font-weight: 600; color: #ff1493; text-align: center; margin-top: 30px;">
-              ¡Nos vemos en la pista de baile! 💃🕺
+              See you on the dance floor! 💃🕺
             </p>
           </div>
           <div class="footer">
             <p class="footer-brand">UK SABOR</p>
-            <p style="margin: 15px 0 5px 0; color: #999; font-size: 12px;">Tu comunidad de baile latino en el UK</p>
+            <p style="margin: 15px 0 5px 0; color: #666; font-size: 12px;">Your Latin dance community in the UK</p>
             <div class="divider" style="margin: 20px auto; max-width: 200px;"></div>
             <p><a href="https://www.consabor.uk">www.consabor.uk</a></p>
             <p><a href="mailto:info@consabor.uk">info@consabor.uk</a></p>
-            <p style="margin-top: 20px; font-size: 11px; color: #999;">© ${new Date().getFullYear()} UK Sabor. All rights reserved.</p>
-            <p style="font-size: 11px; color: #999; margin-top: 10px;">This is an automated message. Please do not reply directly to this email.</p>
+            <p style="margin-top: 20px; font-size: 11px; color: #666;">© ${new Date().getFullYear()} UK Sabor. All rights reserved.</p>
+            <p style="font-size: 11px; color: #666; margin-top: 10px;">This is an automated message. Please do not reply directly to this email.</p>
           </div>
         </div>
       </body>
@@ -824,31 +824,31 @@ export async function sendWelcomeEmail(options: {
   `;
 
   const textContent = `
-Hola ${options.userName},
+Hi ${options.userName},
 
-¡Bienvenido a UK Sabor!
+Welcome to UK Sabor!
 
-Gracias por unirte a nuestra comunidad de baile latino. Tu cuenta ha sido creada exitosamente.
+Thanks for joining our Latin dance community. Your account has been successfully created.
 
-QUÉ PUEDES HACER AHORA:
-- 🎟️ Comprar tickets para eventos de salsa, bachata, y más
-- 💃 Inscribirte en clases de baile con instructores profesionales
-- 📚 Acceder a cursos online para mejorar tus habilidades
-- 🎫 Usar códigos QR para check-in fácil en eventos
+WHAT YOU CAN DO NOW:
+- 🎟️ Buy tickets for salsa, bachata, and more events
+- 💃 Sign up for dance classes with professional instructors
+- 📚 Access online courses to improve your skills
+- 🎫 Use QR codes for easy event check-in
 
-Visita nuestra web: https://www.consabor.uk/events
+Visit our website: https://www.consabor.uk/events
 
-¿Preguntas? Escríbenos a info@consabor.uk
+Questions? Contact us at info@consabor.uk
 
-¡Nos vemos en la pista de baile! 💃🕺
+See you on the dance floor! 💃🕺
 
-UK Sabor - Tu comunidad de baile latino en el UK
+UK Sabor - Your Latin dance community in the UK
 © 2026 UK Sabor. All rights reserved.
   `.trim();
 
   return await sendEmail({
     to: options.to,
-    subject: "🎉 ¡Bienvenido a UK Sabor! Welcome to the dance community",
+    subject: "🎉 Welcome to UK Sabor!",
     htmlContent,
     textContent,
   });
