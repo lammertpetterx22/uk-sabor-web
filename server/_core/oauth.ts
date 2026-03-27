@@ -37,23 +37,27 @@ export function registerOAuthRoutes(app: Express) {
         lastSignedIn: new Date(),
       });
 
-      // Send welcome email to new users (async, don't wait for it)
+      // Send welcome email to new users immediately (wait for it)
       if (isNewUser && userInfo.email && userInfo.name) {
         console.log("[OAuth] 📧 New user registered, sending welcome email to:", userInfo.email);
         console.log("[OAuth] 🔑 RESEND_API_KEY present:", !!process.env.RESEND_API_KEY);
+        console.log("[OAuth] 📍 About to call sendWelcomeEmail function...");
 
-        sendWelcomeEmail({
-          to: userInfo.email,
-          userName: userInfo.name,
-        }).then((success) => {
-          if (success) {
+        try {
+          const emailSuccess = await sendWelcomeEmail({
+            to: userInfo.email,
+            userName: userInfo.name,
+          });
+
+          if (emailSuccess) {
             console.log("[OAuth] ✅ Welcome email sent successfully to:", userInfo.email);
           } else {
             console.error("[OAuth] ❌ Welcome email returned false for:", userInfo.email);
           }
-        }).catch((error) => {
+        } catch (error) {
           console.error("[OAuth] ❌ Failed to send welcome email:", error);
-        });
+          // Don't throw - continue with login even if email fails
+        }
       } else if (!isNewUser) {
         console.log("[OAuth] ℹ️  Existing user logged in, no welcome email sent:", userInfo.email);
       }

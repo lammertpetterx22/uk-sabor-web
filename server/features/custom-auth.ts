@@ -84,7 +84,7 @@ export const customAuthRouter = router({
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_DAY_MS });
 
-      // Send welcome email (async, don't wait for it)
+      // Send welcome email immediately (wait for it to complete)
       console.log("[REGISTRATION] ✅ User created:", {
         email: userRecord.email,
         name: userRecord.name,
@@ -95,19 +95,23 @@ export const customAuthRouter = router({
       if (userRecord.email && userRecord.name) {
         console.log("[REGISTRATION] 📧 Attempting to send welcome email to:", userRecord.email);
         console.log("[REGISTRATION] 🔑 RESEND_API_KEY present:", !!process.env.RESEND_API_KEY);
+        console.log("[REGISTRATION] 📍 About to call sendWelcomeEmail function...");
 
-        sendWelcomeEmail({
-          to: userRecord.email,
-          userName: userRecord.name,
-        }).then((success) => {
-          if (success) {
+        try {
+          const emailSuccess = await sendWelcomeEmail({
+            to: userRecord.email,
+            userName: userRecord.name,
+          });
+
+          if (emailSuccess) {
             console.log("[REGISTRATION] ✅ Welcome email sent successfully to:", userRecord.email);
           } else {
             console.error("[REGISTRATION] ❌ Welcome email returned false for:", userRecord.email);
           }
-        }).catch((error) => {
+        } catch (error) {
           console.error("[REGISTRATION] ❌ Failed to send welcome email:", error);
-        });
+          // Don't throw - continue with registration even if email fails
+        }
       } else {
         console.error("[REGISTRATION] ⚠️  Email or name missing - cannot send welcome email", {
           hasEmail: !!userRecord.email,
