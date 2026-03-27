@@ -13,7 +13,7 @@ import { Loader2, Plus, Edit2, Trash2, AlertCircle, Upload, X, Image as ImageIco
 import { toast } from "sonner";
 import { useLocation, Link } from "wouter";
 import ImageCropperModal from "@/components/ImageCropperModal";
-import InstagramStyleImageUpload from "@/components/InstagramStyleImageUpload";
+import AutoResizeImageUpload from "@/components/AutoResizeImageUpload";
 import QRCodeDisplay from "@/components/QRCodeDisplay";
 import UpgradePlanDialog from "@/components/UpgradePlanDialog";
 import DashboardOverview from "@/components/admin/DashboardOverview";
@@ -3043,17 +3043,18 @@ function InstructorsTab() {
             />
           </div>
 
-          {/* Instagram-Style Auto-Fit Image Upload (Square for Instructors) */}
-          <InstagramStyleImageUpload
+          {/* Auto-Resize Image Upload - Automatically resizes ANY image to 1080x1080 */}
+          <AutoResizeImageUpload
             open={showImageUpload && !!cropSrc}
             onClose={() => {
               setShowImageUpload(false);
               setCropSrc(null);
             }}
             onImageReady={handleImageReady}
-            aspectRatio={1}
+            targetWidth={1080}
+            targetHeight={1080}
             title="Upload Instructor Photo"
-            description="Select any image - it will auto-fit perfectly to square format"
+            description="Upload any size image - it will auto-resize to 1080×1080px perfectly"
           />
 
           <div className="flex gap-2">
