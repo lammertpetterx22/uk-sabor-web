@@ -156,7 +156,7 @@ export const customAuthRouter = router({
       const user = userResult[0];
 
       // Verify password using bcrypt (secure comparison)
-      const passwordField = (user as any).password;
+      const passwordField = user.passwordHash;
       if (!passwordField) {
         // User registered via OAuth or has no password set
         throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid email or password" });
