@@ -70,6 +70,34 @@ async function startServer() {
     });
   });
 
+  // Test email sending endpoint (for debugging)
+  app.post("/api/test-email", async (req, res) => {
+    const { sendWelcomeEmail } = await import("../features/email");
+    const { to, userName } = req.body;
+
+    if (!to || !userName) {
+      return res.status(400).json({ error: "Missing 'to' or 'userName' in request body" });
+    }
+
+    console.log("[TEST-EMAIL] Attempting to send test email to:", to);
+    console.log("[TEST-EMAIL] RESEND_API_KEY present:", !!process.env.RESEND_API_KEY);
+    console.log("[TEST-EMAIL] RESEND_FROM_EMAIL:", process.env.RESEND_FROM_EMAIL || 'UK Sabor <onboarding@resend.dev>');
+
+    try {
+      const success = await sendWelcomeEmail({ to, userName });
+      if (success) {
+        console.log("[TEST-EMAIL] ✅ Email sent successfully");
+        return res.status(200).json({ success: true, message: "Email sent successfully" });
+      } else {
+        console.error("[TEST-EMAIL] ❌ Email sending returned false");
+        return res.status(500).json({ success: false, message: "Email sending failed (returned false)" });
+      }
+    } catch (error) {
+      console.error("[TEST-EMAIL] ❌ Error sending email:", error);
+      return res.status(500).json({ success: false, message: "Email sending error", error: String(error) });
+    }
+  });
+
   // Debug endpoint to check if static files exist
   app.get("/api/debug/static", async (req, res) => {
     const fs = await import("fs");
