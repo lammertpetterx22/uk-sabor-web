@@ -253,7 +253,8 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
   console.log("[EMAIL] sendEmail called with:", { to: options.to, subject: options.subject });
 
   const client = getResendClient();
-  const fromAddress = options.from || process.env.RESEND_FROM_EMAIL || "UK Sabor <noreply@consabor.uk>";
+  // Use Resend's verified onboarding domain until consabor.uk is verified
+  const fromAddress = options.from || process.env.RESEND_FROM_EMAIL || "UK Sabor <onboarding@resend.dev>";
 
   console.log("[EMAIL] Resend client status:", { hasClient: !!client, fromAddress });
   console.log("[EMAIL] Environment check:", {
