@@ -15,6 +15,7 @@ interface ImageCropperModalProps {
 }
 
 const ASPECT_RATIOS = {
+  "17:25": 17 / 25,  // Flyer vertical (1275x1875) - PERFECTO PARA EVENTOS
   "16:9": 16 / 9,
   "4:3": 4 / 3,
   "1:1": 1,
@@ -36,13 +37,14 @@ export default function ImageCropperModal({
 }: ImageCropperModalProps) {
   const [selectedAspect, setSelectedAspect] = useState<string>(() => {
     // Auto-detect aspect ratio
-    if (!aspect) return "free";
-    if (aspect === 16 / 9) return "16:9";
-    if (aspect === 4 / 3) return "4:3";
-    if (aspect === 1) return "1:1";
-    if (aspect === 3 / 4) return "3:4";
-    if (aspect === 9 / 16) return "9:16";
-    return "free";
+    if (!aspect) return "17:25"; // DEFAULT: Flyer format
+    if (Math.abs(aspect - 17 / 25) < 0.01) return "17:25";
+    if (Math.abs(aspect - 16 / 9) < 0.01) return "16:9";
+    if (Math.abs(aspect - 4 / 3) < 0.01) return "4:3";
+    if (Math.abs(aspect - 1) < 0.01) return "1:1";
+    if (Math.abs(aspect - 3 / 4) < 0.01) return "3:4";
+    if (Math.abs(aspect - 9 / 16) < 0.01) return "9:16";
+    return "17:25"; // DEFAULT: Flyer format
   });
   const [rotation, setRotation] = useState(0);
   const [scale, setScale] = useState(1);
@@ -152,10 +154,45 @@ export default function ImageCropperModal({
   };
 
   const handleApply = async () => {
-    if (!previewCanvasRef.current) return;
+    if (!previewCanvasRef.current || !imgRef.current) return;
     setIsProcessing(true);
     try {
-      const dataUrl = await getCroppedImg(previewCanvasRef.current);
+      // Create final canvas with EXACT dimensions based on aspect ratio
+      const finalCanvas = document.createElement('canvas');
+      const ctx = finalCanvas.getContext('2d')!;
+
+      // Set EXACT output dimensions based on aspect ratio
+      if (selectedAspect === "17:25") {
+        // FLYER FORMAT: Exact 1275x1875px
+        finalCanvas.width = 1275;
+        finalCanvas.height = 1875;
+      } else if (selectedAspect === "16:9") {
+        finalCanvas.width = 1920;
+        finalCanvas.height = 1080;
+      } else if (selectedAspect === "1:1") {
+        finalCanvas.width = 1200;
+        finalCanvas.height = 1200;
+      } else {
+        // Use preview canvas dimensions for other ratios
+        finalCanvas.width = previewCanvasRef.current.width * 2;
+        finalCanvas.height = previewCanvasRef.current.height * 2;
+      }
+
+      const img = imgRef.current;
+
+      // Draw image with transformations on final canvas
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+
+      ctx.save();
+      ctx.translate(finalCanvas.width / 2, finalCanvas.height / 2);
+      ctx.rotate((rotation * Math.PI) / 180);
+      ctx.scale(scale, scale);
+      ctx.translate(-img.naturalWidth / 2 + offsetX * 2, -img.naturalHeight / 2 + offsetY * 2);
+      ctx.drawImage(img, 0, 0);
+      ctx.restore();
+
+      const dataUrl = await getCroppedImg(finalCanvas);
       onCropComplete(dataUrl);
     } finally {
       setIsProcessing(false);
