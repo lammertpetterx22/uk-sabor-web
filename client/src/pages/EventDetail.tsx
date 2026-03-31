@@ -60,11 +60,15 @@ export default function EventDetail() {
   return (
     <div className="min-h-screen bg-background">
 
-      {/* Hero Section */}
+      {/* Hero Section — prefer banner (landscape) over cover (flyer) */}
       <div className="relative">
-        {event.imageUrl ? (
+        {((event as any).bannerUrl || event.imageUrl) ? (
           <div className="h-[400px] w-full relative">
-            <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover" />
+            <img
+              src={(event as any).bannerUrl || event.imageUrl}
+              alt={event.title}
+              className="w-full h-full object-cover"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
           </div>
         ) : (

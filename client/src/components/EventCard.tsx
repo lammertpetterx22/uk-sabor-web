@@ -22,17 +22,15 @@ const EventCard = memo(function EventCard({ event }: EventCardProps) {
 
   return (
     <Card className="glass overflow-hidden hover:shadow-2xl hover:shadow-[#FF4500]/30 transition-all duration-300 transform hover:scale-[1.02] h-full flex flex-col border-white/10 hover:border-[#FF4500]/50">
-      {/* Event Image - Flyer Format (17:25 ratio like 1275x1875) */}
+      {/* Event Image — fixed height, object-cover auto-adapts any image */}
       {event.imageUrl && (
-        <div className="relative w-full aspect-[17/25] overflow-hidden bg-gradient-to-br from-[#E91E8C]/20 to-[#FF4500]/20">
+        <div className="relative w-full h-72 overflow-hidden bg-gradient-to-br from-[#E91E8C]/20 to-[#FF4500]/20">
           <img
             src={event.imageUrl}
             alt={event.title}
-            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-500"
             loading="lazy"
             decoding="async"
-            width="1275"
-            height="1875"
           />
           {/* Overlay gradient for better text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />

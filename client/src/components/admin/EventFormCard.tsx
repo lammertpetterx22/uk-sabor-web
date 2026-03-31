@@ -42,6 +42,7 @@ export default function EventFormCard({
 }: EventFormCardProps) {
   const { t } = useTranslations();
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
   const uploadFileMutation = trpc.uploads.uploadFile.useMutation();
   const createMutation = trpc.admin.createEvent.useMutation({
     onSuccess: () => {
@@ -77,6 +78,8 @@ export default function EventFormCard({
         maxTickets: editingEvent.maxTickets?.toString() || "",
         imageUrl: editingEvent.imageUrl || "",
         imagePreview: editingEvent.imageUrl || "",
+        bannerUrl: editingEvent.bannerUrl || "",
+        bannerPreview: editingEvent.bannerUrl || "",
         paymentMethod: (editingEvent.paymentMethod || "online") as "online" | "cash" | "both",
         showLowTicketAlert: editingEvent.showLowTicketAlert || false,
       };
@@ -91,13 +94,17 @@ export default function EventFormCard({
       maxTickets: "",
       imageUrl: "",
       imagePreview: "",
+      bannerUrl: "",
+      bannerPreview: "",
       paymentMethod: "online" as "online" | "cash" | "both",
       showLowTicketAlert: false,
     };
   });
 
   const [uploading, setUploading] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [cropSrcBanner, setCropSrcBanner] = useState<string | null>(null);
 
   const resetForm = () => {
     setFormData({
@@ -110,10 +117,13 @@ export default function EventFormCard({
       maxTickets: "",
       imageUrl: "",
       imagePreview: "",
+      bannerUrl: "",
+      bannerPreview: "",
       paymentMethod: "online",
       showLowTicketAlert: false,
     });
     if (imageInputRef.current) imageInputRef.current.value = "";
+    if (bannerInputRef.current) bannerInputRef.current.value = "";
   };
 
   const handleImageSelect = (file: File) => {
@@ -158,6 +168,47 @@ export default function EventFormCard({
     }
   };
 
+  const handleBannerSelect = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error("Por favor selecciona un archivo de imagen");
+      return;
+    }
+    const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+    if (file.size > MAX_IMAGE_SIZE) {
+      toast.error(`La imagen es demasiado grande (${(file.size / 1024 / 1024).toFixed(1)}MB). Máximo 10MB.`);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => setCropSrcBanner(e.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleBannerCropComplete = async (croppedDataUrl: string) => {
+    setCropSrcBanner(null);
+    setFormData(prev => ({ ...prev, bannerPreview: croppedDataUrl, bannerUrl: "" }));
+    setUploadingBanner(true);
+    try {
+      const timestamp = Date.now();
+      const uniqueFileName = editingEvent?.id
+        ? `event-banner-${editingEvent.id}-${timestamp}.jpg`
+        : `event-banner-new-${timestamp}.jpg`;
+
+      const result = await uploadFileMutation.mutateAsync({
+        fileBase64: croppedDataUrl,
+        fileName: uniqueFileName,
+        mimeType: "image/jpeg",
+        folder: "events",
+      });
+      setFormData(prev => ({ ...prev, bannerUrl: result.url }));
+      toast.success("✅ Banner subido exitosamente");
+    } catch (uploadErr: any) {
+      toast.error(`Error al subir banner: ${uploadErr.message}`);
+      setFormData(prev => ({ ...prev, bannerPreview: "", bannerUrl: "" }));
+    } finally {
+      setUploadingBanner(false);
+    }
+  };
+
   const handleCreateEvent = async () => {
     if (!formData.title || !formData.venue || !formData.eventDate || !formData.ticketPrice) {
       toast.error(t("validation.fillRequiredFields"));
@@ -176,6 +227,7 @@ export default function EventFormCard({
         ticketPrice: formData.ticketPrice,
         maxTickets: formData.maxTickets ? parseInt(formData.maxTickets) : undefined,
         imageUrl: formData.imageUrl,
+        bannerUrl: formData.bannerUrl,
         paymentMethod: formData.paymentMethod,
         showLowTicketAlert: formData.showLowTicketAlert,
       });
@@ -205,6 +257,7 @@ export default function EventFormCard({
       ticketPrice: formData.ticketPrice,
       maxTickets: formData.maxTickets ? parseInt(formData.maxTickets) : undefined,
       imageUrl: formData.imageUrl,
+      bannerUrl: formData.bannerUrl,
       paymentMethod: formData.paymentMethod,
       showLowTicketAlert: formData.showLowTicketAlert,
     });
@@ -436,12 +489,13 @@ export default function EventFormCard({
 
         <Separator className="bg-border/50" />
 
-        {/* Image Upload Section */}
+        {/* Cover Image Upload Section (Flyer/Portada - Vertical 17:25) */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-2">
             <ImageIcon className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Imagen del Evento</h3>
+            <h3 className="font-semibold text-foreground">Portada del Evento (Flyer)</h3>
           </div>
+          <p className="text-xs text-foreground/50 -mt-2">Imagen vertical que se muestra en las tarjetas de eventos (formato flyer 17:25)</p>
 
           {formData.imagePreview ? (
             <div className="space-y-4">
@@ -545,13 +599,135 @@ export default function EventFormCard({
           />
         </div>
 
-        {/* Image Cropper Modal */}
+        {/* Cover Image Cropper Modal (free aspect — auto-adapts like instructors) */}
         <ImageCropperModal
           imageSrc={cropSrc}
-          aspect={16 / 9}
-          label={t("admin.events.cropImage")}
+          label="Recortar Portada del Evento"
           onCropComplete={handleCropComplete}
           onClose={() => setCropSrc(null)}
+        />
+
+        <Separator className="bg-border/50" />
+
+        {/* Banner Image Upload Section (Horizontal 16:9) */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <ImageIcon className="h-4 w-4 text-blue-500" />
+            <h3 className="font-semibold text-foreground">Banner del Evento (Horizontal)</h3>
+          </div>
+          <p className="text-xs text-foreground/50 -mt-2">Imagen horizontal que se muestra en la página de detalle del evento (formato panorámico 16:9)</p>
+
+          {formData.bannerPreview ? (
+            <div className="space-y-4">
+              <div className="relative group rounded-xl overflow-hidden border-2 border-blue-500/30">
+                <img
+                  src={formData.bannerPreview}
+                  alt="Banner preview"
+                  className="w-full h-48 object-cover"
+                />
+                {!formData.bannerUrl && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div className="text-center">
+                      <Loader2 className="h-10 w-10 animate-spin text-white mx-auto mb-3" />
+                      <p className="text-white font-medium">Subiendo banner...</p>
+                    </div>
+                  </div>
+                )}
+                {formData.bannerUrl && (
+                  <div className="absolute top-4 right-4">
+                    <Badge className="bg-blue-500 text-white border-0 shadow-lg">
+                      ✓ Banner subido
+                    </Badge>
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => bannerInputRef.current?.click()}
+                  disabled={!formData.bannerUrl}
+                  className="flex-1"
+                >
+                  <ImageIcon className="h-4 w-4 mr-2" />
+                  Cambiar Banner
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, bannerUrl: "", bannerPreview: "" })}
+                  className="text-red-600 hover:text-red-700 hover:border-red-300"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Eliminar
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div
+              className="relative border-2 border-dashed border-blue-500/30 rounded-xl p-8 bg-gradient-to-br from-blue-500/5 to-transparent hover:border-blue-500/50 transition-all duration-300 cursor-pointer group"
+              onClick={() => bannerInputRef.current?.click()}
+            >
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 mb-3 border border-blue-500/20 group-hover:scale-110 transition-transform duration-300">
+                  <Upload className="h-8 w-8 text-blue-500" />
+                </div>
+                <p className="font-semibold text-foreground mb-1">
+                  Subir Banner Horizontal
+                </p>
+                <p className="text-xs text-foreground/50 mb-4">
+                  Formato panorámico (16:9) • Máx. 10MB
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    bannerInputRef.current?.click();
+                  }}
+                  disabled={uploadingBanner}
+                  className="border-blue-500/50 text-blue-500 hover:bg-blue-500/10"
+                  size="sm"
+                >
+                  {uploadingBanner ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Subiendo...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Seleccionar Banner
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <input
+            ref={bannerInputRef}
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              if (e.target.files?.[0]) {
+                handleBannerSelect(e.target.files[0]);
+                e.target.value = "";
+              }
+            }}
+            className="hidden"
+          />
+        </div>
+
+        {/* Banner Cropper Modal (Landscape 16:9) */}
+        <ImageCropperModal
+          imageSrc={cropSrcBanner}
+          aspect={16 / 9}
+          label="Recortar Banner (Horizontal)"
+          onCropComplete={handleBannerCropComplete}
+          onClose={() => setCropSrcBanner(null)}
         />
 
         {/* Action Buttons */}
@@ -559,7 +735,7 @@ export default function EventFormCard({
           <Button
             type="button"
             onClick={handleCreateEvent}
-            disabled={createMutation.isPending || updateMutation.isPending || uploading}
+            disabled={createMutation.isPending || updateMutation.isPending || uploading || uploadingBanner}
             className="btn-vibrant flex-1 h-12 text-base font-semibold shadow-lg"
           >
             {(createMutation.isPending || updateMutation.isPending) ? (

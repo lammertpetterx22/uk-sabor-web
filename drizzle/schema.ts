@@ -86,7 +86,8 @@ export const events = pgTable("events", {
   id: serial("id").primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
-  imageUrl: text("imageUrl"),
+  imageUrl: text("imageUrl"), // Cover image (flyer vertical 17:25) - shown in event cards
+  bannerUrl: text("bannerUrl"), // Banner image (horizontal) - shown at top of event detail page
   venue: varchar("venue", { length: 255 }).notNull(),
   city: varchar("city", { length: 255 }),
   eventDate: timestamp("eventDate").notNull(),

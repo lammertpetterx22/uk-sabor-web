@@ -185,9 +185,11 @@ export const adminRouter = router({
         ticketPrice: z.string(),
         maxTickets: z.number().int().positive().optional(),
         imageUrl: z.string().optional(),
+        bannerUrl: z.string().optional(),
         city: z.string().optional(),
         status: z.string().optional(),
         paymentMethod: z.enum(["online", "cash", "both"]).default("online"),
+        showLowTicketAlert: z.boolean().optional().default(false),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -206,11 +208,13 @@ export const adminRouter = router({
         venue: input.venue,
         city: input.city,
         imageUrl: input.imageUrl,
+        bannerUrl: input.bannerUrl,
         ticketPrice: input.ticketPrice,
         maxTickets: input.maxTickets || null,
         ticketsSold: 0,
         status: (input.status as any) || "published",
         paymentMethod: input.paymentMethod,
+        showLowTicketAlert: input.showLowTicketAlert ?? false,
         creatorId: ctx.user.id,
       });
 
@@ -228,9 +232,11 @@ export const adminRouter = router({
         ticketPrice: z.string().optional(),
         maxTickets: z.number().int().positive().optional(),
         imageUrl: z.string().optional(),
+        bannerUrl: z.string().optional(),
         city: z.string().optional(),
         status: z.string().optional(),
         paymentMethod: z.enum(["online", "cash", "both"]).optional(),
+        showLowTicketAlert: z.boolean().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -254,10 +260,12 @@ export const adminRouter = router({
       if (input.venue) updateData.venue = input.venue;
       if (input.city) updateData.city = input.city;
       if (input.imageUrl) updateData.imageUrl = input.imageUrl;
+      if (input.bannerUrl !== undefined) updateData.bannerUrl = input.bannerUrl;
       if (input.ticketPrice) updateData.ticketPrice = input.ticketPrice;
       if (input.maxTickets) updateData.maxTickets = input.maxTickets;
       if (input.status) updateData.status = input.status;
       if (input.paymentMethod) updateData.paymentMethod = input.paymentMethod;
+      if (input.showLowTicketAlert !== undefined) updateData.showLowTicketAlert = input.showLowTicketAlert;
 
       await db.update(events).set(updateData).where(eq(events.id, input.id));
 
