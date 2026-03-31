@@ -495,7 +495,7 @@ export default function EventFormCard({
             <ImageIcon className="h-4 w-4 text-accent" />
             <h3 className="font-semibold text-foreground">Portada del Evento (Flyer)</h3>
           </div>
-          <p className="text-xs text-foreground/50 -mt-2">Imagen vertical que se muestra en las tarjetas de eventos (formato flyer 17:25)</p>
+          <p className="text-xs text-foreground/50 -mt-2">Imagen vertical para las tarjetas de eventos (1275×1875px, ratio 17:25). Se recorta automáticamente.</p>
 
           {formData.imagePreview ? (
             <div className="space-y-4">

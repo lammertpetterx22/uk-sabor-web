@@ -22,9 +22,9 @@ const EventCard = memo(function EventCard({ event }: EventCardProps) {
 
   return (
     <Card className="glass overflow-hidden hover:shadow-2xl hover:shadow-[#FF4500]/30 transition-all duration-300 transform hover:scale-[1.02] h-full flex flex-col border-white/10 hover:border-[#FF4500]/50">
-      {/* Event Flyer — shows poster at 2:3 ratio, auto-adapts via cropper */}
+      {/* Event Flyer — 17:25 ratio matching 1275×1875px flyer dimensions */}
       {event.imageUrl && (
-        <div className="relative w-full aspect-[2/3] overflow-hidden bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460]">
+        <div className="relative w-full aspect-[17/25] overflow-hidden bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460]">
           <img
             src={event.imageUrl}
             alt={event.title}
