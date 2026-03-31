@@ -21,58 +21,64 @@ const EventCard = memo(function EventCard({ event }: EventCardProps) {
   });
 
   return (
-    <Card className="glass overflow-hidden hover:shadow-2xl hover:shadow-[#FF4500]/30 transition-all duration-300 transform hover:scale-105 h-full flex flex-col border-white/10 hover:border-[#FF4500]/50">
-      {/* Event Image */}
+    <Card className="glass overflow-hidden hover:shadow-2xl hover:shadow-[#FF4500]/30 transition-all duration-300 transform hover:scale-[1.02] h-full flex flex-col border-white/10 hover:border-[#FF4500]/50">
+      {/* Event Image - Flyer Format (17:25 ratio like 1275x1875) */}
       {event.imageUrl && (
-        <div className="relative h-48 overflow-hidden bg-gradient-to-br from-[#E91E8C]/20 to-[#FF4500]/20">
+        <div className="relative w-full aspect-[17/25] overflow-hidden bg-gradient-to-br from-[#E91E8C]/20 to-[#FF4500]/20">
           <img
             src={event.imageUrl}
             alt={event.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
             loading="lazy"
             decoding="async"
-            width="400"
-            height="192"
+            width="1275"
+            height="1875"
           />
+          {/* Overlay gradient for better text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
         </div>
       )}
 
-      {/* Event Content */}
+      {/* Event Content - Compact to let the flyer image shine */}
       <div className="p-4 flex flex-col flex-grow">
-        <h3 className="text-xl font-bold mb-2 line-clamp-2">{event.title}</h3>
+        <h3 className="text-lg font-bold mb-3 line-clamp-1">{event.title}</h3>
 
-        <p className="text-foreground/70 text-sm mb-4 line-clamp-2">{event.description}</p>
-
-        {/* Event Details */}
+        {/* Event Details - More compact */}
         <div className="space-y-2 mb-4 text-sm">
           <div className="flex items-center gap-2 text-foreground/80">
-            <Calendar size={16} className="text-accent" />
-            <span>{formattedDate}</span>
+            <Calendar size={16} className="text-accent shrink-0" />
+            <span className="line-clamp-1">{formattedDate}</span>
           </div>
 
           {event.venue && (
             <div className="flex items-center gap-2 text-foreground/80">
-              <MapPin size={16} className="text-accent" />
+              <MapPin size={16} className="text-accent shrink-0" />
               <span className="line-clamp-1">{event.venue}</span>
             </div>
           )}
 
-          <div className="flex items-center gap-2 text-accent font-semibold">
-            <DollarSign size={16} />
+          <div className="flex items-center gap-2 text-accent font-bold text-base">
+            <DollarSign size={16} className="shrink-0" />
             <span>£{typeof event.ticketPrice === 'string' ? parseFloat(event.ticketPrice).toFixed(2) : Number(event.ticketPrice).toFixed(2)}</span>
           </div>
         </div>
 
         {/* Tickets Sold - Only visible to event creator */}
         {event.maxTickets && user?.id === event.creatorId && (
-          <div className="mb-4 text-xs text-foreground/60">
+          <div className="mb-3 text-xs text-foreground/60 bg-foreground/5 px-2 py-1 rounded">
             {event.ticketsSold} / {event.maxTickets} tickets sold
           </div>
         )}
 
         {/* CTA Button */}
         <Link href={`/events/${event.id}`} className="mt-auto">
-          <Button className="btn-vibrant btn-modern w-full">View & Buy Tickets</Button>
+          <Button className="btn-vibrant btn-modern w-full group">
+            <span>View & Buy Tickets</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-2 group-hover:translate-x-1 transition-transform">
+              <path d="M5 12h14"></path>
+              <path d="m12 5 7 7-7 7"></path>
+            </svg>
+          </Button>
         </Link>
       </div>
     </Card>
