@@ -56,62 +56,62 @@ export default function ImageCropperModal({
 
   const imgRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const currentAspect = ASPECT_RATIOS[selectedAspect as keyof typeof ASPECT_RATIOS];
 
-  // Update preview canvas
-  const updatePreview = useCallback(() => {
-    if (!imgRef.current || !previewCanvasRef.current) return;
+  const handleImageLoad = useCallback(() => {
+    // Auto-fit: calculate minimum scale to cover the frame
+    if (!imgRef.current || !containerRef.current) return;
 
     const img = imgRef.current;
-    const canvas = previewCanvasRef.current;
-    const ctx = canvas.getContext("2d")!;
+    const containerW = containerRef.current.clientWidth;
+    const containerH = 420;
+    const availW = containerW - 32;
+    const availH = containerH - 32;
 
-    // Set canvas size based on aspect ratio
-    const maxWidth = 600;
-    const maxHeight = 400;
-
+    let fw: number, fh: number;
     if (currentAspect) {
-      canvas.width = maxWidth;
-      canvas.height = Math.round(maxWidth / currentAspect);
-      if (canvas.height > maxHeight) {
-        canvas.height = maxHeight;
-        canvas.width = Math.round(maxHeight * currentAspect);
-      }
+      const byW = { fw: availW, fh: availW / currentAspect };
+      const byH = { fw: availH * currentAspect, fh: availH };
+      ({ fw, fh } = byW.fh <= availH ? byW : byH);
     } else {
-      // Free aspect - use original image aspect
-      const imgAspect = img.naturalWidth / img.naturalHeight;
-      if (imgAspect > 1) {
-        canvas.width = maxWidth;
-        canvas.height = Math.round(maxWidth / imgAspect);
-      } else {
-        canvas.height = maxHeight;
-        canvas.width = Math.round(maxHeight * imgAspect);
-      }
+      fw = availW;
+      fh = availH;
     }
 
-    // Clear canvas with dark background
-    ctx.fillStyle = "#0a0a0a";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const scaleX = fw / img.naturalWidth;
+    const scaleY = fh / img.naturalHeight;
+    setScale(Math.max(scaleX, scaleY));
+    setOffsetX(0);
+    setOffsetY(0);
+  }, [currentAspect]);
 
-    // Draw image with transformations
-    ctx.save();
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate((rotation * Math.PI) / 180);
-    ctx.scale(scale, scale);
-    ctx.translate(-img.width / 2 + offsetX, -img.height / 2 + offsetY);
-    ctx.drawImage(img, 0, 0);
-    ctx.restore();
-  }, [rotation, scale, offsetX, offsetY, currentAspect]);
-
-  const handleImageLoad = useCallback(() => {
-    updatePreview();
-  }, [updatePreview]);
-
+  // Auto-fit when aspect ratio changes
   useEffect(() => {
-    updatePreview();
-  }, [updatePreview]);
+    if (!imgRef.current || !containerRef.current) return;
+
+    const img = imgRef.current;
+    const containerW = containerRef.current.clientWidth;
+    const containerH = 420;
+    const availW = containerW - 32;
+    const availH = containerH - 32;
+
+    let fw: number, fh: number;
+    if (currentAspect) {
+      const byW = { fw: availW, fh: availW / currentAspect };
+      const byH = { fw: availH * currentAspect, fh: availH };
+      ({ fw, fh } = byW.fh <= availH ? byW : byH);
+    } else {
+      fw = availW;
+      fh = availH;
+    }
+
+    const scaleX = fw / img.naturalWidth;
+    const scaleY = fh / img.naturalHeight;
+    setScale(Math.max(scaleX, scaleY));
+    setOffsetX(0);
+    setOffsetY(0);
+  }, [currentAspect]);
 
   // Mouse events for dragging
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -154,41 +154,56 @@ export default function ImageCropperModal({
   };
 
   const handleApply = async () => {
-    if (!previewCanvasRef.current || !imgRef.current) return;
+    if (!containerRef.current || !imgRef.current) return;
     setIsProcessing(true);
     try {
-      // Create final canvas with EXACT dimensions based on aspect ratio
-      const finalCanvas = document.createElement('canvas');
-      const ctx = finalCanvas.getContext('2d')!;
+      // 1. Calculate the frame size (visible crop area) based on aspect ratio
+      const containerW = containerRef.current.clientWidth;
+      const containerH = 420;
+      const availW = containerW - 32;
+      const availH = containerH - 32;
 
-      // Set EXACT output dimensions based on aspect ratio
-      if (selectedAspect === "17:25") {
-        // FLYER FORMAT: Exact 1275x1875px
-        finalCanvas.width = 1275;
-        finalCanvas.height = 1875;
-      } else if (selectedAspect === "16:9") {
-        finalCanvas.width = 1920;
-        finalCanvas.height = 1080;
-      } else if (selectedAspect === "1:1") {
-        finalCanvas.width = 1200;
-        finalCanvas.height = 1200;
+      let fw: number, fh: number;
+      if (currentAspect) {
+        const byW = { fw: availW, fh: availW / currentAspect };
+        const byH = { fw: availH * currentAspect, fh: availH };
+        ({ fw, fh } = byW.fh <= availH ? byW : byH);
       } else {
-        // Use preview canvas dimensions for other ratios
-        finalCanvas.width = previewCanvasRef.current.width * 2;
-        finalCanvas.height = previewCanvasRef.current.height * 2;
+        fw = availW;
+        fh = availH;
       }
 
-      const img = imgRef.current;
+      // 2. Output dimensions (exact sizes for specific aspect ratios)
+      const sizes: Record<string, { w: number; h: number }> = {
+        "17:25": { w: 1275, h: 1875 },
+        "16:9": { w: 1920, h: 1080 },
+        "1:1": { w: 1200, h: 1200 },
+        "3:4": { w: 1200, h: 1600 },
+        "9:16": { w: 1080, h: 1920 },
+      };
+      const outW = sizes[selectedAspect]?.w ?? fw * 2;
+      const outH = sizes[selectedAspect]?.h ?? fh * 2;
 
-      // Draw image with transformations on final canvas
+      // 3. Create final canvas and draw correctly
+      const finalCanvas = document.createElement("canvas");
+      const ctx = finalCanvas.getContext("2d")!;
+      finalCanvas.width = outW;
+      finalCanvas.height = outH;
+
+      const img = imgRef.current;
+      const scaleToOutput = outW / fw;
+
       ctx.fillStyle = "#000000";
-      ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+      ctx.fillRect(0, 0, outW, outH);
 
       ctx.save();
-      ctx.translate(finalCanvas.width / 2, finalCanvas.height / 2);
+      ctx.translate(outW / 2, outH / 2);
       ctx.rotate((rotation * Math.PI) / 180);
-      ctx.scale(scale, scale);
-      ctx.translate(-img.naturalWidth / 2 + offsetX * 2, -img.naturalHeight / 2 + offsetY * 2);
+      ctx.scale(scale * scaleToOutput, scale * scaleToOutput);
+      ctx.translate(
+        -img.naturalWidth / 2 + offsetX / scale,
+        -img.naturalHeight / 2 + offsetY / scale
+      );
       ctx.drawImage(img, 0, 0);
       ctx.restore();
 
@@ -354,10 +369,10 @@ export default function ImageCropperModal({
             <label className="text-sm font-semibold text-foreground/80">Editor de Imagen</label>
             <div
               ref={containerRef}
-              className="relative border-2 border-dashed border-accent/40 rounded-xl bg-gradient-to-br from-black/40 to-black/20 overflow-hidden cursor-grab active:cursor-grabbing shadow-xl"
+              className="relative border-2 border-dashed border-accent/40 rounded-xl bg-black overflow-hidden cursor-grab active:cursor-grabbing shadow-xl"
               style={{
                 width: "100%",
-                height: "400px",
+                height: "420px",
                 position: "relative",
               }}
               onMouseDown={handleMouseDown}
@@ -389,36 +404,72 @@ export default function ImageCropperModal({
                 />
               )}
 
-              {/* Grid overlay for better positioning */}
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="w-full h-full grid grid-cols-3 grid-rows-3">
-                  {[...Array(9)].map((_, i) => (
-                    <div key={i} className="border border-white/10" />
-                  ))}
-                </div>
-              </div>
+              {/* Crop frame overlay - shows exactly what will be exported */}
+              {(() => {
+                if (!containerRef.current) return null;
 
-              {/* Center crosshair */}
-              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                <div className="w-8 h-0.5 bg-accent/40 absolute" />
-                <div className="w-0.5 h-8 bg-accent/40" />
-              </div>
-            </div>
-          </div>
+                const containerW = containerRef.current.clientWidth;
+                const containerH = 420;
+                const availW = containerW - 32;
+                const availH = containerH - 32;
 
-          {/* Live Preview */}
-          <div className="space-y-3">
-            <label className="text-sm font-semibold text-foreground/80">Vista Previa</label>
-            <div className="border-2 border-accent/30 rounded-xl bg-gradient-to-br from-black/60 to-black/40 p-6 flex items-center justify-center shadow-inner min-h-[200px]">
-              <canvas
-                ref={previewCanvasRef}
-                className="rounded-lg shadow-2xl ring-2 ring-accent/20"
-                style={{
-                  maxWidth: "100%",
-                  maxHeight: "300px",
-                  objectFit: "contain",
-                }}
-              />
+                let fw: number, fh: number;
+                if (currentAspect) {
+                  const byW = { fw: availW, fh: availW / currentAspect };
+                  const byH = { fw: availH * currentAspect, fh: availH };
+                  ({ fw, fh } = byW.fh <= availH ? byW : byH);
+                } else {
+                  fw = availW;
+                  fh = availH;
+                }
+
+                const frameLeft = (containerW - fw) / 2;
+                const frameTop = (containerH - fh) / 2;
+
+                return (
+                  <>
+                    {/* Dark overlays outside the crop frame */}
+                    {/* Top overlay */}
+                    <div
+                      className="absolute left-0 right-0 bg-black/60 pointer-events-none"
+                      style={{ top: 0, height: `${frameTop}px` }}
+                    />
+                    {/* Bottom overlay */}
+                    <div
+                      className="absolute left-0 right-0 bg-black/60 pointer-events-none"
+                      style={{ top: `${frameTop + fh}px`, bottom: 0 }}
+                    />
+                    {/* Left overlay */}
+                    <div
+                      className="absolute top-0 bottom-0 bg-black/60 pointer-events-none"
+                      style={{ left: 0, width: `${frameLeft}px` }}
+                    />
+                    {/* Right overlay */}
+                    <div
+                      className="absolute top-0 bottom-0 bg-black/60 pointer-events-none"
+                      style={{ left: `${frameLeft + fw}px`, right: 0 }}
+                    />
+
+                    {/* White border around the crop frame */}
+                    <div
+                      className="absolute border-2 border-white/80 pointer-events-none"
+                      style={{
+                        left: `${frameLeft}px`,
+                        top: `${frameTop}px`,
+                        width: `${fw}px`,
+                        height: `${fh}px`,
+                      }}
+                    >
+                      {/* Grid of thirds inside the frame */}
+                      <div className="w-full h-full grid grid-cols-3 grid-rows-3">
+                        {[...Array(9)].map((_, i) => (
+                          <div key={i} className="border border-white/20" />
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>

@@ -499,11 +499,11 @@ export default function EventFormCard({
 
           {formData.imagePreview ? (
             <div className="space-y-4">
-              <div className="relative group rounded-xl overflow-hidden border-2 border-accent/30">
+              <div className="relative w-full aspect-[17/25] rounded-xl overflow-hidden border-2 border-accent/30">
                 <img
                   src={formData.imagePreview}
-                  alt="Event preview"
-                  className="w-full h-64 object-cover"
+                  alt="Preview portada"
+                  className="w-full h-full object-cover"
                 />
                 {!formData.imageUrl && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
