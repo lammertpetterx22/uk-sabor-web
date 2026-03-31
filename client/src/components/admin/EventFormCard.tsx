@@ -599,10 +599,11 @@ export default function EventFormCard({
           />
         </div>
 
-        {/* Cover Image Cropper Modal (free aspect — auto-adapts like instructors) */}
+        {/* Cover Image Cropper Modal — forces flyer ratio (17:25 = 680×1012px) */}
         <ImageCropperModal
           imageSrc={cropSrc}
-          label="Recortar Portada del Evento"
+          aspect={17 / 25}
+          label="Recortar Portada (Formato Flyer)"
           onCropComplete={handleCropComplete}
           onClose={() => setCropSrc(null)}
         />
