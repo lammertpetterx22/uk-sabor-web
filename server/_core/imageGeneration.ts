@@ -1,21 +1,18 @@
 /**
  * Image generation helper using internal ImageService
  *
- * Example usage:
+ * NOTE: This feature is currently disabled as it requires Forge API configuration.
+ * Storage has been migrated to Bunny.net CDN.
+ *
+ * To re-enable image generation:
+ * 1. Configure FORGE_API_URL and FORGE_API_KEY
+ * 2. Update the storage to use Bunny.net uploadFile API
+ *
+ * Example usage (when enabled):
  *   const { url: imageUrl } = await generateImage({
  *     prompt: "A serene landscape with mountains"
  *   });
- *
- * For editing:
- *   const { url: imageUrl } = await generateImage({
- *     prompt: "Add a rainbow to this landscape",
- *     originalImages: [{
- *       url: "https://example.com/original.jpg",
- *       mimeType: "image/jpeg"
- *     }]
- *   });
  */
-import { storagePut } from "server/storage";
 import { ENV } from "./env";
 
 export type GenerateImageOptions = {
@@ -77,16 +74,13 @@ export async function generateImage(
       mimeType: string;
     };
   };
-  const base64Data = result.image.b64Json;
-  const buffer = Buffer.from(base64Data, "base64");
 
-  // Save to S3
-  const { url } = await storagePut(
-    `generated/${Date.now()}.png`,
-    buffer,
-    result.image.mimeType
-  );
+  // TODO: Integrate with Bunny.net uploadFile API
+  // For now, return the base64 data URL
+  const base64Data = result.image.b64Json;
+  const dataUrl = `data:${result.image.mimeType};base64,${base64Data}`;
+
   return {
-    url,
+    url: dataUrl,
   };
 }

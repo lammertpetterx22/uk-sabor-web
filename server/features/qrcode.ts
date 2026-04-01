@@ -1,10 +1,20 @@
 import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
-import { qrCodes, attendance, events, classes, users, eventTickets, classPurchases } from "../../drizzle/schema";
+import { qrCodes, attendance, events, classes, users, eventTickets, classPurchases, instructors } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 import crypto from "crypto";
 import QRCode from "qrcode";
+
+// Helper to get instructor profile for a user
+async function getInstructorForUser(db: any, userId: number) {
+  const result = await db
+    .select()
+    .from(instructors)
+    .where(eq(instructors.userId, userId))
+    .limit(1);
+  return result[0] || null;
+}
 
 // Generate a unique QR code identifier
 function generateQRCode(): string {
@@ -54,9 +64,18 @@ export const qrcodeRouter = router({
           .where(eq(classes.id, input.itemId))
           .limit(1);
         if (!classResult[0]) throw new Error("Class not found");
+
         // For instructors, verify they own the class
         if (ctx.user.role === "instructor") {
-          // TODO: Add instructor ownership check when instructor-class relation is added
+          const instructor = await getInstructorForUser(db, ctx.user.id);
+          if (!instructor) {
+            throw new Error("Instructor profile not found");
+          }
+
+          // Verify the class belongs to this instructor
+          if (classResult[0].instructorId !== instructor.id) {
+            throw new Error("You can only generate QR codes for your own classes");
+          }
         }
       }
 
