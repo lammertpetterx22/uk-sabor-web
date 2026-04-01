@@ -191,7 +191,7 @@ export default function ClassFormCard({
       setFormData(prev => ({ ...prev, imageUrl: result.url }));
       toast.success(t("upload.imageUploadedSuccess"));
     } catch (uploadErr: any) {
-      toast.error('Error al subir: ' + uploadErr.message);
+      toast.error('Error uploading: ' + uploadErr.message);
       setFormData(prev => ({ ...prev, imagePreview: "", imageUrl: "" }));
     } finally {
       setUploading(false);

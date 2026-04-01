@@ -51,7 +51,7 @@ export default function InstagramCropSelector({
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Por favor selecciona un archivo de imagen");
+      toast.error("Please select an image file");
       return;
     }
 
@@ -88,7 +88,7 @@ export default function InstagramCropSelector({
       };
 
       img.onerror = () => {
-        toast.error("Error al cargar la imagen");
+        toast.error("Error loading image");
         setIsProcessing(false);
       };
 
@@ -97,7 +97,7 @@ export default function InstagramCropSelector({
     };
 
     reader.onerror = () => {
-      toast.error("Error al leer el archivo");
+      toast.error("Error reading file");
       setIsProcessing(false);
     };
 
@@ -230,7 +230,7 @@ export default function InstagramCropSelector({
       handleClose();
     } catch (error) {
       console.error("Error processing image:", error);
-      toast.error("Error al procesar la imagen");
+      toast.error("Error processing image");
     } finally {
       setIsProcessing(false);
     }

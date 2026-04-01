@@ -77,7 +77,7 @@ export function useLessonsManager(courseId: number | null) {
 
   const handleVideoUpload = async (file: File) => {
     if (!file.type.startsWith("video/")) {
-      toast.error("Por favor selecciona un archivo de video válido");
+      toast.error("Please select a valid video file");
       return;
     }
 
@@ -144,7 +144,7 @@ export function useLessonsManager(courseId: number | null) {
       });
     } catch (err: any) {
       toast.error("Error al procesar el video", {
-        description: "Por favor, verifica el archivo e intenta de nuevo",
+        description: "Please verify the file and try again",
         duration: 5000,
       });
       logger.error('[Video Upload] Error', err);
@@ -156,7 +156,7 @@ export function useLessonsManager(courseId: number | null) {
 
   const handleCreateLesson = async () => {
     if (!formData.courseId) {
-      toast.error("Por favor selecciona un curso primero");
+      toast.error("Please select a course first");
       return;
     }
 
@@ -167,7 +167,7 @@ export function useLessonsManager(courseId: number | null) {
 
     // Video is required only when creating, not when editing
     if (!editingLessonId && (!formData.bunnyVideoId || !formData.bunnyLibraryId)) {
-      toast.error("Por favor sube un video antes de crear la lección");
+      toast.error("Please upload a video before creating the lesson");
       return;
     }
 

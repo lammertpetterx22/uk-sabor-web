@@ -170,7 +170,7 @@ export default function EventFormCard({
 
   const handleBannerSelect = (file: File) => {
     if (!file.type.startsWith('image/')) {
-      toast.error("Por favor selecciona un archivo de imagen");
+      toast.error("Please select an image file");
       return;
     }
     const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
@@ -202,7 +202,7 @@ export default function EventFormCard({
       setFormData(prev => ({ ...prev, bannerUrl: result.url }));
       toast.success("✅ Banner subido exitosamente");
     } catch (uploadErr: any) {
-      toast.error(`Error al subir banner: ${uploadErr.message}`);
+      toast.error(`Error uploading banner: ${uploadErr.message}`);
       setFormData(prev => ({ ...prev, bannerPreview: "", bannerUrl: "" }));
     } finally {
       setUploadingBanner(false);

@@ -54,7 +54,7 @@ export default function AdjustableImageCropper({
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Por favor selecciona un archivo de imagen");
+      toast.error("Please select an image file");
       return;
     }
 
@@ -86,11 +86,11 @@ export default function AdjustableImageCropper({
         setPosition({ x: 0, y: 0 });
         setIsProcessing(false);
 
-        toast.success("Imagen cargada - ahora ajusta la posición y zoom");
+        toast.success("Image loaded - now adjust position and zoom");
       };
 
       img.onerror = () => {
-        toast.error("Error al cargar la imagen");
+        toast.error("Error loading image");
         setIsProcessing(false);
       };
 
@@ -99,7 +99,7 @@ export default function AdjustableImageCropper({
     };
 
     reader.onerror = () => {
-      toast.error("Error al leer el archivo");
+      toast.error("Error reading file");
       setIsProcessing(false);
     };
 
@@ -191,11 +191,11 @@ export default function AdjustableImageCropper({
       const resultDataUrl = canvas.toDataURL("image/jpeg", 0.95);
 
       onImageReady(resultDataUrl);
-      toast.success("¡Imagen ajustada perfectamente!");
+      toast.success("Image adjusted perfectly!");
       handleClose();
     } catch (error) {
       console.error("Error processing image:", error);
-      toast.error("Error al procesar la imagen");
+      toast.error("Error processing image");
     } finally {
       setIsProcessing(false);
     }

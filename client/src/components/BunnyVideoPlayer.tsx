@@ -105,7 +105,7 @@ export default function BunnyVideoPlayer({
           }
         }
       } else if (data.event === "error") {
-        setError("Error al cargar el video. Por favor, intenta de nuevo.");
+        setError("Error loading video. Please try again.");
         setIsLoading(false);
       }
     };
