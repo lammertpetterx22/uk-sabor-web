@@ -264,24 +264,68 @@ export function canCreateCourse(plan: string, totalCourses: number): Entitlement
 }
 
 /**
- * Calculate the total checkout amount with NEW MODEL:
- * - Client pays: Ticket price + Stripe fee ONLY
+ * Calculate the total checkout amount with CORRECT STRIPE FEE MODEL:
+ * - Client pays: Ticket price + Stripe fee (calculated via "gross-up")
  * - Platform fee is deducted from instructor's earnings
  * - Stripe fee is NOT deducted from instructor (client already pays it)
  *
- * Stripe processing fee in UK: 1.5% + £0.20 for European cards (we use 1.5% + £0.20 as safe estimate).
+ * IMPORTANT: Stripe charges 1.5% + £0.20 on the TOTAL amount charged to the client,
+ * not just the ticket price. We use "gross-up" formula to calculate the exact amount
+ * needed so that after Stripe takes their fee, we receive the full ticket price.
  *
+ * MATHEMATICAL EXPLANATION:
+ * ========================
+ *
+ * WRONG APPROACH (old code):
+ * --------------------------
+ * Ticket: £10.00
+ * Stripe fee (simple): £10.00 × 1.5% + £0.20 = £0.35
+ * Total charged: £10.00 + £0.35 = £10.35
+ *
+ * But Stripe charges 1.5% + £0.20 on £10.35, not £10.00:
+ * Real Stripe fee: £10.35 × 1.5% + £0.20 = £0.3552 ≈ £0.36
+ * You receive: £10.35 - £0.36 = £9.99 ❌ (missing £0.01)
+ *
+ * CORRECT APPROACH (gross-up formula):
+ * -------------------------------------
+ * We want to receive: £10.00 (ticket price)
+ * Stripe charges: 1.5% + £0.20 on the total amount
+ *
+ * Let X = total amount to charge client
+ * Stripe fee = X × 1.5% + £0.20 = 0.015X + 0.20
+ * After fee = X - (0.015X + 0.20) = £10.00
+ *
+ * Solving for X:
+ * X - 0.015X - 0.20 = 10.00
+ * 0.985X = 10.20
+ * X = 10.20 / 0.985 = £10.355... ≈ £10.36
+ *
+ * Check: £10.36 × 1.5% + £0.20 = £0.3554 ≈ £0.36
+ * You receive: £10.36 - £0.36 = £10.00 ✅ EXACT!
+ *
+ * FORMULA:
+ * --------
+ * totalPence = (ticketPricePence + 20) / 0.985
+ * stripeFeePence = totalPence - ticketPricePence
+ *
+ * Stripe UK processing fee: 1.5% + £0.20 for European cards
  * Returns all amounts in pence (integer).
  */
 export function calculateCheckoutAmounts(ticketPricePence: number, plan: PlanKey, isCourse: boolean = false) {
   const planDef = PLANS[plan] ?? PLANS.starter;
   const commissionRate = isCourse ? planDef.courseCommissionRate : planDef.commissionRate;
 
-  // Stripe UK processing: 1.5% + 20p (European cards) - PAID BY CLIENT
-  const stripeFeePence = Math.round(ticketPricePence * 0.015) + 20;
+  // CORRECT STRIPE FEE CALCULATION using "gross-up" formula
+  // We want to receive exactly ticketPricePence after Stripe takes their 1.5% + £0.20
+  // Formula: totalPence = (ticketPricePence + fixedFeePence) / (1 - percentageFee)
+  const STRIPE_PERCENTAGE = 0.015;  // 1.5%
+  const STRIPE_FIXED_PENCE = 20;    // £0.20
 
-  // NEW MODEL: Client only pays ticket price + Stripe fee
-  const totalPence = ticketPricePence + stripeFeePence;
+  // Gross-up calculation to ensure we receive EXACTLY ticketPricePence after Stripe fee
+  const totalPence = Math.round((ticketPricePence + STRIPE_FIXED_PENCE) / (1 - STRIPE_PERCENTAGE));
+
+  // Stripe fee is the difference between what client pays and what we want to receive
+  const stripeFeePence = totalPence - ticketPricePence;
 
   // Platform fee is deducted from instructor's earnings
   const platformFeePence = Math.round(ticketPricePence * commissionRate);
@@ -292,8 +336,8 @@ export function calculateCheckoutAmounts(ticketPricePence: number, plan: PlanKey
   return {
     ticketPricePence,        // Original ticket price
     platformFeePence,        // Platform commission (deducted from instructor)
-    stripeFeePence,          // Stripe fee (paid by client, NOT deducted from instructor)
-    totalPence,              // What client pays (ticket + Stripe fee only)
+    stripeFeePence,          // Stripe fee (paid by client, calculated via gross-up)
+    totalPence,              // What client pays (calculated to cover ticket + exact Stripe fee)
     instructorEarningsPence, // What instructor receives (price - platform fee)
     commissionRate,
   };
