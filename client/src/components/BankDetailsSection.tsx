@@ -2,12 +2,12 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { trpc } from "@/_core/trpc";
+import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { AlertCircle, CheckCircle2, Trash2, Lock, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -20,7 +20,6 @@ const bankDetailsSchema = z.object({
 type BankDetailsForm = z.infer<typeof bankDetailsSchema>;
 
 export function BankDetailsSection() {
-  const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
 
   const { data: bankDetails, refetch } = trpc.bankDetails.get.useQuery();
@@ -39,19 +38,12 @@ export function BankDetailsSection() {
   const onSubmit = async (data: BankDetailsForm) => {
     try {
       await saveMutation.mutateAsync(data);
-      toast({
-        title: "✅ Bank details saved",
-        description: "Your bank details have been saved securely. Admin will verify them before your first payout.",
-      });
+      toast.success("Bank details saved securely. Admin will verify them before your first payout.");
       setIsEditing(false);
       reset();
       refetch();
     } catch (error: any) {
-      toast({
-        title: "❌ Error",
-        description: error.message || "Failed to save bank details",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to save bank details");
     }
   };
 
@@ -62,17 +54,10 @@ export function BankDetailsSection() {
 
     try {
       await removeMutation.mutateAsync();
-      toast({
-        title: "🗑️ Bank details removed",
-        description: "Your bank details have been removed successfully.",
-      });
+      toast.success("Bank details removed successfully.");
       refetch();
     } catch (error: any) {
-      toast({
-        title: "❌ Error",
-        description: error.message || "Failed to remove bank details",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to remove bank details");
     }
   };
 

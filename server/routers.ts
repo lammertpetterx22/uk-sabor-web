@@ -21,7 +21,7 @@ import { lessonsRouter } from "./features/lessons";
 import { ticketsRouter } from "./features/tickets";
 import { financialsRouter } from "./features/financials";
 import { checkoutRouter } from "./features/checkout";
-// import { bankDetailsRouter } from "./features/bankDetails"; // TEMPORARILY DISABLED UNTIL MIGRATION RUNS
+import { bankDetailsRouter } from "./features/bankDetails";
 
 export const appRouter = router({
   // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -46,7 +46,7 @@ export const appRouter = router({
   stripeSync: stripeSyncRouter,
   promoters: promotersRouter,
   financials: financialsRouter,
-  // bankDetails: bankDetailsRouter, // TEMPORARILY DISABLED UNTIL MIGRATION RUNS
+  bankDetails: bankDetailsRouter,
 });
 
 export type AppRouter = typeof appRouter;
