@@ -165,6 +165,8 @@ export const classesRouter = router({
         socialLocation: z.string().optional(),
         socialDescription: z.string().optional(),
         paymentMethod: z.enum(["online", "cash", "both"]).default("online"),
+        materialsUrl: z.string().optional(),
+        materialsFileName: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -202,6 +204,8 @@ export const classesRouter = router({
         socialLocation: input.socialLocation,
         socialDescription: input.socialDescription,
         paymentMethod: input.paymentMethod,
+        materialsUrl: input.materialsUrl,
+        materialsFileName: input.materialsFileName,
         status: "published",
       });
 
@@ -232,6 +236,8 @@ export const classesRouter = router({
         socialLocation: z.string().optional(),
         socialDescription: z.string().optional(),
         paymentMethod: z.enum(["online", "cash", "both"]).optional(),
+        materialsUrl: z.string().optional(),
+        materialsFileName: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
