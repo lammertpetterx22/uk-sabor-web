@@ -96,7 +96,10 @@ export async function processCampaign(campaignId: number): Promise<{ sent: numbe
  */
 export async function processScheduledCampaigns(): Promise<void> {
   const db = await getDb();
-  if (!db) return;
+  if (!db) {
+    console.log("[ScheduledCampaigns] Database not available, skipping check");
+    return;
+  }
 
   const now = new Date();
 
@@ -111,7 +114,10 @@ export async function processScheduledCampaigns(): Promise<void> {
       )
     );
 
-  if (due.length === 0) return;
+  if (due.length === 0) {
+    console.log("[ScheduledCampaigns] No campaigns due at this time");
+    return;
+  }
 
   console.log(`[ScheduledCampaigns] Processing ${due.length} due campaign(s)...`);
 
@@ -132,16 +138,23 @@ export async function processScheduledCampaigns(): Promise<void> {
 export function startScheduledCampaignProcessor(): ReturnType<typeof setInterval> {
   const INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
-  console.log("[ScheduledCampaigns] Processor started (interval: 5 min)");
+  console.log("[ScheduledCampaigns] ✅ Processor starting (interval: 5 min)");
+  console.log("[ScheduledCampaigns] Next check will run in 5 minutes");
 
   // Run once immediately on startup to catch any campaigns that fired while server was down
+  console.log("[ScheduledCampaigns] Running initial check for due campaigns...");
   processScheduledCampaigns().catch((err) =>
-    console.error("[ScheduledCampaigns] Initial run error:", err)
+    console.error("[ScheduledCampaigns] ❌ Initial run error:", err)
   );
 
-  return setInterval(() => {
+  const interval = setInterval(() => {
+    const now = new Date().toISOString();
+    console.log(`[ScheduledCampaigns] Running scheduled check at ${now}...`);
     processScheduledCampaigns().catch((err) =>
-      console.error("[ScheduledCampaigns] Interval run error:", err)
+      console.error("[ScheduledCampaigns] ❌ Interval run error:", err)
     );
   }, INTERVAL_MS);
+
+  console.log("[ScheduledCampaigns] ✅ Processor successfully started and running");
+  return interval;
 }

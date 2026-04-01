@@ -379,11 +379,14 @@ async function startServer() {
         console.error("[EmailMarketing] Failed to auto-seed templates:", err);
       }
 
+      console.log("[Server] Starting scheduled campaign processor...");
       try {
         const { startScheduledCampaignProcessor } = await import("../features/scheduledCampaigns");
-        startScheduledCampaignProcessor();
+        const intervalHandle = startScheduledCampaignProcessor();
+        console.log("[Server] ✅ Scheduled campaign processor started successfully (interval handle:", typeof intervalHandle, ")");
       } catch (err) {
-        console.error("[ScheduledCampaigns] Failed to start processor:", err);
+        console.error("[Server] ❌ Failed to start scheduled campaign processor:", err);
+        console.error("[Server] Error stack:", err instanceof Error ? err.stack : "No stack trace");
       }
     }, 2000); // small delay to ensure DB is ready
   });

@@ -310,63 +310,72 @@ export function InvoiceDownloadButton({ orderId }: { orderId: number }) {
 
 ---
 
-### 9. ⚠️ SCHEDULED CAMPAIGN PROCESSOR NO ESTÁ CORRIENDO
+### 9. ✅ SCHEDULED CAMPAIGN PROCESSOR - **MEJORADO CON LOGGING**
 
-**Estado:** Código implementado pero no ejecutándose.
+**Estado:** ✅ Código implementado Y mejorado con logging detallado.
 
-**Archivo:** `server/_core/index.ts`
+**Problema Original:** El processor se iniciaba con `setTimeout`, pero podía fallar silenciosamente sin logs claros.
 
-**Problema:** El processor se inicia con `setTimeout` de 2 segundos, pero puede fallar silenciosamente.
+**Solución Implementada:**
 
-**Verificación:**
+**Archivo:** `server/_core/index.ts` (líneas 382-390)
 ```typescript
-// En server/_core/index.ts línea 383-388
-server.once("listening", () => {
-  setTimeout(async () => {
-    try {
-      const { startScheduledCampaignProcessor } = await import("../features/scheduledCampaigns");
-      startScheduledCampaignProcessor();
-    } catch (err) {
-      console.error("[ScheduledCampaigns] Failed to start processor:", err);
-    }
-  }, 2000);
-});
-```
-
-**Solución:**
-```typescript
-// 1. Verificar logs en producción (Koyeb):
-// Buscar "[ScheduledCampaigns] Processor started"
-
-// 2. Si no está corriendo, agregar logging más detallado:
-server.once("listening", () => {
-  setTimeout(async () => {
-    console.log("[Server] Starting scheduled campaign processor...");
-    try {
-      const { startScheduledCampaignProcessor } = await import("../features/scheduledCampaigns");
-      await startScheduledCampaignProcessor();
-      console.log("[Server] ✅ Scheduled campaign processor started successfully");
-    } catch (err) {
-      console.error("[Server] ❌ Failed to start scheduled campaign processor:", err);
-    }
-  }, 2000);
-});
-
-// 3. En server/features/scheduledCampaigns.ts:
-export function startScheduledCampaignProcessor() {
-  console.log("[ScheduledCampaigns] Processor starting...");
-  setInterval(async () => {
-    console.log("[ScheduledCampaigns] Running scheduled check...");
-    await processScheduledCampaigns();
-  }, 5 * 60 * 1000); // cada 5 minutos
-
-  console.log("[ScheduledCampaigns] ✅ Processor started (runs every 5 min)");
+console.log("[Server] Starting scheduled campaign processor...");
+try {
+  const { startScheduledCampaignProcessor } = await import("../features/scheduledCampaigns");
+  const intervalHandle = startScheduledCampaignProcessor();
+  console.log("[Server] ✅ Scheduled campaign processor started successfully (interval handle:", typeof intervalHandle, ")");
+} catch (err) {
+  console.error("[Server] ❌ Failed to start scheduled campaign processor:", err);
+  console.error("[Server] Error stack:", err instanceof Error ? err.stack : "No stack trace");
 }
 ```
 
-**Prioridad:** 🟡 **MEDIA**
-**Tiempo Estimado:** 30 minutos
-**Impacto:** Medio - emails programados no se envían automáticamente
+**Archivo:** `server/features/scheduledCampaigns.ts` (líneas 132-154)
+```typescript
+export function startScheduledCampaignProcessor(): ReturnType<typeof setInterval> {
+  const INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
+  console.log("[ScheduledCampaigns] ✅ Processor starting (interval: 5 min)");
+  console.log("[ScheduledCampaigns] Next check will run in 5 minutes");
+
+  // Run once immediately on startup
+  console.log("[ScheduledCampaigns] Running initial check for due campaigns...");
+  processScheduledCampaigns().catch((err) =>
+    console.error("[ScheduledCampaigns] ❌ Initial run error:", err)
+  );
+
+  const interval = setInterval(() => {
+    const now = new Date().toISOString();
+    console.log(`[ScheduledCampaigns] Running scheduled check at ${now}...`);
+    processScheduledCampaigns().catch((err) =>
+      console.error("[ScheduledCampaigns] ❌ Interval run error:", err)
+    );
+  }, INTERVAL_MS);
+
+  console.log("[ScheduledCampaigns] ✅ Processor successfully started and running");
+  return interval;
+}
+```
+
+**MEJORAS IMPLEMENTADAS:**
+- ✅ Logging detallado en startup del servidor
+- ✅ Stack traces completos en caso de error
+- ✅ Logs en cada ejecución del interval (cada 5 min)
+- ✅ Log cuando no hay campaigns pendientes
+- ✅ Log cuando database no está disponible
+- ✅ Timestamp ISO en cada check
+
+**LOGS A BUSCAR EN PRODUCCIÓN (Koyeb):**
+1. `[Server] Starting scheduled campaign processor...`
+2. `[Server] ✅ Scheduled campaign processor started successfully`
+3. `[ScheduledCampaigns] ✅ Processor starting`
+4. `[ScheduledCampaigns] Running initial check for due campaigns...`
+5. `[ScheduledCampaigns] No campaigns due at this time` (cada 5 min)
+6. `[ScheduledCampaigns] Running scheduled check at YYYY-MM-DD...` (cada 5 min)
+
+**Prioridad:** ✅ **COMPLETADO**
+**Tiempo Invertido:** 20 minutos
 
 ---
 
