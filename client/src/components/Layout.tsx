@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import CartButton from "@/components/cart/CartButton";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
     Home,
     BookOpen,
@@ -59,7 +60,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }, [handleSetDrawerOpen]);
 
     const [location] = useLocation();
-    const { user, isAuthenticated, logout } = useAuth();
+    const { user, isAuthenticated, loading, logout } = useAuth();
 
     const isAdmin = user?.role === "admin";
     const isCreator =
@@ -326,7 +327,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     {/* Right actions — cart, login/avatar */}
                     <div className="flex items-center gap-2">
                         <CartButton />
-                        {isAuthenticated ? (
+                        {loading ? (
+                            <Skeleton className="w-8 h-8 rounded-full" />
+                        ) : isAuthenticated ? (
                             <Link
                                 href="/profile"
                                 className="w-8 h-8 rounded-full bg-[#FA3698]/20 border border-[#FA3698]/40 flex items-center justify-center"
