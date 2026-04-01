@@ -75,12 +75,50 @@ export async function generateImage(
     };
   };
 
-  // TODO: Integrate with Bunny.net uploadFile API
-  // For now, return the base64 data URL
+  // Convert base64 to buffer and upload to Bunny.net
   const base64Data = result.image.b64Json;
-  const dataUrl = `data:${result.image.mimeType};base64,${base64Data}`;
+  const buffer = Buffer.from(base64Data, "base64");
 
-  return {
-    url: dataUrl,
-  };
+  // Generate filename with timestamp
+  const timestamp = Date.now();
+  const ext = result.image.mimeType.split("/")[1] || "png";
+  const fileName = `generated-${timestamp}.${ext}`;
+
+  // Upload to Bunny.net Storage
+  try {
+    if (!ENV.bunnyApiKey) {
+      console.warn("[ImageGen] Bunny API key not configured, returning base64 data URL");
+      const dataUrl = `data:${result.image.mimeType};base64,${base64Data}`;
+      return { url: dataUrl };
+    }
+
+    // Upload to "generated-images" folder
+    const folder = "generated-images";
+    const path = `/${ENV.bunnyStorageZone}/${folder}/${fileName}`;
+    const uploadUrl = `https://storage.bunnycdn.com${path}`;
+
+    console.log(`[ImageGen] 📤 Uploading to Bunny.net: ${fileName}`);
+
+    const uploadResponse = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: {
+        AccessKey: ENV.bunnyApiKey,
+        "Content-Type": "application/octet-stream",
+      },
+      body: new Uint8Array(buffer),
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error(`Bunny upload failed: ${uploadResponse.statusText}`);
+    }
+
+    const publicUrl = `${ENV.bunnyCdnUrl}/${folder}/${fileName}`;
+    console.log(`[ImageGen] ✅ Uploaded to Bunny.net: ${publicUrl}`);
+
+    return { url: publicUrl };
+  } catch (uploadError) {
+    console.error("[ImageGen] Bunny upload error, falling back to base64:", uploadError);
+    const dataUrl = `data:${result.image.mimeType};base64,${base64Data}`;
+    return { url: dataUrl };
+  }
 }

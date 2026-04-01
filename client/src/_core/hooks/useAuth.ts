@@ -17,7 +17,8 @@ export function useAuth(options?: UseAuthOptions) {
     retry: false,
     refetchOnWindowFocus: true, // Re-check auth state when window regains focus
     refetchOnMount: true, // Always re-check auth on component mount
-    staleTime: 30000, // Consider data stale after 30 seconds
+    staleTime: 0, // Always consider data fresh to prevent header state inconsistency
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
   const logoutMutation = trpc.auth.logout.useMutation({

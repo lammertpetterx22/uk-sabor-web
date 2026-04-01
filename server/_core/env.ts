@@ -9,4 +9,8 @@ export const ENV = {
   // For video streaming, use Bunny.net instead
   forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
+  // Bunny.net configuration
+  bunnyApiKey: process.env.BUNNY_API_KEY ?? process.env.BUNNY_STORAGE_API_KEY ?? "",
+  bunnyStorageZone: process.env.BUNNY_STORAGE_ZONE ?? "uk-sabor",
+  bunnyCdnUrl: process.env.BUNNY_CDN_URL ?? "https://uk-sabor.b-cdn.net",
 };
