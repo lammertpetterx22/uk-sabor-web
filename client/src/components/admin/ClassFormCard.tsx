@@ -24,7 +24,9 @@ import {
   CheckCircle,
   CreditCard,
   Banknote,
-  PartyPopper
+  PartyPopper,
+  FileText,
+  Download
 } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -52,6 +54,7 @@ export default function ClassFormCard({
 }: ClassFormCardProps) {
   const { t } = useTranslations();
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const materialsInputRef = useRef<HTMLInputElement>(null);
 
   const uploadFileMutation = trpc.uploads.uploadFile.useMutation();
 
@@ -94,9 +97,12 @@ export default function ClassFormCard({
     socialLocation: "",
     socialDescription: "",
     paymentMethod: "online" as "online" | "cash" | "both",
+    materialsUrl: "",
+    materialsFileName: "",
   });
 
   const [uploading, setUploading] = useState(false);
+  const [uploadingMaterials, setUploadingMaterials] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
 
   // Auto-fill instructorId for instructor role users
@@ -130,6 +136,8 @@ export default function ClassFormCard({
         socialLocation: editingClass.socialLocation || "",
         socialDescription: editingClass.socialDescription || "",
         paymentMethod: (editingClass.paymentMethod || "online") as "online" | "cash" | "both",
+        materialsUrl: editingClass.materialsUrl || "",
+        materialsFileName: editingClass.materialsFileName || "",
       });
     }
   }, [editingClass]);
@@ -152,8 +160,11 @@ export default function ClassFormCard({
       socialLocation: "",
       socialDescription: "",
       paymentMethod: "online",
+      materialsUrl: "",
+      materialsFileName: "",
     });
     if (imageInputRef.current) imageInputRef.current.value = "";
+    if (materialsInputRef.current) materialsInputRef.current.value = "";
   };
 
   const handleImageSelect = (file: File) => {
@@ -198,6 +209,67 @@ export default function ClassFormCard({
     }
   };
 
+  const handleMaterialsUpload = async (file: File) => {
+    if (!file) return;
+
+    const allowedTypes = [
+      'application/pdf',
+      'application/zip',
+      'application/x-zip-compressed',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Please select a valid file (PDF, ZIP, DOC, or DOCX)");
+      return;
+    }
+
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(`File too large. Maximum size is 50MB. Your file: ${(file.size / 1024 / 1024).toFixed(1)}MB`);
+      return;
+    }
+
+    setUploadingMaterials(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64 = e.target?.result as string;
+
+        const timestamp = Date.now();
+        const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const uniqueFileName = editingClass?.id
+          ? `class-${editingClass.id}-materials-${timestamp}-${sanitizedFileName}`
+          : `class-new-materials-${timestamp}-${sanitizedFileName}`;
+
+        try {
+          const result = await uploadFileMutation.mutateAsync({
+            fileBase64: base64,
+            fileName: uniqueFileName,
+            mimeType: file.type,
+            folder: "class-materials",
+          });
+
+          setFormData(prev => ({
+            ...prev,
+            materialsUrl: result.url,
+            materialsFileName: file.name
+          }));
+          toast.success("Materials uploaded successfully!");
+        } catch (uploadErr: any) {
+          toast.error('Error uploading materials: ' + uploadErr.message);
+        } finally {
+          setUploadingMaterials(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (err: any) {
+      toast.error('Error reading file: ' + err.message);
+      setUploadingMaterials(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!formData.title || !formData.price || !formData.instructorId || !formData.classDate) {
       toast.error(t("validation.fillRequiredFields"));
@@ -233,6 +305,8 @@ export default function ClassFormCard({
       socialLocation: formData.socialLocation || undefined,
       socialDescription: formData.socialDescription || undefined,
       paymentMethod: formData.paymentMethod,
+      materialsUrl: formData.materialsUrl || undefined,
+      materialsFileName: formData.materialsFileName || undefined,
     };
 
     if (editingClass) {
@@ -674,6 +748,102 @@ export default function ClassFormCard({
               }
             }}
             className="hidden"
+          />
+        </div>
+
+        <Separator className="bg-border/50" />
+
+        {/* Class Materials Upload Section */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 mb-4">
+            <FileText className="h-4 w-4 text-accent" />
+            <h3 className="font-semibold text-foreground">Class Materials (Optional)</h3>
+          </div>
+
+          <p className="text-sm text-foreground/60">
+            Upload PDF, ZIP, DOC, or DOCX files (max 50MB) that students can download after purchasing the class.
+          </p>
+
+          {formData.materialsUrl ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-4 rounded-xl border-2 border-accent/30 bg-accent/5">
+                <FileText className="h-5 w-5 text-accent flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {formData.materialsFileName || "Materials uploaded"}
+                  </p>
+                  <p className="text-xs text-foreground/50">
+                    Click 'Remove' to upload a different file
+                  </p>
+                </div>
+                <Badge className="bg-green-500 text-white border-0">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Uploaded
+                </Badge>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(formData.materialsUrl, '_blank')}
+                  className="flex-1"
+                >
+                  <Download className="h-3 w-3 mr-2" />
+                  Preview
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, materialsUrl: "", materialsFileName: "" })}
+                  className="flex-1 border-red-500/30 text-red-500 hover:bg-red-500/10"
+                  disabled={uploadingMaterials}
+                >
+                  <X className="h-3 w-3 mr-2" />
+                  Remove
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div
+              onClick={() => materialsInputRef.current?.click()}
+              className="relative group cursor-pointer rounded-xl border-2 border-dashed border-border/50 bg-background/30 hover:border-accent/50 hover:bg-accent/5 transition-all p-8"
+            >
+              <div className="text-center">
+                {uploadingMaterials ? (
+                  <>
+                    <Loader2 className="h-10 w-10 mx-auto mb-3 text-accent animate-spin" />
+                    <p className="text-sm font-medium text-foreground mb-1">Uploading materials...</p>
+                    <p className="text-xs text-foreground/50">Please wait</p>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-10 w-10 mx-auto mb-3 text-foreground/40 group-hover:text-accent transition-colors" />
+                    <p className="text-sm font-medium text-foreground/70 group-hover:text-accent transition-colors mb-1">
+                      Click to upload class materials
+                    </p>
+                    <p className="text-xs text-foreground/50">
+                      PDF, ZIP, DOC, DOCX (max 50MB)
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          <input
+            ref={materialsInputRef}
+            type="file"
+            accept=".pdf,.zip,.doc,.docx"
+            onChange={(e) => {
+              if (e.target.files?.[0]) {
+                handleMaterialsUpload(e.target.files[0]);
+                e.target.value = "";
+              }
+            }}
+            className="hidden"
+            disabled={uploadingMaterials}
           />
         </div>
 

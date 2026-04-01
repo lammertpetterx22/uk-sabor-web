@@ -152,6 +152,8 @@ export const classes = pgTable("classes", {
   socialLocation: varchar("socialLocation", { length: 255 }), // Location of the social event
   socialDescription: text("socialDescription"), // Description of the social event
   paymentMethod: varchar("paymentMethod", { length: 255 }).default("online"), // Payment method: Stripe online, cash, or both
+  materialsUrl: text("materialsUrl"), // URL to class materials (PDF, ZIP, etc.) stored on Bunny CDN
+  materialsFileName: varchar("materialsFileName", { length: 255 }), // Original filename for display
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 }, (table) => ({

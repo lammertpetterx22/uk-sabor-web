@@ -366,7 +366,7 @@ function ClassesTab() {
               </div>
             )}
 
-            {/* QR Code button + Invoice download */}
+            {/* QR Code button + Invoice download + Materials download */}
             {purchase.orderId && (
               <div className="space-y-2">
                 <QRButton
@@ -376,6 +376,26 @@ function ClassesTab() {
                   title={purchase.classItem?.title || "Class"}
                 />
                 <InvoiceDownloadButton orderId={purchase.orderId} />
+                {purchase.classItem?.materialsUrl && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (purchase.classItem?.materialsUrl) {
+                        window.open(purchase.classItem.materialsUrl, '_blank');
+                      }
+                    }}
+                    className="w-full"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Class Materials
+                    {purchase.classItem.materialsFileName && (
+                      <span className="ml-2 text-xs text-foreground/50 truncate">
+                        ({purchase.classItem.materialsFileName})
+                      </span>
+                    )}
+                  </Button>
+                )}
               </div>
             )}
           </CardContent>

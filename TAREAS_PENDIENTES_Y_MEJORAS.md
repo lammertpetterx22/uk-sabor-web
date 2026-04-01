@@ -379,69 +379,84 @@ export function startScheduledCampaignProcessor(): ReturnType<typeof setInterval
 
 ---
 
-### 10. ⚠️ DOWNLOAD/ACCESS CLASS MATERIALS
+### 10. ✅ CLASS MATERIALS DOWNLOAD - **COMPLETADO**
 
-**Estado:** No implementado.
+**Estado:** ✅ Completamente implementado y funcional.
 
-**Requerimientos:**
-1. Campo `materialsUrl` en tabla `classes`
-2. Upload UI en admin panel
-3. Download button en user dashboard
+**Implementación Realizada:**
 
-**Implementación:**
-
-**Paso 1: Schema**
+**1. Database Schema** ([drizzle/schema.ts:155-156](drizzle/schema.ts#L155-L156))
 ```typescript
-// drizzle/schema.ts
-export const classes = pgTable("classes", {
-  // ... campos existentes ...
-  materialsUrl: varchar("materialsUrl", { length: 500 }),
-  materialsFileName: varchar("materialsFileName", { length: 255 }),
-});
+materialsUrl: text("materialsUrl"), // URL to class materials (PDF, ZIP, etc.) stored on Bunny CDN
+materialsFileName: varchar("materialsFileName", { length: 255 }), // Original filename for display
 ```
 
-**Paso 2: Migration**
-```bash
-npm run db:push
+**2. Migration Aplicada**
+- Migration file: `drizzle/0009_married_earthquake.sql`
+- Script: `scripts/apply-class-materials-migration.ts`
+- ✅ Columnas agregadas exitosamente a la tabla `classes`
+
+**3. Admin Upload UI** ([client/src/components/admin/ClassFormCard.tsx:751-843](client/src/components/admin/ClassFormCard.tsx#L751-L843))
+- Upload de archivos PDF, ZIP, DOC, DOCX (max 50MB)
+- Validación de tipo de archivo y tamaño
+- Preview del archivo subido
+- Botón para remover y reemplazar
+- Estado de uploading con loading spinner
+- Almacenamiento en Bunny CDN en folder `class-materials/`
+
+**Características:**
+```typescript
+const allowedTypes = [
+  'application/pdf',
+  'application/zip',
+  'application/x-zip-compressed',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+];
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 ```
 
-**Paso 3: Admin Upload UI**
-
-**Archivo:** `client/src/components/admin/ClassesTab.tsx`
-
+**4. User Download UI** ([client/src/pages/UserDashboard.tsx:379-398](client/src/pages/UserDashboard.tsx#L379-L398))
 ```typescript
-// Agregar campo de upload de materiales (PDF, ZIP, etc.)
-<div>
-  <label>Class Materials (PDF, ZIP)</label>
-  <input
-    type="file"
-    accept=".pdf,.zip,.doc,.docx"
-    onChange={handleMaterialsUpload}
-  />
-</div>
-```
-
-**Paso 4: User Download UI**
-
-**Archivo:** `client/src/components/dashboard/ClassesTab.tsx`
-
-```typescript
-// En cada enrolled class:
-{classItem.materialsUrl && (
+{purchase.classItem?.materialsUrl && (
   <Button
     variant="outline"
     size="sm"
-    onClick={() => window.open(classItem.materialsUrl, '_blank')}
+    onClick={() => {
+      if (purchase.classItem?.materialsUrl) {
+        window.open(purchase.classItem.materialsUrl, '_blank');
+      }
+    }}
+    className="w-full"
   >
-    <Download className="mr-2 h-4 w-4" />
-    Download Materials
+    <Download className="h-4 w-4 mr-2" />
+    Download Class Materials
+    {purchase.classItem.materialsFileName && (
+      <span className="ml-2 text-xs text-foreground/50 truncate">
+        ({purchase.classItem.materialsFileName})
+      </span>
+    )}
   </Button>
 )}
 ```
 
-**Prioridad:** 🟡 **MEDIA**
-**Tiempo Estimado:** 2 horas
-**Impacto:** Medio - mejora valor de las clases
+**ARCHIVOS MODIFICADOS:**
+- ✅ drizzle/schema.ts (schema updated)
+- ✅ drizzle/0009_married_earthquake.sql (migration generated)
+- ✅ scripts/apply-class-materials-migration.ts (migration script)
+- ✅ client/src/components/admin/ClassFormCard.tsx (admin upload UI)
+- ✅ client/src/pages/UserDashboard.tsx (user download button)
+
+**BENEFICIOS:**
+- ✅ Instructores pueden subir materiales de clase fácilmente
+- ✅ Validación robusta de archivos (tipo y tamaño)
+- ✅ Almacenamiento en CDN para acceso rápido
+- ✅ Estudiantes pueden descargar materiales después de comprar
+- ✅ Muestra nombre original del archivo
+- ✅ UX intuitiva con drag & drop visual
+
+**Prioridad:** ✅ **COMPLETADO**
+**Tiempo Invertido:** 1.5 horas
 
 ---
 
