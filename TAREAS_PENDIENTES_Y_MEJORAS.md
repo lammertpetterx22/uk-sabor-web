@@ -252,78 +252,61 @@ SELECT * FROM classes WHERE title LIKE '%test%' OR title LIKE '%Test%';
 
 ## 🚀 FEATURES INCOMPLETAS - COMPLETAR ESTE MES
 
-### 8. ⚠️ INVOICE DOWNLOAD UI EN DASHBOARD
+### 8. ✅ INVOICE DOWNLOAD UI EN DASHBOARD - **COMPLETADO**
 
-**Estado:** Backend implementado, UI faltante.
+**Estado:** ✅ Backend Y UI completamente implementados.
 
-**Backend Existente:**
-- ✅ `downloadInvoice` tRPC mutation
+**Verificación Realizada:**
+- ✅ `downloadInvoice` tRPC mutation (server/features/payments.ts)
 - ✅ PDF generation con PDFKit
 - ✅ Base64 encoding
+- ✅ InvoiceDownloadButton component (client/src/components/dashboard/CoursesTab.tsx:13-56)
+- ✅ Implementado en TicketsTab (línea 303)
+- ✅ Implementado en CoursesTab (línea 160)
+- ✅ Implementado en ClassesTab (línea 378)
+- ✅ Implementado en OrdersTab (línea 514)
 
-**Falta Implementar:**
-
-**Archivo:** `client/src/components/dashboard/TicketsTab.tsx`
-
+**Implementación Actual:**
 ```typescript
-// Agregar botón de download invoice:
-import { Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
+// InvoiceDownloadButton ya existe en CoursesTab.tsx
+export function InvoiceDownloadButton({ orderId }: { orderId: number }) {
+  const [loading, setLoading] = useState(false);
+  const downloadMutation = trpc.payments.downloadInvoice.useMutation({
+    onSuccess: (data) => {
+      // Base64 → Blob → Download
+      const byteChars = atob(data.base64);
+      const byteNums = new Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
+      const blob = new Blob([new Uint8Array(byteNums)], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = data.filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      setLoading(false);
+      toast.success("Invoice downloaded!");
+    },
+  });
 
-// En cada ticket card:
-<Button
-  variant="outline"
-  size="sm"
-  onClick={() => handleDownloadInvoice(ticket.orderId)}
->
-  <Download className="mr-2 h-4 w-4" />
-  Download Invoice
-</Button>
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => { setLoading(true); downloadMutation.mutate({ orderId }); }}
+      disabled={loading}
+    >
+      <Download className="h-4 w-4 mr-2" />
+      {loading ? "Downloading..." : "Invoice"}
+    </Button>
+  );
+}
 ```
 
-**Función de Download:**
-```typescript
-const downloadInvoice = trpc.payments.downloadInvoice.useMutation();
+**Resultado:** Feature completamente funcional en producción. Los usuarios pueden descargar facturas PDF desde cualquier tab del dashboard.
 
-const handleDownloadInvoice = async (orderId: number) => {
-  try {
-    const result = await downloadInvoice.mutateAsync({ orderId });
-
-    // Convertir base64 a blob
-    const byteCharacters = atob(result.pdfBase64);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: 'application/pdf' });
-
-    // Crear link de download
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `invoice-${orderId}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-
-    toast.success("Invoice downloaded!");
-  } catch (error) {
-    toast.error("Failed to download invoice");
-  }
-};
-```
-
-**Archivos a Modificar:**
-- `client/src/components/dashboard/TicketsTab.tsx`
-- `client/src/components/dashboard/CoursesTab.tsx`
-- `client/src/components/dashboard/ClassesTab.tsx`
-- `client/src/components/dashboard/OrdersTab.tsx`
-
-**Prioridad:** 🟠 **MEDIA-ALTA**
-**Tiempo Estimado:** 1 hora
-**Impacto:** Medio - mejora experiencia de usuario
+**Prioridad:** ✅ **COMPLETADO**
+**Tiempo Invertido:** Verificación completada
 
 ---
 
