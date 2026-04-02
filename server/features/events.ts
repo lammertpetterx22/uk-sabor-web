@@ -174,6 +174,10 @@ export const eventsRouter = router({
         throw new Error("Invalid event end date format.");
       }
 
+      // Determine payment method flags based on paymentMethod
+      const allowCashPayment = input.paymentMethod === "cash" || input.paymentMethod === "both";
+      const allowOnlinePayment = input.paymentMethod === "online" || input.paymentMethod === "both";
+
       const result = await db.insert(events).values({
         title: input.title,
         description: input.description,
@@ -185,6 +189,8 @@ export const eventsRouter = router({
         ticketPrice: input.ticketPrice as any,
         maxTickets: input.maxTickets,
         paymentMethod: input.paymentMethod,
+        allowCashPayment,
+        allowOnlinePayment,
         creatorId: ctx.user.id,
         status: "draft",
       });
@@ -264,6 +270,13 @@ export const eventsRouter = router({
         const parsedEndDate = new Date(eventEndDate);
         if (!isNaN(parsedEndDate.getTime())) updateData.eventEndDate = parsedEndDate;
       }
+
+      // Update payment method flags if paymentMethod is being changed
+      if (input.paymentMethod) {
+        updateData.allowCashPayment = input.paymentMethod === "cash" || input.paymentMethod === "both";
+        updateData.allowOnlinePayment = input.paymentMethod === "online" || input.paymentMethod === "both";
+      }
+
       const result = await db.update(events).set(updateData).where(eq(events.id, id));
 
       return result;

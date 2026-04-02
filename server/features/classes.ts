@@ -187,6 +187,10 @@ export const classesRouter = router({
         }
       }
 
+      // Determine payment method flags based on paymentMethod
+      const allowCashPayment = input.paymentMethod === "cash" || input.paymentMethod === "both";
+      const allowOnlinePayment = input.paymentMethod === "online" || input.paymentMethod === "both";
+
       const result = await db.insert(classes).values({
         title: input.title,
         description: input.description,
@@ -204,6 +208,8 @@ export const classesRouter = router({
         socialLocation: input.socialLocation,
         socialDescription: input.socialDescription,
         paymentMethod: input.paymentMethod,
+        allowCashPayment,
+        allowOnlinePayment,
         materialsUrl: input.materialsUrl,
         materialsFileName: input.materialsFileName,
         status: "published",
@@ -258,6 +264,13 @@ export const classesRouter = router({
       const { id, classDate, ...rest } = input;
       const updateData: Record<string, any> = { ...rest };
       if (classDate) updateData.classDate = new Date(classDate);
+
+      // Update payment method flags if paymentMethod is being changed
+      if (input.paymentMethod) {
+        updateData.allowCashPayment = input.paymentMethod === "cash" || input.paymentMethod === "both";
+        updateData.allowOnlinePayment = input.paymentMethod === "online" || input.paymentMethod === "both";
+      }
+
       const result = await db.update(classes).set(updateData).where(eq(classes.id, id));
 
       return result;
