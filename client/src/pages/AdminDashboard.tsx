@@ -420,10 +420,33 @@ function EventsTab() {
     if (isAdmin) utils.admin.listAllEvents.invalidate();
     else utils.admin.listMyEvents.invalidate();
   };
+
+  // Get list of potential collaborators (instructors/promoters/admins)
+  const { data: potentialCollaborators } = trpc.admin.listUsers.useQuery();
+  const collaboratorsList = potentialCollaborators?.filter(u =>
+    (u.role === "instructor" || u.role === "promoter" || u.role === "admin") && u.id !== user?.id
+  ) || [];
+
+  const addCollaboratorMutation = trpc.events.addCollaborator.useMutation();
+
   const createMutation = trpc.admin.createEvent.useMutation({
-    onSuccess: () => {
+    onSuccess: async (data) => {
       toast.success(t("admin.events.toastCreated"));
       invalidateEvents();
+
+      // If collaborator was selected, add them after event creation
+      if (formData.collaboratorId && data?.id) {
+        try {
+          await addCollaboratorMutation.mutateAsync({
+            eventId: data.id,
+            collaboratorId: parseInt(formData.collaboratorId),
+            split: formData.collaboratorSplit,
+          });
+          toast.success("Collaborator added successfully!");
+        } catch (err: any) {
+          toast.error(`Event created, but failed to add collaborator: ${err.message}`);
+        }
+      }
     },
     onError: (err) => {
       toast.error(err.message);
@@ -458,6 +481,8 @@ function EventsTab() {
     imageUrl: "" as string,
     imagePreview: "" as string,
     paymentMethod: "online" as "online" | "cash" | "both",
+    collaboratorId: "" as string,
+    collaboratorSplit: "50/50" as "50/50" | "60/40",
   });
   const [uploading, setUploading] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -631,6 +656,8 @@ function EventsTab() {
       imageUrl: "",
       imagePreview: "",
       paymentMethod: "online",
+      collaboratorId: "",
+      collaboratorSplit: "50/50",
     });
     if (imageInputRef.current) imageInputRef.current.value = "";
   };
@@ -799,6 +826,47 @@ function EventsTab() {
               <p className="text-xs text-blue-400 bg-blue-400/10 border border-blue-400/30 rounded px-3 py-2">
                 ℹ️ Both options: Attendees can pay online or at the door.
               </p>
+            )}
+          </div>
+
+          {/* Collaborator Section (Optional) */}
+          <div className="border-t border-border/30 pt-4 mt-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-accent" />
+              <p className="text-sm font-medium text-foreground/80">Collaborator (Optional)</p>
+            </div>
+            <p className="text-xs text-foreground/50">Add a collaborator to share earnings from online sales. Cash payments are handled manually between you.</p>
+
+            <Select value={formData.collaboratorId} onValueChange={(val: string) => setFormData({ ...formData, collaboratorId: val })}>
+              <SelectTrigger>
+                <SelectValue placeholder="No collaborator (solo event)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">No collaborator</SelectItem>
+                {collaboratorsList.map(collab => (
+                  <SelectItem key={collab.id} value={collab.id.toString()}>
+                    {collab.name || collab.email} ({collab.role})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {formData.collaboratorId && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-foreground/70">Revenue Split</p>
+                <Select value={formData.collaboratorSplit} onValueChange={(val: any) => setFormData({ ...formData, collaboratorSplit: val })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="50/50">50/50 - Equal split</SelectItem>
+                    <SelectItem value="60/40">60/40 - You get 60%</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-green-400 bg-green-400/10 border border-green-400/30 rounded px-3 py-2">
+                  🤝 {formData.collaboratorSplit === "50/50" ? "Each of you will receive 50% of online earnings" : "You will receive 60%, collaborator gets 40% of online earnings"}
+                </p>
+              </div>
             )}
           </div>
 
