@@ -1,4 +1,5 @@
-import { useRoute, Link } from "wouter";
+import { useState } from "react";
+import { useRoute, Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -10,12 +11,15 @@ import BunnyVideoPlayer from "@/components/BunnyVideoPlayer";
 import ProtectedVideoPlayer from "@/components/ProtectedVideoPlayer";
 import { Play, BookOpen } from "lucide-react";
 import AddToCartButton from "@/components/cart/AddToCartButton";
+import PaymentMethodModal from "@/components/payment/PaymentMethodModal";
 
 
 export default function ClassDetail() {
   const [, params] = useRoute("/classes/:id");
+  const [, setLocation] = useLocation();
   const classId = parseInt(params?.id || "0");
   const { user, isAuthenticated } = useAuth();
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const { data: classItem, isLoading } = trpc.classes.getById.useQuery(classId, { enabled: !!classId });
   const { data: instructor } = trpc.instructors.getById.useQuery(classItem?.instructorId || 0, { enabled: !!classItem?.instructorId });
@@ -31,6 +35,45 @@ export default function ClassDetail() {
     },
     onError: (err) => toast.error(err.message),
   });
+
+  const cashReservationMutation = trpc.classes.createCashReservation.useMutation({
+    onSuccess: (data) => {
+      toast.success("Reservation confirmed!");
+      sessionStorage.setItem("reservationData", JSON.stringify({ ...data, itemType: "class" }));
+      setLocation("/reservation-confirmation");
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const handleReserveClick = () => {
+    if (!isAuthenticated) {
+      toast.error("Please log in to reserve your spot");
+      setLocation("/login");
+      return;
+    }
+
+    const allowsBoth = (classItem as any)?.allowCashPayment && (classItem as any)?.allowOnlinePayment;
+    const cashOnly = (classItem as any)?.paymentMethod === "cash";
+
+    if (cashOnly || ((classItem as any)?.allowCashPayment && !allowsBoth)) {
+      cashReservationMutation.mutate({ classId });
+    } else if (allowsBoth) {
+      setShowPaymentModal(true);
+    }
+  };
+
+  const handlePayOnline = () => {
+    setShowPaymentModal(false);
+    const addToCartBtn = document.querySelector('[data-cart-button="class"]') as HTMLButtonElement;
+    if (addToCartBtn) {
+      addToCartBtn.click();
+    }
+  };
+
+  const handlePayCash = () => {
+    setShowPaymentModal(false);
+    cashReservationMutation.mutate({ classId });
+  };
 
   if (isLoading) {
     return (
@@ -202,14 +245,6 @@ export default function ClassDetail() {
                     <p className="font-semibold text-destructive">Class Full</p>
                     <p className="text-sm text-foreground/60 mt-1">No spots available</p>
                   </div>
-                ) : classItem.paymentMethod === "cash" ? (
-                  <div className="space-y-4">
-                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-center">
-                      <AlertCircle className="h-8 w-8 text-blue-500 mx-auto mb-2" />
-                      <p className="font-semibold text-blue-400">Payment in cash at the door</p>
-                      <p className="text-sm text-foreground/60 mt-1">Contact the instructor for more details</p>
-                    </div>
-                  </div>
                 ) : (
                   <div className="space-y-4">
                     <ul className="space-y-3">
@@ -227,29 +262,73 @@ export default function ClassDetail() {
                       </li>
                     </ul>
 
-                    <AddToCartButton
-                      item={{
-                        type: "class",
-                        id: classItem.id,
-                        title: classItem.title,
-                        price: price,
-                        imageUrl: classItem.imageUrl || undefined,
-                        instructorName: instructor?.name,
-                        danceStyle: classItem.danceStyle || undefined,
-                        date: classDate.toISOString(),
-                      }}
-                      maxStock={classItem.maxParticipants || undefined}
-                      currentlySold={classItem.currentParticipants || 0}
-                      className="w-full py-6 text-lg"
-                    />
+                    {/* Dynamic button based on payment methods */}
+                    {(() => {
+                      const allowsCash = (classItem as any)?.allowCashPayment || (classItem as any)?.paymentMethod === "cash" || (classItem as any)?.paymentMethod === "both";
+                      const allowsOnline = (classItem as any)?.allowOnlinePayment !== false && (classItem as any)?.paymentMethod !== "cash";
+                      const allowsBoth = allowsCash && allowsOnline;
+
+                      if (allowsBoth) {
+                        return (
+                          <Button
+                            onClick={handleReserveClick}
+                            disabled={cashReservationMutation.isPending}
+                            className="w-full py-6 text-lg bg-gradient-to-r from-pink-500 to-red-500"
+                          >
+                            {cashReservationMutation.isPending ? (
+                              <>
+                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                Processing...
+                              </>
+                            ) : (
+                              "Reserve Your Spot"
+                            )}
+                          </Button>
+                        );
+                      } else if (allowsCash && !allowsOnline) {
+                        return (
+                          <Button
+                            onClick={handleReserveClick}
+                            disabled={cashReservationMutation.isPending}
+                            className="w-full py-6 text-lg bg-gradient-to-r from-green-500 to-emerald-500"
+                          >
+                            {cashReservationMutation.isPending ? (
+                              <>
+                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                Reserving...
+                              </>
+                            ) : (
+                              <>💵 Reserve (Pay at Door)</>
+                            )}
+                          </Button>
+                        );
+                      } else {
+                        return (
+                          <AddToCartButton
+                            item={{
+                              type: "class",
+                              id: classItem.id,
+                              title: classItem.title,
+                              price: price,
+                              imageUrl: classItem.imageUrl || undefined,
+                              instructorName: instructor?.name,
+                              danceStyle: classItem.danceStyle || undefined,
+                              date: classDate.toISOString(),
+                            }}
+                            maxStock={classItem.maxParticipants || undefined}
+                            currentlySold={classItem.currentParticipants || 0}
+                            className="w-full py-6 text-lg"
+                            data-cart-button="class"
+                          />
+                        );
+                      }
+                    })()}
 
                     {spotsLeft !== null && spotsLeft <= 5 && (
                       <p className="text-sm text-center text-orange-400">
                         Only {spotsLeft} spots left!
                       </p>
                     )}
-
-
                   </div>
                 )}
               </CardContent>
@@ -259,6 +338,19 @@ export default function ClassDetail() {
       </div>
 
       <div className="h-16" />
+
+      {/* Payment Method Modal */}
+      {classItem && (
+        <PaymentMethodModal
+          open={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          onSelectOnline={handlePayOnline}
+          onSelectCash={handlePayCash}
+          price={price.toFixed(2)}
+          itemTitle={classItem.title}
+          itemType="class"
+        />
+      )}
     </div>
   );
 }

@@ -71,6 +71,13 @@
       "when": 1775068845745,
       "tag": "0009_married_earthquake",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1775092837815,
+      "tag": "0010_green_stardust",
+      "breakpoints": true
     }
   ]
 }

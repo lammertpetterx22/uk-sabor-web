@@ -290,4 +290,110 @@ export const eventsRouter = router({
 
     return result;
   }),
+
+  /**
+   * Create cash reservation for event (user reserves spot, pays at door)
+   */
+  createCashReservation: protectedProcedure
+    .input(z.object({
+      eventId: z.number(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // 1. Get event details
+      const [event] = await db.select()
+        .from(events)
+        .where(eq(events.id, input.eventId))
+        .limit(1);
+
+      if (!event) {
+        throw new Error("Event not found");
+      }
+
+      // 2. Verify event allows cash payment
+      if (!event.allowCashPayment && event.paymentMethod !== "cash" && event.paymentMethod !== "both") {
+        throw new Error("This event requires online payment");
+      }
+
+      // 3. Check if event is published
+      if (event.status !== "published") {
+        throw new Error("This event is not available for booking");
+      }
+
+      // 4. Check if user already has a ticket for this event
+      const existingTicket = await db.select()
+        .from(eventTickets)
+        .where(and(
+          eq(eventTickets.userId, ctx.user.id),
+          eq(eventTickets.eventId, input.eventId)
+        ))
+        .limit(1);
+
+      if (existingTicket.length > 0) {
+        throw new Error("You already have a ticket for this event");
+      }
+
+      // 5. Check if there are spots available
+      if (event.maxTickets && (event.ticketsSold ?? 0) >= event.maxTickets) {
+        throw new Error("This event is sold out");
+      }
+
+      // 6. Generate unique ticket code
+      const ticketCode = `CASH-${event.id}-${ctx.user.id}-${Date.now()}`;
+
+      // 7. Create ticket with pending_cash status
+      const [ticket] = await db.insert(eventTickets).values({
+        userId: ctx.user.id,
+        eventId: input.eventId,
+        quantity: 1,
+        pricePaid: event.ticketPrice,
+        ticketCode,
+        status: "valid",
+        paymentStatus: "pending_cash",
+        paymentMethod: "cash",
+        reservedAt: new Date(),
+        purchasedAt: new Date(),
+      }).returning();
+
+      // 8. Update tickets sold count
+      const { sql } = await import("drizzle-orm");
+      await db.update(events)
+        .set({ ticketsSold: sql`${events.ticketsSold} + 1` })
+        .where(eq(events.id, input.eventId));
+
+      // 9. Generate QR code
+      const QRCode = await import("qrcode");
+      const { qrCodes } = await import("../../drizzle/schema");
+
+      const qrCodeValue = `event-${event.id}-user-${ctx.user.id}-ticket-${ticket.id}`;
+      const qrDataUrl = await QRCode.toDataURL(qrCodeValue, {
+        errorCorrectionLevel: 'H',
+        margin: 1,
+        width: 300
+      });
+
+      await db.insert(qrCodes).values({
+        code: qrCodeValue,
+        itemType: 'event',
+        itemId: event.id,
+        userId: ctx.user.id,
+        qrData: qrDataUrl,
+      });
+
+      console.log(`[CashReservation] ✅ Reservation created for user ${ctx.user.id} for event ${event.id}`);
+
+      return {
+        success: true,
+        ticketId: ticket.id,
+        ticketCode: ticket.ticketCode,
+        qrCode: qrDataUrl,
+        eventTitle: event.title,
+        eventDate: event.eventDate,
+        venue: event.venue,
+        price: event.ticketPrice,
+        paymentInstructions: event.cashPaymentInstructions || `Bring ${event.ticketPrice} in cash to the door`,
+      };
+    }),
 });

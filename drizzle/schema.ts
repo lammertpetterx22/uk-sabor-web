@@ -96,7 +96,10 @@ export const events = pgTable("events", {
   maxTickets: integer("maxTickets"),
   ticketsSold: integer("ticketsSold").default(0),
   status: varchar("status", { length: 255 }).default("draft"),
-  paymentMethod: varchar("paymentMethod", { length: 255 }).default("online"), // Payment method: Stripe online, cash, or both
+  paymentMethod: varchar("paymentMethod", { length: 255 }).default("online"), // Payment method: "online", "cash", or "both"
+  allowCashPayment: boolean("allowCashPayment").default(false), // Allow cash payment at door
+  allowOnlinePayment: boolean("allowOnlinePayment").default(true), // Allow Stripe online payment
+  cashPaymentInstructions: text("cashPaymentInstructions"), // Instructions for cash payment (e.g., "Pay at the door")
   showLowTicketAlert: boolean("showLowTicketAlert").default(false), // Show "Only X tickets left!" message
   creatorId: integer("creatorId"), // User ID of the event creator (instructor/promoter/admin)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -151,7 +154,10 @@ export const classes = pgTable("classes", {
   socialTime: varchar("socialTime", { length: 255 }), // Time of the social event (e.g., "22:00")
   socialLocation: varchar("socialLocation", { length: 255 }), // Location of the social event
   socialDescription: text("socialDescription"), // Description of the social event
-  paymentMethod: varchar("paymentMethod", { length: 255 }).default("online"), // Payment method: Stripe online, cash, or both
+  paymentMethod: varchar("paymentMethod", { length: 255 }).default("online"), // Payment method: "online", "cash", or "both"
+  allowCashPayment: boolean("allowCashPayment").default(false), // Allow cash payment at door
+  allowOnlinePayment: boolean("allowOnlinePayment").default(true), // Allow Stripe online payment
+  cashPaymentInstructions: text("cashPaymentInstructions"), // Instructions for cash payment
   materialsUrl: text("materialsUrl"), // URL to class materials (PDF, ZIP, etc.) stored on Bunny CDN
   materialsFileName: varchar("materialsFileName", { length: 255 }), // Original filename for display
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -190,12 +196,17 @@ export const eventTickets = pgTable("eventTickets", {
   instructorEarnings: decimal("instructorEarnings", { precision: 10, scale: 2 }),
   ticketCode: varchar("ticketCode", { length: 255 }).unique(),
   status: varchar("status", { length: 255 }).default("valid"),
+  paymentStatus: varchar("paymentStatus", { length: 20 }).default("paid"), // "paid", "pending_cash", "pending_online", "cancelled"
+  paymentMethod: varchar("paymentMethod", { length: 20 }), // "online", "cash", "transfer"
+  paidAt: timestamp("paidAt"), // When payment was actually received (for cash: at check-in)
+  reservedAt: timestamp("reservedAt"), // When reservation was made (for cash reservations)
   purchasedAt: timestamp("purchasedAt").defaultNow().notNull(),
   usedAt: timestamp("usedAt"),
 }, (table) => ({
   userIdIdx: index("event_tickets_user_id_idx").on(table.userId),
   eventIdIdx: index("event_tickets_event_id_idx").on(table.eventId),
   statusIdx: index("event_tickets_status_idx").on(table.status),
+  paymentStatusIdx: index("event_tickets_payment_status_idx").on(table.paymentStatus),
 }));
 
 // Course Purchases table
@@ -230,12 +241,17 @@ export const classPurchases = pgTable("classPurchases", {
   instructorEarnings: decimal("instructorEarnings", { precision: 10, scale: 2 }),
   accessCode: varchar("accessCode", { length: 255 }).unique(),
   status: varchar("status", { length: 255 }).default("active"),
+  paymentStatus: varchar("paymentStatus", { length: 20 }).default("paid"), // "paid", "pending_cash", "pending_online", "cancelled"
+  paymentMethod: varchar("paymentMethod", { length: 20 }), // "online", "cash", "transfer"
+  paidAt: timestamp("paidAt"), // When payment was actually received (for cash: at check-in)
+  reservedAt: timestamp("reservedAt"), // When reservation was made (for cash reservations)
   purchasedAt: timestamp("purchasedAt").defaultNow().notNull(),
   expiresAt: timestamp("expiresAt"),
 }, (table) => ({
   userIdIdx: index("class_purchases_user_id_idx").on(table.userId),
   classIdIdx: index("class_purchases_class_id_idx").on(table.classId),
   instructorIdIdx: index("class_purchases_instructor_id_idx").on(table.instructorId),
+  paymentStatusIdx: index("class_purchases_payment_status_idx").on(table.paymentStatus),
 }));
 
 // Type exports

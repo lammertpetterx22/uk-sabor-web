@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -8,12 +8,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Calendar, MapPin, Clock, Users, Ticket, ArrowLeft, Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
 import AddToCartButton from "@/components/cart/AddToCartButton";
+import PaymentMethodModal from "@/components/payment/PaymentMethodModal";
 
 export default function EventDetail() {
   const [, params] = useRoute("/events/:id");
+  const [, setLocation] = useLocation();
   const eventId = parseInt(params?.id || "0");
   const { user, isAuthenticated } = useAuth();
   const [quantity, setQuantity] = useState(1);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const { data: event, isLoading } = trpc.events.getById.useQuery(eventId, { enabled: !!eventId });
   const hasAccessQuery = trpc.events.hasAccess.useQuery(eventId, { enabled: !!eventId && isAuthenticated });
@@ -27,6 +30,53 @@ export default function EventDetail() {
     },
     onError: (err) => toast.error(err.message),
   });
+
+  const cashReservationMutation = trpc.events.createCashReservation.useMutation({
+    onSuccess: (data) => {
+      toast.success("Reservation confirmed!");
+      // Store reservation data and navigate to confirmation page
+      sessionStorage.setItem("reservationData", JSON.stringify({ ...data, itemType: "event" }));
+      setLocation("/reservation-confirmation");
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const handleReserveClick = () => {
+    if (!isAuthenticated) {
+      toast.error("Please log in to reserve your spot");
+      setLocation("/login");
+      return;
+    }
+
+    // Check if event allows both payment methods
+    const allowsBoth = (event as any)?.allowCashPayment && (event as any)?.allowOnlinePayment;
+    const cashOnly = (event as any)?.paymentMethod === "cash";
+
+    if (cashOnly || ((event as any)?.allowCashPayment && !allowsBoth)) {
+      // Cash only - create reservation directly
+      cashReservationMutation.mutate({ eventId });
+    } else if (allowsBoth) {
+      // Show modal to choose payment method
+      setShowPaymentModal(true);
+    } else {
+      // Online only - use existing cart flow (do nothing, AddToCartButton handles it)
+    }
+  };
+
+  const handlePayOnline = () => {
+    setShowPaymentModal(false);
+    // Trigger the add to cart button click programmatically
+    // Or we can implement the checkout logic here
+    const addToCartBtn = document.querySelector('[data-cart-button="event"]') as HTMLButtonElement;
+    if (addToCartBtn) {
+      addToCartBtn.click();
+    }
+  };
+
+  const handlePayCash = () => {
+    setShowPaymentModal(false);
+    cashReservationMutation.mutate({ eventId });
+  };
 
   if (isLoading) {
     return (
@@ -182,28 +232,70 @@ export default function EventDetail() {
                         </div>
                       </div>
 
-                      {(event as any).paymentMethod === "cash" ? (
-                        <div className="w-full rounded-lg bg-blue-500/10 border border-blue-500/30 p-4 text-center space-y-2">
-                          <p className="text-blue-400 font-semibold text-base">💵 Payment in cash at the door</p>
-                          <p className="text-sm text-foreground/60">No online payment required. Please bring cash to the event.</p>
-                        </div>
-                      ) : (
-                        <AddToCartButton
-                          item={{
-                            type: "event",
-                            id: event.id,
-                            title: event.title,
-                            price: price,
-                            imageUrl: event.imageUrl || undefined,
-                            date: eventDate.toISOString(),
-                            location: event.venue,
-                            quantity: quantity,
-                          }}
-                          maxStock={event.maxTickets || undefined}
-                          currentlySold={event.ticketsSold || 0}
-                          className="w-full py-6 text-lg"
-                        />
-                      )}
+                      {/* Dynamic button based on payment methods */}
+                      {(() => {
+                        const allowsCash = (event as any)?.allowCashPayment || (event as any)?.paymentMethod === "cash" || (event as any)?.paymentMethod === "both";
+                        const allowsOnline = (event as any)?.allowOnlinePayment !== false && (event as any)?.paymentMethod !== "cash";
+                        const allowsBoth = allowsCash && allowsOnline;
+
+                        if (allowsBoth) {
+                          // Both methods - show button that opens modal
+                          return (
+                            <Button
+                              onClick={handleReserveClick}
+                              disabled={cashReservationMutation.isPending}
+                              className="w-full py-6 text-lg bg-gradient-to-r from-pink-500 to-red-500"
+                            >
+                              {cashReservationMutation.isPending ? (
+                                <>
+                                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                  Processing...
+                                </>
+                              ) : (
+                                "Reserve Your Spot"
+                              )}
+                            </Button>
+                          );
+                        } else if (allowsCash && !allowsOnline) {
+                          // Cash only
+                          return (
+                            <Button
+                              onClick={handleReserveClick}
+                              disabled={cashReservationMutation.isPending}
+                              className="w-full py-6 text-lg bg-gradient-to-r from-green-500 to-emerald-500"
+                            >
+                              {cashReservationMutation.isPending ? (
+                                <>
+                                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                  Reserving...
+                                </>
+                              ) : (
+                                <>💵 Reserve (Pay at Door)</>
+                              )}
+                            </Button>
+                          );
+                        } else {
+                          // Online only (default)
+                          return (
+                            <AddToCartButton
+                              item={{
+                                type: "event",
+                                id: event.id,
+                                title: event.title,
+                                price: price,
+                                imageUrl: event.imageUrl || undefined,
+                                date: eventDate.toISOString(),
+                                location: event.venue,
+                                quantity: quantity,
+                              }}
+                              maxStock={event.maxTickets || undefined}
+                              currentlySold={event.ticketsSold || 0}
+                              className="w-full py-6 text-lg"
+                              data-cart-button="event"
+                            />
+                          );
+                        }
+                      })()}
 
                       {event.showLowTicketAlert && spotsLeft !== null && spotsLeft <= 20 && (
                         <p className="text-sm text-center text-orange-400">
@@ -223,6 +315,19 @@ export default function EventDetail() {
 
       {/* Footer spacer */}
       <div className="h-16" />
+
+      {/* Payment Method Modal */}
+      {event && (
+        <PaymentMethodModal
+          open={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          onSelectOnline={handlePayOnline}
+          onSelectCash={handlePayCash}
+          price={price.toFixed(2)}
+          itemTitle={event.title}
+          itemType="event"
+        />
+      )}
     </div>
   );
 }

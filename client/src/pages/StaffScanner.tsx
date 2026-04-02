@@ -34,6 +34,8 @@ interface ScanResult {
     eventTitle?: string;
     eventDate?: Date | null;
     eventVenue?: string | null;
+    wasPendingCash?: boolean;
+    price?: string | number | null;
     errorMsg?: string;
     scannedAt: Date;
 }
@@ -67,6 +69,14 @@ function ScanResultCard({ result }: { result: ScanResult }) {
 
                     {result.success ? (
                         <div className="mt-2 space-y-1.5 text-sm">
+                            {result.wasPendingCash && result.price && (
+                                <div className="mb-3 rounded-lg bg-yellow-500/20 border border-yellow-500/40 px-3 py-2">
+                                    <p className="font-bold text-yellow-400 flex items-center gap-2">
+                                        💵 CASH PAYMENT: £{result.price}
+                                    </p>
+                                    <p className="text-xs text-yellow-300/80 mt-0.5">Payment confirmed at door</p>
+                                </div>
+                            )}
                             {result.attendeeName && (
                                 <div className="flex items-center gap-2 text-white/80">
                                     <User size={13} className="text-white/40" />
@@ -128,13 +138,19 @@ export default function StaffScanner() {
                 eventTitle: data.eventTitle,
                 eventDate: data.eventDate ? new Date(data.eventDate) : null,
                 eventVenue: data.eventVenue,
+                wasPendingCash: data.wasPendingCash,
+                price: data.price,
                 scannedAt: new Date(),
             };
             setLastResult(result);
             setScanHistory(prev => [result, ...prev.slice(0, 19)]);
-            // Flash screen green
-            document.body.style.background = "#16a34a33";
+            // Flash screen green (or yellow if cash payment)
+            document.body.style.background = data.wasPendingCash ? "#eab30833" : "#16a34a33";
             setTimeout(() => { document.body.style.background = ""; }, 600);
+            // Play success sound or show toast for cash payment
+            if (data.wasPendingCash) {
+                toast.success(`💵 Cash payment confirmed: £${data.price}`);
+            }
         },
         onError: (err: any) => {
             const result: ScanResult = {

@@ -41,6 +41,7 @@ const StaffScanner = lazy(() => import("./pages/StaffScanner"));
 const BecomeInstructor = lazy(() => import("./pages/BecomeInstructor"));
 const ImageCropperDemo = lazy(() => import("./components/ImageCropperDemo"));
 const ImageCropperProDemo = lazy(() => import("./components/ImageCropperProDemo"));
+const ReservationConfirmation = lazy(() => import("./pages/ReservationConfirmation"));
 
 // Loading fallback - Discrete top progress bar (non-blocking)
 function PageLoader() {
@@ -123,6 +124,13 @@ function Router() {
           </Route>
           <Route path="/payment-success">
             <SafeRoute name="Payment Success"><PaymentSuccess /></SafeRoute>
+          </Route>
+          <Route path="/reservation-confirmation">
+            <SafeRoute name="Reservation Confirmation">
+              <ProtectedRoute>
+                <ReservationConfirmation />
+              </ProtectedRoute>
+            </SafeRoute>
           </Route>
 
           {/* ── Rutas autenticadas ─────────────────────────────── */}

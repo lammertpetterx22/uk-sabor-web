@@ -104,6 +104,9 @@ export const ticketsRouter = router({
                 throw new Error("Esta entrada fue cancelada y no es válida");
             }
 
+            // Check if payment is pending (cash)
+            const isPendingCash = (ticket as any).paymentStatus === "pending_cash";
+
             // Get buyer info
             const [buyer] = await db
                 .select({ name: users.name, email: users.email })
@@ -118,10 +121,20 @@ export const ticketsRouter = router({
                 .where(eq(events.id, ticket.eventId))
                 .limit(1);
 
-            // Mark as used  
+            // Mark as used AND confirm cash payment if pending
+            const updateData: any = {
+                status: "used",
+                usedAt: new Date()
+            };
+
+            if (isPendingCash) {
+                updateData.paymentStatus = "paid";
+                updateData.paidAt = new Date();
+            }
+
             await db
                 .update(eventTickets)
-                .set({ status: "used", usedAt: new Date() })
+                .set(updateData)
                 .where(eq(eventTickets.id, ticket.id));
 
             return {
@@ -132,6 +145,8 @@ export const ticketsRouter = router({
                 eventTitle: event?.title ?? "Evento",
                 eventDate: event?.eventDate ?? null,
                 eventVenue: event?.venue ?? null,
+                wasPendingCash: isPendingCash,
+                price: isPendingCash ? ticket.pricePaid : null,
             };
         }),
 

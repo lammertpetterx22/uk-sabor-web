@@ -363,4 +363,109 @@ export const classesRouter = router({
 
       return result;
     }),
+
+  /**
+   * Create cash reservation for class (user reserves spot, pays at door)
+   */
+  createCashReservation: protectedProcedure
+    .input(z.object({
+      classId: z.number(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // 1. Get class details
+      const [classRecord] = await db.select()
+        .from(classes)
+        .where(eq(classes.id, input.classId))
+        .limit(1);
+
+      if (!classRecord) {
+        throw new Error("Class not found");
+      }
+
+      // 2. Verify class allows cash payment
+      if (!classRecord.allowCashPayment && classRecord.paymentMethod !== "cash" && classRecord.paymentMethod !== "both") {
+        throw new Error("This class requires online payment");
+      }
+
+      // 3. Check if class is published
+      if (classRecord.status !== "published") {
+        throw new Error("This class is not available for booking");
+      }
+
+      // 4. Check if user already purchased this class
+      const existingPurchase = await db.select()
+        .from(classPurchases)
+        .where(and(
+          eq(classPurchases.userId, ctx.user.id),
+          eq(classPurchases.classId, input.classId)
+        ))
+        .limit(1);
+
+      if (existingPurchase.length > 0) {
+        throw new Error("You already have access to this class");
+      }
+
+      // 5. Check if there are spots available
+      if (classRecord.maxParticipants && (classRecord.currentParticipants ?? 0) >= classRecord.maxParticipants) {
+        throw new Error("This class is full");
+      }
+
+      // 6. Generate unique access code
+      const accessCode = `CASH-${classRecord.id}-${ctx.user.id}-${Date.now()}`;
+
+      // 7. Create purchase with pending_cash status
+      const [purchase] = await db.insert(classPurchases).values({
+        userId: ctx.user.id,
+        classId: input.classId,
+        instructorId: classRecord.instructorId,
+        pricePaid: classRecord.price,
+        accessCode,
+        status: "active",
+        paymentStatus: "pending_cash",
+        paymentMethod: "cash",
+        reservedAt: new Date(),
+        purchasedAt: new Date(),
+      }).returning();
+
+      // 8. Update participant count
+      const { sql } = await import("drizzle-orm");
+      await db.update(classes)
+        .set({ currentParticipants: sql`${classes.currentParticipants} + 1` })
+        .where(eq(classes.id, input.classId));
+
+      // 9. Generate QR code
+      const QRCode = await import("qrcode");
+      const { qrCodes } = await import("../../drizzle/schema");
+
+      const qrCodeValue = `class-${classRecord.id}-user-${ctx.user.id}-purchase-${purchase.id}`;
+      const qrDataUrl = await QRCode.toDataURL(qrCodeValue, {
+        errorCorrectionLevel: 'H',
+        margin: 1,
+        width: 300
+      });
+
+      await db.insert(qrCodes).values({
+        code: qrCodeValue,
+        itemType: 'class',
+        itemId: classRecord.id,
+        userId: ctx.user.id,
+        qrData: qrDataUrl,
+      });
+
+      console.log(`[CashReservation] ✅ Reservation created for user ${ctx.user.id} for class ${classRecord.id}`);
+
+      return {
+        success: true,
+        purchaseId: purchase.id,
+        accessCode: purchase.accessCode,
+        qrCode: qrDataUrl,
+        classTitle: classRecord.title,
+        classDate: classRecord.classDate,
+        price: classRecord.price,
+        paymentInstructions: classRecord.cashPaymentInstructions || `Bring ${classRecord.price} in cash to the class`,
+      };
+    }),
 });

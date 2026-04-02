@@ -279,10 +279,24 @@ function TicketsTab() {
                   </div>
                 )}
               </div>
-              <Badge className={ticket.status === "valid" ? "bg-green-500/20 text-green-400" : "bg-foreground/10 text-foreground/50"}>
-                {ticket.status === "valid" ? "Valid" : ticket.status === "used" ? "Used" : "Cancelled"}
-              </Badge>
+              <div className="flex flex-col gap-2">
+                <Badge className={ticket.status === "valid" ? "bg-green-500/20 text-green-400" : "bg-foreground/10 text-foreground/50"}>
+                  {ticket.status === "valid" ? "Valid" : ticket.status === "used" ? "Used" : "Cancelled"}
+                </Badge>
+                {(ticket as any).paymentStatus === "pending_cash" && (
+                  <Badge className="bg-yellow-500/20 text-yellow-400 text-xs">
+                    💵 Pay at Door
+                  </Badge>
+                )}
+              </div>
             </div>
+
+            {(ticket as any).paymentStatus === "pending_cash" && (ticket as any).pricePaid && (
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mb-3">
+                <p className="text-xs text-yellow-400 font-semibold mb-1">⚠️ Payment Required at Door</p>
+                <p className="text-sm text-yellow-300">Bring £{(ticket as any).pricePaid} in cash</p>
+              </div>
+            )}
 
             {ticket.ticketCode && (
               <div className="bg-accent/5 border border-accent/20 rounded-lg p-3 text-center mb-3">
