@@ -121,8 +121,13 @@ export const checkoutRouter = router({
         const itemPricePence = Math.round(item.price * 100);
         const quantity = item.quantity || 1;
 
-        // Calculate Stripe fee: 1.5% + 20p per item (UK cards)
-        const stripeFeePence = Math.round(itemPricePence * 0.015) + 20;
+        // Calculate Stripe fee using GROSS-UP formula (correct method)
+        // We want the seller to receive exactly itemPricePence after Stripe takes their fee
+        // Stripe charges: 1.5% + 20p on the TOTAL amount charged
+        // Formula: totalPence = (itemPricePence + 20) / 0.985
+        // Then: stripeFee = totalPence - itemPricePence
+        const totalPence = Math.round((itemPricePence + 20) / 0.985);
+        const stripeFeePence = totalPence - itemPricePence;
 
         // Add product line item
         lineItems.push({
@@ -166,7 +171,9 @@ export const checkoutRouter = router({
           cart_items: JSON.stringify(
             validatedItems.map((item) => {
               const itemPricePence = Math.round(item.price * 100);
-              const stripeFeePence = Math.round(itemPricePence * 0.015) + 20;
+              // Use GROSS-UP formula for accurate Stripe fee
+              const totalPence = Math.round((itemPricePence + 20) / 0.985);
+              const stripeFeePence = totalPence - itemPricePence;
 
               return {
                 type: item.type,
