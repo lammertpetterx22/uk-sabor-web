@@ -70,11 +70,11 @@ function ScanResultCard({ result }: { result: ScanResult }) {
                     {result.success ? (
                         <div className="mt-2 space-y-1.5 text-sm">
                             {result.wasPendingCash && result.price && (
-                                <div className="mb-3 rounded-lg bg-yellow-500/20 border border-yellow-500/40 px-3 py-2">
-                                    <p className="font-bold text-yellow-400 flex items-center gap-2">
-                                        💵 CASH PAYMENT: £{result.price}
+                                <div className="mb-3 rounded-lg bg-yellow-500/20 border border-yellow-500/40 px-3 py-2.5">
+                                    <p className="font-bold text-yellow-400 flex items-center gap-2 text-base">
+                                        💵 COLLECT CASH: £{result.price}
                                     </p>
-                                    <p className="text-xs text-yellow-300/80 mt-0.5">Payment confirmed at door</p>
+                                    <p className="text-xs text-yellow-300/90 mt-1 font-medium">⚠️ This person must pay NOW at the door</p>
                                 </div>
                             )}
                             {result.attendeeName && (
@@ -147,9 +147,11 @@ export default function StaffScanner() {
             // Flash screen green (or yellow if cash payment)
             document.body.style.background = data.wasPendingCash ? "#eab30833" : "#16a34a33";
             setTimeout(() => { document.body.style.background = ""; }, 600);
-            // Play success sound or show toast for cash payment
+            // Show toast for cash payment
             if (data.wasPendingCash) {
-                toast.success(`💵 Cash payment confirmed: £${data.price}`);
+                toast.warning(`💵 COLLECT £${data.price} CASH from ${data.attendeeName || 'this person'}`, {
+                    duration: 5000,
+                });
             }
         },
         onError: (err: any) => {
