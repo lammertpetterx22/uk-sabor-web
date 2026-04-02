@@ -195,13 +195,48 @@ async function handleMultiItemCartCheckout(
 
           console.log(`[Webhook] 💰 ${livemode ? 'LIVE' : 'TEST'} EARNINGS - ${itemType} #${itemId} | Role: ${sellerRole} | Price: £${(netEarningsPence/100).toFixed(2)} | Fee: £${platformFeeGBP.toFixed(2)} (${(commissionRate*100).toFixed(1)}%) | Instructor: £${instructorEarningsGBP.toFixed(2)}`);
 
-          // Record earnings in balance
-          await addEarnings({
-            userId: creatorUserId,
-            amount: instructorEarningsGBP,
-            description: `${livemode ? 'Sale' : 'Test Sale'}: ${item.title} (#${orderId})`,
-            orderId: orderId,
-          });
+          // Check if there's a collaborator for this item
+          const { collaborators } = await import("../../drizzle/schema");
+          const { and: andOp } = await import("drizzle-orm");
+          const [collaboratorRecord] = await db.select()
+            .from(collaborators)
+            .where(andOp(
+              eq(collaborators.itemType, itemType),
+              eq(collaborators.itemId, itemId)
+            ))
+            .limit(1);
+
+          if (collaboratorRecord) {
+            // Split earnings between creator and collaborator
+            const creatorEarnings = (instructorEarningsGBP * collaboratorRecord.creatorPercentage) / 100;
+            const collaboratorEarnings = (instructorEarningsGBP * collaboratorRecord.collaboratorPercentage) / 100;
+
+            console.log(`[Webhook] 🤝 SPLIT EARNINGS - Creator (${collaboratorRecord.creatorPercentage}%): £${creatorEarnings.toFixed(2)} | Collaborator (${collaboratorRecord.collaboratorPercentage}%): £${collaboratorEarnings.toFixed(2)}`);
+
+            // Record earnings for creator
+            await addEarnings({
+              userId: creatorUserId,
+              amount: creatorEarnings,
+              description: `${livemode ? 'Sale' : 'Test Sale'}: ${item.title} (${collaboratorRecord.creatorPercentage}% split) (#${orderId})`,
+              orderId: orderId,
+            });
+
+            // Record earnings for collaborator
+            await addEarnings({
+              userId: collaboratorRecord.collaboratorId,
+              amount: collaboratorEarnings,
+              description: `${livemode ? 'Sale' : 'Test Sale'}: ${item.title} (${collaboratorRecord.collaboratorPercentage}% split) (#${orderId})`,
+              orderId: orderId,
+            });
+          } else {
+            // No collaborator - all earnings go to creator
+            await addEarnings({
+              userId: creatorUserId,
+              amount: instructorEarningsGBP,
+              description: `${livemode ? 'Sale' : 'Test Sale'}: ${item.title} (#${orderId})`,
+              orderId: orderId,
+            });
+          }
         } else {
           console.log(`[Webhook] ⚠️  No earnings - Mode: ${livemode ? 'LIVE' : 'TEST'}, Creator: ${creatorUserId || 'NULL'}, ${itemType} #${itemId}`);
         }
@@ -475,13 +510,48 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
         console.log(`[Webhook] 💰 ${livemode ? 'LIVE' : 'TEST'} EARNINGS - ${itemType} #${itemId} | Role: ${sellerRole} | Plan: ${sellerPlan} | Price: £${(netEarningsPence/100).toFixed(2)} | Fee: £${platformFeeGBP.toFixed(2)} (${(commissionRate*100).toFixed(1)}%) | Instructor: £${instructorEarningsGBP.toFixed(2)}`);
 
-        // Record earnings in balance and ledger for ALL types (events, courses, classes)
-        await addEarnings({
-          userId: creatorUserId,
-          amount: instructorEarningsGBP,
-          description: `${livemode ? 'Sale' : 'Test Sale'}: ${metadata.item_name || itemType} (#${orderId})`,
-          orderId: orderId,
-        });
+        // Check if there's a collaborator for this item
+        const { collaborators } = await import("../../drizzle/schema");
+        const { and } = await import("drizzle-orm");
+        const [collaboratorRecord] = await db.select()
+          .from(collaborators)
+          .where(and(
+            eq(collaborators.itemType, itemType),
+            eq(collaborators.itemId, itemId)
+          ))
+          .limit(1);
+
+        if (collaboratorRecord) {
+          // Split earnings between creator and collaborator
+          const creatorEarnings = (instructorEarningsGBP * collaboratorRecord.creatorPercentage) / 100;
+          const collaboratorEarnings = (instructorEarningsGBP * collaboratorRecord.collaboratorPercentage) / 100;
+
+          console.log(`[Webhook] 🤝 SPLIT EARNINGS - Creator (${collaboratorRecord.creatorPercentage}%): £${creatorEarnings.toFixed(2)} | Collaborator (${collaboratorRecord.collaboratorPercentage}%): £${collaboratorEarnings.toFixed(2)}`);
+
+          // Record earnings for creator
+          await addEarnings({
+            userId: creatorUserId,
+            amount: creatorEarnings,
+            description: `${livemode ? 'Sale' : 'Test Sale'}: ${metadata.item_name || itemType} (${collaboratorRecord.creatorPercentage}% split) (#${orderId})`,
+            orderId: orderId,
+          });
+
+          // Record earnings for collaborator
+          await addEarnings({
+            userId: collaboratorRecord.collaboratorId,
+            amount: collaboratorEarnings,
+            description: `${livemode ? 'Sale' : 'Test Sale'}: ${metadata.item_name || itemType} (${collaboratorRecord.collaboratorPercentage}% split) (#${orderId})`,
+            orderId: orderId,
+          });
+        } else {
+          // No collaborator - all earnings go to creator
+          await addEarnings({
+            userId: creatorUserId,
+            amount: instructorEarningsGBP,
+            description: `${livemode ? 'Sale' : 'Test Sale'}: ${metadata.item_name || itemType} (#${orderId})`,
+            orderId: orderId,
+          });
+        }
 
         // Store financial details in purchase record later (sharing scope)
         (metadata as any)._calculated_platform_fee = platformFeeGBP;

@@ -633,3 +633,35 @@ export const instructorApplications = pgTable("instructorApplications", {
 
 export type InstructorApplication = typeof instructorApplications.$inferSelect;
 export type InsertInstructorApplication = typeof instructorApplications.$inferInsert;
+
+/**
+ * Collaborators table - tracks revenue splits for events, classes, and courses
+ * Allows creators to share revenue with one collaborator (50/50 or 60/40 split)
+ */
+export const collaborators = pgTable("collaborators", {
+  id: serial("id").primaryKey(),
+
+  // What item is being collaborated on
+  itemType: varchar("itemType", { length: 20 }).notNull(), // 'event', 'class', 'course'
+  itemId: integer("itemId").notNull(), // ID of the event/class/course
+
+  // Who are the collaborators
+  creatorId: integer("creatorId").notNull(), // User ID of the creator (original owner)
+  collaboratorId: integer("collaboratorId").notNull(), // User ID of the collaborator
+
+  // Revenue split percentages (must add up to 100)
+  creatorPercentage: integer("creatorPercentage").notNull().default(50), // 50 or 60
+  collaboratorPercentage: integer("collaboratorPercentage").notNull().default(50), // 50 or 40
+
+  // Metadata
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+}, (table) => ({
+  // Index for fast lookups
+  itemIdx: index("collaborators_item_idx").on(table.itemType, table.itemId),
+  creatorIdx: index("collaborators_creator_idx").on(table.creatorId),
+  collaboratorIdx: index("collaborators_collaborator_idx").on(table.collaboratorId),
+}));
+
+export type Collaborator = typeof collaborators.$inferSelect;
+export type InsertCollaborator = typeof collaborators.$inferInsert;

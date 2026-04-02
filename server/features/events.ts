@@ -453,4 +453,122 @@ export const eventsRouter = router({
         paymentInstructions: event.cashPaymentInstructions || `Bring ${event.ticketPrice} in cash to the door`,
       };
     }),
+
+  /**
+   * Add collaborator to event - Only creator can add
+   * Split options: 50/50 or 60/40 (creator gets 60%)
+   */
+  addCollaborator: protectedProcedure
+    .input(z.object({
+      eventId: z.number(),
+      collaboratorId: z.number(),
+      split: z.enum(["50/50", "60/40"]).default("50/50"),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!isCreatorRole(ctx.user)) throw new Error("Unauthorized");
+
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // 1. Get event and verify creator
+      const [event] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
+      if (!event) throw new Error("Event not found");
+      if (event.creatorId !== ctx.user.id) {
+        throw new Error("Only the event creator can add collaborators");
+      }
+
+      // 2. Check if collaborator exists and has instructor/promoter role
+      const { users, collaborators } = await import("../../drizzle/schema");
+      const [collaborator] = await db.select().from(users).where(eq(users.id, input.collaboratorId)).limit(1);
+      if (!collaborator) throw new Error("Collaborator user not found");
+
+      const collabRoles = getAllRoles(collaborator as any);
+      if (!collabRoles.some(r => r === "instructor" || r === "promoter" || r === "admin")) {
+        throw new Error("Collaborator must be an instructor or promoter");
+      }
+
+      // 3. Check if collaborator already exists for this event
+      const existing = await db.select()
+        .from(collaborators)
+        .where(and(
+          eq(collaborators.itemType, "event"),
+          eq(collaborators.itemId, input.eventId)
+        ))
+        .limit(1);
+
+      if (existing.length > 0) {
+        throw new Error("This event already has a collaborator");
+      }
+
+      // 4. Calculate percentages based on split
+      const creatorPercentage = input.split === "60/40" ? 60 : 50;
+      const collaboratorPercentage = input.split === "60/40" ? 40 : 50;
+
+      // 5. Create collaborator record
+      const [result] = await db.insert(collaborators).values({
+        itemType: "event",
+        itemId: input.eventId,
+        creatorId: ctx.user.id,
+        collaboratorId: input.collaboratorId,
+        creatorPercentage,
+        collaboratorPercentage,
+      }).returning();
+
+      console.log(`[Collaborator] ✅ Added collaborator ${input.collaboratorId} to event ${input.eventId} (${input.split})`);
+
+      return result;
+    }),
+
+  /**
+   * Remove collaborator from event - Only creator can remove
+   */
+  removeCollaborator: protectedProcedure
+    .input(z.object({
+      eventId: z.number(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!isCreatorRole(ctx.user)) throw new Error("Unauthorized");
+
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Verify event creator
+      const [event] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
+      if (!event) throw new Error("Event not found");
+      if (event.creatorId !== ctx.user.id) {
+        throw new Error("Only the event creator can remove collaborators");
+      }
+
+      const { collaborators } = await import("../../drizzle/schema");
+      const result = await db.delete(collaborators)
+        .where(and(
+          eq(collaborators.itemType, "event"),
+          eq(collaborators.itemId, input.eventId)
+        ));
+
+      console.log(`[Collaborator] ✅ Removed collaborator from event ${input.eventId}`);
+
+      return result;
+    }),
+
+  /**
+   * Get collaborator for an event
+   */
+  getCollaborator: publicProcedure
+    .input(z.number())
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const { collaborators } = await import("../../drizzle/schema");
+      const [result] = await db.select()
+        .from(collaborators)
+        .where(and(
+          eq(collaborators.itemType, "event"),
+          eq(collaborators.itemId, input)
+        ))
+        .limit(1);
+
+      return result || null;
+    }),
 });

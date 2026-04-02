@@ -287,4 +287,131 @@ export const coursesRouter = router({
         "Access videos via lessons.getSecureVideoUrl endpoint."
       );
     }),
+
+  /**
+   * Add collaborator to course - Only creator can add
+   * Split options: 50/50 or 60/40 (creator gets 60%)
+   */
+  addCollaborator: protectedProcedure
+    .input(z.object({
+      courseId: z.number(),
+      collaboratorId: z.number(),
+      split: z.enum(["50/50", "60/40"]).default("50/50"),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!isInstructorOrAdmin(ctx.user)) throw new Error("Unauthorized");
+
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // 1. Get course and verify creator/instructor
+      const [course] = await db.select().from(courses).where(eq(courses.id, input.courseId)).limit(1);
+      if (!course) throw new Error("Course not found");
+
+      // Check if user is the instructor of the course
+      const instructor = await getInstructorForUser(db, ctx.user.id);
+      if (!instructor || course.instructorId !== instructor.id) {
+        if (!isAdminRole(ctx.user)) {
+          throw new Error("Only the course instructor can add collaborators");
+        }
+      }
+
+      // 2. Check if collaborator exists and has instructor/promoter role
+      const { users, collaborators } = await import("../../drizzle/schema");
+      const [collaborator] = await db.select().from(users).where(eq(users.id, input.collaboratorId)).limit(1);
+      if (!collaborator) throw new Error("Collaborator user not found");
+
+      const collabRoles = getAllRoles(collaborator as any);
+      if (!collabRoles.some(r => r === "instructor" || r === "promoter" || r === "admin")) {
+        throw new Error("Collaborator must be an instructor or promoter");
+      }
+
+      // 3. Check if collaborator already exists for this course
+      const existing = await db.select()
+        .from(collaborators)
+        .where(and(
+          eq(collaborators.itemType, "course"),
+          eq(collaborators.itemId, input.courseId)
+        ))
+        .limit(1);
+
+      if (existing.length > 0) {
+        throw new Error("This course already has a collaborator");
+      }
+
+      // 4. Calculate percentages based on split
+      const creatorPercentage = input.split === "60/40" ? 60 : 50;
+      const collaboratorPercentage = input.split === "60/40" ? 40 : 50;
+
+      // 5. Create collaborator record
+      const [result] = await db.insert(collaborators).values({
+        itemType: "course",
+        itemId: input.courseId,
+        creatorId: ctx.user.id,
+        collaboratorId: input.collaboratorId,
+        creatorPercentage,
+        collaboratorPercentage,
+      }).returning();
+
+      console.log(`[Collaborator] ✅ Added collaborator ${input.collaboratorId} to course ${input.courseId} (${input.split})`);
+
+      return result;
+    }),
+
+  /**
+   * Remove collaborator from course - Only creator can remove
+   */
+  removeCollaborator: protectedProcedure
+    .input(z.object({
+      courseId: z.number(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!isInstructorOrAdmin(ctx.user)) throw new Error("Unauthorized");
+
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Verify course instructor
+      const [course] = await db.select().from(courses).where(eq(courses.id, input.courseId)).limit(1);
+      if (!course) throw new Error("Course not found");
+
+      const instructor = await getInstructorForUser(db, ctx.user.id);
+      if (!instructor || course.instructorId !== instructor.id) {
+        if (!isAdminRole(ctx.user)) {
+          throw new Error("Only the course instructor can remove collaborators");
+        }
+      }
+
+      const { collaborators } = await import("../../drizzle/schema");
+      const result = await db.delete(collaborators)
+        .where(and(
+          eq(collaborators.itemType, "course"),
+          eq(collaborators.itemId, input.courseId)
+        ));
+
+      console.log(`[Collaborator] ✅ Removed collaborator from course ${input.courseId}`);
+
+      return result;
+    }),
+
+  /**
+   * Get collaborator for a course
+   */
+  getCollaborator: publicProcedure
+    .input(z.number())
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const { collaborators } = await import("../../drizzle/schema");
+      const [result] = await db.select()
+        .from(collaborators)
+        .where(and(
+          eq(collaborators.itemType, "course"),
+          eq(collaborators.itemId, input)
+        ))
+        .limit(1);
+
+      return result || null;
+    }),
 });
