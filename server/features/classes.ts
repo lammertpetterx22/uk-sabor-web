@@ -470,6 +470,50 @@ export const classesRouter = router({
 
       console.log(`[CashReservation] ✅ Reservation created for user ${ctx.user.id} for class ${classRecord.id}`);
 
+      // 10. Send confirmation email
+      try {
+        const { generateCashReservationEmail, generateCashReservationEmailPlainText } = await import("../emails/cashReservationConfirmation");
+        const { sendEmail } = await import("../emails/emailService");
+
+        const emailHtml = generateCashReservationEmail({
+          to: ctx.user.email,
+          userName: ctx.user.name || ctx.user.email.split('@')[0],
+          itemType: "class",
+          itemTitle: classRecord.title,
+          itemDate: classRecord.classDate,
+          venue: classRecord.venue || undefined,
+          price: classRecord.price,
+          qrCode: qrDataUrl,
+          confirmationCode: purchase.accessCode || "",
+          paymentInstructions: classRecord.cashPaymentInstructions || undefined,
+        });
+
+        const emailText = generateCashReservationEmailPlainText({
+          to: ctx.user.email,
+          userName: ctx.user.name || ctx.user.email.split('@')[0],
+          itemType: "class",
+          itemTitle: classRecord.title,
+          itemDate: classRecord.classDate,
+          venue: classRecord.venue || undefined,
+          price: classRecord.price,
+          qrCode: qrDataUrl,
+          confirmationCode: purchase.accessCode || "",
+          paymentInstructions: classRecord.cashPaymentInstructions || undefined,
+        });
+
+        await sendEmail({
+          to: ctx.user.email,
+          subject: `Spot Reserved: ${classRecord.title} - Pay at Door`,
+          html: emailHtml,
+          text: emailText,
+        });
+
+        console.log(`[CashReservation] 📧 Email sent to ${ctx.user.email}`);
+      } catch (emailError) {
+        console.error(`[CashReservation] ⚠️ Failed to send email:`, emailError);
+        // Don't throw - reservation was successful even if email fails
+      }
+
       return {
         success: true,
         purchaseId: purchase.id,

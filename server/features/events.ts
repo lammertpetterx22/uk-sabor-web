@@ -397,6 +397,50 @@ export const eventsRouter = router({
 
       console.log(`[CashReservation] ✅ Reservation created for user ${ctx.user.id} for event ${event.id}`);
 
+      // 10. Send confirmation email
+      try {
+        const { generateCashReservationEmail, generateCashReservationEmailPlainText } = await import("../emails/cashReservationConfirmation");
+        const { sendEmail } = await import("../emails/emailService");
+
+        const emailHtml = generateCashReservationEmail({
+          to: ctx.user.email,
+          userName: ctx.user.name || ctx.user.email.split('@')[0],
+          itemType: "event",
+          itemTitle: event.title,
+          itemDate: event.eventDate,
+          venue: event.venue || undefined,
+          price: event.ticketPrice,
+          qrCode: qrDataUrl,
+          confirmationCode: ticket.ticketCode || "",
+          paymentInstructions: event.cashPaymentInstructions || undefined,
+        });
+
+        const emailText = generateCashReservationEmailPlainText({
+          to: ctx.user.email,
+          userName: ctx.user.name || ctx.user.email.split('@')[0],
+          itemType: "event",
+          itemTitle: event.title,
+          itemDate: event.eventDate,
+          venue: event.venue || undefined,
+          price: event.ticketPrice,
+          qrCode: qrDataUrl,
+          confirmationCode: ticket.ticketCode || "",
+          paymentInstructions: event.cashPaymentInstructions || undefined,
+        });
+
+        await sendEmail({
+          to: ctx.user.email,
+          subject: `Spot Reserved: ${event.title} - Pay at Door`,
+          html: emailHtml,
+          text: emailText,
+        });
+
+        console.log(`[CashReservation] 📧 Email sent to ${ctx.user.email}`);
+      } catch (emailError) {
+        console.error(`[CashReservation] ⚠️ Failed to send email:`, emailError);
+        // Don't throw - reservation was successful even if email fails
+      }
+
       return {
         success: true,
         ticketId: ticket.id,
