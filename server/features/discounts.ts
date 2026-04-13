@@ -84,19 +84,17 @@ export const discountRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      const values: Record<string, any> = {
+      const [created] = await db.insert(discountCodes).values({
         code: input.code.trim().toUpperCase(),
         discountType: input.discountType,
-        discountValue: String(input.discountValue),
+        discountValue: String(input.discountValue) as any,
+        eventId: input.eventId ?? null,
+        classId: input.classId ?? null,
+        courseId: input.courseId ?? null,
+        maxUses: input.maxUses ?? null,
+        expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
         createdBy: ctx.user.id,
-      };
-      if (input.eventId) values.eventId = input.eventId;
-      if (input.classId) values.classId = input.classId;
-      if (input.courseId) values.courseId = input.courseId;
-      if (input.maxUses) values.maxUses = input.maxUses;
-      if (input.expiresAt) values.expiresAt = new Date(input.expiresAt);
-
-      const [created] = await db.insert(discountCodes).values(values).returning();
+      }).returning();
 
       return created;
     }),
