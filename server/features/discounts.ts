@@ -3,6 +3,7 @@ import { publicProcedure, protectedProcedure, adminProcedure, router } from "../
 import { getDb } from "../db";
 import { discountCodes } from "../../drizzle/schema";
 import { eq, sql, and } from "drizzle-orm";
+import postgres from "postgres";
 
 export const discountRouter = router({
   /** Validate a discount code against the current cart */
@@ -84,17 +85,18 @@ export const discountRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      const code = input.code.trim().toUpperCase();
-      const expiresAt = input.expiresAt ? new Date(input.expiresAt).toISOString() : null;
-
-      const result = await db.execute(sql`
-        INSERT INTO "discountCodes" ("code", "discountType", "discountValue", "eventId", "classId", "courseId", "maxUses", "usesCount", "active", "expiresAt", "createdBy", "createdAt")
-        VALUES (${code}, ${input.discountType}, ${input.discountValue}, ${input.eventId ?? null}, ${input.classId ?? null}, ${input.courseId ?? null}, ${input.maxUses ?? null}, 0, true, ${expiresAt}::timestamp, ${ctx.user.id}, NOW())
-        RETURNING *
-      `);
-      const created = (result as any)[0] ?? result;
-
-      return created;
+      const pgSql = postgres(process.env.DATABASE_URL!);
+      try {
+        const code = input.code.trim().toUpperCase();
+        const [created] = await pgSql`
+          INSERT INTO "discountCodes" ("code", "discountType", "discountValue", "eventId", "classId", "courseId", "maxUses", "usesCount", "active", "expiresAt", "createdBy", "createdAt")
+          VALUES (${code}, ${input.discountType}, ${input.discountValue}, ${input.eventId ?? null}, ${input.classId ?? null}, ${input.courseId ?? null}, ${input.maxUses ?? null}, ${0}, ${true}, ${input.expiresAt ? new Date(input.expiresAt) : null}, ${ctx.user.id}, ${new Date()})
+          RETURNING *
+        `;
+        return created;
+      } finally {
+        await pgSql.end();
+      }
     }),
 
   /** Admin: list all discount codes */
