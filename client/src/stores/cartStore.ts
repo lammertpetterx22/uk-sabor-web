@@ -15,8 +15,17 @@ export interface CartItem {
   quantity?: number;
 }
 
+export interface AppliedDiscount {
+  code: string;
+  discountType: string;
+  discountValue: number;
+  discountAmount: number;
+  description: string;
+}
+
 interface CartState {
   items: CartItem[];
+  appliedDiscount: AppliedDiscount | null;
   // Actions
   addItem: (item: CartItem) => void;
   removeItem: (type: CartItem['type'], id: number) => void;
@@ -25,12 +34,16 @@ interface CartState {
   isInCart: (type: CartItem['type'], id: number) => boolean;
   getItemCount: () => number;
   getTotal: () => number;
+  applyDiscount: (discount: AppliedDiscount) => void;
+  removeDiscount: () => void;
+  getDiscountedTotal: () => number;
 }
 
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
+      appliedDiscount: null,
 
       addItem: (item) => {
         const { items } = get();
@@ -76,7 +89,7 @@ export const useCartStore = create<CartState>()(
       },
 
       clearCart: () => {
-        set({ items: [] });
+        set({ items: [], appliedDiscount: null });
       },
 
       isInCart: (type, id) => {
@@ -89,6 +102,21 @@ export const useCartStore = create<CartState>()(
 
       getTotal: () => {
         return get().items.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0);
+      },
+
+      applyDiscount: (discount) => {
+        set({ appliedDiscount: discount });
+      },
+
+      removeDiscount: () => {
+        set({ appliedDiscount: null });
+      },
+
+      getDiscountedTotal: () => {
+        const total = get().getTotal();
+        const discount = get().appliedDiscount;
+        if (!discount) return total;
+        return Math.max(0, total - discount.discountAmount);
       },
     }),
     {

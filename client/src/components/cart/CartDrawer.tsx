@@ -1,10 +1,11 @@
-import { X, Trash2, ShoppingBag, ArrowRight, Plus, Minus, MapPin, Calendar } from "lucide-react";
+import { X, Trash2, ShoppingBag, ArrowRight, Plus, Minus, MapPin, Calendar, Tag } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Link } from "wouter";
 import { createPortal } from "react-dom";
+import { useState } from "react";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -12,7 +13,40 @@ interface CartDrawerProps {
 }
 
 export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
-  const { items, removeItem, clearCart, getTotal, updateQuantity } = useCartStore();
+  const { items, removeItem, clearCart, getTotal, updateQuantity, appliedDiscount, applyDiscount, removeDiscount, getDiscountedTotal } = useCartStore();
+  const [discountCode, setDiscountCode] = useState("");
+  const [discountError, setDiscountError] = useState("");
+
+  const validateDiscount = trpc.discounts.validate.useMutation({
+    onSuccess: (data) => {
+      if (data.valid) {
+        applyDiscount({
+          code: data.code,
+          discountType: data.discountType,
+          discountValue: data.discountValue,
+          discountAmount: data.discountAmount,
+          description: data.description,
+        });
+        setDiscountCode("");
+        setDiscountError("");
+        toast.success(`Discount applied: ${data.description}`);
+      } else {
+        setDiscountError(data.error);
+      }
+    },
+    onError: (err) => {
+      setDiscountError(err.message);
+    },
+  });
+
+  const handleApplyDiscount = () => {
+    if (!discountCode.trim()) return;
+    setDiscountError("");
+    validateDiscount.mutate({
+      code: discountCode,
+      items: items.map(i => ({ type: i.type, id: i.id, price: i.price, quantity: i.quantity })),
+    });
+  };
 
   const createCheckout = trpc.checkout.createMultiItemSession.useMutation({
     onSuccess: (data) => {
@@ -33,7 +67,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       return;
     }
 
-    createCheckout.mutate({ items });
+    createCheckout.mutate({ items, discountCode: appliedDiscount?.code });
   };
 
   const formatPrice = (price: number) => {
@@ -270,6 +304,49 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         {/* Footer with total and checkout */}
         {items.length > 0 && (
           <div className="border-t border-white/10 bg-black/90 backdrop-blur-sm px-6 py-6 flex-shrink-0">
+            {/* Discount code */}
+            <div className="mb-4">
+              {appliedDiscount ? (
+                <div className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-green-500/10 border border-green-500/20">
+                  <div className="flex items-center gap-2">
+                    <Tag size={14} className="text-green-400" />
+                    <span className="text-sm font-medium text-green-400">
+                      {appliedDiscount.code} — {appliedDiscount.description}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => removeDiscount()}
+                    className="p-1 text-white/40 hover:text-red-400 transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex gap-2">
+                    <input
+                      value={discountCode}
+                      onChange={(e) => { setDiscountCode(e.target.value.toUpperCase()); setDiscountError(""); }}
+                      onKeyDown={(e) => e.key === "Enter" && handleApplyDiscount()}
+                      placeholder="Discount code"
+                      className="flex-1 h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-accent/50"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={handleApplyDiscount}
+                      disabled={!discountCode.trim() || validateDiscount.isPending}
+                      className="h-10 px-4 border-white/10 hover:bg-white/5"
+                    >
+                      {validateDiscount.isPending ? "..." : "Apply"}
+                    </Button>
+                  </div>
+                  {discountError && (
+                    <p className="text-xs text-red-400 mt-1.5 pl-1">{discountError}</p>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Order summary */}
             <div className="space-y-3 mb-5">
               <div className="flex items-center justify-between">
@@ -280,11 +357,19 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   {formatPrice(getTotal())}
                 </span>
               </div>
+              {appliedDiscount && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-green-400">Discount</span>
+                  <span className="text-sm font-medium text-green-400">
+                    -{formatPrice(appliedDiscount.discountAmount)}
+                  </span>
+                </div>
+              )}
               <div className="border-t border-white/[0.06]" />
               <div className="flex items-center justify-between pt-1">
                 <span className="text-base font-semibold text-white">Total</span>
                 <span className="text-2xl sm:text-3xl font-bold gradient-text">
-                  {formatPrice(getTotal())}
+                  {formatPrice(getDiscountedTotal())}
                 </span>
               </div>
             </div>

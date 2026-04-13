@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import DiscountCodesSection from "./DiscountCodesSection";
 import ImageCropperModal from "@/components/ImageCropperModal";
 import { useTranslations } from "@/hooks/useTranslations";
 
@@ -566,6 +567,11 @@ export default function ClassFormCard({
             </button>
           </div>
         </div>
+
+        <Separator className="bg-border/50" />
+
+        {/* Discount Codes Section */}
+        <DiscountCodesSection itemType="class" itemId={editingClass?.id} />
 
         <Separator className="bg-border/50" />
 

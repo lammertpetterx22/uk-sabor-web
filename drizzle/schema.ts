@@ -665,3 +665,25 @@ export const collaborators = pgTable("collaborators", {
 
 export type Collaborator = typeof collaborators.$inferSelect;
 export type InsertCollaborator = typeof collaborators.$inferInsert;
+
+// ── Discount codes ──────────────────────────────────────────────────
+export const discountCodes = pgTable("discountCodes", {
+  id: serial("id").primaryKey(),
+  code: varchar("code", { length: 50 }).notNull().unique(),
+  discountType: varchar("discountType", { length: 20 }).notNull(), // "percentage" or "fixed"
+  discountValue: decimal("discountValue", { precision: 10, scale: 2 }).notNull(),
+  eventId: integer("eventId"),
+  classId: integer("classId"),
+  courseId: integer("courseId"),
+  maxUses: integer("maxUses"),
+  usesCount: integer("usesCount").default(0).notNull(),
+  active: boolean("active").default(true).notNull(),
+  expiresAt: timestamp("expiresAt"),
+  createdBy: integer("createdBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => ({
+  codeIdx: index("discount_codes_code_idx").on(table.code),
+}));
+
+export type DiscountCode = typeof discountCodes.$inferSelect;
+export type InsertDiscountCode = typeof discountCodes.$inferInsert;

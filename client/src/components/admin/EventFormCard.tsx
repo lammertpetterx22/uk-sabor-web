@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import ImageCropperModal from "@/components/ImageCropperModal";
 import { useTranslations } from "@/hooks/useTranslations";
+import DiscountCodesSection from "./DiscountCodesSection";
 
 interface EventFormCardProps {
   editingEvent?: any;
@@ -486,6 +487,11 @@ export default function EventFormCard({
             </label>
           </div>
         </div>
+
+        <Separator className="bg-border/50" />
+
+        {/* Discount Codes Section */}
+        <DiscountCodesSection itemType="event" itemId={editingEvent?.id} />
 
         <Separator className="bg-border/50" />
 

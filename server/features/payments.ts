@@ -106,7 +106,6 @@ export const paymentsRouter = router({
         cancel_url: `${origin}/events/${event.id}`,
         client_reference_id: ctx.user.id.toString(),
         customer_email: ctx.user.email || undefined,
-        allow_promotion_codes: true,
         metadata: {
           user_id: ctx.user.id.toString(),
           item_type: "event",
@@ -196,7 +195,6 @@ export const paymentsRouter = router({
         cancel_url: `${origin}/courses/${course.id}`,
         client_reference_id: ctx.user.id.toString(),
         customer_email: ctx.user.email || undefined,
-        allow_promotion_codes: true,
         metadata: {
           user_id: ctx.user.id.toString(),
           item_type: "course",
@@ -291,7 +289,6 @@ export const paymentsRouter = router({
         cancel_url: `${origin}/classes/${classItem.id}`,
         client_reference_id: ctx.user.id.toString(),
         customer_email: ctx.user.email || undefined,
-        allow_promotion_codes: true,
         metadata: {
           user_id: ctx.user.id.toString(),
           item_type: "class",

@@ -28,6 +28,7 @@ import { trpc } from "@/lib/trpc";
 import ImageCropperModal from "@/components/ImageCropperModal";
 import { ProfessionalUploadProgress } from "@/../components/video/ProfessionalUploadProgress";
 import { useTranslations } from "@/hooks/useTranslations";
+import DiscountCodesSection from "./DiscountCodesSection";
 
 interface CourseFormCardProps {
   onSuccess?: () => void;
@@ -466,6 +467,11 @@ export default function CourseFormCard({
             </div>
           )}
         </div>
+
+        <Separator className="bg-border/50" />
+
+        {/* Discount Codes Section */}
+        <DiscountCodesSection itemType="course" itemId={editingCourse?.id} />
 
         <Separator className="bg-border/50" />
 

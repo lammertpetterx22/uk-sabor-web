@@ -4,8 +4,8 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { events, courses, classes } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { events, courses, classes, discountCodes } from "../../drizzle/schema";
+import { eq, sql, and } from "drizzle-orm";
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
@@ -33,6 +33,7 @@ export const checkoutRouter = router({
   createMultiItemSession: protectedProcedure
     .input(z.object({
       items: z.array(cartItemSchema).min(1, "Cart must have at least one item"),
+      discountCode: z.string().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
@@ -93,6 +94,63 @@ export const checkoutRouter = router({
         })
       );
 
+      // ── Discount code validation ──────────────────────────────────
+      let discountRecord: typeof discountCodes.$inferSelect | null = null;
+      let totalDiscountPence = 0;
+      const itemDiscounts = new Map<string, number>(); // "type-id" -> discount pence per unit
+
+      if (input.discountCode) {
+        const normalized = input.discountCode.trim().toUpperCase();
+        const [dc] = await db.select().from(discountCodes)
+          .where(eq(discountCodes.code, normalized)).limit(1);
+
+        if (!dc) throw new Error("Invalid discount code");
+        if (!dc.active) throw new Error("This discount code is no longer active");
+        if (dc.expiresAt && new Date(dc.expiresAt) < new Date()) throw new Error("This discount code has expired");
+        if (dc.maxUses && dc.usesCount >= dc.maxUses) throw new Error("This discount code has reached its usage limit");
+
+        // Check item scoping
+        if (dc.eventId && !validatedItems.some(i => i.type === "event" && i.id === dc.eventId))
+          throw new Error("This discount code is for a specific event only");
+        if (dc.classId && !validatedItems.some(i => i.type === "class" && i.id === dc.classId))
+          throw new Error("This discount code is for a specific class only");
+        if (dc.courseId && !validatedItems.some(i => i.type === "course" && i.id === dc.courseId))
+          throw new Error("This discount code is for a specific course only");
+
+        // Atomically claim usage
+        const [updated] = await db.update(discountCodes)
+          .set({ usesCount: sql`${discountCodes.usesCount} + 1` })
+          .where(and(
+            eq(discountCodes.id, dc.id),
+            dc.maxUses ? sql`${discountCodes.usesCount} < ${dc.maxUses}` : sql`1=1`
+          ))
+          .returning();
+
+        if (!updated) throw new Error("Discount code is no longer available");
+
+        discountRecord = dc;
+        const discountValue = parseFloat(String(dc.discountValue));
+
+        if (dc.discountType === "percentage") {
+          for (const item of validatedItems) {
+            const perUnit = Math.round(item.price * 100 * discountValue / 100);
+            itemDiscounts.set(`${item.type}-${item.id}`, perUnit);
+            totalDiscountPence += perUnit * (item.quantity || 1);
+          }
+        } else {
+          // Fixed: distribute proportionally
+          const totalPence = validatedItems.reduce((s, i) => s + Math.round(i.price * 100) * (i.quantity || 1), 0);
+          const fixedPence = Math.min(Math.round(discountValue * 100), totalPence);
+          for (const item of validatedItems) {
+            const itemTotal = Math.round(item.price * 100) * (item.quantity || 1);
+            const share = Math.round(fixedPence * (itemTotal / totalPence));
+            const perUnit = Math.round(share / (item.quantity || 1));
+            itemDiscounts.set(`${item.type}-${item.id}`, perUnit);
+            totalDiscountPence += perUnit * (item.quantity || 1);
+          }
+        }
+      }
+
       // Create Stripe line items (product + processing fee per item)
       const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
 
@@ -118,14 +176,12 @@ export const checkoutRouter = router({
           productData.description = description;
         }
 
-        const itemPricePence = Math.round(item.price * 100);
+        const originalPricePence = Math.round(item.price * 100);
+        const discountPerUnit = itemDiscounts.get(`${item.type}-${item.id}`) || 0;
+        const itemPricePence = Math.max(0, originalPricePence - discountPerUnit);
         const quantity = item.quantity || 1;
 
-        // Calculate Stripe fee using GROSS-UP formula (correct method)
-        // We want the seller to receive exactly itemPricePence after Stripe takes their fee
-        // Stripe charges: 1.5% + 20p on the TOTAL amount charged
-        // Formula: totalPence = (itemPricePence + 20) / 0.985
-        // Then: stripeFee = totalPence - itemPricePence
+        // Calculate Stripe fee using GROSS-UP formula on the discounted price
         const totalPence = Math.round((itemPricePence + 20) / 0.985);
         const stripeFeePence = totalPence - itemPricePence;
 
@@ -162,30 +218,33 @@ export const checkoutRouter = router({
         cancel_url: `${origin}/cart`,
         client_reference_id: ctx.user.id.toString(),
         customer_email: ctx.user.email || undefined,
-        allow_promotion_codes: true,
         metadata: {
           user_id: ctx.user.id.toString(),
           customer_email: ctx.user.email || "",
           customer_name: ctx.user.name || "",
-          // Store cart items as JSON for webhook processing
           cart_items: JSON.stringify(
             validatedItems.map((item) => {
-              const itemPricePence = Math.round(item.price * 100);
-              // Use GROSS-UP formula for accurate Stripe fee
-              const totalPence = Math.round((itemPricePence + 20) / 0.985);
-              const stripeFeePence = totalPence - itemPricePence;
+              const originalPricePence = Math.round(item.price * 100);
+              const discPerUnit = itemDiscounts.get(`${item.type}-${item.id}`) || 0;
+              const adjustedPricePence = Math.max(0, originalPricePence - discPerUnit);
+              const totalPence = Math.round((adjustedPricePence + 20) / 0.985);
+              const stripeFeePence = totalPence - adjustedPricePence;
 
               return {
                 type: item.type,
                 id: item.id,
                 title: item.title,
-                price: item.price,
+                price: adjustedPricePence / 100,
                 quantity: item.quantity || 1,
                 stripe_fee_pence: stripeFeePence,
               };
             })
           ),
           is_multi_item_cart: "true",
+          ...(discountRecord ? {
+            discount_code: discountRecord.code,
+            discount_amount_pence: String(totalDiscountPence),
+          } : {}),
         },
       });
 
