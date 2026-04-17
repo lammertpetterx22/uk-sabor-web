@@ -27,6 +27,7 @@ import { trpc } from "@/lib/trpc";
 import ImageCropperModal from "@/components/ImageCropperModal";
 import { useTranslations } from "@/hooks/useTranslations";
 import DiscountCodesSection from "./DiscountCodesSection";
+import GuestListSection from "./GuestListSection";
 
 interface EventFormCardProps {
   editingEvent?: any;
@@ -492,6 +493,11 @@ export default function EventFormCard({
 
         {/* Discount Codes Section */}
         <DiscountCodesSection itemType="event" itemId={editingEvent?.id} />
+
+        <Separator className="bg-border/50" />
+
+        {/* Guest List Section (only for existing events) */}
+        <GuestListSection eventId={editingEvent?.id} />
 
         <Separator className="bg-border/50" />
 

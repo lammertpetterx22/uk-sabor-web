@@ -372,6 +372,30 @@ async function startServer() {
   // Auto-seed default email templates and start scheduled campaign processor after server starts
   server.once("listening", () => {
     setTimeout(async () => {
+      // Idempotent schema migrations (safe to re-run on every boot)
+      try {
+        const { getDb } = await import("../db");
+        const { sql } = await import("drizzle-orm");
+        const db = await getDb();
+        if (db) {
+          const autoMigrations = [
+            `ALTER TABLE "eventTickets" ADD COLUMN IF NOT EXISTS "guestName" VARCHAR(255)`,
+            `ALTER TABLE "eventTickets" ADD COLUMN IF NOT EXISTS "guestEmail" VARCHAR(320)`,
+            `ALTER TABLE "eventTickets" ADD COLUMN IF NOT EXISTS "guestAddedBy" INTEGER`,
+          ];
+          for (const q of autoMigrations) {
+            try {
+              await db.execute(sql.raw(q));
+            } catch (migErr) {
+              console.error(`[Migration] Failed: ${q}`, migErr);
+            }
+          }
+          console.log("[Migration] Guest list columns ensured on eventTickets");
+        }
+      } catch (err) {
+        console.error("[Migration] Auto-migration error:", err);
+      }
+
       try {
         const { seedDefaultEmailTemplates } = await import("../features/emailMarketing");
         await seedDefaultEmailTemplates();

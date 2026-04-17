@@ -196,12 +196,16 @@ export const eventTickets = pgTable("eventTickets", {
   instructorEarnings: decimal("instructorEarnings", { precision: 10, scale: 2 }),
   ticketCode: varchar("ticketCode", { length: 255 }).unique(),
   status: varchar("status", { length: 255 }).default("valid"),
-  paymentStatus: varchar("paymentStatus", { length: 20 }).default("paid"), // "paid", "pending_cash", "pending_online", "cancelled"
-  paymentMethod: varchar("paymentMethod", { length: 20 }), // "online", "cash", "transfer"
+  paymentStatus: varchar("paymentStatus", { length: 20 }).default("paid"), // "paid", "pending_cash", "pending_online", "cancelled", "guest"
+  paymentMethod: varchar("paymentMethod", { length: 20 }), // "online", "cash", "transfer", "guest"
   paidAt: timestamp("paidAt"), // When payment was actually received (for cash: at check-in)
   reservedAt: timestamp("reservedAt"), // When reservation was made (for cash reservations)
   purchasedAt: timestamp("purchasedAt").defaultNow().notNull(),
   usedAt: timestamp("usedAt"),
+  // Guest list fields (populated only when paymentStatus = "guest")
+  guestName: varchar("guestName", { length: 255 }),
+  guestEmail: varchar("guestEmail", { length: 320 }),
+  guestAddedBy: integer("guestAddedBy"), // user id of admin/creator who added this guest
 }, (table) => ({
   userIdIdx: index("event_tickets_user_id_idx").on(table.userId),
   eventIdIdx: index("event_tickets_event_id_idx").on(table.eventId),
