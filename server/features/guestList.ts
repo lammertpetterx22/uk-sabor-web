@@ -63,42 +63,43 @@ function buildInvitationEmailHtml(opts: {
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estás invitado — UK Sabor</title>
+    <title>You're Invited — UK Sabor</title>
   </head>
   <body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background-color:#f3f4f6;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f3f4f6;padding:20px;">
       <tr><td align="center">
         <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
           <tr><td style="background:linear-gradient(135deg,#FA3698 0%,#FD4D43 100%);padding:40px 30px;text-align:center;">
-            <h1 style="margin:0;color:#fff;font-size:28px;font-weight:800;">🎉 ¡Estás en la Guest List!</h1>
-            <p style="margin:10px 0 0 0;color:rgba(255,255,255,0.95);font-size:15px;">Entrada de cortesía — UK Sabor</p>
+            <h1 style="margin:0;color:#fff;font-size:28px;font-weight:800;">🎉 You're on the Guest List!</h1>
+            <p style="margin:10px 0 0 0;color:rgba(255,255,255,0.95);font-size:15px;">Complimentary entry — UK Sabor</p>
           </td></tr>
           <tr><td style="padding:30px;">
-            <p style="margin:0 0 16px 0;font-size:16px;color:#1a1a1a;">Hola <strong>${escapeHtml(opts.guestName)}</strong>,</p>
+            <p style="margin:0 0 16px 0;font-size:16px;color:#1a1a1a;">Hi <strong>${escapeHtml(opts.guestName)}</strong>,</p>
             <p style="margin:0 0 20px 0;font-size:15px;color:#444;line-height:1.6;">
-              Has sido añadido/a a la <strong>guest list</strong> para el siguiente evento.
-              Enseña el QR de abajo en la puerta para entrar.
+              You've been added to the <strong>guest list</strong> for the event below.
+              Show the QR code at the door to get in.
             </p>
 
             <div style="background:#f9f9f9;border-left:4px solid #FA3698;border-radius:8px;padding:18px;margin:20px 0;">
               <h2 style="margin:0 0 10px 0;color:#FA3698;font-size:20px;">${escapeHtml(opts.eventTitle)}</h2>
-              ${opts.eventDate ? `<p style="margin:4px 0;font-size:14px;color:#333;"><strong>Fecha:</strong> ${escapeHtml(opts.eventDate)}</p>` : ""}
-              ${opts.eventTime ? `<p style="margin:4px 0;font-size:14px;color:#333;"><strong>Hora:</strong> ${escapeHtml(opts.eventTime)}</p>` : ""}
-              ${opts.venue ? `<p style="margin:4px 0;font-size:14px;color:#333;"><strong>Lugar:</strong> ${escapeHtml(opts.venue)}</p>` : ""}
+              ${opts.eventDate ? `<p style="margin:4px 0;font-size:14px;color:#333;"><strong>Date:</strong> ${escapeHtml(opts.eventDate)}</p>` : ""}
+              ${opts.eventTime ? `<p style="margin:4px 0;font-size:14px;color:#333;"><strong>Time:</strong> ${escapeHtml(opts.eventTime)}</p>` : ""}
+              ${opts.venue ? `<p style="margin:4px 0;font-size:14px;color:#333;"><strong>Venue:</strong> ${escapeHtml(opts.venue)}</p>` : ""}
             </div>
 
             <div style="text-align:center;background:#fafafa;border-radius:10px;padding:24px;margin:20px 0;">
-              <p style="margin:0 0 12px 0;font-size:14px;color:#555;font-weight:600;">📱 Tu QR de entrada</p>
+              <p style="margin:0 0 12px 0;font-size:14px;color:#555;font-weight:600;">📱 Your entry QR code</p>
               <img src="${opts.qrDataUrl}" alt="QR" style="max-width:240px;width:100%;height:auto;border:2px solid #eee;padding:10px;background:#fff;border-radius:8px;" />
               <p style="margin:14px 0 0 0;font-family:monospace;font-size:13px;color:#FA3698;font-weight:700;letter-spacing:1px;">${escapeHtml(opts.ticketCode)}</p>
+              <p style="margin:12px 0 0 0;font-size:12px;color:#888;">If the QR above doesn't display, check the attached image.</p>
             </div>
 
             <div style="background:#fff3cd;border-left:4px solid #ffc107;border-radius:6px;padding:14px;margin:20px 0;font-size:13px;color:#664d03;">
-              ⚠️ Este QR es <strong>único y de un solo uso</strong>. No lo compartas — solo funciona una vez.
+              ⚠️ This QR is <strong>unique and single-use</strong>. Don't share it — it only works once.
             </div>
 
             <p style="margin:20px 0 0 0;font-size:13px;color:#666;">
-              ¿Preguntas? Responde a este email o escribe a <a href="mailto:info@consabor.uk" style="color:#FA3698;">info@consabor.uk</a>
+              Questions? Reply to this email or contact <a href="mailto:info@consabor.uk" style="color:#FA3698;">info@consabor.uk</a>
             </p>
           </td></tr>
           <tr><td style="background:#f5f5f5;padding:20px;text-align:center;font-size:12px;color:#888;border-top:1px solid #e5e5e5;">
@@ -109,6 +110,13 @@ function buildInvitationEmailHtml(opts: {
     </table>
   </body>
   </html>`;
+}
+
+/** Extract the raw PNG bytes from a `data:image/png;base64,...` URL. */
+function dataUrlToBuffer(dataUrl: string): Buffer | null {
+  const match = /^data:image\/png;base64,(.+)$/.exec(dataUrl);
+  if (!match) return null;
+  return Buffer.from(match[1], "base64");
 }
 
 function escapeHtml(s: string): string {
@@ -128,8 +136,8 @@ async function sendGuestInvitationEmail(opts: {
   qrDataUrl: string;
 }): Promise<boolean> {
   const d = new Date(opts.event.eventDate);
-  const eventDate = d.toLocaleDateString("es-ES", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
-  const eventTime = d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+  const eventDate = d.toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  const eventTime = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
   const html = buildInvitationEmailHtml({
     guestName: opts.guestName,
@@ -141,10 +149,20 @@ async function sendGuestInvitationEmail(opts: {
     qrDataUrl: opts.qrDataUrl,
   });
 
+  const qrBuffer = dataUrlToBuffer(opts.qrDataUrl);
+  const attachments = qrBuffer
+    ? [{
+        filename: `guest-list-qr-${opts.ticketCode}.png`,
+        content: qrBuffer,
+        contentType: "image/png",
+      }]
+    : undefined;
+
   return sendEmail({
     to: opts.to,
-    subject: `🎟️ Estás en la Guest List — ${opts.event.title}`,
+    subject: `🎟️ You're on the Guest List — ${opts.event.title}`,
     htmlContent: html,
+    attachments,
   });
 }
 
