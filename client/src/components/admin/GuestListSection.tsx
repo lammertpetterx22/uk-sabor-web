@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
+  RefreshCw,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -30,7 +31,11 @@ export default function GuestListSection({ eventId }: GuestListSectionProps) {
 
   const listQuery = trpc.guestList.list.useQuery(
     { eventId: eventId! },
-    { enabled: !!eventId },
+    {
+      enabled: !!eventId,
+      refetchInterval: 10_000, // auto-refresh every 10s so scans appear live
+      refetchOnWindowFocus: true,
+    },
   );
 
   const addMutation = trpc.guestList.add.useMutation({
@@ -97,6 +102,17 @@ export default function GuestListSection({ eventId }: GuestListSectionProps) {
         <Users className="h-4 w-4 text-accent" />
         <h3 className="font-semibold text-foreground">Guest List</h3>
         <Badge variant="secondary" className="ml-1">{stats.total}</Badge>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => listQuery.refetch()}
+          disabled={listQuery.isFetching}
+          className="ml-auto h-8 px-2 text-foreground/60 hover:text-foreground"
+          title="Refrescar lista"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${listQuery.isFetching ? "animate-spin" : ""}`} />
+        </Button>
       </div>
       <p className="text-xs text-foreground/50 -mt-2">
         Añade invitados (VIP, DJs, amigos) — reciben un QR único por email, gratis, sin pasar por Stripe.
