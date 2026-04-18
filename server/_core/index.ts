@@ -382,6 +382,16 @@ async function startServer() {
             `ALTER TABLE "eventTickets" ADD COLUMN IF NOT EXISTS "guestName" VARCHAR(255)`,
             `ALTER TABLE "eventTickets" ADD COLUMN IF NOT EXISTS "guestEmail" VARCHAR(320)`,
             `ALTER TABLE "eventTickets" ADD COLUMN IF NOT EXISTS "guestAddedBy" INTEGER`,
+            `CREATE TABLE IF NOT EXISTS "passwordResetTokens" (
+              "id" SERIAL PRIMARY KEY,
+              "userId" INTEGER NOT NULL,
+              "token" VARCHAR(128) NOT NULL UNIQUE,
+              "expiresAt" TIMESTAMP NOT NULL,
+              "usedAt" TIMESTAMP,
+              "createdAt" TIMESTAMP NOT NULL DEFAULT now()
+            )`,
+            `CREATE INDEX IF NOT EXISTS "password_reset_tokens_token_idx" ON "passwordResetTokens" ("token")`,
+            `CREATE INDEX IF NOT EXISTS "password_reset_tokens_user_idx" ON "passwordResetTokens" ("userId")`,
           ];
           for (const q of autoMigrations) {
             try {

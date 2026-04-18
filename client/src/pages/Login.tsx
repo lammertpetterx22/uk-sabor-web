@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation, useSearch } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -164,6 +164,15 @@ export default function Login() {
                   <p className="text-xs text-foreground/50">
                     Minimum 6 characters
                   </p>
+                )}
+                {!isRegister && (
+                  <div className="text-right">
+                    <Link href="/forgot-password">
+                      <a className="text-xs text-accent hover:underline font-medium">
+                        Forgot your password?
+                      </a>
+                    </Link>
+                  </div>
                 )}
               </div>
 

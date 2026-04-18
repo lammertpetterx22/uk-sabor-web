@@ -10,6 +10,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BillingSection from "@/components/profile/BillingSection";
+import ChangePasswordSection from "@/components/profile/ChangePasswordSection";
 import { UserCoursesTab } from "@/components/dashboard/CoursesTab";
 import { logger } from "@/lib/logger";
 
@@ -285,6 +286,9 @@ export default function UserProfile() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Change Password */}
+            <ChangePasswordSection />
           </TabsContent>
 
 

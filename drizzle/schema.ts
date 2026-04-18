@@ -387,6 +387,22 @@ export type InsertQRCode = typeof qrCodes.$inferInsert;
 export type Attendance = typeof attendance.$inferSelect;
 export type InsertAttendance = typeof attendance.$inferInsert;
 
+// Password Reset Tokens table (forgot-password flow)
+export const passwordResetTokens = pgTable("passwordResetTokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  token: varchar("token", { length: 128 }).notNull().unique(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  usedAt: timestamp("usedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => ({
+  tokenIdx: index("password_reset_tokens_token_idx").on(table.token),
+  userIdx: index("password_reset_tokens_user_idx").on(table.userId),
+}));
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type InsertPasswordResetToken = typeof passwordResetTokens.$inferInsert;
+
 // ─── Email Marketing Tables ───────────────────────────────────────────────────
 
 // Email Templates table (reusable templates for campaigns)

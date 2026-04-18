@@ -42,6 +42,8 @@ const BecomeInstructor = lazy(() => import("./pages/BecomeInstructor"));
 const ImageCropperDemo = lazy(() => import("./components/ImageCropperDemo"));
 const ImageCropperProDemo = lazy(() => import("./components/ImageCropperProDemo"));
 const ReservationConfirmation = lazy(() => import("./pages/ReservationConfirmation"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 // Loading fallback - Discrete top progress bar (non-blocking)
 function PageLoader() {
@@ -115,6 +117,12 @@ function Router() {
           </Route>
           <Route path="/login">
             <SafeRoute name="Login"><Login /></SafeRoute>
+          </Route>
+          <Route path="/forgot-password">
+            <SafeRoute name="Forgot Password"><ForgotPassword /></SafeRoute>
+          </Route>
+          <Route path="/reset-password">
+            <SafeRoute name="Reset Password"><ResetPassword /></SafeRoute>
           </Route>
           <Route path="/terms">
             <SafeRoute name="Terms of Service"><TermsOfService /></SafeRoute>
