@@ -95,6 +95,10 @@ export const adminRouter = router({
       loginMethod: users.loginMethod,
       createdAt: users.createdAt,
       lastSignedIn: users.lastSignedIn,
+      stripeAccountId: users.stripeAccountId,
+      stripeAccountStatus: users.stripeAccountStatus,
+      stripeChargesEnabled: users.stripeChargesEnabled,
+      stripePayoutsEnabled: users.stripePayoutsEnabled,
     }).from(users).orderBy(desc(users.createdAt));
 
     // Parse roles JSON for each user
@@ -122,8 +126,8 @@ export const adminRouter = router({
   updateUserRole: adminProcedure
     .input(z.object({
       id: z.number(),
-      role: z.enum(["user", "instructor", "promoter", "admin"]),
-      additionalRole: z.enum(["user", "instructor", "promoter", "admin"]).optional(),
+      role: z.enum(["user", "instructor", "promoter", "admin", "rrp"]),
+      additionalRole: z.enum(["user", "instructor", "promoter", "admin", "rrp"]).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();

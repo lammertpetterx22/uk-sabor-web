@@ -44,6 +44,8 @@ const ImageCropperProDemo = lazy(() => import("./components/ImageCropperProDemo"
 const ReservationConfirmation = lazy(() => import("./pages/ReservationConfirmation"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const BecomeRrp = lazy(() => import("./pages/BecomeRrp"));
+const RrpDashboard = lazy(() => import("./pages/RrpDashboard"));
 
 // Loading fallback - Discrete top progress bar (non-blocking)
 function PageLoader() {
@@ -123,6 +125,16 @@ function Router() {
           </Route>
           <Route path="/reset-password">
             <SafeRoute name="Reset Password"><ResetPassword /></SafeRoute>
+          </Route>
+          <Route path="/become-rrp">
+            <SafeRoute name="Become RRP"><BecomeRrp /></SafeRoute>
+          </Route>
+          <Route path="/rrp-dashboard">
+            <SafeRoute name="RRP Dashboard">
+              <ProtectedRoute>
+                <RrpDashboard />
+              </ProtectedRoute>
+            </SafeRoute>
           </Route>
           <Route path="/terms">
             <SafeRoute name="Terms of Service"><TermsOfService /></SafeRoute>

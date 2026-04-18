@@ -392,6 +392,65 @@ async function startServer() {
             )`,
             `CREATE INDEX IF NOT EXISTS "password_reset_tokens_token_idx" ON "passwordResetTokens" ("token")`,
             `CREATE INDEX IF NOT EXISTS "password_reset_tokens_user_idx" ON "passwordResetTokens" ("userId")`,
+            // Stripe Connect onboarding status columns on users
+            `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "stripeAccountStatus" VARCHAR(32) DEFAULT 'none'`,
+            `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "stripeChargesEnabled" BOOLEAN DEFAULT false`,
+            `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "stripePayoutsEnabled" BOOLEAN DEFAULT false`,
+            `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "stripeOnboardedAt" TIMESTAMP`,
+            // RRP tables
+            `CREATE TABLE IF NOT EXISTS "rrpApplications" (
+              "id" SERIAL PRIMARY KEY,
+              "userId" INTEGER NOT NULL UNIQUE,
+              "motivation" TEXT,
+              "socialHandle" VARCHAR(255),
+              "phone" VARCHAR(32),
+              "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
+              "adminNotes" TEXT,
+              "reviewedBy" INTEGER,
+              "reviewedAt" TIMESTAMP,
+              "createdAt" TIMESTAMP NOT NULL DEFAULT now()
+            )`,
+            `CREATE INDEX IF NOT EXISTS "rrp_applications_status_idx" ON "rrpApplications" ("status")`,
+            `CREATE TABLE IF NOT EXISTS "rrpProfiles" (
+              "id" SERIAL PRIMARY KEY,
+              "userId" INTEGER NOT NULL UNIQUE,
+              "code" VARCHAR(32) NOT NULL UNIQUE,
+              "tier" VARCHAR(20) NOT NULL DEFAULT 'bronze',
+              "lifetimeSales" INTEGER NOT NULL DEFAULT 0,
+              "lifetimeEarnings" DECIMAL(10,2) NOT NULL DEFAULT '0.00',
+              "active" BOOLEAN NOT NULL DEFAULT true,
+              "approvedBy" INTEGER,
+              "approvedAt" TIMESTAMP NOT NULL DEFAULT now()
+            )`,
+            `CREATE INDEX IF NOT EXISTS "rrp_profiles_code_idx" ON "rrpProfiles" ("code")`,
+            `CREATE TABLE IF NOT EXISTS "eventRrps" (
+              "id" SERIAL PRIMARY KEY,
+              "eventId" INTEGER NOT NULL,
+              "rrpUserId" INTEGER NOT NULL,
+              "customerDiscountPct" INTEGER NOT NULL DEFAULT 0,
+              "rrpCommissionPct" INTEGER NOT NULL,
+              "active" BOOLEAN NOT NULL DEFAULT true,
+              "assignedBy" INTEGER,
+              "createdAt" TIMESTAMP NOT NULL DEFAULT now()
+            )`,
+            `CREATE INDEX IF NOT EXISTS "event_rrps_event_rrp_idx" ON "eventRrps" ("eventId","rrpUserId")`,
+            `CREATE INDEX IF NOT EXISTS "event_rrps_event_idx" ON "eventRrps" ("eventId")`,
+            `CREATE INDEX IF NOT EXISTS "event_rrps_rrp_idx" ON "eventRrps" ("rrpUserId")`,
+            `CREATE TABLE IF NOT EXISTS "rrpSales" (
+              "id" SERIAL PRIMARY KEY,
+              "rrpUserId" INTEGER NOT NULL,
+              "eventId" INTEGER NOT NULL,
+              "orderId" INTEGER,
+              "buyerUserId" INTEGER NOT NULL,
+              "ticketPrice" DECIMAL(10,2) NOT NULL,
+              "customerDiscount" DECIMAL(10,2) NOT NULL,
+              "rrpCommission" DECIMAL(10,2) NOT NULL,
+              "commissionPct" INTEGER NOT NULL,
+              "creditedToBalance" BOOLEAN NOT NULL DEFAULT false,
+              "createdAt" TIMESTAMP NOT NULL DEFAULT now()
+            )`,
+            `CREATE INDEX IF NOT EXISTS "rrp_sales_rrp_idx" ON "rrpSales" ("rrpUserId")`,
+            `CREATE INDEX IF NOT EXISTS "rrp_sales_event_idx" ON "rrpSales" ("eventId")`,
           ];
           for (const q of autoMigrations) {
             try {

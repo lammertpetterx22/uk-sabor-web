@@ -25,6 +25,11 @@ export const users = pgTable("users", {
   subscriptionPlan: varchar("subscriptionPlan", { length: 255 }).default("starter").notNull(),
   stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
   stripeAccountId: varchar("stripeAccountId", { length: 255 }), // Stripe Connect ID for receiving split payments
+  // Stripe Connect onboarding / verification state
+  stripeAccountStatus: varchar("stripeAccountStatus", { length: 32 }).default("none"), // "none" | "pending" | "verified" | "restricted"
+  stripeChargesEnabled: boolean("stripeChargesEnabled").default(false),
+  stripePayoutsEnabled: boolean("stripePayoutsEnabled").default(false),
+  stripeOnboardedAt: timestamp("stripeOnboardedAt"),
   // Bank details for payouts (encrypted)
   bankAccountHolderName: varchar("bankAccountHolderName", { length: 255 }),
   bankSortCode: varchar("bankSortCode", { length: 10 }), // UK Sort Code (e.g., 12-34-56)
@@ -707,3 +712,98 @@ export const discountCodes = pgTable("discountCodes", {
 
 export type DiscountCode = typeof discountCodes.$inferSelect;
 export type InsertDiscountCode = typeof discountCodes.$inferInsert;
+
+// ─── RRP (Relaciones Públicas / Street Team) ─────────────────────────────────
+
+/** Application to become an RRP — admin approves or rejects. */
+export const rrpApplications = pgTable("rrpApplications", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().unique(),
+  motivation: text("motivation"),
+  socialHandle: varchar("socialHandle", { length: 255 }),
+  phone: varchar("phone", { length: 32 }),
+  status: varchar("status", { length: 20 }).default("pending").notNull(), // "pending" | "approved" | "rejected"
+  adminNotes: text("adminNotes"),
+  reviewedBy: integer("reviewedBy"),
+  reviewedAt: timestamp("reviewedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => ({
+  statusIdx: index("rrp_applications_status_idx").on(table.status),
+}));
+
+/** Approved RRP profile — unique code, current tier, lifetime counters. */
+export const rrpProfiles = pgTable("rrpProfiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().unique(),
+  code: varchar("code", { length: 32 }).notNull().unique(),
+  tier: varchar("tier", { length: 20 }).default("bronze").notNull(), // "bronze" | "silver" | "gold" | "platinum" | "diamond"
+  lifetimeSales: integer("lifetimeSales").default(0).notNull(),
+  lifetimeEarnings: decimal("lifetimeEarnings", { precision: 10, scale: 2 }).default("0.00").notNull(),
+  active: boolean("active").default(true).notNull(),
+  approvedBy: integer("approvedBy"),
+  approvedAt: timestamp("approvedAt").defaultNow().notNull(),
+}, (table) => ({
+  codeIdx: index("rrp_profiles_code_idx").on(table.code),
+}));
+
+/** Per-event RRP assignment: event creator decides who can sell + rates. */
+export const eventRrps = pgTable("eventRrps", {
+  id: serial("id").primaryKey(),
+  eventId: integer("eventId").notNull(),
+  rrpUserId: integer("rrpUserId").notNull(),
+  customerDiscountPct: integer("customerDiscountPct").default(0).notNull(), // 0-100
+  rrpCommissionPct: integer("rrpCommissionPct").notNull(),                  // 0-40
+  active: boolean("active").default(true).notNull(),
+  assignedBy: integer("assignedBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => ({
+  eventRrpIdx: index("event_rrps_event_rrp_idx").on(table.eventId, table.rrpUserId),
+  eventIdx: index("event_rrps_event_idx").on(table.eventId),
+  rrpIdx: index("event_rrps_rrp_idx").on(table.rrpUserId),
+}));
+
+/** Individual sale attributed to an RRP — source of truth for tier + earnings. */
+export const rrpSales = pgTable("rrpSales", {
+  id: serial("id").primaryKey(),
+  rrpUserId: integer("rrpUserId").notNull(),
+  eventId: integer("eventId").notNull(),
+  orderId: integer("orderId"),
+  buyerUserId: integer("buyerUserId").notNull(),
+  ticketPrice: decimal("ticketPrice", { precision: 10, scale: 2 }).notNull(),       // original price
+  customerDiscount: decimal("customerDiscount", { precision: 10, scale: 2 }).notNull(),
+  rrpCommission: decimal("rrpCommission", { precision: 10, scale: 2 }).notNull(),
+  commissionPct: integer("commissionPct").notNull(),
+  creditedToBalance: boolean("creditedToBalance").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => ({
+  rrpIdx: index("rrp_sales_rrp_idx").on(table.rrpUserId),
+  eventIdx: index("rrp_sales_event_idx").on(table.eventId),
+}));
+
+export type RrpApplication = typeof rrpApplications.$inferSelect;
+export type InsertRrpApplication = typeof rrpApplications.$inferInsert;
+export type RrpProfile = typeof rrpProfiles.$inferSelect;
+export type InsertRrpProfile = typeof rrpProfiles.$inferInsert;
+export type EventRrp = typeof eventRrps.$inferSelect;
+export type InsertEventRrp = typeof eventRrps.$inferInsert;
+export type RrpSale = typeof rrpSales.$inferSelect;
+export type InsertRrpSale = typeof rrpSales.$inferInsert;
+
+/** RRP tier table: ordered by required sales, each tier has a minimum commission %. */
+export const RRP_TIERS = [
+  { key: "bronze",   label: "Bronce",   minSales: 0,   minCommissionPct: 15 },
+  { key: "silver",   label: "Plata",    minSales: 15,  minCommissionPct: 20 },
+  { key: "gold",     label: "Oro",      minSales: 40,  minCommissionPct: 25 },
+  { key: "platinum", label: "Platino",  minSales: 100, minCommissionPct: 30 },
+  { key: "diamond",  label: "Diamante", minSales: 250, minCommissionPct: 40 },
+] as const;
+
+export const RRP_MAX_COMMISSION_PCT = 40;
+
+export function tierForSales(totalSales: number): typeof RRP_TIERS[number] {
+  let current: typeof RRP_TIERS[number] = RRP_TIERS[0];
+  for (const t of RRP_TIERS) {
+    if (totalSales >= t.minSales) current = t;
+  }
+  return current;
+}

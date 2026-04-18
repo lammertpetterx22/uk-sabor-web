@@ -59,6 +59,40 @@ export async function handleStripeWebhook(req: Request, res: Response) {
         await handleChargeRefunded(event.data.object as Stripe.Charge);
         break;
 
+      case "account.updated": {
+        const account = event.data.object as Stripe.Account;
+        try {
+          const db = await getDb();
+          if (!db) break;
+          const [u] = await db.select().from(users).where(eq(users.stripeAccountId, account.id)).limit(1);
+          if (u) {
+            const chargesEnabled = !!account.charges_enabled;
+            const payoutsEnabled = !!account.payouts_enabled;
+            const hasRequirements = (account.requirements?.currently_due?.length ?? 0) > 0
+              || (account.requirements?.past_due?.length ?? 0) > 0;
+            const status = chargesEnabled && payoutsEnabled && !hasRequirements
+              ? "verified"
+              : account.details_submitted && hasRequirements
+                ? "restricted"
+                : "pending";
+
+            const updateData: any = {
+              stripeAccountStatus: status,
+              stripeChargesEnabled: chargesEnabled,
+              stripePayoutsEnabled: payoutsEnabled,
+            };
+            if (status === "verified" && !u.stripeOnboardedAt) {
+              updateData.stripeOnboardedAt = new Date();
+            }
+            await db.update(users).set(updateData).where(eq(users.id, u.id));
+            console.log(`[Webhook] Synced Stripe account ${account.id} -> status=${status}`);
+          }
+        } catch (e) {
+          console.error("[Webhook] account.updated sync failed:", e);
+        }
+        break;
+      }
+
       default:
         console.log(`[Webhook] Unhandled event type: ${event.type}`);
     }

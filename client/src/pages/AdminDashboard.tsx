@@ -17,6 +17,7 @@ import InstagramCropSelector from "@/components/InstagramCropSelector";
 import QRCodeDisplay from "@/components/QRCodeDisplay";
 import UpgradePlanDialog from "@/components/UpgradePlanDialog";
 import DashboardOverview from "@/components/admin/DashboardOverview";
+import AdminRrpSection from "@/components/admin/AdminRrpSection";
 import QuickActions from "@/components/admin/QuickActions";
 import InstructorOverview from "@/components/instructor/InstructorOverview";
 import LessonsManager from "@/components/admin/LessonsManager";
@@ -354,7 +355,8 @@ export default function AdminDashboard() {
                   <InstructorsTab />
                 </TabsContent>
 
-                <TabsContent value="users">
+                <TabsContent value="users" className="space-y-8">
+                  <AdminRrpSection />
                   <UsersTab />
                 </TabsContent>
               </Tabs>
@@ -3257,10 +3259,17 @@ function UsersTab() {
     onError: (err) => toast.error(err.message),
   });
 
-  const filteredUsers = usersList?.filter((u) =>
+  const [onlyUnverified, setOnlyUnverified] = useState(false);
+
+  const filteredUsers = (usersList?.filter((u: any) =>
     u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  ) || []).filter((u: any) => {
+    if (!onlyUnverified) return true;
+    const roles = Array.isArray(u.rolesArray) ? u.rolesArray : [u.role];
+    const canEarn = roles.some((r: string) => r === "instructor" || r === "promoter" || r === "rrp");
+    return canEarn && u.stripeAccountStatus !== "verified";
+  });
 
   const roleColors: Record<string, string> = {
     admin: "bg-red-500/20 text-red-400 border-red-500/50",
@@ -3278,11 +3287,23 @@ function UsersTab() {
         <CardDescription>{t("admin.users.description")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Input
-          placeholder={t("admin.users.searchPlaceholder")}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+        <div className="flex gap-3 items-center flex-wrap">
+          <Input
+            placeholder={t("admin.users.searchPlaceholder")}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1 min-w-[200px]"
+          />
+          <label className="flex items-center gap-2 text-sm text-foreground/70 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={onlyUnverified}
+              onChange={(e) => setOnlyUnverified(e.target.checked)}
+              className="w-4 h-4"
+            />
+            Solo creadores sin Stripe verificado
+          </label>
+        </div>
 
         {isLoading ? (
           <div className="flex justify-center py-8">
@@ -3297,6 +3318,7 @@ function UsersTab() {
                   <th className="text-left py-3 px-4 font-semibold">Email</th>
                   <th className="text-left py-3 px-4 font-semibold">Role</th>
                   <th className="text-left py-3 px-4 font-semibold">Plan</th>
+                  <th className="text-left py-3 px-4 font-semibold">Stripe</th>
                   <th className="text-left py-3 px-4 font-semibold">Method</th>
                   <th className="text-left py-3 px-4 font-semibold">Registered</th>
                   <th className="text-left py-3 px-4 font-semibold">Last Access</th>
@@ -3329,6 +3351,9 @@ function UsersTab() {
                             <SelectItem value="promoter">
                               <span className="flex items-center gap-2">📣 Promotor</span>
                             </SelectItem>
+                            <SelectItem value="rrp">
+                              <span className="flex items-center gap-2">📢 RRP</span>
+                            </SelectItem>
                             <SelectItem value="admin">
                               <span className="flex items-center gap-2">🛡️ Admin</span>
                             </SelectItem>
@@ -3341,7 +3366,7 @@ function UsersTab() {
                             onClick={() => {
                               updateRoleMutation.mutate({
                                 id: u.id,
-                                role: editingRoles.role as "user" | "instructor" | "promoter" | "admin",
+                                role: editingRoles.role as "user" | "instructor" | "promoter" | "admin" | "rrp",
                               });
                               setEditingRoles(null);
                             }}
@@ -3394,6 +3419,15 @@ function UsersTab() {
                           </Button>
                         )}
                       </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      {(() => {
+                        const st = (u as any).stripeAccountStatus as string | undefined;
+                        if (st === "verified") return <Badge className="bg-green-500/15 text-green-500 border-green-500/30 text-xs">✓ Verificado</Badge>;
+                        if (st === "pending") return <Badge className="bg-amber-500/15 text-amber-500 border-amber-500/30 text-xs">⏳ Pendiente</Badge>;
+                        if (st === "restricted") return <Badge className="bg-red-500/15 text-red-500 border-red-500/30 text-xs">⚠️ Acción</Badge>;
+                        return <Badge variant="outline" className="text-xs bg-foreground/5 text-foreground/40">Sin conectar</Badge>;
+                      })()}
                     </td>
                     <td className="py-3 px-4">
                       <Badge variant="outline" className="text-xs">

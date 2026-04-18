@@ -28,6 +28,7 @@ import ImageCropperModal from "@/components/ImageCropperModal";
 import { useTranslations } from "@/hooks/useTranslations";
 import DiscountCodesSection from "./DiscountCodesSection";
 import GuestListSection from "./GuestListSection";
+import RrpAssignmentSection from "./RrpAssignmentSection";
 
 interface EventFormCardProps {
   editingEvent?: any;
@@ -498,6 +499,11 @@ export default function EventFormCard({
 
         {/* Guest List Section (only for existing events) */}
         <GuestListSection eventId={editingEvent?.id} />
+
+        <Separator className="bg-border/50" />
+
+        {/* RRP Assignment Section (only for existing events) */}
+        <RrpAssignmentSection eventId={editingEvent?.id} />
 
         <Separator className="bg-border/50" />
 

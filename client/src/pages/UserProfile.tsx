@@ -11,6 +11,7 @@ import { trpc } from "@/lib/trpc";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BillingSection from "@/components/profile/BillingSection";
 import ChangePasswordSection from "@/components/profile/ChangePasswordSection";
+import StripeConnectSection from "@/components/profile/StripeConnectSection";
 import { UserCoursesTab } from "@/components/dashboard/CoursesTab";
 import { logger } from "@/lib/logger";
 
@@ -286,6 +287,14 @@ export default function UserProfile() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Stripe Connect — for anyone who can earn money (instructors, promoters, rrps, admins) */}
+            {(() => {
+              const roles = user.roles ? JSON.parse(user.roles) : [];
+              const allRoles = Array.from(new Set([user.role, ...roles]));
+              const canEarn = allRoles.some(r => r === "admin" || r === "instructor" || r === "promoter" || r === "rrp");
+              return canEarn ? <StripeConnectSection /> : null;
+            })()}
 
             {/* Change Password */}
             <ChangePasswordSection />

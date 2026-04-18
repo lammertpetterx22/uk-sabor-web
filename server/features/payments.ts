@@ -41,6 +41,7 @@ export const paymentsRouter = router({
     .input(z.object({
       eventId: z.number(),
       quantity: z.number().min(1).max(10).default(1),
+      rrpCode: z.string().trim().max(32).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
@@ -56,10 +57,40 @@ export const paymentsRouter = router({
         throw new Error("Entradas agotadas");
       }
 
-      const unitPrice = Math.round(parseFloat(String(event.ticketPrice)) * 100); // Convert to pence
+      const originalUnitPrice = Math.round(parseFloat(String(event.ticketPrice)) * 100); // pence
+      let unitPrice = originalUnitPrice;
+      let rrpAttribution: { rrpUserId: number; customerDiscountPct: number; rrpCommissionPct: number } | null = null;
+
+      // RRP code validation + discount application
+      if (input.rrpCode) {
+        const { rrpProfiles, eventRrps } = await import("../../drizzle/schema");
+        const normalized = input.rrpCode.trim().toUpperCase();
+        const [profile] = await db.select().from(rrpProfiles)
+          .where(and(eq(rrpProfiles.code, normalized), eq(rrpProfiles.active, true)))
+          .limit(1);
+        if (profile) {
+          const [assignment] = await db.select().from(eventRrps)
+            .where(and(
+              eq(eventRrps.eventId, event.id),
+              eq(eventRrps.rrpUserId, profile.userId),
+              eq(eventRrps.active, true),
+            ))
+            .limit(1);
+          if (assignment) {
+            const discountPence = Math.round(originalUnitPrice * assignment.customerDiscountPct / 100);
+            unitPrice = Math.max(0, originalUnitPrice - discountPence);
+            rrpAttribution = {
+              rrpUserId: profile.userId,
+              customerDiscountPct: assignment.customerDiscountPct,
+              rrpCommissionPct: assignment.rrpCommissionPct,
+            };
+          }
+        }
+      }
+
       const origin = ctx.req.headers.origin || "https://consabor.uk";
 
-      // Determine seller's plan for commission rate
+      // Determine seller's plan for commission rate (fees computed on discounted price)
       const creatorId = event.creatorId || 0;
       const [creatorRow] = await db.select({ subscriptionPlan: users.subscriptionPlan, stripeAccountId: users.stripeAccountId })
         .from(users).where(eq(users.id, creatorId)).limit(1);
@@ -116,6 +147,12 @@ export const paymentsRouter = router({
           ticket_price_pence: fees.ticketPricePence.toString(),
           platform_fee_pence: fees.platformFeePence.toString(),
           stripe_fee_pence: fees.stripeFeePence.toString(),
+          original_price_pence: originalUnitPrice.toString(),
+          ...(rrpAttribution ? {
+            rrp_user_id: String(rrpAttribution.rrpUserId),
+            rrp_customer_discount_pct: String(rrpAttribution.customerDiscountPct),
+            rrp_commission_pct: String(rrpAttribution.rrpCommissionPct),
+          } : {}),
         },
       });
 
@@ -635,6 +672,31 @@ export async function processCompletedCheckout(session: Stripe.Checkout.Session)
       await db.update(events).set({
         ticketsSold: (event.ticketsSold || 0) + quantity,
       }).where(eq(events.id, itemId));
+    }
+
+    // RRP attribution: credit commission if this sale came through an RRP code
+    const rrpUserIdRaw = (metadata as any).rrp_user_id;
+    const rrpCommissionPctRaw = (metadata as any).rrp_commission_pct;
+    const rrpCustomerDiscountPctRaw = (metadata as any).rrp_customer_discount_pct;
+    const originalPricePenceRaw = (metadata as any).original_price_pence;
+    if (rrpUserIdRaw && rrpCommissionPctRaw && originalPricePenceRaw) {
+      try {
+        const { attributeRrpSale } = await import("./rrp");
+        const originalPrice = parseInt(originalPricePenceRaw) / 100;
+        for (let i = 0; i < quantity; i++) {
+          await attributeRrpSale({
+            rrpUserId: parseInt(rrpUserIdRaw),
+            eventId: itemId,
+            orderId,
+            buyerUserId: userId,
+            ticketPrice: originalPrice,
+            customerDiscountPct: parseInt(rrpCustomerDiscountPctRaw || "0"),
+            rrpCommissionPct: parseInt(rrpCommissionPctRaw),
+          });
+        }
+      } catch (e) {
+        console.error("[Webhook] RRP attribution failed:", e);
+      }
     }
 
   } else if (itemType === "course") {
