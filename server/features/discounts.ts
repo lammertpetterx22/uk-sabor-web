@@ -88,6 +88,21 @@ export const discountRouter = router({
       const pgSql = postgres(process.env.DATABASE_URL!);
       try {
         const code = input.code.trim().toUpperCase();
+
+        // If an inactive code with the same name exists, remove it first so
+        // the user can "recycle" codes after deactivating them.
+        const existingRows = await pgSql`
+          SELECT "id", "active" FROM "discountCodes" WHERE "code" = ${code} LIMIT 1
+        `;
+        if (existingRows.length > 0) {
+          const existing = existingRows[0] as { id: number; active: boolean };
+          if (existing.active) {
+            throw new Error(`El código "${code}" ya existe y está activo. Desactívalo primero o usa otro nombre.`);
+          }
+          // Inactive duplicate — purge it so we can re-create fresh
+          await pgSql`DELETE FROM "discountCodes" WHERE "id" = ${existing.id}`;
+        }
+
         const [created] = await pgSql`
           INSERT INTO "discountCodes" ("code", "discountType", "discountValue", "eventId", "classId", "courseId", "maxUses", "usesCount", "active", "expiresAt", "createdBy", "createdAt")
           VALUES (${code}, ${input.discountType}, ${input.discountValue}, ${input.eventId ?? null}, ${input.classId ?? null}, ${input.courseId ?? null}, ${input.maxUses ?? null}, ${0}, ${true}, ${input.expiresAt ? new Date(input.expiresAt) : null}, ${ctx.user.id}, ${new Date()})
@@ -123,13 +138,17 @@ export const discountRouter = router({
       return db.select().from(discountCodes).where(eq(col, input.itemId));
     }),
 
-  /** Admin: deactivate a code */
+  /**
+   * Admin: delete a discount code. Frees the code name so it can be re-created.
+   * (Historical `usesCount` is lost — past orders that used the code are unaffected
+   * because they store the code name in their own metadata, not as a FK to this row.)
+   */
   deactivate: adminProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      await db.update(discountCodes).set({ active: false }).where(eq(discountCodes.id, input.id));
+      await db.delete(discountCodes).where(eq(discountCodes.id, input.id));
       return { success: true };
     }),
 });
