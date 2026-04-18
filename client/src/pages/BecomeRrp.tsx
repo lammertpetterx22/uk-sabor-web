@@ -29,7 +29,7 @@ export default function BecomeRrp() {
 
   const myAppQuery = trpc.rrp.getMyApplication.useQuery(undefined, { enabled: isAuthenticated });
 
-  const applyMutation = trpc.rrp.apply.useMutation({
+  const applyMutation = trpc.rrp.submit.useMutation({
     onSuccess: () => {
       toast.success("✅ Solicitud enviada — te avisaremos cuando sea revisada");
       myAppQuery.refetch();

@@ -64,7 +64,7 @@ export const rrpRouter = router({
   // ===== APPLICATIONS =====
 
   /** User submits an application to become an RRP. */
-  apply: protectedProcedure
+  submit: protectedProcedure
     .input(z.object({
       motivation: z.string().trim().min(10, "Cuéntanos un poco más (mínimo 10 caracteres)").max(2000),
       socialHandle: z.string().trim().max(255).optional(),
