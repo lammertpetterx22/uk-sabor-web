@@ -69,6 +69,64 @@ export async function addEarnings(args: {
   console.log(`[Financials] ✅ Added £${amountStr} to user ${args.userId} balance (${args.description})`);
 }
 
+/**
+ * Record a refund: deduct from a user's balance and log a negative ledger entry.
+ * Idempotent — if a ledger entry with the same `externalRef` already exists,
+ * it's a no-op (so webhook replays don't double-count).
+ */
+export async function recordRefund(args: {
+  userId: number;
+  amount: number; // positive number; we'll record it as negative
+  description: string;
+  orderId?: number;
+  /** Unique identifier for this refund (e.g. Stripe refund id) — used for dedup */
+  externalRef?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  if (args.externalRef) {
+    const existing = await db
+      .select()
+      .from(ledgerTransactions)
+      .where(and(
+        eq(ledgerTransactions.userId, args.userId),
+        eq(ledgerTransactions.type, "refund"),
+        sql`description LIKE ${`%${args.externalRef}%`}`,
+      ))
+      .limit(1);
+    if (existing.length > 0) {
+      console.log(`[Financials] Refund ${args.externalRef} already recorded for user ${args.userId} — skipping`);
+      return;
+    }
+  }
+
+  const amountStr = args.amount.toFixed(2);
+  const negStr = (-args.amount).toFixed(2);
+
+  await getOrCreateBalance(args.userId);
+
+  await db.update(balances)
+    .set({
+      currentBalance: sql`${balances.currentBalance} - ${amountStr}`,
+      totalEarned: sql`${balances.totalEarned} - ${amountStr}`,
+      updatedAt: new Date(),
+    })
+    .where(eq(balances.userId, args.userId));
+
+  const desc = args.externalRef ? `${args.description} [${args.externalRef}]` : args.description;
+  await db.insert(ledgerTransactions).values({
+    userId: args.userId,
+    amount: negStr as any,
+    type: "refund",
+    description: desc,
+    orderId: args.orderId,
+    status: "completed",
+  });
+
+  console.log(`[Financials] ↩️  Refunded £${amountStr} from user ${args.userId} balance (${desc})`);
+}
+
 // ─── Router ───────────────────────────────────────────────────────────────────
 
 export const financialsRouter = router({

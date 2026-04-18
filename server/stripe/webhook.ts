@@ -799,7 +799,9 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
 }
 
 /**
- * Handle charge refunded
+ * Handle charge refunded (full or partial) — deducts the creator's share of
+ * the refund from their balance and records a negative ledger entry. Runs
+ * once per refund (idempotent via the Stripe refund id).
  */
 async function handleChargeRefunded(charge: Stripe.Charge) {
   const db = await getDb();
@@ -809,8 +811,89 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
   }
 
   console.log(`[Webhook] Charge refunded: ${charge.id}`);
-  // Update order status to cancelled if needed
-  // This would require querying by payment intent ID
+
+  const paymentIntentId = typeof charge.payment_intent === "string"
+    ? charge.payment_intent
+    : charge.payment_intent?.id;
+  if (!paymentIntentId) {
+    console.log(`[Webhook] charge.refunded: no payment_intent id, skipping`);
+    return;
+  }
+
+  try {
+    const { eq } = await import("drizzle-orm");
+    const { events, coursePurchases, classPurchases, eventTickets, orders, instructors } = await import("../../drizzle/schema");
+    const { recordRefund } = await import("../features/financials");
+
+    // Find the order by Stripe payment intent id
+    const [order] = await db.select().from(orders).where(eq(orders.stripePaymentIntentId, paymentIntentId)).limit(1);
+    if (!order) {
+      console.log(`[Webhook] charge.refunded: no order found for PI ${paymentIntentId}`);
+      return;
+    }
+
+    // Each Stripe `charge.refunded` event carries the full list of refunds on
+    // the charge. Iterate and skip ones we've already logged (via externalRef).
+    const refunds = (charge.refunds?.data ?? []) as Stripe.Refund[];
+    if (refunds.length === 0) {
+      console.log(`[Webhook] charge.refunded: no refunds in payload for ${charge.id}`);
+      return;
+    }
+
+    for (const refund of refunds) {
+      if (refund.status !== "succeeded" && refund.status !== "pending") continue;
+      const refundGBP = (refund.amount ?? 0) / 100;
+      if (refundGBP <= 0) continue;
+
+      // Resolve the creator and their proportional share
+      let creatorUserId: number | null = null;
+      let creatorShareGBP = 0;
+
+      if (order.itemType === "event") {
+        const [event] = await db.select().from(events).where(eq(events.id, order.itemId)).limit(1);
+        creatorUserId = event?.creatorId ?? null;
+        // Creator's share = refund × (instructorEarnings / pricePaid) from tickets
+        const tickets = await db.select().from(eventTickets).where(eq(eventTickets.orderId, order.id));
+        const sumPrice = tickets.reduce((s, t) => s + parseFloat(String(t.pricePaid ?? "0")), 0);
+        const sumEarnings = tickets.reduce((s, t) => s + parseFloat(String(t.instructorEarnings ?? "0")), 0);
+        const ratio = sumPrice > 0 ? (sumEarnings / sumPrice) : 1; // default: full
+        creatorShareGBP = Number((refundGBP * ratio).toFixed(2));
+      } else if (order.itemType === "course") {
+        const [purchase] = await db.select().from(coursePurchases).where(eq(coursePurchases.orderId, order.id)).limit(1);
+        creatorUserId = purchase?.instructorId ?? null;
+        const price = parseFloat(String(purchase?.pricePaid ?? "0"));
+        const earn = parseFloat(String(purchase?.instructorEarnings ?? "0"));
+        const ratio = price > 0 ? (earn / price) : 1;
+        creatorShareGBP = Number((refundGBP * ratio).toFixed(2));
+      } else if (order.itemType === "class") {
+        const [purchase] = await db.select().from(classPurchases).where(eq(classPurchases.orderId, order.id)).limit(1);
+        creatorUserId = purchase?.instructorId ?? null;
+        const price = parseFloat(String(purchase?.pricePaid ?? "0"));
+        const earn = parseFloat(String(purchase?.instructorEarnings ?? "0"));
+        const ratio = price > 0 ? (earn / price) : 1;
+        creatorShareGBP = Number((refundGBP * ratio).toFixed(2));
+      }
+
+      if (!creatorUserId) {
+        console.log(`[Webhook] charge.refunded: no creator for order ${order.id} (itemType=${order.itemType})`);
+        continue;
+      }
+      if (creatorShareGBP <= 0) {
+        console.log(`[Webhook] charge.refunded: zero creator share for order ${order.id}, skipping`);
+        continue;
+      }
+
+      await recordRefund({
+        userId: creatorUserId,
+        amount: creatorShareGBP,
+        description: `Refund on order #${order.id} (${order.itemType})`,
+        orderId: order.id,
+        externalRef: refund.id,
+      });
+    }
+  } catch (e: any) {
+    console.error(`[Webhook] charge.refunded handler error:`, e?.message || e);
+  }
 }
 
 /**
