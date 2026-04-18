@@ -209,6 +209,26 @@ export const qrcodeRouter = router({
         .set({ isUsed: true, usedAt: new Date() })
         .where(eq(qrCodes.id, qr.id));
 
+      // Also mark the matching event ticket as used so both scan flows
+      // (staff scanner + attendance panel) keep eventTickets.status consistent.
+      // TKT-prefixed QRs embed the ticketCode directly.
+      if (qr.itemType === "event") {
+        if (qr.code.startsWith("TKT-")) {
+          const ticketCode = qr.code.slice(4);
+          await db.update(eventTickets)
+            .set({ status: "used", usedAt: new Date() })
+            .where(eq(eventTickets.ticketCode, ticketCode));
+        } else {
+          // Fallback: match by (userId + eventId) for pre-existing purchase QRs
+          await db.update(eventTickets)
+            .set({ status: "used", usedAt: new Date() })
+            .where(and(
+              eq(eventTickets.userId, userId),
+              eq(eventTickets.eventId, qr.itemId),
+            ));
+        }
+      }
+
       // Record attendance
       const result = await db.insert(attendance).values({
         userId,
