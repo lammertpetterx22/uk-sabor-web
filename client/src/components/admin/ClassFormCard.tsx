@@ -37,6 +37,7 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import DiscountCodesSection from "./DiscountCodesSection";
 import TicketTiersSection from "./TicketTiersSection";
+import TicketTiersEditor, { TierRow, validateTierRows, tierRowsToPayload } from "./TicketTiersEditor";
 import ImageCropperModal from "@/components/ImageCropperModal";
 import ModernImageUpload from "@/components/ModernImageUpload";
 import { useTranslations } from "@/hooks/useTranslations";
@@ -66,27 +67,9 @@ export default function ClassFormCard({
 
   const uploadFileMutation = trpc.uploads.uploadFile.useMutation();
 
-  const createMutation = trpc.classes.create.useMutation({
-    onSuccess: () => {
-      toast.success(t("admin.classes.toastCreated"));
-      resetForm();
-      onSuccess?.();
-    },
-    onError: (err) => {
-      toast.error(err.message);
-    },
-  });
-
-  const updateMutation = trpc.classes.update.useMutation({
-    onSuccess: () => {
-      toast.success(t("admin.classes.toastUpdated"));
-      resetForm();
-      onSuccess?.();
-    },
-    onError: (err) => {
-      toast.error(err.message);
-    },
-  });
+  const createMutation = trpc.classes.create.useMutation();
+  const updateMutation = trpc.classes.update.useMutation();
+  const saveTiersMutation = trpc.classes.saveTiers.useMutation();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -115,23 +98,29 @@ export default function ClassFormCard({
 
   const steps = useMemo(() => {
     const base = [
-      { key: "basics",   label: "Basics",   icon: Sparkles,    color: "blue" },
-      { key: "schedule", label: "Schedule", icon: Clock,       color: "amber" },
-      { key: "payment",  label: "Payment",  icon: CreditCard,  color: "green" },
-      { key: "social",   label: "Social",   icon: PartyPopper, color: "pink" },
-      { key: "image",    label: "Image",    icon: ImageIcon,   color: "indigo" },
-      { key: "files",    label: "Materials", icon: FileText,    color: "teal" },
+      { key: "basics",   label: "Basics",       icon: Sparkles,    color: "blue" },
+      { key: "schedule", label: "Schedule",     icon: Clock,       color: "amber" },
+      { key: "payment",  label: "Payment",      icon: CreditCard,  color: "green" },
+      { key: "tiers",    label: "Ticket Types", icon: Ticket,      color: "cyan" },
+      { key: "social",   label: "Social",       icon: PartyPopper, color: "pink" },
+      { key: "image",    label: "Image",        icon: ImageIcon,   color: "indigo" },
+      { key: "files",    label: "Materials",    icon: FileText,    color: "teal" },
     ];
     if (editingClass?.id) {
-      base.push({ key: "tiers",     label: "Ticket Types", icon: Ticket, color: "cyan" });
-      base.push({ key: "discounts", label: "Discounts",    icon: Tag,    color: "rose" });
+      base.push({ key: "discounts", label: "Discounts", icon: Tag, color: "rose" });
     }
     return base;
   }, [editingClass?.id]);
 
   const currentStep = steps[step];
-  const isLastCoreStep = step === 5;
+  // "Materials" (files) is the last core step — after that we enter extras
+  // that only exist when editing a saved class (e.g. Discounts).
+  const isLastCoreStep = steps[step]?.key === "files";
   const [cropSrc, setCropSrc] = useState<string | null>(null);
+  // Pending tiers held locally before the class is saved.
+  const [pendingTiers, setPendingTiers] = useState<TierRow[]>([
+    { name: "General Admission", description: "", price: "", maxQuantity: "", position: 0 },
+  ]);
 
   // Auto-fill instructorId for instructor role users
   useEffect(() => {
@@ -139,6 +128,18 @@ export default function ClassFormCard({
       setFormData(prev => ({ ...prev, instructorId: myInstructorProfile.id.toString() }));
     }
   }, [myInstructorProfile, isAdmin, editingClass]);
+
+  // Auto-seed the default tier price from the class's base price
+  useEffect(() => {
+    if (editingClass) return;
+    if (!formData.price) return;
+    setPendingTiers((prev) => {
+      if (prev.length !== 1) return prev;
+      if (prev[0].name !== "General Admission") return prev;
+      if (prev[0].price) return prev;
+      return [{ ...prev[0], price: formData.price }];
+    });
+  }, [formData.price, editingClass]);
 
   // Populate form when editing
   useEffect(() => {
@@ -191,6 +192,8 @@ export default function ClassFormCard({
       materialsUrl: "",
       materialsFileName: "",
     });
+    setPendingTiers([{ name: "General Admission", description: "", price: "", maxQuantity: "", position: 0 }]);
+    setStep(0);
     if (imageInputRef.current) imageInputRef.current.value = "";
     if (materialsInputRef.current) materialsInputRef.current.value = "";
   };
@@ -338,9 +341,43 @@ export default function ClassFormCard({
     };
 
     if (editingClass) {
-      updateMutation.mutate({ id: editingClass.id, ...payload });
-    } else {
-      createMutation.mutate(payload);
+      try {
+        await updateMutation.mutateAsync({ id: editingClass.id, ...payload });
+        toast.success(t("admin.classes.toastUpdated"));
+        resetForm();
+        onSuccess?.();
+      } catch (err: any) {
+        toast.error(err?.message || "Failed to update class");
+      }
+      return;
+    }
+
+    const hasMeaningfulTiers = pendingTiers.some(t => t.name.trim() && t.price);
+    if (hasMeaningfulTiers) {
+      const err = validateTierRows(pendingTiers);
+      if (err) { toast.error(err); return; }
+    }
+
+    try {
+      const created: any = await createMutation.mutateAsync(payload);
+      const newId = Array.isArray(created) ? created[0]?.id : created?.id;
+
+      if (hasMeaningfulTiers && newId) {
+        try {
+          await saveTiersMutation.mutateAsync({
+            classId: newId,
+            tiers: tierRowsToPayload(pendingTiers),
+          });
+        } catch (tierErr: any) {
+          toast.error(`Class created, but ticket types failed to save: ${tierErr?.message || "unknown error"}`);
+        }
+      }
+
+      toast.success(t("admin.classes.toastCreated"));
+      resetForm();
+      onSuccess?.();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to create class");
     }
   };
 
@@ -352,7 +389,10 @@ export default function ClassFormCard({
           {steps.map((s, idx) => {
             const active = idx === step;
             const done = idx < step;
-            const disabled = !editingClass?.id && idx > 5;
+            // Extras (like Discounts) need a saved classId; tiers are held
+            // locally during creation so they're always reachable.
+            const editOnlyKeys = ["discounts"];
+            const disabled = !editingClass?.id && editOnlyKeys.includes(s.key);
             const Icon = s.icon;
             return (
               <button
@@ -633,9 +673,13 @@ export default function ClassFormCard({
       )}
 
       {/* ───────── Ticket Types (edit-only) ───────── */}
-      {steps[step]?.key === "tiers" && editingClass?.id && (
+      {steps[step]?.key === "tiers" && (
       <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/[0.06] to-transparent p-5 md:p-6">
-        <TicketTiersSection parentType="class" classId={editingClass.id} flatTicketPrice={formData.price} />
+        {editingClass?.id ? (
+          <TicketTiersSection parentType="class" classId={editingClass.id} flatTicketPrice={formData.price} />
+        ) : (
+          <TicketTiersEditor rows={pendingTiers} onChange={setPendingTiers} />
+        )}
       </div>
       )}
 

@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,7 @@ import DiscountCodesSection from "./DiscountCodesSection";
 import GuestListSection from "./GuestListSection";
 import RrpAssignmentSection from "./RrpAssignmentSection";
 import TicketTiersSection from "./TicketTiersSection";
+import TicketTiersEditor, { TierRow, validateTierRows, tierRowsToPayload } from "./TicketTiersEditor";
 
 interface EventFormCardProps {
   editingEvent?: any;
@@ -57,27 +58,9 @@ export default function EventFormCard({
   const imageInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const uploadFileMutation = trpc.uploads.uploadFile.useMutation();
-  const createMutation = trpc.admin.createEvent.useMutation({
-    onSuccess: () => {
-      toast.success(t("admin.events.toastCreated"));
-      resetForm();
-      onSuccess?.();
-    },
-    onError: (err) => {
-      toast.error(err.message);
-    },
-  });
-
-  const updateMutation = trpc.admin.updateEvent.useMutation({
-    onSuccess: () => {
-      toast.success("✅ Event updated successfully");
-      resetForm();
-      onSuccess?.();
-    },
-    onError: (err) => {
-      toast.error(err.message);
-    },
-  });
+  const createMutation = trpc.admin.createEvent.useMutation();
+  const updateMutation = trpc.admin.updateEvent.useMutation();
+  const saveTiersMutation = trpc.events.saveTiers.useMutation();
 
   const [formData, setFormData] = useState(() => {
     if (editingEvent) {
@@ -119,28 +102,50 @@ export default function EventFormCard({
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [cropSrcBanner, setCropSrcBanner] = useState<string | null>(null);
   const [step, setStep] = useState(0);
+  // Pending tiers held locally before the event is saved. When the user
+  // clicks Publish, we create the event and then flush these into the DB
+  // using the new event id.
+  const [pendingTiers, setPendingTiers] = useState<TierRow[]>([
+    { name: "General Admission", description: "", price: "", maxQuantity: "", position: 0 },
+  ]);
 
-  // Step definitions — extras (Discount, Guest, RRP) only available after
-  // the event is saved (they need an eventId).
+  // Auto-seed the default tier's price from the event's base ticketPrice so
+  // creators who don't open the Ticket Types step still end up with a sane
+  // General Admission row matching the price they typed earlier.
+  useEffect(() => {
+    if (editingEvent) return; // editing uses the server-backed tiers
+    if (!formData.ticketPrice) return;
+    setPendingTiers((prev) => {
+      if (prev.length !== 1) return prev;
+      if (prev[0].name !== "General Admission") return prev;
+      if (prev[0].price) return prev;
+      return [{ ...prev[0], price: formData.ticketPrice }];
+    });
+  }, [formData.ticketPrice, editingEvent]);
+
+  // Step definitions — tiers available during creation (held locally until
+  // the event is saved); extras (Discount, Guest, RRP) only after save
+  // because they need an eventId.
   const steps = useMemo(() => {
     const base = [
-      { key: "basics",  label: "Basics",   icon: Sparkles,    color: "blue" },
-      { key: "date",    label: "Schedule", icon: Clock,       color: "amber" },
-      { key: "payment", label: "Payment",  icon: CreditCard,  color: "green" },
-      { key: "images",  label: "Images",   icon: ImageIcon,   color: "indigo" },
+      { key: "basics",  label: "Basics",       icon: Sparkles,    color: "blue" },
+      { key: "date",    label: "Schedule",     icon: Clock,       color: "amber" },
+      { key: "payment", label: "Payment",      icon: CreditCard,  color: "green" },
+      { key: "tiers",   label: "Ticket Types", icon: Ticket,      color: "cyan" },
+      { key: "images",  label: "Images",       icon: ImageIcon,   color: "indigo" },
     ];
     if (editingEvent?.id) {
       base.push(
-        { key: "tiers",     label: "Ticket Types", icon: Ticket,    color: "cyan" },
-        { key: "discounts", label: "Discounts",    icon: Tag,       color: "pink" },
-        { key: "guests",    label: "Guest List",   icon: Users,     color: "purple" },
-        { key: "rrp",       label: "RRPs",         icon: Megaphone, color: "orange" },
+        { key: "discounts", label: "Discounts",  icon: Tag,       color: "pink" },
+        { key: "guests",    label: "Guest List", icon: Users,     color: "purple" },
+        { key: "rrp",       label: "RRPs",       icon: Megaphone, color: "orange" },
       );
     }
     return base;
   }, [editingEvent?.id]);
 
-  const isLastCoreStep = step === 3;
+  // "Images" is the last core step — after it we switch into extras.
+  const isLastCoreStep = steps[step]?.key === "images";
   const isLast = step === steps.length - 1;
   const currentStep = steps[step];
 
@@ -160,6 +165,8 @@ export default function EventFormCard({
       paymentMethod: "online",
       showLowTicketAlert: false,
     });
+    setPendingTiers([{ name: "General Admission", description: "", price: "", maxQuantity: "", position: 0 }]);
+    setStep(0);
     if (imageInputRef.current) imageInputRef.current.value = "";
     if (bannerInputRef.current) bannerInputRef.current.value = "";
   };
@@ -253,22 +260,30 @@ export default function EventFormCard({
       return;
     }
 
-    // If editing, update existing event
+    // Editing path — update fields, tiers are managed by the Ticket Types
+    // step (which persists tiers via its own Save button).
     if (editingEvent) {
-      updateMutation.mutate({
-        id: editingEvent.id,
-        title: formData.title,
-        description: formData.description,
-        venue: formData.venue,
-        city: formData.city,
-        eventDate: formData.eventDate,
-        ticketPrice: formData.ticketPrice,
-        maxTickets: formData.maxTickets ? parseInt(formData.maxTickets) : undefined,
-        imageUrl: formData.imageUrl,
-        bannerUrl: formData.bannerUrl,
-        paymentMethod: formData.paymentMethod,
-        showLowTicketAlert: formData.showLowTicketAlert,
-      });
+      try {
+        await updateMutation.mutateAsync({
+          id: editingEvent.id,
+          title: formData.title,
+          description: formData.description,
+          venue: formData.venue,
+          city: formData.city,
+          eventDate: formData.eventDate,
+          ticketPrice: formData.ticketPrice,
+          maxTickets: formData.maxTickets ? parseInt(formData.maxTickets) : undefined,
+          imageUrl: formData.imageUrl,
+          bannerUrl: formData.bannerUrl,
+          paymentMethod: formData.paymentMethod,
+          showLowTicketAlert: formData.showLowTicketAlert,
+        });
+        toast.success("✅ Event updated successfully");
+        resetForm();
+        onSuccess?.();
+      } catch (err: any) {
+        toast.error(err?.message || "Failed to update event");
+      }
       return;
     }
 
@@ -286,19 +301,49 @@ export default function EventFormCard({
       }
     }
 
-    createMutation.mutate({
-      title: formData.title,
-      description: formData.description,
-      venue: formData.venue,
-      city: formData.city,
-      eventDate: formData.eventDate,
-      ticketPrice: formData.ticketPrice,
-      maxTickets: formData.maxTickets ? parseInt(formData.maxTickets) : undefined,
-      imageUrl: formData.imageUrl,
-      bannerUrl: formData.bannerUrl,
-      paymentMethod: formData.paymentMethod,
-      showLowTicketAlert: formData.showLowTicketAlert,
-    });
+    // Validate pendingTiers so we fail fast before creating the event with
+    // unusable pricing.
+    const hasMeaningfulTiers = pendingTiers.some(t => t.name.trim() && t.price);
+    if (hasMeaningfulTiers) {
+      const err = validateTierRows(pendingTiers);
+      if (err) { toast.error(err); return; }
+    }
+
+    try {
+      const created = await createMutation.mutateAsync({
+        title: formData.title,
+        description: formData.description,
+        venue: formData.venue,
+        city: formData.city,
+        eventDate: formData.eventDate,
+        ticketPrice: formData.ticketPrice,
+        maxTickets: formData.maxTickets ? parseInt(formData.maxTickets) : undefined,
+        imageUrl: formData.imageUrl,
+        bannerUrl: formData.bannerUrl,
+        paymentMethod: formData.paymentMethod,
+        showLowTicketAlert: formData.showLowTicketAlert,
+      });
+
+      // Flush pending tiers if the creator added any (beyond the default
+      // "General Admission" placeholder) so multi-tier pricing is live
+      // immediately after the event goes up.
+      if (hasMeaningfulTiers && created.id) {
+        try {
+          await saveTiersMutation.mutateAsync({
+            eventId: created.id,
+            tiers: tierRowsToPayload(pendingTiers),
+          });
+        } catch (tierErr: any) {
+          toast.error(`Event created, but ticket types failed to save: ${tierErr?.message || "unknown error"}`);
+        }
+      }
+
+      toast.success(t("admin.events.toastCreated"));
+      resetForm();
+      onSuccess?.();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to create event");
+    }
   };
 
   return (
@@ -309,7 +354,10 @@ export default function EventFormCard({
           {steps.map((s, idx) => {
             const active = idx === step;
             const done = idx < step;
-            const disabled = !editingEvent?.id && idx > 3;
+            // Extras (Discount, Guest List, RRP) need a saved eventId.
+            // Tiers are held locally during creation so they're always reachable.
+            const editOnlyKeys = ["discounts", "guests", "rrp"];
+            const disabled = !editingEvent?.id && editOnlyKeys.includes(s.key);
             const Icon = s.icon;
             return (
               <button
@@ -530,10 +578,14 @@ export default function EventFormCard({
       </div>
       )}
 
-      {/* ───────── Ticket Types (step 4, only when editing) ───────── */}
-      {steps[step]?.key === "tiers" && editingEvent?.id && (
+      {/* ───────── Ticket Types ───────── */}
+      {steps[step]?.key === "tiers" && (
       <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/[0.06] to-transparent p-5 md:p-6">
-        <TicketTiersSection eventId={editingEvent.id} flatTicketPrice={formData.ticketPrice} />
+        {editingEvent?.id ? (
+          <TicketTiersSection eventId={editingEvent.id} flatTicketPrice={formData.ticketPrice} />
+        ) : (
+          <TicketTiersEditor rows={pendingTiers} onChange={setPendingTiers} />
+        )}
       </div>
       )}
 
@@ -558,8 +610,8 @@ export default function EventFormCard({
       </div>
       )}
 
-      {/* ───────── Images (step 3) ───────── */}
-      {step === 3 && (
+      {/* ───────── Images ───────── */}
+      {steps[step]?.key === "images" && (
       <div className="rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-500/[0.06] to-transparent p-5 md:p-6 space-y-6">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-indigo-500/15">
@@ -655,7 +707,7 @@ export default function EventFormCard({
             >
               Next <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
-          ) : step === 3 ? (
+          ) : isLastCoreStep ? (
             // Images step (last core step): show "Save" / "Publish"
             <Button
               type="button"

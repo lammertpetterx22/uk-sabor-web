@@ -205,7 +205,7 @@ export const adminRouter = router({
         throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid event date. Please select a valid date and time." });
       }
 
-      await db.insert(events).values({
+      const [inserted] = await db.insert(events).values({
         title: input.title,
         description: input.description,
         eventDate: parsedDate,
@@ -220,9 +220,9 @@ export const adminRouter = router({
         paymentMethod: input.paymentMethod,
         showLowTicketAlert: input.showLowTicketAlert ?? false,
         creatorId: ctx.user.id,
-      });
+      }).returning({ id: events.id });
 
-      return { success: true };
+      return { success: true, id: inserted.id };
     }),
 
   updateEvent: creatorProcedure
@@ -451,7 +451,7 @@ export const adminRouter = router({
         throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid class date. Please select a valid date and time." });
       }
 
-      await db.insert(classes).values({
+      const [inserted] = await db.insert(classes).values({
         title: input.title,
         description: input.description,
         danceStyle: input.danceStyle,
@@ -469,9 +469,9 @@ export const adminRouter = router({
         level: input.level as any,
         imageUrl: input.imageUrl,
         paymentMethod: input.paymentMethod || "online",
-      });
+      }).returning({ id: classes.id });
 
-      return { success: true };
+      return { success: true, id: inserted.id };
     }),
 
   updateClass: creatorProcedure

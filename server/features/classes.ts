@@ -216,7 +216,7 @@ export const classesRouter = router({
         materialsUrl: input.materialsUrl,
         materialsFileName: input.materialsFileName,
         status: "published",
-      });
+      }).returning({ id: classes.id });
 
       return result;
     }),
