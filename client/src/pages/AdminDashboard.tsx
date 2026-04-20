@@ -2916,11 +2916,11 @@ function InstructorsTab() {
     setFormData(prev => ({ ...prev, photoPreview: autoFittedDataUrl, photoUrl: "" }));
     setUploading(true);
     try {
-      // Generate unique filename: instructor-{id}-{timonthtamp}.jpg
-      const timonthtamp = Date.now();
+      // Generate unique filename: instructor-{id}-{timestamp}.jpg
+      const timestamp = Date.now();
       const uniqueFileName = editingId
-        ? `instructor-${editingId}-${timonthtamp}.jpg`
-        : `instructor-new-${timonthtamp}.jpg`;
+        ? `instructor-${editingId}-${timestamp}.jpg`
+        : `instructor-new-${timestamp}.jpg`;
 
       const result = await uploadFileMutation.mutateAsync({
         fileBase64: autoFittedDataUrl,
@@ -3930,9 +3930,9 @@ function InstructorProfileTab() {
     setCropSrc(null);
     setUploading(true);
     try {
-      // Generate unique filename: instructor-{userId}-{timonthtamp}.jpg
-      const timonthtamp = Date.now();
-      const uniqueFileName = `instructor-${user?.id || 'unknown'}-${timonthtamp}.jpg`;
+      // Generate unique filename: instructor-{userId}-{timestamp}.jpg
+      const timestamp = Date.now();
+      const uniqueFileName = `instructor-${user?.id || 'unknown'}-${timestamp}.jpg`;
 
       const result = await uploadFileMutation.mutateAsync({
         fileBase64: croppedDataUrl,

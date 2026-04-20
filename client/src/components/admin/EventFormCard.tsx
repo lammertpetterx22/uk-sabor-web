@@ -30,6 +30,7 @@ import {
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import ImageCropperModal from "@/components/ImageCropperModal";
+import ModernImageUpload from "@/components/ModernImageUpload";
 import { useTranslations } from "@/hooks/useTranslations";
 import DiscountCodesSection from "./DiscountCodesSection";
 import GuestListSection from "./GuestListSection";
@@ -178,11 +179,11 @@ export default function EventFormCard({
     setFormData(prev => ({ ...prev, imagePreview: croppedDataUrl, imageUrl: "" }));
     setUploading(true);
     try {
-      // Generate unique filename: event-{id}-{timonthtamp}.jpg
-      const timonthtamp = Date.now();
+      // Generate unique filename: event-{id}-{timestamp}.jpg
+      const timestamp = Date.now();
       const uniqueFileName = editingEvent?.id
-        ? `event-${editingEvent.id}-${timonthtamp}.jpg`
-        : `event-new-${timonthtamp}.jpg`;
+        ? `event-${editingEvent.id}-${timestamp}.jpg`
+        : `event-new-${timestamp}.jpg`;
 
       const result = await uploadFileMutation.mutateAsync({
         fileBase64: croppedDataUrl,
@@ -220,10 +221,10 @@ export default function EventFormCard({
     setFormData(prev => ({ ...prev, bannerPreview: croppedDataUrl, bannerUrl: "" }));
     setUploadingBanner(true);
     try {
-      const timonthtamp = Date.now();
+      const timestamp = Date.now();
       const uniqueFileName = editingEvent?.id
-        ? `event-banner-${editingEvent.id}-${timonthtamp}.jpg`
-        : `event-banner-new-${timonthtamp}.jpg`;
+        ? `event-banner-${editingEvent.id}-${timestamp}.jpg`
+        : `event-banner-new-${timestamp}.jpg`;
 
       const result = await uploadFileMutation.mutateAsync({
         fileBase64: croppedDataUrl,
@@ -562,109 +563,20 @@ export default function EventFormCard({
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <span className="text-xs uppercase tracking-wider text-foreground/70 font-semibold">Cover Flyer</span>
-            <span className="text-xs text-foreground/40">17:25 vertical</span>
+            <span className="text-xs text-foreground/40">17:25 · vertical · required</span>
           </div>
-
-          {formData.imagePreview ? (
-            <div className="space-y-4">
-              <div className="relative w-full aspect-[17/25] rounded-xl overflow-hidden border-2 border-accent/30">
-                <img
-                  src={formData.imagePreview}
-                  alt="Cover preview"
-                  className="w-full h-full object-cover"
-                />
-                {!formData.imageUrl && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="text-center">
-                      <Loader2 className="h-10 w-10 animate-spin text-white mx-auto mb-3" />
-                      <p className="text-white font-medium">Uploading image...</p>
-                    </div>
-                  </div>
-                )}
-                {formData.imageUrl && (
-                  <div className="absolute top-4 right-4">
-                    <Badge className="bg-green-500 text-white border-0 shadow-lg">
-                      ✓ Upload complete
-                    </Badge>
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => imageInputRef.current?.click()}
-                  disabled={!formData.imageUrl}
-                  className="flex-1"
-                >
-                  <ImageIcon className="h-4 w-4 mr-2" />
-                  Change Image
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setFormData({ ...formData, imageUrl: "", imagePreview: "" })}
-                  className="text-red-600 hover:text-red-700 hover:border-red-300"
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Delete
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div
-              className="relative border-2 border-dashed border-accent/30 rounded-xl p-10 bg-gradient-to-br from-accent/5 to-transparent hover:border-accent/50 transition-all duration-300 courser-pointer group"
-              onClick={() => imageInputRef.current?.click()}
-            >
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 mb-4 border border-accent/20 group-hover:scale-110 transition-transform duration-300">
-                  <Upload className="h-10 w-10 text-accent" />
-                </div>
-                <p className="font-semibold text-foreground mb-2">
-                  Drag an image here
-                </p>
-                <p className="text-sm text-foreground/60 mb-6">
-                  or click to select (max. 10MB)
-                </p>
-                <Button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    imageInputRef.current?.click();
-                  }}
-                  disabled={uploading}
-                  className="bg-gradient-to-r from-[#FA3698] to-purple-600 hover:from-[#FA3698]/90 hover:to-purple-600/90 text-white border-0 shadow-lg shadow-[#FA3698]/25"
-                >
-                  {uploading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Select Image
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          )}
-
-          <input
-            ref={imageInputRef}
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              if (e.target.files?.[0]) {
-                handleImageSelect(e.target.files[0]);
-                e.target.value = "";
-              }
-            }}
-            className="hidden"
-          />
+          <div className="max-w-sm mx-auto md:mx-0">
+            <ModernImageUpload
+              previewUrl={formData.imagePreview || undefined}
+              uploading={!!formData.imagePreview && !formData.imageUrl}
+              onFileSelected={handleImageSelect}
+              onRemove={() => setFormData({ ...formData, imageUrl: "", imagePreview: "" })}
+              aspect="17/25"
+              accent="pink"
+              label="Upload your flyer"
+              helper="Eye-catching vertical poster. Used everywhere your event shows up."
+            />
+          </div>
         </div>
 
         {/* Cover Image Cropper Modal — forces flyer ratio (17:25 = 680×1012px) */}
@@ -682,108 +594,15 @@ export default function EventFormCard({
             <span className="text-xs uppercase tracking-wider text-foreground/70 font-semibold">Landscape Banner</span>
             <span className="text-xs text-foreground/40">16:9 · optional</span>
           </div>
-
-          {formData.bannerPreview ? (
-            <div className="space-y-4">
-              <div className="relative group rounded-xl overflow-hidden border-2 border-blue-500/30">
-                <img
-                  src={formData.bannerPreview}
-                  alt="Banner preview"
-                  className="w-full h-48 object-cover"
-                />
-                {!formData.bannerUrl && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="text-center">
-                      <Loader2 className="h-10 w-10 animate-spin text-white mx-auto mb-3" />
-                      <p className="text-white font-medium">Uploading...nner...</p>
-                    </div>
-                  </div>
-                )}
-                {formData.bannerUrl && (
-                  <div className="absolute top-4 right-4">
-                    <Badge className="bg-blue-500 text-white border-0 shadow-lg">
-                      ✓ Banner uploaded
-                    </Badge>
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => bannerInputRef.current?.click()}
-                  disabled={!formData.bannerUrl}
-                  className="flex-1"
-                >
-                  <ImageIcon className="h-4 w-4 mr-2" />
-                  Change Banner
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setFormData({ ...formData, bannerUrl: "", bannerPreview: "" })}
-                  className="text-red-600 hover:text-red-700 hover:border-red-300"
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Delete
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div
-              className="relative border-2 border-dashed border-blue-500/30 rounded-xl p-8 bg-gradient-to-br from-blue-500/5 to-transparent hover:border-blue-500/50 transition-all duration-300 courser-pointer group"
-              onClick={() => bannerInputRef.current?.click()}
-            >
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 mb-3 border border-blue-500/20 group-hover:scale-110 transition-transform duration-300">
-                  <Upload className="h-8 w-8 text-blue-500" />
-                </div>
-                <p className="font-semibold text-foreground mb-1">
-                  Upload landscape banner
-                </p>
-                <p className="text-xs text-foreground/50 mb-4">
-                  Landscape format (16:9) • Max. 10MB
-                </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    bannerInputRef.current?.click();
-                  }}
-                  disabled={uploadingBanner}
-                  className="border-blue-500/50 text-blue-500 hover:bg-blue-500/10"
-                  size="sm"
-                >
-                  {uploadingBanner ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Select Banner
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          )}
-
-          <input
-            ref={bannerInputRef}
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              if (e.target.files?.[0]) {
-                handleBannerSelect(e.target.files[0]);
-                e.target.value = "";
-              }
-            }}
-            className="hidden"
+          <ModernImageUpload
+            previewUrl={formData.bannerPreview || undefined}
+            uploading={!!formData.bannerPreview && !formData.bannerUrl}
+            onFileSelected={handleBannerSelect}
+            onRemove={() => setFormData({ ...formData, bannerUrl: "", bannerPreview: "" })}
+            aspect="16/9"
+            accent="blue"
+            label="Upload a banner"
+            helper="Shown on the event detail page. Wider shots work best."
           />
         </div>
 

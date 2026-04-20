@@ -36,6 +36,7 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import DiscountCodesSection from "./DiscountCodesSection";
 import ImageCropperModal from "@/components/ImageCropperModal";
+import ModernImageUpload from "@/components/ModernImageUpload";
 import { useTranslations } from "@/hooks/useTranslations";
 
 interface ClassFormCardProps {
@@ -211,11 +212,11 @@ export default function ClassFormCard({
     setFormData(prev => ({ ...prev, imagePreview: croppedDataUrl, imageUrl: "" }));
     setUploading(true);
     try {
-      // Generate unique filename: class-{id}-{timonthtamp}.jpg
-      const timonthtamp = Date.now();
+      // Generate unique filename: class-{id}-{timestamp}.jpg
+      const timestamp = Date.now();
       const uniqueFileName = editingClass?.id
-        ? `class-${editingClass.id}-${timonthtamp}.jpg`
-        : `class-new-${timonthtamp}.jpg`;
+        ? `class-${editingClass.id}-${timestamp}.jpg`
+        : `class-new-${timestamp}.jpg`;
 
       const result = await uploadFileMutation.mutateAsync({
         fileBase64: croppedDataUrl,
@@ -261,11 +262,11 @@ export default function ClassFormCard({
       reader.onload = async (e) => {
         const base64 = e.target?.result as string;
 
-        const timonthtamp = Date.now();
+        const timestamp = Date.now();
         const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const uniqueFileName = editingClass?.id
-          ? `class-${editingClass.id}-materials-${timonthtamp}-${sanitizedFileName}`
-          : `class-new-materials-${timonthtamp}-${sanitizedFileName}`;
+          ? `class-${editingClass.id}-materials-${timestamp}-${sanitizedFileName}`
+          : `class-new-materials-${timestamp}-${sanitizedFileName}`;
 
         try {
           const result = await uploadFileMutation.mutateAsync({
@@ -724,109 +725,17 @@ export default function ClassFormCard({
           </div>
         </div>
 
-          {formData.imagePreview ? (
-            <div className="space-y-4">
-              <div className="relative group rounded-xl overflow-hidden border-2 border-accent/30">
-                <img
-                  src={formData.imagePreview}
-                  alt="Class preview"
-                  className="w-full h-48 object-cover"
-                />
-                {!formData.imageUrl && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="text-center">
-                      <Loader2 className="h-8 w-8 animate-spin text-white mx-auto mb-2" />
-                      <p className="text-white text-sm font-medium">Uploading image...</p>
-                    </div>
-                  </div>
-                )}
-                {formData.imageUrl && (
-                  <div className="absolute top-3 right-3">
-                    <Badge className="bg-green-500 text-white border-0 shadow-lg">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Subida
-                    </Badge>
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => imageInputRef.current?.click()}
-                  disabled={uploading}
-                  className="flex-1"
-                >
-                  <ImageIcon className="h-4 w-4 mr-2" />
-                  Change Image
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setFormData({ ...formData, imageUrl: "", imagePreview: "" })}
-                  className="text-red-600 hover:text-red-700 hover:border-red-300"
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Delete
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div
-              className="relative border-2 border-dashed border-accent/30 rounded-xl p-6 bg-gradient-to-br from-accent/5 to-transparent hover:border-accent/50 transition-all duration-300 courser-pointer group"
-              onClick={() => imageInputRef.current?.click()}
-            >
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 mb-3 border border-accent/20 group-hover:scale-110 transition-transform duration-300">
-                  <Upload className="h-7 w-7 text-accent" />
-                </div>
-                <p className="font-medium text-foreground mb-1 text-sm">
-                  Sube una image para la class
-                </p>
-                <p className="text-xs text-foreground/60 mb-3">
-                  Máx. 10MB (JPG, PNG, etc.)
-                </p>
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    imageInputRef.current?.click();
-                  }}
-                  disabled={uploading}
-                  className="bg-gradient-to-r from-[#FA3698] to-purple-600 hover:from-[#FA3698]/90 hover:to-purple-600/90 text-white border-0"
-                >
-                  {uploading ? (
-                    <>
-                      <Loader2 className="h-3 w-3 mr-2 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-3 w-3 mr-2" />
-                      Select Image
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          )}
-
-          <input
-            ref={imageInputRef}
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              if (e.target.files?.[0]) {
-                handleImageSelect(e.target.files[0]);
-                e.target.value = "";
-              }
-            }}
-            className="hidden"
-          />
-        </div>
+        <ModernImageUpload
+          previewUrl={formData.imagePreview || undefined}
+          uploading={!!formData.imagePreview && !formData.imageUrl}
+          onFileSelected={handleImageSelect}
+          onRemove={() => setFormData({ ...formData, imageUrl: "", imagePreview: "" })}
+          aspect="16/9"
+          accent="indigo"
+          label="Upload a class image"
+          helper="Landscape photo shown on the class card and detail page."
+        />
+      </div>
       )}
 
       {/* ───────── Step 5: Materials ───────── */}
