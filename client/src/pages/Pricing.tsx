@@ -56,8 +56,15 @@ export default function Pricing() {
   const [, navigate] = useLocation();
   const [billingInterval, setBillingInterval] = useState<BillingInterval>("monthly");
 
-  // Plans are public — no auth required to view
-  const { data: plans, isLoading: plansLoading } = trpc.subscriptions.listPlans.useQuery();
+  // Plans are meant for creators — if a logged-in regular user (ticket buyer)
+  // lands here, hide the plans and suggest they explore events/classes instead.
+  const isCreatorRole = !!user && ["admin", "instructor", "promoter"].includes(user.role);
+  const isTicketBuyer = !!user && !isCreatorRole;
+
+  // Plans are public — no auth required to view (for marketing to prospects)
+  const { data: plans, isLoading: plansLoading } = trpc.subscriptions.listPlans.useQuery(undefined, {
+    enabled: !isTicketBuyer,
+  });
   const { data: mySubscription } = trpc.subscriptions.getMySubscription.useQuery(undefined, {
     // Only fetch subscription if user is logged in and is a creator/promoter/admin
     enabled: !!user && ["admin", "instructor", "promoter"].includes(user.role),
@@ -102,6 +109,29 @@ export default function Pricing() {
     }
     return { price: `£${plan.priceGBP}`, suffix: "/ month" };
   };
+
+  if (isTicketBuyer) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
+        <Card className="max-w-md w-full">
+          <CardHeader>
+            <CardTitle>Plans are for creators</CardTitle>
+            <CardDescription>
+              Subscription plans are available to instructors, promoters and academies. If you just want to attend events or classes, browse the feed instead.
+            </CardDescription>
+          </CardHeader>
+          <CardFooter className="flex gap-2">
+            <Button asChild variant="outline" className="flex-1">
+              <Link href="/events">Browse events</Link>
+            </Button>
+            <Button asChild className="flex-1 btn-vibrant">
+              <Link href="/classes">Browse classes</Link>
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
