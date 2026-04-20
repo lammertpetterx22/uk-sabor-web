@@ -9,11 +9,11 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 
 const TIER_LABELS: Record<string, string> = {
-  bronze: "Bronce",
-  silver: "Plata",
-  gold: "Oro",
-  platinum: "Platino",
-  diamond: "Diamante",
+  bronze: "Bronze",
+  silver: "Silver",
+  gold: "Gold",
+  platinum: "Platinum",
+  diamond: "Diamond",
 };
 
 export default function AdminRrpSection() {
@@ -27,7 +27,7 @@ export default function AdminRrpSection() {
 
   const approveMutation = trpc.rrp.approveApplication.useMutation({
     onSuccess: (res: any) => {
-      toast.success(`✅ RRP aprobado — código: ${res.code}`);
+      toast.success(`✅ RRP approved — code: ${res.code}`);
       utils.rrp.listApplications.invalidate();
       utils.rrp.adminList.invalidate();
     },
@@ -36,7 +36,7 @@ export default function AdminRrpSection() {
 
   const rejectMutation = trpc.rrp.rejectApplication.useMutation({
     onSuccess: () => {
-      toast.success("Solicitud rechazada");
+      toast.success("Application rejected");
       utils.rrp.listApplications.invalidate();
     },
     onError: (err) => toast.error(err.message),
@@ -45,9 +45,9 @@ export default function AdminRrpSection() {
   const createForUserMutation = trpc.rrp.createForUser.useMutation({
     onSuccess: (res: any) => {
       if (res.alreadyExisted) {
-        toast.info(`Este usuario ya era RRP — código: ${res.code}`);
+        toast.info(`User is already an RRP — code: ${res.code}`);
       } else {
-        toast.success(`✅ RRP creado — código: ${res.code}`);
+        toast.success(`✅ RRP created — code: ${res.code}`);
       }
       setManualUserId("");
       utils.rrp.adminList.invalidate();
@@ -66,17 +66,17 @@ export default function AdminRrpSection() {
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-amber-500" />
-              <CardTitle>Solicitudes RRP pendientes</CardTitle>
+              <CardTitle>Pending RRP applications</CardTitle>
               <Badge variant="secondary">{pending.length}</Badge>
             </div>
           </div>
-          <CardDescription>Aprueba o rechaza solicitudes para convertirse en RRP.</CardDescription>
+          <CardDescription>Approve or reject applications to become RRP.</CardDescription>
         </CardHeader>
         <CardContent>
           {pendingQuery.isLoading ? (
             <div className="flex justify-center py-6"><Loader2 className="h-6 w-6 animate-spin" /></div>
           ) : pending.length === 0 ? (
-            <p className="text-center text-sm text-foreground/50 py-6">No hay solicitudes pendientes.</p>
+            <p className="text-center text-sm text-foreground/50 py-6">No pending applications.</p>
           ) : (
             <div className="space-y-3">
               {pending.map((a: any) => (
@@ -106,10 +106,10 @@ export default function AdminRrpSection() {
                       onClick={() => approveMutation.mutate({ applicationId: a.id })}
                       disabled={approveMutation.isPending}
                     >
-                      <Check className="h-4 w-4 mr-1" /> Aprobar
+                      <Check className="h-4 w-4 mr-1" /> Approve
                     </Button>
                     <Input
-                      placeholder="Motivo del rechazo (opcional)"
+                      placeholder="Rejection reason (optional)"
                       value={rejectReason[a.id] || ""}
                       onChange={(e) => setRejectReason({ ...rejectReason, [a.id]: e.target.value })}
                       className="flex-1 min-w-[200px] h-8 text-xs"
@@ -121,7 +121,7 @@ export default function AdminRrpSection() {
                       onClick={() => rejectMutation.mutate({ applicationId: a.id, adminNotes: rejectReason[a.id] })}
                       disabled={rejectMutation.isPending}
                     >
-                      <X className="h-4 w-4 mr-1" /> Rechazar
+                      <X className="h-4 w-4 mr-1" /> Reject
                     </Button>
                   </div>
                 </div>
@@ -136,14 +136,14 @@ export default function AdminRrpSection() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <UserPlus className="h-5 w-5 text-accent" />
-            <CardTitle>Crear RRP manualmente</CardTitle>
+            <CardTitle>Create RRP manually</CardTitle>
           </div>
-          <CardDescription>Asigna el rol RRP a un usuario existente sin pasar por solicitud. Genera su código automáticamente.</CardDescription>
+          <CardDescription>Assign the RRP role to an existing user, skipping the application. Code is auto-generated.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2 flex-wrap">
             <Input
-              placeholder="User ID (de la tabla de usuarios)"
+              placeholder="User ID (from the users table)"
               type="number"
               value={manualUserId}
               onChange={(e) => setManualUserId(e.target.value)}
@@ -153,7 +153,7 @@ export default function AdminRrpSection() {
               onClick={() => {
                 const id = parseInt(manualUserId);
                 if (isNaN(id)) {
-                  toast.error("Introduce un userId válido");
+                  toast.error("Enter a valid userId");
                   return;
                 }
                 createForUserMutation.mutate({ userId: id });
@@ -161,7 +161,7 @@ export default function AdminRrpSection() {
               disabled={createForUserMutation.isPending || !manualUserId}
               className="btn-vibrant"
             >
-              {createForUserMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><UserPlus className="h-4 w-4 mr-2" /> Crear RRP</>}
+              {createForUserMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><UserPlus className="h-4 w-4 mr-2" /> Create RRP</>}
             </Button>
           </div>
         </CardContent>
@@ -172,7 +172,7 @@ export default function AdminRrpSection() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Megaphone className="h-5 w-5 text-accent" />
-            <CardTitle>RRPs activos</CardTitle>
+            <CardTitle>Active RRPs</CardTitle>
             <Badge variant="secondary">{rrps.length}</Badge>
           </div>
         </CardHeader>
@@ -180,18 +180,18 @@ export default function AdminRrpSection() {
           {rrpListQuery.isLoading ? (
             <div className="flex justify-center py-6"><Loader2 className="h-6 w-6 animate-spin" /></div>
           ) : rrps.length === 0 ? (
-            <p className="text-center text-sm text-foreground/50 py-6">Todavía no hay RRPs.</p>
+            <p className="text-center text-sm text-foreground/50 py-6">No RRPs yet.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border/50 text-left">
-                    <th className="py-2 px-3 font-semibold">Nombre</th>
+                    <th className="py-2 px-3 font-semibold">Name</th>
                     <th className="py-2 px-3 font-semibold">Email</th>
-                    <th className="py-2 px-3 font-semibold">Código</th>
-                    <th className="py-2 px-3 font-semibold">Rango</th>
+                    <th className="py-2 px-3 font-semibold">Code</th>
+                    <th className="py-2 px-3 font-semibold">Tier</th>
                     <th className="py-2 px-3 font-semibold text-right">Ventas</th>
-                    <th className="py-2 px-3 font-semibold text-right">Ganado</th>
+                    <th className="py-2 px-3 font-semibold text-right">Earned</th>
                   </tr>
                 </thead>
                 <tbody>

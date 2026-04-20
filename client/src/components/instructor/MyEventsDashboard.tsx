@@ -49,7 +49,7 @@ export default function MyEventsDashboard({
   // Mutations
   const updateMutation = trpc.admin.updateEvent.useMutation({
     onSuccess: () => {
-      toast.success("✅ Evento actualizado exitosamente");
+      toast.success("✅ Event updated successfully");
       utils.admin.listMyEvents.invalidate();
       utils.admin.listAllEvents.invalidate();
       setEditingEvent(null);
@@ -61,7 +61,7 @@ export default function MyEventsDashboard({
 
   const deleteMutation = trpc.admin.deleteEvent.useMutation({
     onSuccess: () => {
-      toast.success("🗑️ Evento eliminado exitosamente");
+      toast.success("🗑️ Event deleted successfully");
       utils.admin.listMyEvents.invalidate();
       utils.admin.listAllEvents.invalidate();
       setConfirmDeleteId(null);
@@ -141,9 +141,9 @@ export default function MyEventsDashboard({
                 <Calendar className="h-6 w-6 text-blue-500" />
               </div>
               <div>
-                <CardTitle className="text-2xl gradient-text">Mis Eventos</CardTitle>
+                <CardTitle className="text-2xl gradient-text">My Events</CardTitle>
                 <CardDescription>
-                  Gestiona tus eventos y promociones
+                  Manage your events and promotions
                 </CardDescription>
               </div>
             </div>
@@ -152,7 +152,7 @@ export default function MyEventsDashboard({
               className="btn-vibrant"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Crear Evento
+              Create Event
             </Button>
           </div>
         </CardHeader>
@@ -188,18 +188,20 @@ export default function MyEventsDashboard({
                       {event.status === "published" ? (
                         <>
                           <Eye className="h-3 w-3 mr-1" />
-                          Publicado
+                          Published
                         </>
                       ) : (
                         <>
                           <EyeOff className="h-3 w-3 mr-1" />
-                          Borrador
+                          Draft
                         </>
                       )}
                     </Badge>
                   </div>
                 </div>
               )}
+
+
 
               <CardContent className="p-4 space-y-3">
                 <div>
@@ -223,7 +225,7 @@ export default function MyEventsDashboard({
                     ) : (
                       <>
                         <EyeOff className="h-3 w-3 mr-1" />
-                        Borrador
+                        Draft
                       </>
                     )}
                   </Badge>
@@ -272,7 +274,7 @@ export default function MyEventsDashboard({
                     className="flex-1 text-xs"
                   >
                     <Edit2 className="h-3 w-3 mr-1" />
-                    Editar
+                    Edit
                   </Button>
                   <Button
                     variant="outline"
@@ -283,12 +285,12 @@ export default function MyEventsDashboard({
                     {event.status === "published" ? (
                       <>
                         <EyeOff className="h-3 w-3 mr-1" />
-                        Ocultar
+                        Hide
                       </>
                     ) : (
                       <>
                         <Eye className="h-3 w-3 mr-1" />
-                        Publicar
+                        Publish
                       </>
                     )}
                   </Button>
@@ -302,7 +304,7 @@ export default function MyEventsDashboard({
                     className="flex-1 text-xs"
                   >
                     <QrCode className="h-3 w-3 mr-1" />
-                    {expandedEventId === event.id ? "Ocultar QR" : "Ver QR"}
+                    {expandedEventId === event.id ? "Hide QR" : "View QR"}
                   </Button>
                   <Button
                     variant={confirmDeleteId === event.id ? "destructive" : "outline"}
@@ -311,7 +313,7 @@ export default function MyEventsDashboard({
                     className="text-xs"
                   >
                     <Trash2 className="h-3 w-3 mr-1" />
-                    {confirmDeleteId === event.id ? "Confirmar" : "Eliminar"}
+                    {confirmDeleteId === event.id ? "Confirm" : "Delete"}
                   </Button>
                 </div>
 
@@ -319,7 +321,7 @@ export default function MyEventsDashboard({
                 {expandedEventId === event.id && eventQRCodes && (
                   <div className="pt-3 border-t space-y-3 animate-in slide-in-from-top-2">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-xs">Código QR</h4>
+                      <h4 className="font-semibold text-xs">QR Code</h4>
                       <Button
                         variant="outline"
                         size="sm"
@@ -329,7 +331,7 @@ export default function MyEventsDashboard({
                         }}
                       >
                         <Download className="h-3 w-3 mr-1" />
-                        Descargar
+                        Download
                       </Button>
                     </div>
                     {eventQRCodes.qrData && (
@@ -353,13 +355,13 @@ export default function MyEventsDashboard({
             <div className="p-4 rounded-full bg-accent/10 mb-4">
               <PartyPopper className="h-12 w-12 text-accent" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">No hay eventos</h3>
+            <h3 className="text-xl font-semibold mb-2">No events yet</h3>
             <p className="text-foreground/60 mb-6 max-w-sm">
-              Comienza creando tu primer evento para promocionar tus actividades
+              Start by creating your first event to promote your activities
             </p>
             <Button onClick={handleCreateEvent} className="btn-vibrant">
               <Plus className="h-4 w-4 mr-2" />
-              Crear Primer Evento
+              Create First Event
             </Button>
           </CardContent>
         </Card>
@@ -370,12 +372,12 @@ export default function MyEventsDashboard({
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">
-              {editingEvent ? "Editar Evento" : "Crear Nuevo Evento"}
+              {editingEvent ? "Edit Evento" : "Create New Event"}
             </DialogTitle>
             <DialogDescription>
               {editingEvent
-                ? "Actualiza la información del evento"
-                : "Completa los detalles para crear un nuevo evento"}
+                ? "Update event information"
+                : "Complete the details to create a new event"}
             </DialogDescription>
           </DialogHeader>
           <EventFormCard

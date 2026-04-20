@@ -14,11 +14,11 @@ interface RrpAssignmentSectionProps {
 }
 
 const TIER_LABELS: Record<string, { label: string; min: number }> = {
-  bronze:   { label: "Bronce",   min: 15 },
-  silver:   { label: "Plata",    min: 20 },
-  gold:     { label: "Oro",      min: 25 },
-  platinum: { label: "Platino",  min: 30 },
-  diamond:  { label: "Diamante", min: 40 },
+  bronze:   { label: "Bronze",   min: 15 },
+  silver:   { label: "Silver",    min: 20 },
+  gold:     { label: "Gold",      min: 25 },
+  platinum: { label: "Platinum",  min: 30 },
+  diamond:  { label: "Diamond", min: 40 },
 };
 
 const MAX_COMMISSION = 40;
@@ -41,7 +41,7 @@ export default function RrpAssignmentSection({ eventId }: RrpAssignmentSectionPr
 
   const assignMutation = trpc.rrp.assignToEvent.useMutation({
     onSuccess: () => {
-      toast.success("✅ RRP añadido");
+      toast.success("✅ RRP added");
       setSelectedUserId("");
       setDiscountPct("10");
       setCommissionPct("");
@@ -53,7 +53,7 @@ export default function RrpAssignmentSection({ eventId }: RrpAssignmentSectionPr
 
   const removeMutation = trpc.rrp.removeFromEvent.useMutation({
     onSuccess: () => {
-      toast.success("RRP eliminado del evento");
+      toast.success("RRP removed from event");
       utils.rrp.listEventRrps.invalidate({ eventId: eventId! });
       utils.rrp.listAvailableRrps.invalidate({ eventId: eventId! });
     },
@@ -65,10 +65,10 @@ export default function RrpAssignmentSection({ eventId }: RrpAssignmentSectionPr
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Megaphone className="h-4 w-4 text-accent" />
-          <h3 className="font-semibold text-foreground">RRPs Asignados</h3>
+          <h3 className="font-semibold text-foreground">Assigned RRPs</h3>
         </div>
         <p className="text-sm text-foreground/60 bg-background/30 border border-border/50 rounded-lg p-4">
-          Guarda el evento primero para poder asignar RRPs.
+          Save the event first to assign RRPs.
         </p>
       </div>
     );
@@ -81,17 +81,17 @@ export default function RrpAssignmentSection({ eventId }: RrpAssignmentSectionPr
 
   const handleAdd = () => {
     if (!selectedUserId) {
-      toast.error("Selecciona un RRP");
+      toast.error("Select an RRP");
       return;
     }
     const d = parseInt(discountPct);
     const c = parseInt(commissionPct);
     if (isNaN(d) || d < 0 || d > 90) {
-      toast.error("Descuento: 0-90%");
+      toast.error("Discount: 0-90%");
       return;
     }
     if (isNaN(c) || c < selectedTierMin || c > MAX_COMMISSION) {
-      toast.error(`Comisión: entre ${selectedTierMin}% y ${MAX_COMMISSION}%`);
+      toast.error(`Commission: between ${selectedTierMin}% and ${MAX_COMMISSION}%`);
       return;
     }
     assignMutation.mutate({
@@ -106,18 +106,18 @@ export default function RrpAssignmentSection({ eventId }: RrpAssignmentSectionPr
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <Megaphone className="h-4 w-4 text-accent" />
-        <h3 className="font-semibold text-foreground">RRPs Asignados</h3>
+        <h3 className="font-semibold text-foreground">Assigned RRPs</h3>
         <Badge variant="secondary" className="ml-1">{assigned.length}</Badge>
       </div>
       <p className="text-xs text-foreground/50 -mt-2">
-        Los RRPs asignados podrán vender este evento con su código — reciben una comisión por cada venta.
-        Tope máximo global: {MAX_COMMISSION}%.
+        Assigned RRPs can sell this event with their code — they receive a commission per sale.
+        Global max cap: {MAX_COMMISSION}%.
       </p>
 
       {/* Add form */}
       <div className="rounded-xl border border-border/50 bg-background/40 p-4 space-y-3">
         <div className="space-y-2">
-          <Label className="text-foreground/80 text-sm">RRP a añadir</Label>
+          <Label className="text-foreground/80 text-sm">RRP to add</Label>
           <Select value={selectedUserId} onValueChange={(v) => {
             setSelectedUserId(v);
             const rrp = available.find(a => String(a.userId) === v);
@@ -127,12 +127,12 @@ export default function RrpAssignmentSection({ eventId }: RrpAssignmentSectionPr
             }
           }}>
             <SelectTrigger className="bg-background/60 border-border/50">
-              <SelectValue placeholder={available.length === 0 ? "No hay RRPs disponibles" : "Selecciona un RRP"} />
+              <SelectValue placeholder={available.length === 0 ? "No RRPs available" : "Select an RRP"} />
             </SelectTrigger>
             <SelectContent>
               {available.map(a => (
                 <SelectItem key={a.userId} value={String(a.userId)}>
-                  {a.name} · {TIER_LABELS[a.tier]?.label ?? a.tier} · {a.lifetimeSales} ventas · {a.code}
+                  {a.name} · {TIER_LABELS[a.tier]?.label ?? a.tier} · {a.lifetimeSales} sales · {a.code}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -143,7 +143,7 @@ export default function RrpAssignmentSection({ eventId }: RrpAssignmentSectionPr
           <div className="space-y-1.5">
             <Label className="text-foreground/80 text-sm flex items-center gap-1.5">
               <Percent className="h-3 w-3 text-accent" />
-              Descuento para el cliente (%)
+              Customer discount (%)
             </Label>
             <Input
               type="number"
@@ -158,7 +158,7 @@ export default function RrpAssignmentSection({ eventId }: RrpAssignmentSectionPr
           <div className="space-y-1.5">
             <Label className="text-foreground/80 text-sm flex items-center gap-1.5">
               <TrendingUp className="h-3 w-3 text-accent" />
-              Comisión del RRP (%) — mín {selectedTierMin}% · máx {MAX_COMMISSION}%
+              RRP commission (%) — min {selectedTierMin}% · max {MAX_COMMISSION}%
             </Label>
             <Input
               type="number"
@@ -167,7 +167,7 @@ export default function RrpAssignmentSection({ eventId }: RrpAssignmentSectionPr
               value={commissionPct}
               onChange={(e) => setCommissionPct(e.target.value)}
               className="bg-background/60 border-border/50"
-              placeholder={`Mín ${selectedTierMin}`}
+              placeholder={`Min ${selectedTierMin}`}
             />
           </div>
         </div>
@@ -179,9 +179,9 @@ export default function RrpAssignmentSection({ eventId }: RrpAssignmentSectionPr
           className="w-full md:w-auto bg-gradient-to-r from-[#FA3698] to-purple-600 hover:from-[#FA3698]/90 hover:to-purple-600/90 text-white border-0"
         >
           {assignMutation.isPending ? (
-            <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Añadiendo…</>
+            <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Adding…</>
           ) : (
-            <><UserPlus className="h-4 w-4 mr-2" /> Asignar RRP</>
+            <><UserPlus className="h-4 w-4 mr-2" /> Assign RRP</>
           )}
         </Button>
       </div>
@@ -189,11 +189,11 @@ export default function RrpAssignmentSection({ eventId }: RrpAssignmentSectionPr
       {/* Assigned list */}
       {assignedQuery.isLoading ? (
         <div className="flex items-center justify-center py-8 text-foreground/50">
-          <Loader2 className="h-5 w-5 animate-spin mr-2" /> Cargando…
+          <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading…
         </div>
       ) : assigned.length === 0 ? (
         <div className="text-center py-8 text-sm text-foreground/50 border border-dashed border-border/50 rounded-lg">
-          Todavía no hay RRPs asignados a este evento
+          No RRPs assigned to this event yet
         </div>
       ) : (
         <div className="divide-y divide-border/40 rounded-lg border border-border/50 overflow-hidden">
@@ -209,8 +209,8 @@ export default function RrpAssignmentSection({ eventId }: RrpAssignmentSectionPr
                 </div>
                 <div className="text-xs text-foreground/60 mt-0.5 flex gap-3 flex-wrap">
                   <span>📉 Descuento cliente: <strong>{a.customerDiscountPct}%</strong></span>
-                  <span>💰 Comisión RRP: <strong>{a.rrpCommissionPct}%</strong></span>
-                  <span>📊 {a.lifetimeSales ?? 0} ventas totales</span>
+                  <span>💰 RRP commission: <strong>{a.rrpCommissionPct}%</strong></span>
+                  <span>📊 {a.lifetimeSales ?? 0} total sales</span>
                 </div>
               </div>
               <Button
@@ -218,7 +218,7 @@ export default function RrpAssignmentSection({ eventId }: RrpAssignmentSectionPr
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  if (confirm(`¿Quitar a ${a.rrpName} de este evento? No afectará ventas pasadas.`)) {
+                  if (confirm(`Remove ${a.rrpName} from this event? Past sales are not affected.`)) {
                     removeMutation.mutate({ eventRrpId: a.id });
                   }
                 }}

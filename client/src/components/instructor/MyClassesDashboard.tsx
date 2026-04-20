@@ -56,7 +56,7 @@ export default function MyClassesDashboard({
   // Mutations
   const updateMutation = trpc.classes.update.useMutation({
     onSuccess: () => {
-      toast.success("✅ Clase actualizada exitosamente");
+      toast.success("✅ Class updated successfully");
       utils.classes.listAll.invalidate();
       utils.admin.listMyClasses.invalidate();
       setEditingClass(null);
@@ -68,7 +68,7 @@ export default function MyClassesDashboard({
 
   const deleteMutation = trpc.classes.delete.useMutation({
     onSuccess: () => {
-      toast.success("🗑️ Clase eliminada exitosamente");
+      toast.success("🗑️ Class deleted successfully");
       utils.classes.listAll.invalidate();
       utils.admin.listMyClasses.invalidate();
       setConfirmDeleteId(null);
@@ -174,9 +174,9 @@ export default function MyClassesDashboard({
                 <GraduationCap className="h-6 w-6 text-orange-500" />
               </div>
               <div>
-                <CardTitle className="text-2xl gradient-text">Mis Clases</CardTitle>
+                <CardTitle className="text-2xl gradient-text">My Classes</CardTitle>
                 <CardDescription>
-                  Gestiona tus clases y horarios
+                  Manage your classes and schedule
                 </CardDescription>
               </div>
             </div>
@@ -185,7 +185,7 @@ export default function MyClassesDashboard({
               className="btn-vibrant"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Crear Clase
+              Create Class
             </Button>
           </div>
         </CardHeader>
@@ -221,12 +221,12 @@ export default function MyClassesDashboard({
                       {cls.status === "published" ? (
                         <>
                           <Eye className="h-3 w-3 mr-1" />
-                          Publicado
+                          Published
                         </>
                       ) : (
                         <>
                           <EyeOff className="h-3 w-3 mr-1" />
-                          Borrador
+                          Draft
                         </>
                       )}
                     </Badge>
@@ -252,12 +252,12 @@ export default function MyClassesDashboard({
                     {cls.status === "published" ? (
                       <>
                         <Eye className="h-3 w-3 mr-1" />
-                        Publicado
+                        Published
                       </>
                     ) : (
                       <>
                         <EyeOff className="h-3 w-3 mr-1" />
-                        Borrador
+                        Draft
                       </>
                     )}
                   </Badge>
@@ -377,7 +377,7 @@ export default function MyClassesDashboard({
                     className="text-xs"
                   >
                     <Trash2 className="h-3 w-3 mr-1" />
-                    {confirmDeleteId === cls.id ? "Confirmar" : "Eliminar"}
+                    {confirmDeleteId === cls.id ? "Confirm" : "Eliminar"}
                   </Button>
                 </div>
 
@@ -419,13 +419,13 @@ export default function MyClassesDashboard({
             <div className="p-4 rounded-full bg-accent/10 mb-4">
               <GraduationCap className="h-12 w-12 text-accent" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">No hay clases</h3>
+            <h3 className="text-xl font-semibold mb-2">No classes yet</h3>
             <p className="text-foreground/60 mb-6 max-w-sm">
-              Comienza creando tu primera clase para ofrecer tus enseñanzas
+              Start by creating your first class para ofrecer tus enseñanzas
             </p>
             <Button onClick={handleCreateClass} className="btn-vibrant">
               <Plus className="h-4 w-4 mr-2" />
-              Crear Primera Clase
+              Create First Class
             </Button>
           </CardContent>
         </Card>
@@ -436,12 +436,12 @@ export default function MyClassesDashboard({
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">
-              {editingClass ? "Editar Clase" : "Crear Nueva Clase"}
+              {editingClass ? "Edit Class" : "Create New Class"}
             </DialogTitle>
             <DialogDescription>
               {editingClass
-                ? "Actualiza la información de la clase"
-                : "Completa los detalles para crear una nueva clase"}
+                ? "Update class information"
+                : "Complete the details to create a new class"}
             </DialogDescription>
           </DialogHeader>
           <ClassFormCard

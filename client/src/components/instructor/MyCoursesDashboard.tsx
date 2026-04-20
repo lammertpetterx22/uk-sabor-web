@@ -99,7 +99,7 @@ export default function MyCoursesDashboard({
   // Lesson mutations
   // const deleteLessonMutation = trpc.lessons.delete.useMutation({
   //   onSuccess: () => {
-  //     toast.success("Lección eliminada");
+  //     toast.success("Lesson deleted");
   //     onRefresh();
   //   },
   //   onError: (err: any) => {
@@ -131,7 +131,7 @@ export default function MyCoursesDashboard({
   };
 
   const handleDeleteLesson = (lessonId: number) => {
-    if (confirm("¿Estás seguro de eliminar esta lección?")) {
+    if (confirm("Are you sure you want to delete this lesson?")) {
       // deleteLessonMutation.mutate(lessonId);
       toast.error("Deleting lessons is not implemented yet");
     }
@@ -171,9 +171,9 @@ export default function MyCoursesDashboard({
                   <GraduationCap className="h-6 w-6 text-purple-500" />
                 </div>
                 <div>
-                  <CardTitle className="text-2xl gradient-text">Mis Cursos</CardTitle>
+                  <CardTitle className="text-2xl gradient-text">My Courses</CardTitle>
                   <CardDescription>
-                    Gestiona tus cursos y sus lecciones
+                    Manage your courses and lessons
                   </CardDescription>
                 </div>
               </div>
@@ -182,7 +182,7 @@ export default function MyCoursesDashboard({
                 className="btn-vibrant"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Crear Curso
+                Create Course
               </Button>
             </div>
           </CardHeader>
@@ -383,7 +383,7 @@ export default function MyCoursesDashboard({
                     {selectedCourse.title}
                   </CardTitle>
                   <CardDescription>
-                    Gestiona las lecciones de este curso
+                    Manage this course lessons
                   </CardDescription>
                 </div>
               </div>
@@ -554,12 +554,12 @@ export default function MyCoursesDashboard({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-2xl">
               <Sparkles className="h-6 w-6 text-accent" />
-              {editingLessonId ? "Editar Lección" : "Nueva Lección"}
+              {editingLessonId ? "Edit Lesson" : "New Lesson"}
             </DialogTitle>
             <DialogDescription>
               {editingLessonId
-                ? "Actualiza la información de la lección (el video es opcional)"
-                : "Sube un video y completa la información de la lección"}
+                ? "Update lesson info (video is optional)"
+                : "Upload a video and fill in the lesson info"}
             </DialogDescription>
           </DialogHeader>
 
@@ -571,7 +571,7 @@ export default function MyCoursesDashboard({
                   <Label htmlFor="lesson-title">Título de la Lección *</Label>
                   <Input
                     id="lesson-title"
-                    placeholder="Ej: Introducción al paso básico"
+                    placeholder="e.g. Introduction to the basic step"
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     className="bg-background/50"
@@ -598,7 +598,7 @@ export default function MyCoursesDashboard({
                 <Label htmlFor="lesson-description">Descripción</Label>
                 <Textarea
                   id="lesson-description"
-                  placeholder="Describe qué aprenderán en esta lección..."
+                  placeholder="Describe what they will learn in this lesson..."
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={3}
@@ -749,7 +749,7 @@ export default function MyCoursesDashboard({
               ) : (
                 <>
                   <CheckCircle2 className="mr-2 h-4 w-4" />
-                  {editingLessonId ? "Actualizar Lección" : "Guardar Lección"}
+                  {editingLessonId ? "Update Lesson" : "Save Lesson"}
                 </>
               )}
             </Button>
