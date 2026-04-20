@@ -242,6 +242,10 @@ interface EmailOptions {
     filename: string;
     content: Buffer;
     contentType: string;
+    /** Set to mark as inline (renderable via `cid:<contentId>` in HTML) */
+    contentId?: string;
+    /** Override disposition (defaults to "attachment"; use "inline" for CID images) */
+    disposition?: "attachment" | "inline";
   }>;
 }
 
@@ -285,12 +289,16 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
     };
 
     if (options.attachments && options.attachments.length > 0) {
-      (emailPayload as any).attachments = options.attachments.map((a) => ({
-        filename: a.filename,
-        content: a.content.toString("base64"),
-        type: a.contentType,
-        disposition: "attachment",
-      }));
+      (emailPayload as any).attachments = options.attachments.map((a) => {
+        const payload: any = {
+          filename: a.filename,
+          content: a.content.toString("base64"),
+          type: a.contentType,
+          disposition: a.disposition ?? "attachment",
+        };
+        if (a.contentId) payload.content_id = a.contentId;
+        return payload;
+      });
     }
 
     console.log("[EMAIL] Sending email via Resend API...");
@@ -330,6 +338,18 @@ function qrDataUrlToBuffer(dataUrl: string): Buffer | null {
 /**
  * Send QR code email to ticket buyer after successful payment
  */
+/**
+ * Build a public QR code image URL using a free QR rendering service.
+ * This is the ONLY approach that reliably renders inline across every
+ * email client (Apple Mail, Gmail, Outlook). `data:` URLs and CID attachments
+ * both fail in Apple Mail; external hosted URLs always work.
+ */
+function qrImageUrlFor(payload: string, sizePx = 300): string {
+  const safe = encodeURIComponent(payload);
+  // Rock-solid public service, been online for 10+ years
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${sizePx}x${sizePx}&margin=10&ecc=H&format=png&data=${safe}`;
+}
+
 export async function sendQRCodeEmail(options: {
   to: string;
   userName: string;
@@ -343,11 +363,17 @@ export async function sendQRCodeEmail(options: {
 }): Promise<boolean> {
   try {
     const code = options.ticketCode || options.accessCode || "NO-CODE";
+
+    // Build the inline QR via a public URL so every email client renders it.
+    // The QR payload is `TKT-<code>` (matches the staff scanner's validateQR).
+    const qrPayload = options.ticketCode ? `TKT-${options.ticketCode}` : code;
+    const inlineSrc = qrImageUrlFor(qrPayload, 320);
+
     const htmlContent = generateQRCodeEmailTemplate(
       options.userName,
       options.itemType,
       options.itemName,
-      options.qrCodeImage,
+      inlineSrc,
       code,
       options.eventDate,
       options.eventTime
@@ -362,8 +388,9 @@ export async function sendQRCodeEmail(options: {
       options.eventTime
     );
 
-    // Some mobile clients block inline base64 images. Attach the QR as a real
-    // PNG file so the recipient always has a working copy.
+    // Also include the QR as a real PNG attachment for offline backup (the
+    // recipient can save it to their phone and show it at the door even
+    // without signal).
     const qrBuffer = qrDataUrlToBuffer(options.qrCodeImage);
     const attachments = qrBuffer ? [{
       filename: `ticket-${code}.png`,

@@ -139,6 +139,11 @@ async function sendGuestInvitationEmail(opts: {
   const eventDate = d.toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
   const eventTime = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
+  // Use a public QR service URL for the inline image — Apple Mail refuses to
+  // render data: URLs and CID attachments, but external URLs always work.
+  const qrPayload = `TKT-${opts.ticketCode}`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=10&ecc=H&format=png&data=${encodeURIComponent(qrPayload)}`;
+
   const html = buildInvitationEmailHtml({
     guestName: opts.guestName,
     eventTitle: opts.event.title,
@@ -146,7 +151,7 @@ async function sendGuestInvitationEmail(opts: {
     eventTime,
     venue: opts.event.venue || undefined,
     ticketCode: opts.ticketCode,
-    qrDataUrl: opts.qrDataUrl,
+    qrDataUrl: qrUrl,
   });
 
   const qrBuffer = dataUrlToBuffer(opts.qrDataUrl);
