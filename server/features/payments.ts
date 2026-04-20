@@ -736,8 +736,6 @@ export async function processCompletedCheckout(session: Stripe.Checkout.Session)
       let itemName = itemType;
       let eventDate: string | undefined;
       let eventTime: string | undefined;
-      let ticketCode: string | undefined;
-      let accessCode: string | undefined;
 
       if (itemType === "event") {
         const [eventRecord] = await db.select().from(events).where(eq(events.id, itemId)).limit(1);
@@ -747,9 +745,6 @@ export async function processCompletedCheckout(session: Stripe.Checkout.Session)
           eventDate = d.toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
           eventTime = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
         }
-        // Get ticket code
-        const [ticket] = await db.select().from(eventTickets).where(eq(eventTickets.orderId, orderId)).limit(1);
-        if (ticket) ticketCode = ticket.ticketCode || undefined;
       } else if (itemType === "class") {
         const [classRecord] = await db.select().from(classes).where(eq(classes.id, itemId)).limit(1);
         if (classRecord) {
@@ -758,30 +753,9 @@ export async function processCompletedCheckout(session: Stripe.Checkout.Session)
           eventDate = d.toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
           eventTime = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
         }
-        // Get access code
-        const [classPurchase] = await db.select().from(classPurchases).where(eq(classPurchases.orderId, orderId)).limit(1);
-        if (classPurchase) accessCode = classPurchase.accessCode || undefined;
       }
 
-      // Generate QR code
-      const qrValue = `${itemType}-${itemId}-user-${userId}-order-${orderId}`;
-      const qrCodeImage = await QRCode.toDataURL(qrValue, {
-        errorCorrectionLevel: "H" as any,
-        margin: 1,
-        width: 300,
-      });
-
-      // Save QR code to database
-      await db.insert(qrCodes).values({
-        itemType: itemType as "event" | "class",
-        itemId,
-        userId,
-        orderId,
-        code: qrValue,
-        qrData: qrCodeImage,
-      });
-
-      // Generate invoice PDF
+      // Generate invoice PDF once for the whole order
       let invoicePdf: Buffer | undefined;
       try {
         const ticketPricePence = parseInt(metadata.ticket_price_pence || "0");
@@ -805,22 +779,83 @@ export async function processCompletedCheckout(session: Stripe.Checkout.Session)
         console.error("[Webhook] Error generating invoice PDF:", invoiceError);
       }
 
-      // Send email with QR code
       if (userEmail) {
-        await sendQRCodeEmail({
-          to: userEmail,
-          userName,
-          itemType: itemType as "event" | "class",
-          itemName,
-          qrCodeImage,
-          ticketCode,
-          accessCode,
-          eventDate,
-          eventTime,
-        });
-        console.log(`[Webhook] QR code email sent to ${userEmail} for ${itemType} ${itemId}`);
+        if (itemType === "event") {
+          // Send ONE email per ticket so each attendee can be forwarded their
+          // own QR. Each ticket was already stored in eventTickets with a
+          // unique ticketCode, and a matching TKT-{code} QR row was created
+          // in qrCodes. We just need to pull each one, render its QR image,
+          // and send it.
+          const ticketsForOrder = await db.select()
+            .from(eventTickets)
+            .where(eq(eventTickets.orderId, orderId));
 
-        // Send order confirmation with invoice PDF
+          for (let i = 0; i < ticketsForOrder.length; i++) {
+            const t = ticketsForOrder[i];
+            if (!t.ticketCode) continue;
+            const qrPayload = `TKT-${t.ticketCode}`;
+            let qrDataUrl = "";
+            try {
+              qrDataUrl = await QRCode.toDataURL(qrPayload, {
+                errorCorrectionLevel: "H" as any,
+                margin: 1,
+                width: 300,
+              });
+            } catch (qrErr) {
+              console.error(`[Webhook] QR render failed for ticket ${t.ticketCode}:`, qrErr);
+              continue;
+            }
+
+            const multiSuffix = ticketsForOrder.length > 1
+              ? ` (ticket ${i + 1}/${ticketsForOrder.length})`
+              : "";
+
+            await sendQRCodeEmail({
+              to: userEmail,
+              userName,
+              itemType: "event",
+              itemName: `${itemName}${multiSuffix}`,
+              qrCodeImage: qrDataUrl,
+              ticketCode: t.ticketCode,
+              eventDate,
+              eventTime,
+            });
+          }
+          console.log(`[Webhook] Sent ${ticketsForOrder.length} QR email(s) to ${userEmail} for event ${itemId}`);
+        } else {
+          // Classes: one purchase per order, use the accessCode + a class-level QR
+          const [classPurchase] = await db.select().from(classPurchases)
+            .where(eq(classPurchases.orderId, orderId)).limit(1);
+          const accessCode = classPurchase?.accessCode || undefined;
+
+          const qrValue = `class-${itemId}-user-${userId}-order-${orderId}`;
+          const qrCodeImage = await QRCode.toDataURL(qrValue, {
+            errorCorrectionLevel: "H" as any,
+            margin: 1,
+            width: 300,
+          });
+          await db.insert(qrCodes).values({
+            itemType: "class",
+            itemId,
+            userId,
+            orderId,
+            code: qrValue,
+            qrData: qrCodeImage,
+          });
+          await sendQRCodeEmail({
+            to: userEmail,
+            userName,
+            itemType: "class",
+            itemName,
+            qrCodeImage,
+            accessCode,
+            eventDate,
+            eventTime,
+          });
+          console.log(`[Webhook] Sent class QR email to ${userEmail} for class ${itemId}`);
+        }
+
+        // Send order confirmation with invoice PDF (just one per order)
         await sendOrderConfirmationEmail({
           to: userEmail,
           userName,

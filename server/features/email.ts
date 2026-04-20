@@ -317,6 +317,17 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
 }
 
 /**
+ * Extract raw PNG bytes from a `data:image/png;base64,...` URL, so we can
+ * attach the QR to the email in addition to embedding it inline. Mobile
+ * clients that strip inline base64 images will still see the attachment.
+ */
+function qrDataUrlToBuffer(dataUrl: string): Buffer | null {
+  const match = /^data:image\/png;base64,(.+)$/.exec(dataUrl);
+  if (!match) return null;
+  return Buffer.from(match[1], "base64");
+}
+
+/**
  * Send QR code email to ticket buyer after successful payment
  */
 export async function sendQRCodeEmail(options: {
@@ -351,11 +362,21 @@ export async function sendQRCodeEmail(options: {
       options.eventTime
     );
 
+    // Some mobile clients block inline base64 images. Attach the QR as a real
+    // PNG file so the recipient always has a working copy.
+    const qrBuffer = qrDataUrlToBuffer(options.qrCodeImage);
+    const attachments = qrBuffer ? [{
+      filename: `ticket-${code}.png`,
+      content: qrBuffer,
+      contentType: "image/png",
+    }] : undefined;
+
     return await sendEmail({
       to: options.to,
       subject: `Your ${options.itemType === "event" ? "Event Ticket" : "Class Booking"} - ${options.itemName}`,
       htmlContent,
       textContent,
+      attachments,
     });
   } catch (error) {
     console.error("[EMAIL] Failed to send QR code email:", error);
@@ -517,6 +538,7 @@ export function generateQRCodeEmailTemplate(
               <p>Show this at the entrance to check in:</p>
               <img src="${qrCodeImage}" alt="Check-in QR Code" class="qr-image">
               <div class="qr-code-text">${qrCode}</div>
+              <p style="font-size:12px;color:#888;margin-top:10px">Can't see the QR above? Open the attached PNG file or show staff the code.</p>
             </div>
             <div class="instructions">
               <h4>How to Use Your Check-In Code:</h4>
