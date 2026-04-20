@@ -124,10 +124,18 @@ export default function AttendanceDashboard() {
   );
 }
 
+// Anything with a date >= start of today counts as "upcoming" — this matches
+// the public-feed cutoff so an event running past midnight still shows as
+// upcoming for the whole calendar day.
+function getStartOfToday() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
 function EventsAttendanceTab({ onOpenScanner }: { onOpenScanner: (type: "event" | "class", id: number, title: string) => void }) {
-  // Only show events the current user created (server already scopes
-  // listMyEvents by creatorId for non-admins)
   const { data: events, isLoading } = trpc.admin.listMyEvents.useQuery();
+  const [view, setView] = useState<"upcoming" | "past">("upcoming");
 
   if (isLoading) return <div className="text-center py-8 text-foreground/50">Loading...</div>;
   if (!events || events.length === 0) {
@@ -140,17 +148,42 @@ function EventsAttendanceTab({ onOpenScanner }: { onOpenScanner: (type: "event" 
     );
   }
 
+  const startOfToday = getStartOfToday();
+  const upcoming = events.filter((e: any) => new Date(e.eventDate) >= startOfToday);
+  const past = events.filter((e: any) => new Date(e.eventDate) < startOfToday);
+  const list = view === "upcoming" ? upcoming : past;
+
   return (
-    <div className="space-y-6">
-      {events.map((event: any) => (
-        <EventAttendanceCard key={event.id} event={event} onOpenScanner={() => onOpenScanner("event", event.id, event.title)} />
-      ))}
+    <div className="space-y-4">
+      <Tabs value={view} onValueChange={(v) => setView(v as "upcoming" | "past")}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
+          <TabsTrigger value="past">Past ({past.length})</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {list.length === 0 ? (
+        <Card>
+          <CardContent className="py-8 text-center">
+            <p className="text-foreground/60">
+              {view === "upcoming" ? "No upcoming events" : "No past events"}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-6">
+          {list.map((event: any) => (
+            <EventAttendanceCard key={event.id} event={event} onOpenScanner={() => onOpenScanner("event", event.id, event.title)} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 function ClassesAttendanceTab({ onOpenScanner }: { onOpenScanner: (type: "event" | "class", id: number, title: string) => void }) {
   const { data: classes, isLoading } = trpc.admin.listMyClasses.useQuery();
+  const [view, setView] = useState<"upcoming" | "past">("upcoming");
 
   if (isLoading) return <div className="text-center py-8 text-foreground/50">Loading...</div>;
   if (!classes || classes.length === 0) {
@@ -163,11 +196,35 @@ function ClassesAttendanceTab({ onOpenScanner }: { onOpenScanner: (type: "event"
     );
   }
 
+  const startOfToday = getStartOfToday();
+  const upcoming = classes.filter((c: any) => new Date(c.classDate) >= startOfToday);
+  const past = classes.filter((c: any) => new Date(c.classDate) < startOfToday);
+  const list = view === "upcoming" ? upcoming : past;
+
   return (
-    <div className="space-y-6">
-      {classes.map((cls: any) => (
-        <ClassAttendanceCard key={cls.id} cls={cls} onOpenScanner={() => onOpenScanner("class", cls.id, cls.title)} />
-      ))}
+    <div className="space-y-4">
+      <Tabs value={view} onValueChange={(v) => setView(v as "upcoming" | "past")}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
+          <TabsTrigger value="past">Past ({past.length})</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {list.length === 0 ? (
+        <Card>
+          <CardContent className="py-8 text-center">
+            <p className="text-foreground/60">
+              {view === "upcoming" ? "No upcoming classes" : "No past classes"}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-6">
+          {list.map((cls: any) => (
+            <ClassAttendanceCard key={cls.id} cls={cls} onOpenScanner={() => onOpenScanner("class", cls.id, cls.title)} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
