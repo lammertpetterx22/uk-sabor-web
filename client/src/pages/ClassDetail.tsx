@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRoute, Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -25,6 +25,14 @@ export default function ClassDetail() {
   const { data: instructor } = trpc.instructors.getById.useQuery(classItem?.instructorId || 0, { enabled: !!classItem?.instructorId });
   const hasAccessQuery = trpc.classes.hasAccess.useQuery(classId, { enabled: !!classId && isAuthenticated });
   const hasAccess = hasAccessQuery.data === true;
+  const { data: tiers } = trpc.classes.listTiers.useQuery(classId, { enabled: !!classId });
+
+  const [selectedTierId, setSelectedTierId] = useState<number | null>(null);
+  useEffect(() => {
+    if (tiers && tiers.length > 0 && selectedTierId === null) {
+      setSelectedTierId(tiers[0].id);
+    }
+  }, [tiers, selectedTierId]);
 
   const checkoutMutation = trpc.payments.createClassCheckout.useMutation({
     onSuccess: (data) => {
@@ -100,9 +108,20 @@ export default function ClassDetail() {
   }
 
   const classDate = new Date(classItem.classDate);
-  const price = parseFloat(String(classItem.price));
-  const isFull = classItem.maxParticipants ? (classItem.currentParticipants || 0) >= classItem.maxParticipants : false;
-  const spotsLeft = classItem.maxParticipants ? classItem.maxParticipants - (classItem.currentParticipants || 0) : null;
+  const hasTiers = (tiers?.length ?? 0) > 0;
+  const selectedTier = hasTiers ? tiers!.find((t: any) => t.id === selectedTierId) : null;
+  const price = selectedTier
+    ? parseFloat(String(selectedTier.price))
+    : parseFloat(String(classItem.price));
+
+  const tierFull = selectedTier?.maxQuantity != null
+    ? (selectedTier.soldCount ?? 0) >= selectedTier.maxQuantity
+    : false;
+  const flatFull = classItem.maxParticipants ? (classItem.currentParticipants || 0) >= classItem.maxParticipants : false;
+  const isFull = hasTiers ? tierFull : flatFull;
+  const spotsLeft = hasTiers
+    ? (selectedTier?.maxQuantity != null ? selectedTier.maxQuantity - (selectedTier.soldCount ?? 0) : null)
+    : (classItem.maxParticipants ? classItem.maxParticipants - (classItem.currentParticipants || 0) : null);
 
   return (
     <div className="min-h-screen bg-background">
@@ -223,9 +242,52 @@ export default function ClassDetail() {
             <Card className="sticky top-24 border-accent/20">
               <CardContent className="pt-6 space-y-6">
                 <div className="text-center">
-                  <p className="text-sm text-foreground/60 mb-1">Price per class</p>
+                  <p className="text-sm text-foreground/60 mb-1">{selectedTier?.name || "Price per class"}</p>
                   <p className="text-4xl font-bold text-accent">£{price.toFixed(2)}</p>
                 </div>
+
+                {hasTiers && tiers!.length > 1 && (
+                  <div>
+                    <p className="text-sm text-foreground/60 mb-2">Ticket type</p>
+                    <div className="space-y-2">
+                      {tiers!.map((t: any) => {
+                        const tierPrice = parseFloat(String(t.price));
+                        const tierRemaining = t.maxQuantity != null ? t.maxQuantity - (t.soldCount ?? 0) : null;
+                        const tierSoldOut = tierRemaining != null && tierRemaining <= 0;
+                        const active = selectedTierId === t.id;
+                        return (
+                          <button
+                            key={t.id}
+                            type="button"
+                            disabled={tierSoldOut}
+                            onClick={() => setSelectedTierId(t.id)}
+                            className={`w-full text-left p-3 rounded-xl border-2 transition-all ${
+                              active
+                                ? "border-accent bg-accent/10"
+                                : "border-border/40 bg-background/40 hover:border-accent/40"
+                            } ${tierSoldOut ? "opacity-50 cursor-not-allowed" : ""}`}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className={`font-semibold ${active ? "text-accent" : "text-foreground"}`}>{t.name}</p>
+                                {t.description && (
+                                  <p className="text-xs text-foreground/60 mt-0.5 line-clamp-2">{t.description}</p>
+                                )}
+                                {tierRemaining != null && tierRemaining > 0 && tierRemaining <= 10 && (
+                                  <p className="text-xs text-orange-400 mt-1">Only {tierRemaining} left</p>
+                                )}
+                                {tierSoldOut && (
+                                  <p className="text-xs text-destructive mt-1">Sold out</p>
+                                )}
+                              </div>
+                              <p className="font-bold text-accent shrink-0">£{tierPrice.toFixed(2)}</p>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {hasAccess ? (
                   <div className="space-y-3">
@@ -308,15 +370,16 @@ export default function ClassDetail() {
                             item={{
                               type: "class",
                               id: classItem.id,
-                              title: classItem.title,
+                              title: selectedTier ? `${classItem.title} — ${selectedTier.name}` : classItem.title,
                               price: price,
                               imageUrl: classItem.imageUrl || undefined,
                               instructorName: instructor?.name,
                               danceStyle: classItem.danceStyle || undefined,
                               date: classDate.toISOString(),
+                              ...(selectedTier ? { tierId: selectedTier.id, tierName: selectedTier.name } : {}),
                             }}
-                            maxStock={classItem.maxParticipants || undefined}
-                            currentlySold={classItem.currentParticipants || 0}
+                            maxStock={selectedTier?.maxQuantity ?? classItem.maxParticipants ?? undefined}
+                            currentlySold={selectedTier?.soldCount ?? classItem.currentParticipants ?? 0}
                             className="w-full py-6 text-lg"
                             data-cart-button="class"
                           />

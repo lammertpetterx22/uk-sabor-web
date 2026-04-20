@@ -4,7 +4,7 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { events, courses, classes, discountCodes, eventTicketTiers } from "../../drizzle/schema";
+import { events, courses, classes, discountCodes, eventTicketTiers, classTicketTiers } from "../../drizzle/schema";
 import { eq, sql, and } from "drizzle-orm";
 import Stripe from "stripe";
 
@@ -108,6 +108,30 @@ export const checkoutRouter = router({
             const [classItem] = await db.select().from(classes).where(eq(classes.id, item.id)).limit(1);
             if (!classItem) throw new Error(`Class ${item.id} not found`);
             if (classItem.status !== "published") throw new Error(`Class "${classItem.title}" is not available`);
+
+            const qty = item.quantity || 1;
+
+            // Multi-tier path for classes — mirrors the event logic.
+            if (item.tierId) {
+              const [tier] = await db.select()
+                .from(classTicketTiers)
+                .where(and(
+                  eq(classTicketTiers.id, item.tierId),
+                  eq(classTicketTiers.classId, classItem.id),
+                  eq(classTicketTiers.active, true),
+                )).limit(1);
+              if (!tier) throw new Error(`Ticket type for "${classItem.title}" is no longer available`);
+              if (tier.maxQuantity != null && tier.soldCount + qty > tier.maxQuantity) {
+                throw new Error(`"${tier.name}" spots for "${classItem.title}" are sold out`);
+              }
+              return {
+                ...item,
+                price: parseFloat(String(tier.price)),
+                title: `${classItem.title} — ${tier.name}`,
+                imageUrl: classItem.imageUrl || undefined,
+                tierId: tier.id,
+              };
+            }
 
             return {
               ...item,

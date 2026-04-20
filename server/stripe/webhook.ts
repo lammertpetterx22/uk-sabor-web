@@ -337,19 +337,31 @@ async function handleMultiItemCartCheckout(
           break;
 
         case "class":
-          accessCode = generateAccessCode();
-          await db.insert(classPurchases).values({
-            userId,
-            classId: itemId,
-            instructorId: creatorUserId,
-            orderId,
-            pricePaid: itemPrice.toFixed(2) as any,
-            platformFee: platformFeeGBP.toFixed(2) as any,
-            instructorEarnings: instructorEarningsGBP.toFixed(2) as any,
-            accessCode,
-            status: "active",
-          });
-          console.log(`[Webhook] ✅ Class purchase created for class #${itemId}`);
+          {
+            accessCode = generateAccessCode();
+            const tierId = item.tier_id ?? null;
+            await db.insert(classPurchases).values({
+              userId,
+              classId: itemId,
+              tierId,
+              instructorId: creatorUserId,
+              orderId,
+              pricePaid: itemPrice.toFixed(2) as any,
+              platformFee: platformFeeGBP.toFixed(2) as any,
+              instructorEarnings: instructorEarningsGBP.toFixed(2) as any,
+              accessCode,
+              status: "active",
+            });
+            console.log(`[Webhook] ✅ Class purchase created for class #${itemId}${tierId ? ` (tier ${tierId})` : ""}`);
+
+            if (tierId) {
+              const { classTicketTiers } = await import("../../drizzle/schema");
+              await db.update(classTicketTiers)
+                .set({ soldCount: sql`${classTicketTiers.soldCount} + ${quantity}` })
+                .where(eq(classTicketTiers.id, tierId));
+              console.log(`[Webhook] ✅ Incremented class tier #${tierId} soldCount (+${quantity})`);
+            }
+          }
           break;
       }
 
@@ -406,6 +418,12 @@ async function handleMultiItemCartCheckout(
               const [classRecord] = await db.select().from(classes).where(eq(classes.id, itemId)).limit(1);
               if (classRecord) {
                 itemName = classRecord.title;
+                if (item.tier_id) {
+                  const { classTicketTiers } = await import("../../drizzle/schema");
+                  const [tier] = await db.select({ name: classTicketTiers.name })
+                    .from(classTicketTiers).where(eq(classTicketTiers.id, item.tier_id)).limit(1);
+                  if (tier?.name) itemName = `${classRecord.title} — ${tier.name}`;
+                }
                 const d = new Date(classRecord.classDate);
                 eventDate = d.toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
                 eventTime = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });

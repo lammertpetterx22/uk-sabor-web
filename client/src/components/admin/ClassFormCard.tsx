@@ -31,10 +31,12 @@ import {
   ArrowRight,
   Check,
   Tag,
+  Ticket,
 } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import DiscountCodesSection from "./DiscountCodesSection";
+import TicketTiersSection from "./TicketTiersSection";
 import ImageCropperModal from "@/components/ImageCropperModal";
 import ModernImageUpload from "@/components/ModernImageUpload";
 import { useTranslations } from "@/hooks/useTranslations";
@@ -121,7 +123,8 @@ export default function ClassFormCard({
       { key: "files",    label: "Materials", icon: FileText,    color: "teal" },
     ];
     if (editingClass?.id) {
-      base.push({ key: "discounts", label: "Discounts", icon: Tag, color: "rose" });
+      base.push({ key: "tiers",     label: "Ticket Types", icon: Ticket, color: "cyan" });
+      base.push({ key: "discounts", label: "Discounts",    icon: Tag,    color: "rose" });
     }
     return base;
   }, [editingClass?.id]);
@@ -629,8 +632,15 @@ export default function ClassFormCard({
         </div>
       )}
 
-      {/* ───────── Discounts (edit-only, step 6) ───────── */}
-      {step === 6 && editingClass?.id && (
+      {/* ───────── Ticket Types (edit-only) ───────── */}
+      {steps[step]?.key === "tiers" && editingClass?.id && (
+      <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/[0.06] to-transparent p-5 md:p-6">
+        <TicketTiersSection parentType="class" classId={editingClass.id} flatTicketPrice={formData.price} />
+      </div>
+      )}
+
+      {/* ───────── Discounts (edit-only) ───────── */}
+      {steps[step]?.key === "discounts" && editingClass?.id && (
       <div className="rounded-2xl border border-rose-500/20 bg-gradient-to-br from-rose-500/[0.06] to-transparent p-5 md:p-6">
         <DiscountCodesSection itemType="class" itemId={editingClass.id} />
       </div>

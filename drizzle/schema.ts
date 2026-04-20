@@ -262,11 +262,31 @@ export const coursePurchases = pgTable("coursePurchases", {
   instructorIdIdx: index("course_purchases_instructor_id_idx").on(table.instructorId),
 }));
 
+// Class Ticket Tiers — optional multi-tier pricing for a class
+// (e.g. Drop-in, Monthly Pass, Class + Social). Falls back to classes.price
+// when the class has zero rows here.
+export const classTicketTiers = pgTable("classTicketTiers", {
+  id: serial("id").primaryKey(),
+  classId: integer("classId").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  maxQuantity: integer("maxQuantity"),         // null = unlimited
+  soldCount: integer("soldCount").default(0).notNull(),
+  position: integer("position").default(0).notNull(),
+  active: boolean("active").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+}, (table) => ({
+  classIdIdx: index("class_ticket_tiers_class_idx").on(table.classId),
+}));
+
 // Class Purchases table
 export const classPurchases = pgTable("classPurchases", {
   id: serial("id").primaryKey(),
   userId: integer("userId").notNull(),
   classId: integer("classId").notNull(),
+  tierId: integer("tierId"), // FK to classTicketTiers.id — null for flat-price (legacy)
   instructorId: integer("instructorId"),
   orderId: integer("orderId"),
   pricePaid: decimal("pricePaid", { precision: 10, scale: 2 }),
@@ -285,7 +305,11 @@ export const classPurchases = pgTable("classPurchases", {
   classIdIdx: index("class_purchases_class_id_idx").on(table.classId),
   instructorIdIdx: index("class_purchases_instructor_id_idx").on(table.instructorId),
   paymentStatusIdx: index("class_purchases_payment_status_idx").on(table.paymentStatus),
+  tierIdIdx: index("class_purchases_tier_id_idx").on(table.tierId),
 }));
+
+export type ClassTicketTier = typeof classTicketTiers.$inferSelect;
+export type InsertClassTicketTier = typeof classTicketTiers.$inferInsert;
 
 // Type exports
 export type Instructor = typeof instructors.$inferSelect;

@@ -468,6 +468,23 @@ async function startServer() {
             `CREATE INDEX IF NOT EXISTS "event_ticket_tiers_event_idx" ON "eventTicketTiers" ("eventId")`,
             `ALTER TABLE "eventTickets" ADD COLUMN IF NOT EXISTS "tierId" INTEGER`,
             `CREATE INDEX IF NOT EXISTS "event_tickets_tier_id_idx" ON "eventTickets" ("tierId")`,
+            // Multi-tier class tickets
+            `CREATE TABLE IF NOT EXISTS "classTicketTiers" (
+              "id" SERIAL PRIMARY KEY,
+              "classId" INTEGER NOT NULL,
+              "name" VARCHAR(255) NOT NULL,
+              "description" TEXT,
+              "price" DECIMAL(10,2) NOT NULL,
+              "maxQuantity" INTEGER,
+              "soldCount" INTEGER NOT NULL DEFAULT 0,
+              "position" INTEGER NOT NULL DEFAULT 0,
+              "active" BOOLEAN NOT NULL DEFAULT true,
+              "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
+              "updatedAt" TIMESTAMP NOT NULL DEFAULT now()
+            )`,
+            `CREATE INDEX IF NOT EXISTS "class_ticket_tiers_class_idx" ON "classTicketTiers" ("classId")`,
+            `ALTER TABLE "classPurchases" ADD COLUMN IF NOT EXISTS "tierId" INTEGER`,
+            `CREATE INDEX IF NOT EXISTS "class_purchases_tier_id_idx" ON "classPurchases" ("tierId")`,
           ];
           for (const q of autoMigrations) {
             try {

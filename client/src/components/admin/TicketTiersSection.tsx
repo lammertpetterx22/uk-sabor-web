@@ -8,7 +8,11 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
 interface TicketTiersSectionProps {
-  eventId: number;
+  /** Which entity these tiers belong to. Defaults to "event" for backwards-compat. */
+  parentType?: "event" | "class";
+  /** Either an eventId or a classId depending on parentType. */
+  eventId?: number;
+  classId?: number;
   /** Fallback flat ticket price shown as the default single-tier price */
   flatTicketPrice?: string;
 }
@@ -23,14 +27,18 @@ interface TierRow {
   position: number;
 }
 
-export default function TicketTiersSection({ eventId, flatTicketPrice }: TicketTiersSectionProps) {
+export default function TicketTiersSection({ parentType = "event", eventId, classId, flatTicketPrice }: TicketTiersSectionProps) {
   const utils = trpc.useUtils();
-  const tiersQuery = trpc.events.listTiers.useQuery(eventId);
+  const parentId = (parentType === "event" ? eventId : classId) as number;
+
+  const eventTiersQuery = trpc.events.listTiers.useQuery(parentId, { enabled: parentType === "event" });
+  const classTiersQuery = trpc.classes.listTiers.useQuery(parentId, { enabled: parentType === "class" });
+  const tiersQuery = parentType === "event" ? eventTiersQuery : classTiersQuery;
 
   const [rows, setRows] = useState<TierRow[]>([]);
 
   // Hydrate from server, or start with a single default row seeded from the
-  // event's flat ticket price so creators can just add "VIP" on top without
+  // flat ticket price so creators can just add "VIP" on top without
   // re-entering the base price.
   useEffect(() => {
     if (!tiersQuery.data) return;
@@ -57,13 +65,23 @@ export default function TicketTiersSection({ eventId, flatTicketPrice }: TicketT
     }
   }, [tiersQuery.data, flatTicketPrice]);
 
-  const saveMutation = trpc.events.saveTiers.useMutation({
+  const eventSaveMutation = trpc.events.saveTiers.useMutation({
     onSuccess: () => {
       toast.success("Ticket types saved");
-      utils.events.listTiers.invalidate(eventId);
+      utils.events.listTiers.invalidate(parentId);
     },
     onError: (err) => toast.error(err.message),
   });
+
+  const classSaveMutation = trpc.classes.saveTiers.useMutation({
+    onSuccess: () => {
+      toast.success("Ticket types saved");
+      utils.classes.listTiers.invalidate(parentId);
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const saveMutation = parentType === "event" ? eventSaveMutation : classSaveMutation;
 
   const addRow = () => {
     setRows((prev) => [
@@ -96,17 +114,20 @@ export default function TicketTiersSection({ eventId, flatTicketPrice }: TicketT
       }
     }
 
-    saveMutation.mutate({
-      eventId,
-      tiers: rows.map((r, i) => ({
-        id: r.id,
-        name: r.name.trim(),
-        description: r.description.trim() || null,
-        price: r.price,
-        maxQuantity: r.maxQuantity === "" ? null : parseInt(r.maxQuantity, 10),
-        position: i,
-      })),
-    });
+    const tiers = rows.map((r, i) => ({
+      id: r.id,
+      name: r.name.trim(),
+      description: r.description.trim() || null,
+      price: r.price,
+      maxQuantity: r.maxQuantity === "" ? null : parseInt(r.maxQuantity, 10),
+      position: i,
+    }));
+
+    if (parentType === "event") {
+      eventSaveMutation.mutate({ eventId: parentId, tiers });
+    } else {
+      classSaveMutation.mutate({ classId: parentId, tiers });
+    }
   };
 
   return (

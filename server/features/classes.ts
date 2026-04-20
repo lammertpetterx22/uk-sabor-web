@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { classes, classPurchases, instructors, classInstructors } from "../../drizzle/schema";
+import { classes, classPurchases, instructors, classInstructors, classTicketTiers } from "../../drizzle/schema";
 import { getAllRoles } from "../../drizzle/schema";
 import { eq, desc, gte, and } from "drizzle-orm";
 import { canCreateClass } from "../stripe/plans";
@@ -656,5 +656,93 @@ export const classesRouter = router({
         .limit(1);
 
       return result || null;
+    }),
+
+  // ─── Multi-tier tickets ────────────────────────────────────────────────
+  /** Public: list ticket tiers for a class (ordered by position). */
+  listTiers: publicProcedure
+    .input(z.number())
+    .query(async ({ input: classId }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      return db
+        .select()
+        .from(classTicketTiers)
+        .where(and(eq(classTicketTiers.classId, classId), eq(classTicketTiers.active, true)))
+        .orderBy(classTicketTiers.position);
+    }),
+
+  /**
+   * Replace the tier list for a class. Creators send the full desired state:
+   * new rows insert, edits update (preserving soldCount), removed rows soft-
+   * deactivate so existing purchase.tierId references stay intact.
+   */
+  saveTiers: protectedProcedure
+    .input(z.object({
+      classId: z.number(),
+      tiers: z.array(z.object({
+        id: z.number().optional(),
+        name: z.string().min(1),
+        description: z.string().optional().nullable(),
+        price: z.string().min(1),
+        maxQuantity: z.number().int().positive().optional().nullable(),
+        position: z.number().int().min(0),
+      })).max(20),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!hasCreatorRole(ctx.user)) throw new Error("Unauthorized");
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Ownership check — class belongs to an instructor profile linked to a userId
+      const [cls] = await db.select().from(classes).where(eq(classes.id, input.classId)).limit(1);
+      if (!cls) throw new Error("Class not found");
+
+      if (!isAdminRole(ctx.user)) {
+        const instructor = await getInstructorForUser(db, ctx.user.id);
+        if (!instructor || instructor.id !== cls.instructorId) {
+          throw new Error("You do not have permission to edit this class");
+        }
+      }
+
+      const existing = await db.select().from(classTicketTiers).where(eq(classTicketTiers.classId, input.classId));
+      const existingById = new Map(existing.map(t => [t.id, t]));
+      const keptIds = new Set<number>();
+
+      for (const tier of input.tiers) {
+        if (tier.id && existingById.has(tier.id)) {
+          keptIds.add(tier.id);
+          await db.update(classTicketTiers)
+            .set({
+              name: tier.name,
+              description: tier.description ?? null,
+              price: tier.price as any,
+              maxQuantity: tier.maxQuantity ?? null,
+              position: tier.position,
+              active: true,
+              updatedAt: new Date(),
+            })
+            .where(eq(classTicketTiers.id, tier.id));
+        } else {
+          await db.insert(classTicketTiers).values({
+            classId: input.classId,
+            name: tier.name,
+            description: tier.description ?? null,
+            price: tier.price as any,
+            maxQuantity: tier.maxQuantity ?? null,
+            position: tier.position,
+          });
+        }
+      }
+
+      for (const t of existing) {
+        if (!keptIds.has(t.id)) {
+          await db.update(classTicketTiers)
+            .set({ active: false, updatedAt: new Date() })
+            .where(eq(classTicketTiers.id, t.id));
+        }
+      }
+
+      return { ok: true };
     }),
 });
