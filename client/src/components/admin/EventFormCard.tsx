@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,12 @@ import {
   CreditCard,
   Banknote,
   Building2,
-  Clock
+  Clock,
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Tag,
+  Megaphone,
 } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -108,6 +113,30 @@ export default function EventFormCard({
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [cropSrcBanner, setCropSrcBanner] = useState<string | null>(null);
+  const [step, setStep] = useState(0);
+
+  // Step definitions — extras (Discount, Guest, RRP) only available after
+  // the event is saved (they need an eventId).
+  const steps = useMemo(() => {
+    const base = [
+      { key: "basics",  label: "Basics",   icon: Sparkles,    color: "blue" },
+      { key: "date",    label: "Schedule", icon: Clock,       color: "amber" },
+      { key: "payment", label: "Payment",  icon: CreditCard,  color: "green" },
+      { key: "images",  label: "Images",   icon: ImageIcon,   color: "indigo" },
+    ];
+    if (editingEvent?.id) {
+      base.push(
+        { key: "discounts", label: "Discounts",  icon: Tag,       color: "pink" },
+        { key: "guests",    label: "Guest List", icon: Users,     color: "purple" },
+        { key: "rrp",       label: "RRPs",       icon: Megaphone, color: "orange" },
+      );
+    }
+    return base;
+  }, [editingEvent?.id]);
+
+  const isLastCoreStep = step === 3;
+  const isLast = step === steps.length - 1;
+  const currentStep = steps[step];
 
   const resetForm = () => {
     setFormData({
@@ -268,7 +297,49 @@ export default function EventFormCard({
 
   return (
     <div className="space-y-6">
+      {/* ───────── Step Indicator ───────── */}
+      <div className="rounded-2xl border border-border/40 bg-card/40 backdrop-blur-sm p-3">
+        <div className="flex items-center gap-1.5 overflow-x-auto">
+          {steps.map((s, idx) => {
+            const active = idx === step;
+            const done = idx < step;
+            const disabled = !editingEvent?.id && idx > 3;
+            const Icon = s.icon;
+            return (
+              <button
+                key={s.key}
+                type="button"
+                onClick={() => !disabled && setStep(idx)}
+                disabled={disabled}
+                className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                  active
+                    ? "bg-gradient-to-r from-[#FA3698]/20 to-purple-500/20 text-foreground border border-[#FA3698]/40"
+                    : done
+                      ? "text-green-400 hover:bg-white/5"
+                      : disabled
+                        ? "text-foreground/30 cursor-not-allowed"
+                        : "text-foreground/60 hover:bg-white/5"
+                }`}
+              >
+                <span className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${
+                  active
+                    ? "bg-[#FA3698] text-white"
+                    : done
+                      ? "bg-green-500/20 text-green-400"
+                      : "bg-white/10 text-foreground/50"
+                }`}>
+                  {done ? <Check className="h-3 w-3" /> : idx + 1}
+                </span>
+                <Icon className="h-3.5 w-3.5" />
+                {s.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* ───────── Basic Information ───────── */}
+      {step === 0 && (
       <div className="rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-500/[0.06] to-transparent p-5 md:p-6 space-y-5">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-blue-500/15">
@@ -334,8 +405,10 @@ export default function EventFormCard({
           />
         </div>
       </div>
+      )}
 
       {/* ───────── Date & Tickets ───────── */}
+      {step === 1 && (
       <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/[0.06] to-transparent p-5 md:p-6 space-y-5">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-amber-500/15">
@@ -408,8 +481,10 @@ export default function EventFormCard({
           <span className="text-sm text-foreground/80">Show "Only X tickets left" alert when fewer than 20 remain</span>
         </label>
       </div>
+      )}
 
       {/* ───────── Payment Method ───────── */}
+      {step === 2 && (
       <div className="rounded-2xl border border-green-500/20 bg-gradient-to-br from-green-500/[0.06] to-transparent p-5 md:p-6 space-y-5">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-green-500/15">
@@ -447,23 +522,31 @@ export default function EventFormCard({
           })}
         </div>
       </div>
+      )}
 
-      {/* ───────── Discount Codes ───────── */}
+      {/* ───────── Discount Codes (step 4, only when editing) ───────── */}
+      {step === 4 && editingEvent?.id && (
       <div className="rounded-2xl border border-pink-500/20 bg-gradient-to-br from-pink-500/[0.06] to-transparent p-5 md:p-6">
-        <DiscountCodesSection itemType="event" itemId={editingEvent?.id} />
+        <DiscountCodesSection itemType="event" itemId={editingEvent.id} />
       </div>
+      )}
 
-      {/* ───────── Guest List ───────── */}
+      {/* ───────── Guest List (step 5, only when editing) ───────── */}
+      {step === 5 && editingEvent?.id && (
       <div className="rounded-2xl border border-purple-500/20 bg-gradient-to-br from-purple-500/[0.06] to-transparent p-5 md:p-6">
-        <GuestListSection eventId={editingEvent?.id} />
+        <GuestListSection eventId={editingEvent.id} />
       </div>
+      )}
 
-      {/* ───────── RRP ───────── */}
+      {/* ───────── RRP (step 6, only when editing) ───────── */}
+      {step === 6 && editingEvent?.id && (
       <div className="rounded-2xl border border-orange-500/20 bg-gradient-to-br from-orange-500/[0.06] to-transparent p-5 md:p-6">
-        <RrpAssignmentSection eventId={editingEvent?.id} />
+        <RrpAssignmentSection eventId={editingEvent.id} />
       </div>
+      )}
 
-      {/* ───────── Images ───────── */}
+      {/* ───────── Images (step 3) ───────── */}
+      {step === 3 && (
       <div className="rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-500/[0.06] to-transparent p-5 md:p-6 space-y-6">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-indigo-500/15">
@@ -713,33 +796,69 @@ export default function EventFormCard({
           onClose={() => setCropSrcBanner(null)}
         />
       </div>
+      )}
 
       {/* ───────── Sticky Action Bar ───────── */}
-      <div className="sticky bottom-0 -mx-4 md:-mx-0 bg-background/95 backdrop-blur-md border-t border-border/40 px-4 py-4 mt-2 flex flex-col sm:flex-row gap-3 items-center sm:justify-between z-10">
-        <p className="text-xs text-foreground/40 order-last sm:order-first">
-          <span className="text-[#FA3698]">*</span> Required fields
-        </p>
-        <div className="flex gap-3 w-full sm:w-auto">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={resetForm}
-            className="h-11 px-5"
-          >
-            <X className="h-4 w-4 mr-2" /> Cancel
-          </Button>
-          <Button
-            type="button"
-            onClick={handleCreateEvent}
-            disabled={createMutation.isPending || updateMutation.isPending || uploading || uploadingBanner}
-            className="btn-vibrant flex-1 sm:flex-none h-11 px-8 text-sm font-semibold shadow-lg"
-          >
-            {(createMutation.isPending || updateMutation.isPending) ? (
-              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {editingEvent ? "Updating…" : "Creating…"}</>
+      <div className="sticky bottom-0 -mx-4 md:-mx-0 bg-background/95 backdrop-blur-md border-t border-border/40 px-4 py-3 mt-2 flex items-center justify-between gap-3 z-10">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setStep(s => Math.max(0, s - 1))}
+          disabled={step === 0}
+          className="h-11 px-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" /> Back
+        </Button>
+
+        <div className="text-xs text-foreground/50 hidden sm:block">
+          Step {step + 1} of {steps.length} · <span className="font-semibold text-foreground/70">{currentStep.label}</span>
+        </div>
+
+        <div className="flex gap-2">
+          {step < 3 ? (
+            // Core steps 0-2: show "Next" to advance
+            <Button
+              type="button"
+              onClick={() => setStep(s => Math.min(steps.length - 1, s + 1))}
+              className="btn-vibrant h-11 px-6"
+            >
+              Next <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+          ) : step === 3 ? (
+            // Images step (last core step): show "Save" / "Publish"
+            <Button
+              type="button"
+              onClick={handleCreateEvent}
+              disabled={createMutation.isPending || updateMutation.isPending || uploading || uploadingBanner}
+              className="btn-vibrant h-11 px-6 text-sm font-semibold shadow-lg"
+            >
+              {(createMutation.isPending || updateMutation.isPending) ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {editingEvent ? "Updating…" : "Publishing…"}</>
+              ) : (
+                <><Sparkles className="mr-2 h-4 w-4" /> {editingEvent ? "Save Changes" : "Publish Event"}</>
+              )}
+            </Button>
+          ) : (
+            // Extras steps (Discount/Guest/RRP) — continue navigation
+            step < steps.length - 1 ? (
+              <Button
+                type="button"
+                onClick={() => setStep(s => s + 1)}
+                variant="outline"
+                className="h-11 px-6"
+              >
+                Next <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
             ) : (
-              <><Sparkles className="mr-2 h-4 w-4" /> {editingEvent ? "Update Event" : "Publish Event"}</>
-            )}
-          </Button>
+              <Button
+                type="button"
+                onClick={resetForm}
+                className="btn-vibrant h-11 px-6"
+              >
+                Done
+              </Button>
+            )
+          )}
         </div>
       </div>
     </div>
