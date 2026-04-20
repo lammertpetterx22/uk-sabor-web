@@ -150,7 +150,7 @@ export default function AdminDashboard() {
             <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-2 mb-8 h-auto p-2 bg-card/50 backdrop-blur-sm border border-border/50">
               <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-accent/20 data-[state=active]:to-purple-500/20 data-[state=active]:border-accent/50">
                 <LayoutTemplate className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Inicio</span>
+                <span className="hidden sm:inline">Home</span>
               </TabsTrigger>
               <TabsTrigger value="content" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-500/20 data-[state=active]:to-cyan-500/20 data-[state=active]:border-blue-500/50">
                 <Calendar className="h-4 w-4 mr-2" />
@@ -182,23 +182,23 @@ export default function AdminDashboard() {
             <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-2 mb-8 h-auto p-2 bg-card/50 backdrop-blur-sm border border-border/50">
               <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-accent/20 data-[state=active]:to-purple-500/20 data-[state=active]:border-accent/50">
                 <LayoutTemplate className="h-4 w-4 mr-2" />
-                Inicio
+                Home
               </TabsTrigger>
               <TabsTrigger value="events" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-500/20 data-[state=active]:to-cyan-500/20 data-[state=active]:border-blue-500/50">
                 <Calendar className="h-4 w-4 mr-2" />
-                Mis Eventos
+                My Events
               </TabsTrigger>
               <TabsTrigger value="classes" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-orange-500/20 data-[state=active]:to-red-500/20 data-[state=active]:border-orange-500/50">
                 <Users className="h-4 w-4 mr-2" />
-                Mis Clases
+                My Classes
               </TabsTrigger>
               <TabsTrigger value="my-courses" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:border-purple-500/50">
                 <Video className="h-4 w-4 mr-2" />
-                Mis Cursos
+                My Courses
               </TabsTrigger>
               <TabsTrigger value="profile" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-green-500/20 data-[state=active]:to-emerald-500/20 data-[state=active]:border-green-500/50">
                 <Users className="h-4 w-4 mr-2" />
-                Mi Perfil
+                My Profile
               </TabsTrigger>
             </TabsList>
           ) : (
@@ -206,19 +206,19 @@ export default function AdminDashboard() {
             <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-2 mb-8 h-auto p-2 bg-card/50 backdrop-blur-sm border border-border/50">
               <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-accent/20 data-[state=active]:to-purple-500/20 data-[state=active]:border-accent/50">
                 <LayoutTemplate className="h-4 w-4 mr-2" />
-                Inicio
+                Home
               </TabsTrigger>
               <TabsTrigger value="events" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-500/20 data-[state=active]:to-cyan-500/20 data-[state=active]:border-blue-500/50">
                 <Calendar className="h-4 w-4 mr-2" />
-                Mis Eventos
+                My Events
               </TabsTrigger>
               <TabsTrigger value="classes" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-orange-500/20 data-[state=active]:to-red-500/20 data-[state=active]:border-orange-500/50">
                 <Users className="h-4 w-4 mr-2" />
-                Mis Clases
+                My Classes
               </TabsTrigger>
               <TabsTrigger value="profile" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-green-500/20 data-[state=active]:to-emerald-500/20 data-[state=active]:border-green-500/50">
                 <Users className="h-4 w-4 mr-2" />
-                Mi Perfil
+                My Profile
               </TabsTrigger>
             </TabsList>
           )}

@@ -63,7 +63,7 @@ export default function UserProfile() {
 
   const handleImageUpload = async (file: File) => {
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('La imagen debe pesar menos de 5MB');
+      toast.error('Image must be under 5MB');
       return;
     }
 
@@ -83,10 +83,10 @@ export default function UserProfile() {
       });
 
       setFormData(prev => ({ ...prev, avatarUrl: result.url }));
-      toast.success('Foto de perfil subida correctamente');
+      toast.success('Profile photo uploaded successfully');
     } catch (err: any) {
       logger.error('Image upload failed', err);
-      toast.error('Error al subir: ' + err.message);
+      toast.error('Upload error: ' + err.message);
     } finally {
       setIsUploading(false);
     }
@@ -101,10 +101,10 @@ export default function UserProfile() {
         avatarUrl: formData.avatarUrl,
       });
       await refresh();
-      toast.success("¡Perfil actualizado correctamente!");
+      toast.success("Profile updated successfully!");
       setIsEditing(false);
     } catch (error: any) {
-      toast.error("Error al actualizar el perfil: " + error.message);
+      toast.error("Failed to update profile: " + error.message);
     } finally {
       setIsSaving(false);
     }
@@ -117,15 +117,15 @@ export default function UserProfile() {
         <Tabs defaultValue="perfil" className="w-full">
           <TabsList className={`w-full ${(user?.role === "admin" || user?.role === "instructor" || user?.role === "promoter") ? 'grid-cols-3' : 'grid-cols-2'} grid bg-card/60 backdrop-blur-xl border border-border/40 mb-8 p-1 h-12 rounded-xl`}>
             <TabsTrigger value="perfil" className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-white">
-              Perfil
+              Profile
             </TabsTrigger>
             <TabsTrigger value="cursos" className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-white">
-              Cursos
+              Courses
             </TabsTrigger>
             {/* Only show Billing tab for instructors, promoters, and admins */}
             {(user?.role === "admin" || user?.role === "instructor" || user?.role === "promoter") && (
               <TabsTrigger value="billing" className="rounded-lg data-[state=active]:bg-accent data-[state=active]:text-white">
-                Facturación
+                Billing
               </TabsTrigger>
             )}
           </TabsList>
@@ -166,7 +166,7 @@ export default function UserProfile() {
 
                   <div className="text-center sm:text-left">
                     <CardTitle className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
-                      {user.name || "Mi Perfil"}
+                      {user.name || "My Profile"}
                     </CardTitle>
                     <CardDescription className="text-lg mt-1 flex items-center justify-center sm:justify-start gap-2">
                       <Mail className="w-4 h-4" /> {user.email}
@@ -183,14 +183,14 @@ export default function UserProfile() {
             <Card className="border-border/40 shadow-lg">
               <CardHeader className="flex flex-row items-center justify-between border-b border-border/40 pb-6 mb-6">
                 <div>
-                  <CardTitle className="text-xl">Información del Perfil</CardTitle>
+                  <CardTitle className="text-xl">Profile Information</CardTitle>
                   <CardDescription>
-                    {isEditing ? "Actualiza tus datos públicos" : "Tus datos actuales"}
+                    {isEditing ? "Update your public details" : "Your current details"}
                   </CardDescription>
                 </div>
                 {!isEditing && (
                   <Button onClick={() => setIsEditing(true)} variant="outline" className="h-9 px-4">
-                    Editar Perfil
+                    Edit Profile
                   </Button>
                 )}
               </CardHeader>
@@ -200,18 +200,18 @@ export default function UserProfile() {
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-foreground/80 flex items-center gap-2">
                     <User size={16} className="text-accent" />
-                    Nombre Completo
+                    Full Name
                   </label>
                   {isEditing ? (
                     <Input
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="Tu nombre y apellido"
+                      placeholder="Your name and surname"
                       className="bg-background border-border/50 h-11"
                     />
                   ) : (
                     <div className="p-3 bg-card/30 rounded-lg border border-border/20">
-                      <p className="text-foreground">{formData.name || "No proporcionado"}</p>
+                      <p className="text-foreground">{formData.name || "Not provided"}</p>
                     </div>
                   )}
                 </div>
@@ -220,7 +220,7 @@ export default function UserProfile() {
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-foreground/80 flex items-center gap-2">
                     <Mail size={16} className="text-muted-foreground" />
-                    Correo Electrónico (Solo Lectura)
+                    Email Address (Read-only)
                   </label>
                   <div className="p-3 bg-background/50 rounded-lg border border-border/20">
                     <p className="text-foreground/70">{user.email}</p>
@@ -231,20 +231,20 @@ export default function UserProfile() {
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-foreground/80 flex items-center gap-2">
                     <CheckCircle size={16} className="text-accent" />
-                    Biografía
+                    Bio
                   </label>
                   {isEditing ? (
                     <Textarea
                       value={formData.bio}
                       onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                      placeholder="Cuéntanos un poco sobre ti y tu experiencia con el baile..."
+                      placeholder="Tell us a bit about yourself and your dance experience..."
                       rows={5}
                       className="bg-background border-border/50 resize-none"
                     />
                   ) : (
                     <div className="p-4 bg-card/30 rounded-lg border border-border/20 min-h-[100px]">
                       <p className="text-foreground whitespace-pre-wrap leading-relaxed">
-                        {formData.bio || "Aún no has escrito una biografía."}
+                        {formData.bio || "You have not written a bio yet."}
                       </p>
                     </div>
                   )}
@@ -267,7 +267,7 @@ export default function UserProfile() {
                       disabled={isSaving || isUploading}
                       className="w-1/3 h-11"
                     >
-                      Cancelar
+                      Cancel
                     </Button>
                     <Button
                       onClick={handleSaveProfile}
@@ -277,10 +277,10 @@ export default function UserProfile() {
                       {isSaving ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Guardando...
+                          Saving...
                         </>
                       ) : (
-                        "Guardar Cambios"
+                        "Save Changes"
                       )}
                     </Button>
                   </div>
