@@ -9,12 +9,14 @@ import { Loader2, Calendar, MapPin, Clock, Users, Ticket, ArrowLeft, Minus, Plus
 import { toast } from "sonner";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import PaymentMethodModal from "@/components/payment/PaymentMethodModal";
+import { Trans, useTr } from "@/components/Trans";
 
 export default function EventDetail() {
   const [, params] = useRoute("/events/:id");
   const [, setLocation] = useLocation();
   const eventId = parseInt(params?.id || "0");
   const { user, isAuthenticated } = useAuth();
+  const { tr } = useTr();
   const [quantity, setQuantity] = useState(1);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
@@ -92,9 +94,9 @@ export default function EventDetail() {
     return (
       <div className="min-h-screen bg-background">
         <div className="container py-16 text-center">
-          <h1 className="text-2xl font-bold mb-4">Event not found</h1>
+          <h1 className="text-2xl font-bold mb-4"><Trans>Event not found</Trans></h1>
           <Link href="/events">
-            <Button variant="outline">Back to Events</Button>
+            <Button variant="outline"><Trans>Back to Events</Trans></Button>
           </Link>
         </div>
       </div>
@@ -128,7 +130,7 @@ export default function EventDetail() {
         <div className="container relative -mt-32 z-10">
           <Link href="/events" className="inline-flex items-center gap-2 text-foreground/60 hover:text-accent mb-4 transition-colors">
             <ArrowLeft className="h-4 w-4" />
-            Back to Events
+            <Trans>Back to Events</Trans>
           </Link>
 
           <div className="grid lg:grid-cols-3 gap-8">
@@ -136,7 +138,7 @@ export default function EventDetail() {
             <div className="lg:col-span-2 space-y-6">
               <div>
                 <Badge className="mb-3 bg-accent/20 text-accent border-accent/50">
-                  {event.status === "published" ? "Available" : event.status}
+                  {event.status === "published" ? tr("Available") : event.status}
                 </Badge>
                 <h1 className="text-4xl font-bold mb-4">{event.title}</h1>
 
@@ -159,9 +161,9 @@ export default function EventDetail() {
               {/* Description */}
               <Card>
                 <CardContent className="pt-6">
-                  <h2 className="text-xl font-semibold mb-4">About this event</h2>
+                  <h2 className="text-xl font-semibold mb-4"><Trans>About this event</Trans></h2>
                   <div className="text-foreground/80 whitespace-pre-wrap leading-relaxed">
-                    {event.description || "More information coming soon."}
+                    {event.description || tr("More information coming soon.")}
                   </div>
                 </CardContent>
               </Card>
@@ -172,7 +174,7 @@ export default function EventDetail() {
               <Card className="sticky top-24 border-accent/20">
                 <CardContent className="pt-6 space-y-6">
                   <div className="text-center">
-                    <p className="text-sm text-foreground/60 mb-1">Price per ticket</p>
+                    <p className="text-sm text-foreground/60 mb-1"><Trans>Price per ticket</Trans></p>
                     <p className="text-4xl font-bold text-accent">£{price.toFixed(2)}</p>
                   </div>
 
@@ -180,24 +182,24 @@ export default function EventDetail() {
                     <div className="space-y-3">
                       <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 text-center">
                         <Ticket className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                        <p className="font-semibold text-green-400">You have your ticket</p>
-                        <p className="text-sm text-foreground/60 mt-1">Check your dashboard for the code</p>
+                        <p className="font-semibold text-green-400"><Trans>You have your ticket</Trans></p>
+                        <p className="text-sm text-foreground/60 mt-1"><Trans>Check your dashboard for the code</Trans></p>
                       </div>
                       <Link href="/dashboard">
                         <Button className="w-full" variant="outline">
-                          View my ticket
+                          <Trans>View my ticket</Trans>
                         </Button>
                       </Link>
                     </div>
                   ) : isSoldOut ? (
                     <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 text-center">
-                      <p className="font-semibold text-destructive">Sold Out</p>
+                      <p className="font-semibold text-destructive"><Trans>Sold Out</Trans></p>
                     </div>
                   ) : (
                     <div className="space-y-4">
                       {/* Quantity selector */}
                       <div>
-                        <p className="text-sm text-foreground/60 mb-2">Quantity</p>
+                        <p className="text-sm text-foreground/60 mb-2"><Trans>Quantity</Trans></p>
                         <div className="flex items-center justify-center gap-4">
                           <Button
                             variant="outline"
@@ -223,11 +225,11 @@ export default function EventDetail() {
 
                       <div className="border-t border-border/50 pt-4">
                         <div className="flex justify-between text-sm mb-1">
-                          <span className="text-foreground/60">{quantity}x Ticket</span>
+                          <span className="text-foreground/60">{quantity}x {tr("Ticket")}</span>
                           <span>£{(price * quantity).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between font-bold text-lg mt-2">
-                          <span>Total</span>
+                          <span><Trans>Total</Trans></span>
                           <span className="text-accent">£{(price * quantity).toFixed(2)}</span>
                         </div>
                       </div>
@@ -249,10 +251,10 @@ export default function EventDetail() {
                               {cashReservationMutation.isPending ? (
                                 <>
                                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                  Processing...
+                                  {tr("Processing...")}
                                 </>
                               ) : (
-                                "Reserve Your Spot"
+                                tr("Reserve Your Spot")
                               )}
                             </Button>
                           );

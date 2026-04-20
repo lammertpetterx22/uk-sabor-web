@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, DollarSign, Clock, Users, Video } from "lucide-react";
 import type { Course } from "@shared/types";
+import { Trans } from "@/components/Trans";
 
 interface CourseCardProps {
   course: Course;
@@ -89,7 +90,7 @@ const CourseCard = memo(function CourseCard({ course, instructorName }: CourseCa
 
         {/* CTA Button */}
         <Link href={`/courses/${course.id}`} className="mt-auto">
-          <Button className="bg-gradient-to-r from-[#00D4FF] to-[#9D4EDD] text-white hover:scale-105 active:scale-95 transition-all w-full btn-modern">View Course</Button>
+          <Button className="bg-gradient-to-r from-[#00D4FF] to-[#9D4EDD] text-white hover:scale-105 active:scale-95 transition-all w-full btn-modern"><Trans>View Course</Trans></Button>
         </Link>
       </div>
     </Card>

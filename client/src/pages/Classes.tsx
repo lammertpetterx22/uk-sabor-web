@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { Input } from "@/components/ui/input";
 import { ClassesCalendar } from "@/components/ClassesCalendar";
+import { Trans, useTr } from "@/components/Trans";
 import { Loader2, Calendar, Clock, Users, Image as ImageIcon, Search } from "lucide-react";
 import type { Class, Instructor } from "@shared/types";
 
 export default function Classes() {
+  const { tr } = useTr();
   const [classes, setClasses] = useState<Class[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [instructorMap, setInstructorMap] = useState<Record<number, Instructor>>({});
@@ -62,9 +64,9 @@ export default function Classes() {
       {/* Page Header */}
       <section className="bg-gradient-to-r from-[#E91E8C]/20 via-[#FF4500]/20 to-[#FFD700]/20 py-12">
         <div className="container">
-          <h1 className="text-5xl md:text-6xl font-bold mb-4">Live Dance Classes</h1>
+          <h1 className="text-5xl md:text-6xl font-bold mb-4"><Trans>Live Dance Classes</Trans></h1>
           <p className="text-lg text-foreground/80 max-w-2xl">
-            Join our live dance classes and learn in real time with our expert instructors. Suitable for all levels.
+            <Trans>Join our live dance classes and learn in real time with our expert instructors. Suitable for all levels.</Trans>
           </p>
         </div>
       </section>
@@ -75,16 +77,16 @@ export default function Classes() {
           <div className="mb-8">
             <h2 className="text-4xl font-bold mb-4 flex items-center gap-3">
               <Calendar className="text-accent" size={32} />
-              Class Calendar
+              <Trans>Class Calendar</Trans>
             </h2>
-            <p className="text-lg text-foreground/70">Our live dance classes every week</p>
+            <p className="text-lg text-foreground/70"><Trans>Our live dance classes every week</Trans></p>
           </div>
           
           <div className="mb-8 relative max-w-md">
             <Search className="absolute left-3 top-3 text-accent" size={20} />
             <Input
               type="text"
-              placeholder="Search classes by name, style, or description..."
+              placeholder={tr("Search classes by name, style, or description...")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 h-12 bg-card/60 border-white/10"
@@ -98,8 +100,8 @@ export default function Classes() {
             <ClassesCalendar classes={upcomingClasses} onClassClick={(id) => window.location.href = `/classes/${id}`} />
           ) : (
             <div className="text-center py-20">
-              <p className="text-xl text-foreground/70 mb-6">No upcoming classes scheduled at this time.</p>
-              <p className="text-foreground/60">Check back soon for new classes!</p>
+              <p className="text-xl text-foreground/70 mb-6"><Trans>No upcoming classes scheduled at this time.</Trans></p>
+              <p className="text-foreground/60"><Trans>Check back soon for new classes!</Trans></p>
             </div>
           )}
         </div>
@@ -108,7 +110,7 @@ export default function Classes() {
       {/* Upcoming Classes List */}
       <section className="py-16">
         <div className="container">
-          <h2 className="text-3xl font-bold mb-8">Upcoming Classes</h2>
+          <h2 className="text-3xl font-bold mb-8"><Trans>Upcoming Classes</Trans></h2>
           {loading ? (
             <div className="flex justify-center py-20">
               <Loader2 className="animate-spin text-accent" size={48} />

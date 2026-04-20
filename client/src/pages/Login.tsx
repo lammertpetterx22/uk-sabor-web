@@ -8,6 +8,7 @@ import { Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { Trans, useTr } from "@/components/Trans";
 
 const SABOR_LOGO = "https://d2xsxph8kpxj0f.cloudfront.net/310519663400274503/DGihaPaJvnMFHruoq9jmVQ/sabor-logo_7c905b38.png";
 
@@ -15,6 +16,7 @@ export default function Login() {
   const [, setLocation] = useLocation();
   const search = useSearch();
   const { isAuthenticated } = useAuth();
+  const { tr } = useTr();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -97,19 +99,19 @@ export default function Login() {
         <div className="text-center mb-8">
           <img src={SABOR_LOGO} alt="UK Sabor logo" className="h-20 w-auto mx-auto mb-4" />
           <h1 className="text-3xl font-bold gradient-text">UK Sabor</h1>
-          <p className="text-foreground/60 mt-2">Dance Events & Online Courses</p>
+          <p className="text-foreground/60 mt-2"><Trans>Dance Events & Online Courses</Trans></p>
         </div>
 
         {/* Login/Register Card */}
         <Card className="border-border/50 shadow-xl">
           <CardHeader>
             <CardTitle className="gradient-text">
-              {isRegister ? "Create Account" : "Welcome Back"}
+              {isRegister ? tr("Create Account") : tr("Welcome Back")}
             </CardTitle>
             <CardDescription>
               {isRegister
-                ? "Join UK Sabor and start dancing"
-                : "Sign in to your account"}
+                ? tr("Join UK Sabor and start dancing")
+                : tr("Sign in to your account")}
             </CardDescription>
           </CardHeader>
 
@@ -118,11 +120,11 @@ export default function Login() {
               {/* Name Field (Register Only) */}
               {isRegister && (
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="name"><Trans>Full Name</Trans></Label>
                   <Input
                     id="name"
                     type="text"
-                    placeholder="Your name"
+                    placeholder={tr("Your name")}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     disabled={isLoading}
@@ -134,7 +136,7 @@ export default function Login() {
 
               {/* Email Field */}
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email"><Trans>Email</Trans></Label>
                 <Input
                   id="email"
                   type="email"
@@ -149,7 +151,7 @@ export default function Login() {
 
               {/* Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password"><Trans>Password</Trans></Label>
                 <Input
                   id="password"
                   type="password"
@@ -162,14 +164,14 @@ export default function Login() {
                 />
                 {isRegister && (
                   <p className="text-xs text-foreground/50">
-                    Minimum 6 characters
+                    <Trans>Minimum 6 characters</Trans>
                   </p>
                 )}
                 {!isRegister && (
                   <div className="text-right">
                     <Link href="/forgot-password">
                       <a className="text-xs text-accent hover:underline font-medium">
-                        Forgot your password?
+                        <Trans>Forgot your password?</Trans>
                       </a>
                     </Link>
                   </div>
@@ -185,19 +187,19 @@ export default function Login() {
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    {isRegister ? "Creating account..." : "Signing in..."}
+                    {isRegister ? tr("Creating account...") : tr("Signing in...")}
                   </>
                 ) : isRegister ? (
-                  "Create Account"
+                  <Trans>Create Account</Trans>
                 ) : (
-                  "Sign In"
+                  <Trans>Sign In</Trans>
                 )}
               </Button>
 
               {/* Toggle Register/Login */}
               <div className="text-center pt-4 border-t border-border/50">
                 <p className="text-sm text-foreground/60 mb-3">
-                  {isRegister ? "Already have an account?" : "Don't have an account?"}
+                  {isRegister ? tr("Already have an account?") : tr("Don't have an account?")}
                 </p>
                 <Button
                   type="button"
@@ -211,7 +213,7 @@ export default function Login() {
                   }}
                   disabled={isLoading}
                 >
-                  {isRegister ? "Sign In" : "Create Account"}
+                  {isRegister ? <Trans>Sign In</Trans> : <Trans>Create Account</Trans>}
                 </Button>
               </div>
             </form>
@@ -219,18 +221,18 @@ export default function Login() {
             {/* Benefits */}
             {isRegister && (
               <div className="mt-6 p-4 bg-accent/10 rounded-lg border border-accent/20 space-y-2">
-                <p className="text-xs font-semibold text-foreground/80 mb-2">By registering you can:</p>
+                <p className="text-xs font-semibold text-foreground/80 mb-2"><Trans>By registering you can:</Trans></p>
                 <div className="flex items-center gap-2 text-xs text-foreground/70">
                   <CheckCircle2 className="h-3 w-3 text-accent flex-shrink-0" />
-                  <span>Buy tickets for events</span>
+                  <span><Trans>Buy tickets for events</Trans></span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-foreground/70">
                   <CheckCircle2 className="h-3 w-3 text-accent flex-shrink-0" />
-                  <span>Access online dance courses</span>
+                  <span><Trans>Access online dance courses</Trans></span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-foreground/70">
                   <CheckCircle2 className="h-3 w-3 text-accent flex-shrink-0" />
-                  <span>Book in-person classes</span>
+                  <span><Trans>Book in-person classes</Trans></span>
                 </div>
               </div>
             )}
@@ -239,7 +241,7 @@ export default function Login() {
 
         {/* Footer */}
         <p className="text-center text-xs text-foreground/50 mt-8">
-          © 2026 UK Sabor. All rights reserved.
+          © 2026 UK Sabor. <Trans>All rights reserved.</Trans>
         </p>
       </div>
     </div>

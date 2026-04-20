@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { MapPin, Calendar, DollarSign } from "lucide-react";
 import type { Event } from "@shared/types";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { Trans, useTr } from "@/components/Trans";
 
 interface EventCardProps {
   event: Event;
@@ -12,6 +13,7 @@ interface EventCardProps {
 
 const EventCard = memo(function EventCard({ event }: EventCardProps) {
   const { user } = useAuth();
+  const { tr } = useTr();
   const eventDate = new Date(event.eventDate);
   const formattedDate = eventDate.toLocaleDateString("en-GB", {
     weekday: "short",
@@ -62,14 +64,14 @@ const EventCard = memo(function EventCard({ event }: EventCardProps) {
         {/* Tickets Sold - Only visible to event creator */}
         {event.maxTickets && user?.id === event.creatorId && (
           <div className="mb-3 text-xs text-foreground/60 bg-foreground/5 px-2 py-1 rounded">
-            {event.ticketsSold} / {event.maxTickets} tickets sold
+            {event.ticketsSold} / {event.maxTickets} {tr("tickets sold")}
           </div>
         )}
 
         {/* CTA Button */}
         <Link href={`/events/${event.id}`} className="mt-auto">
           <Button className="btn-vibrant btn-modern w-full group">
-            <span>View & Buy Tickets</span>
+            <span><Trans>View & Buy Tickets</Trans></span>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-2 group-hover:translate-x-1 transition-transform">
               <path d="M5 12h14"></path>
               <path d="m12 5 7 7-7 7"></path>

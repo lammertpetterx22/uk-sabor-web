@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
 import CourseCard from "@/components/CourseCard";
+import { Trans, useTr } from "@/components/Trans";
 import { Search, Filter, BookOpen } from "lucide-react";
 import { ListSkeleton } from "@/components/Skeleton";
 import type { Course, Instructor } from "@shared/types";
 
 export default function Courses() {
+  const { tr } = useTr();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
@@ -53,9 +55,9 @@ export default function Courses() {
       {/* Page Header */}
       <section className="bg-gradient-to-r from-[#E91E8C]/20 via-[#FF4500]/20 to-[#FFD700]/20 py-12">
         <div className="container">
-          <h1 className="text-5xl md:text-6xl font-bold mb-4">Dance Courses</h1>
+          <h1 className="text-5xl md:text-6xl font-bold mb-4"><Trans>Dance Courses</Trans></h1>
           <p className="text-lg text-foreground/80 max-w-2xl">
-            Learn from world-class instructors with comprehensive courses designed for all levels. Master Salsa, Bachata, Merengue, and more.
+            <Trans>Learn from world-class instructors with comprehensive courses designed for all levels. Master Salsa, Bachata, Merengue, and more.</Trans>
           </p>
         </div>
       </section>
@@ -68,7 +70,7 @@ export default function Courses() {
               <Search className="absolute left-3 top-3 text-accent" size={20} />
               <Input
                 type="text"
-                placeholder="Search courses by name, style, or instructor..."
+                placeholder={tr("Search courses by name, style, or instructor...")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 h-12 bg-card border-border/50"
@@ -78,14 +80,14 @@ export default function Courses() {
 
           {/* Level Filter */}
           <div className="flex flex-wrap gap-2">
-            <span className="text-sm text-foreground/70 self-center">Level:</span>
+            <span className="text-sm text-foreground/70 self-center"><Trans>Level</Trans>:</span>
             <Button
               variant={selectedLevel === null ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedLevel(null)}
               className={selectedLevel === null ? "btn-vibrant" : "border-border/50"}
             >
-              All Levels
+              <Trans>All Levels</Trans>
             </Button>
             {levels.map((level) => (
               <Button
@@ -95,7 +97,7 @@ export default function Courses() {
                 onClick={() => setSelectedLevel(level)}
                 className={selectedLevel === level ? "btn-vibrant" : "border-border/50 capitalize"}
               >
-                {level}
+                {tr(level === "beginner" ? "Beginner" : level === "intermediate" ? "Intermediate" : level === "advanced" ? "Advanced" : "All Levels")}
               </Button>
             ))}
           </div>
@@ -110,7 +112,7 @@ export default function Courses() {
           ) : filteredCourses.length > 0 ? (
             <>
               <div className="mb-6 text-foreground/70">
-                Showing {filteredCourses.length} course{filteredCourses.length !== 1 ? "s" : ""}
+                {tr("Showing {{count}} course(s)", { count: filteredCourses.length })}
               </div>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredCourses.map((course) => (
@@ -123,10 +125,10 @@ export default function Courses() {
               <div className="flex justify-center mb-4">
                 <BookOpen size={48} className="text-accent/40" />
               </div>
-              <h3 className="text-2xl font-bold mb-2">No courses found</h3>
-              <p className="text-lg text-foreground/60 mb-6">We couldn't find any courses matching your filters.</p>
+              <h3 className="text-2xl font-bold mb-2"><Trans>No courses found</Trans></h3>
+              <p className="text-lg text-foreground/60 mb-6"><Trans>We couldn't find any courses matching your search.</Trans></p>
               <Button asChild className="btn-vibrant btn-modern">
-                <Link href="/courses">Clear Filters</Link>
+                <Link href="/courses"><Trans>Clear Filters</Trans></Link>
               </Button>
             </div>
           )}
@@ -136,12 +138,12 @@ export default function Courses() {
       {/* CTA Section */}
       <section className="py-16 md:py-24 bg-card/50 border-y border-border/50">
         <div className="container text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">Ready to Start Learning?</h2>
+          <h2 className="text-4xl md:text-5xl font-bold mb-4"><Trans>Ready to Start Learning?</Trans></h2>
           <p className="text-lg text-foreground/80 mb-8 max-w-2xl mx-auto">
-            Choose a course and begin your Latin dance journey today. All courses include lifetime access to video lessons.
+            <Trans>Choose a course and begin your Latin dance journey today. All courses include lifetime access to video lessons.</Trans>
           </p>
           <Button asChild className="btn-vibrant btn-modern text-lg px-8 py-6 h-auto">
-            <Link href="/courses">Browse All Courses</Link>
+            <Link href="/courses"><Trans>Browse All Courses</Trans></Link>
           </Button>
         </div>
       </section>
@@ -149,7 +151,7 @@ export default function Courses() {
       {/* Footer */}
       <footer className="bg-card border-t border-border/50 py-8">
         <div className="container text-center text-foreground/70 text-sm">
-          <p>&copy; 2026 UK Sabor. All rights reserved. Dance with passion, celebrate culture.</p>
+          <p>&copy; 2026 UK Sabor. <Trans>All rights reserved. Dance with passion, celebrate culture.</Trans></p>
         </div>
       </footer>
     </div>
