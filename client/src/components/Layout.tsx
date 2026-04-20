@@ -2,6 +2,7 @@ import { useMemo, useState, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useTranslation } from "react-i18next";
+import { useTr } from "@/components/Trans";
 import CartButton from "@/components/cart/CartButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -88,6 +89,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     const [location] = useLocation();
     const { user, isAuthenticated, loading, logout } = useAuth();
     const { i18n } = useTranslation();
+    const { tr } = useTr();
 
     const allRoles = useMemo(() => collectRoles(user as any), [user]);
     const isAdmin = allRoles.includes("admin");
@@ -129,7 +131,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     size={17}
                     className={active ? "text-[#FA3698]" : "group-hover:text-[#FA3698] transition-colors"}
                 />
-                <span className="text-sm">{label}</span>
+                <span className="text-sm">{tr(label)}</span>
                 {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#FA3698]" />}
             </Link>
         );
@@ -158,9 +160,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <div className="flex items-center gap-3">
                     <Icon size={20} />
                     <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-sm">{label}</div>
+                        <div className="font-semibold text-sm">{tr(label)}</div>
                         {description && (
-                            <div className="text-[11px] text-white/50 mt-0.5">{description}</div>
+                            <div className="text-[11px] text-white/50 mt-0.5">{tr(description)}</div>
                         )}
                     </div>
                     <ChevronRight size={16} className="text-white/30 group-hover:text-white/60 transition-colors" />
@@ -236,7 +238,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     className="w-full flex items-center justify-between px-4 py-2 text-[10px] uppercase tracking-widest text-white/40 font-semibold hover:text-white/70 transition-colors"
                 >
                     <span className="flex items-center gap-2">
-                        <Compass size={12} /> Explorar
+                        <Compass size={12} /> {tr("Explore")}
                     </span>
                     <ChevronDown size={14} className={`transition-transform ${exploreOpen ? "rotate-180" : ""}`} />
                 </button>
@@ -252,7 +254,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 {isAuthenticated && (
                     <>
                         <p className="px-4 pt-3 pb-2 text-[10px] uppercase tracking-widest text-white/40 font-semibold">
-                            My Account
+                            {tr("My Account")}
                         </p>
                         <NavLink href="/dashboard" icon={Ticket} label="My Tickets" onClick={onClose} />
                         {!isCreator && !isRrp && (
@@ -298,7 +300,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 {isAuthenticated && isAdmin && (
                     <div className="mt-4">
                         <p className="px-4 pb-2 text-[10px] uppercase tracking-widest text-white/40 font-semibold flex items-center gap-2">
-                            <Shield size={12} /> Administration
+                            <Shield size={12} /> {tr("Administration")}
                         </p>
                         <NavLink href="/crm" icon={Users} label="CRM" onClick={onClose} />
                         <NavLink href="/email-marketing" icon={Mail} label="Email Marketing" onClick={onClose} />
@@ -309,21 +311,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 {/* Legal */}
                 <div className="mt-5">
                     <p className="px-4 pb-2 text-[10px] uppercase tracking-widest text-white/30 font-semibold">
-                        Legal
+                        {tr("Legal")}
                     </p>
                     <Link
                         href="/terms"
                         onClick={onClose}
                         className="flex items-center gap-3 px-4 py-2 rounded-xl text-xs text-white/40 hover:text-white/70 transition-colors"
                     >
-                        Terms of Service
+                        {tr("Terms of Service")}
                     </Link>
                     <Link
                         href="/privacy"
                         onClick={onClose}
                         className="flex items-center gap-3 px-4 py-2 rounded-xl text-xs text-white/40 hover:text-white/70 transition-colors"
                     >
-                        Privacy Policy
+                        {tr("Privacy Policy")}
                     </Link>
                 </div>
             </nav>
@@ -337,7 +339,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-white/5 transition-colors text-white/70 hover:text-white text-sm"
                     >
                         <Globe size={17} />
-                        <span className="flex-1 text-left">Language</span>
+                        <span className="flex-1 text-left">{tr("Language")}</span>
                         <span className="text-xs text-white/60 flex items-center gap-1.5">
                             <span className="text-base leading-none">{currentLang.flag}</span>
                             <ChevronDown size={14} className={`transition-transform ${langMenuOpen ? "rotate-180" : ""}`} />
@@ -375,7 +377,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/50 hover:text-[#FD4D43] hover:bg-[#FD4D43]/10 transition-all text-sm font-medium"
                     >
                         <LogOut size={17} />
-                        Log Out
+                        {tr("Log Out")}
                     </button>
                 ) : (
                     <Link
@@ -383,12 +385,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         onClick={onClose}
                         className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#FA3698] to-[#FD4D43] text-white font-bold text-sm hover:shadow-lg hover:shadow-[#FA3698]/30 transition-all"
                     >
-                        Log In
+                        {tr("Log In")}
                     </Link>
                 )}
             </div>
         </div>
-    ), [isAuthenticated, isCreator, isAdmin, isRrp, user, allRoles, exploreOpen, langMenuOpen, currentLang, i18n, handleLogout, location]);
+    ), [isAuthenticated, isCreator, isAdmin, isRrp, user, allRoles, exploreOpen, langMenuOpen, currentLang, i18n, handleLogout, location, tr]);
 
     return (
         <div className="min-h-screen bg-black flex">
@@ -457,26 +459,26 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <footer className="hidden lg:block border-t border-white/5 bg-black/50 backdrop-blur-sm py-6 px-4">
                     <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
                         <p className="text-white/40">
-                            © {new Date().getFullYear()} UK Sabor. All rights reserved.
+                            © {new Date().getFullYear()} UK Sabor. {tr("All rights reserved.")}
                         </p>
                         <nav className="flex items-center gap-6">
                             <Link
                                 href="/terms"
                                 className="text-white/50 hover:text-accent transition-colors font-medium"
                             >
-                                Terms of Service
+                                {tr("Terms of Service")}
                             </Link>
                             <Link
                                 href="/privacy"
                                 className="text-white/50 hover:text-accent transition-colors font-medium"
                             >
-                                Privacy Policy
+                                {tr("Privacy Policy")}
                             </Link>
                             <a
                                 href="mailto:support@uksabor.com"
                                 className="text-white/50 hover:text-accent transition-colors font-medium"
                             >
-                                Contact
+                                {tr("Contact")}
                             </a>
                         </nav>
                     </div>

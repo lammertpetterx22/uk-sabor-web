@@ -24,6 +24,7 @@ import {
   PartyPopper
 } from "lucide-react";
 import { useTranslations } from "@/hooks/useTranslations";
+import { Trans, useTr } from "@/components/Trans";
 
 interface MyEventsDashboardProps {
   events: any[];
@@ -39,6 +40,7 @@ export default function MyEventsDashboard({
   isAdmin,
 }: MyEventsDashboardProps) {
   const { t } = useTranslations();
+  const { tr } = useTr();
   const utils = trpc.useUtils();
 
   const [showEventDialog, setShowEventDialog] = useState(false);
@@ -141,9 +143,9 @@ export default function MyEventsDashboard({
                 <Calendar className="h-6 w-6 text-blue-500" />
               </div>
               <div>
-                <CardTitle className="text-2xl gradient-text">My Events</CardTitle>
+                <CardTitle className="text-2xl gradient-text"><Trans>My Events</Trans></CardTitle>
                 <CardDescription>
-                  Manage your events and promotions
+                  <Trans>Manage your events and promotions</Trans>
                 </CardDescription>
               </div>
             </div>
@@ -152,7 +154,7 @@ export default function MyEventsDashboard({
               className="btn-vibrant"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Create Event
+              <Trans>Create Event</Trans>
             </Button>
           </div>
         </CardHeader>
@@ -163,7 +165,7 @@ export default function MyEventsDashboard({
         <div className="flex justify-center py-16">
           <div className="text-center">
             <Loader2 className="h-12 w-12 animate-spin text-accent mx-auto mb-4" />
-            <p className="text-foreground/60">Loading events...</p>
+            <p className="text-foreground/60">{tr("Loading events...")}</p>
           </div>
         </div>
       ) : events && events.length > 0 ? (

@@ -27,6 +27,7 @@ import {
   GraduationCap
 } from "lucide-react";
 import { useTranslations } from "@/hooks/useTranslations";
+import { useTr } from "@/components/Trans";
 
 interface MyClassesDashboardProps {
   classes: any[];
@@ -46,6 +47,7 @@ export default function MyClassesDashboard({
   myInstructorProfile,
 }: MyClassesDashboardProps) {
   const { t } = useTranslations();
+  const { tr } = useTr();
   const utils = trpc.useUtils();
 
   const [showClassDialog, setShowClassDialog] = useState(false);
@@ -196,7 +198,7 @@ export default function MyClassesDashboard({
         <div className="flex justify-center py-16">
           <div className="text-center">
             <Loader2 className="h-12 w-12 animate-spin text-accent mx-auto mb-4" />
-            <p className="text-foreground/60">Loading classes...</p>
+            <p className="text-foreground/60">{tr("Loading classes...")}</p>
           </div>
         </div>
       ) : classes && classes.length > 0 ? (

@@ -33,6 +33,7 @@ import {
 import { toast } from "sonner";
 import { ProfessionalUploadProgress } from "@/../components/video/ProfessionalUploadProgress";
 import CourseFormCard from "@/components/admin/CourseFormCard";
+import { useTr } from "@/components/Trans";
 
 interface MyCoursesDashboardProps {
   courses: any[];
@@ -51,6 +52,7 @@ export default function MyCoursesDashboard({
   instructors = [],
   myInstructorProfile
 }: MyCoursesDashboardProps) {
+  const { tr } = useTr();
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [showLessonDialog, setShowLessonDialog] = useState(false);
   const [showCourseDialog, setShowCourseDialog] = useState(false);
@@ -193,7 +195,7 @@ export default function MyCoursesDashboard({
           <div className="flex justify-center py-16">
             <div className="text-center">
               <Loader2 className="h-12 w-12 animate-spin text-accent mx-auto mb-4" />
-              <p className="text-foreground/60">Loading courses...</p>
+              <p className="text-foreground/60">{tr("Loading courses...")}</p>
             </div>
           </div>
         ) : courses && courses.length > 0 ? (

@@ -23,6 +23,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useTranslations } from "@/hooks/useTranslations";
+import { useTr } from "@/components/Trans";
 import { SUPPORTED_LANGUAGES } from "@/i18n/config";
 import {
   DropdownMenu,
@@ -75,6 +76,7 @@ export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
   const { t } = useTranslations();
   const { i18n } = useTranslation();
+  const { tr } = useTr();
 
   const [open, setOpen] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
@@ -301,7 +303,7 @@ export default function Header() {
                 onClick={() => setExploreOpen(v => !v)}
                 className="w-full flex items-center justify-between px-4 py-3.5 bg-card/50 hover:bg-card transition-colors"
               >
-                <span className="text-xs font-bold uppercase tracking-wider text-foreground/60">Explore</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-foreground/60">{tr("Explore")}</span>
                 <ChevronDown className={`h-4 w-4 text-foreground/60 transition-transform ${exploreOpen ? "rotate-180" : ""}`} />
               </button>
               {exploreOpen && (
@@ -390,7 +392,7 @@ export default function Header() {
                   className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-red-500/10 transition-colors text-left text-red-400"
                 >
                   <LogOut className="h-5 w-5 shrink-0" />
-                  <span className="flex-1 font-medium text-sm">Log out</span>
+                  <span className="flex-1 font-medium text-sm">{tr("Log out")}</span>
                 </button>
               </div>
             )}
@@ -447,6 +449,7 @@ interface MobileMenuItemProps {
 }
 
 function MobileMenuItem({ icon: Icon, label, onClick, description, trailing, variant = "default" }: MobileMenuItemProps) {
+  const { tr } = useTr();
   const wrapperClass =
     variant === "framed" ? "rounded-xl border border-border/50 bg-card/20 hover:bg-card/50"
     : variant === "highlighted" ? "rounded-xl bg-gradient-to-br from-accent/15 to-purple-500/15 border border-accent/40 hover:border-accent/70"
@@ -462,8 +465,8 @@ function MobileMenuItem({ icon: Icon, label, onClick, description, trailing, var
     <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3.5 transition-colors text-left ${wrapperClass}`}>
       <Icon className={`h-5 w-5 shrink-0 ${iconColor}`} />
       <div className="flex-1 min-w-0">
-        <div className="font-medium text-sm">{label}</div>
-        {description && <div className="text-xs text-foreground/50 mt-0.5">{description}</div>}
+        <div className="font-medium text-sm">{tr(label)}</div>
+        {description && <div className="text-xs text-foreground/50 mt-0.5">{tr(description)}</div>}
       </div>
       {trailing ? <span className="text-foreground/40">{trailing}</span> : null}
     </button>
@@ -471,12 +474,13 @@ function MobileMenuItem({ icon: Icon, label, onClick, description, trailing, var
 }
 
 function MobileSubItem({ label, onClick }: { label: string; onClick: () => void }) {
+  const { tr } = useTr();
   return (
     <button
       onClick={onClick}
       className="rounded-lg border border-border/50 bg-card/20 hover:bg-card/50 transition-colors py-3 text-center text-sm font-medium"
     >
-      {label}
+      {tr(label)}
     </button>
   );
 }

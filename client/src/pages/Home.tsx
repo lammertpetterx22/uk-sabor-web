@@ -5,6 +5,7 @@ import { trpc } from "@/lib/trpc";
 import EventCard from "@/components/EventCard";
 import CourseCard from "@/components/CourseCard";
 import InstructorCard from "@/components/InstructorCard";
+import { Trans, useTr } from "@/components/Trans";
 import { Loader2, Sparkles, Music, Users } from "lucide-react";
 import type { Event, Course, Instructor } from "@shared/types";
 
@@ -49,24 +50,24 @@ export default function Home() {
             <div className="space-y-6 animate-slide-in-left">
               <div className="space-y-4">
                 <h1 className="text-5xl md:text-7xl font-bold leading-tight">
-                  <span className="gradient-text animate-gradient-shift">Experience</span>
+                  <span className="gradient-text animate-gradient-shift"><Trans>Experience</Trans></span>
                   <br />
-                  <span className="text-foreground">Latin Dance</span>
+                  <span className="text-foreground"><Trans>Latin Dance</Trans></span>
                   <br />
-                  <span className="gradient-text animate-gradient-shift">Like Never Before</span>
+                  <span className="gradient-text animate-gradient-shift"><Trans>Like Never Before</Trans></span>
                 </h1>
 
                 <p className="text-lg md:text-xl text-foreground/80 max-w-lg">
-                  Join UK Sabor for unforgettable dance events, professional courses, and live classes. Learn from world-class instructors and become part of our vibrant dance community.
+                  <Trans>Join UK Sabor for unforgettable dance events, professional courses, and live classes. Learn from world-class instructors and become part of our vibrant dance community.</Trans>
                 </p>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button asChild className="btn-vibrant btn-modern text-lg px-8 py-6 h-auto">
-                  <Link href="/events">Explore Events</Link>
+                  <Link href="/events"><Trans>Explore Events</Trans></Link>
                 </Button>
                 <Button asChild variant="outline" className="btn-modern text-lg px-8 py-6 h-auto border-2 border-accent text-accent hover:bg-accent/10">
-                  <Link href="/courses">Browse Courses</Link>
+                  <Link href="/courses"><Trans>Browse Courses</Trans></Link>
                 </Button>
               </div>
 
@@ -74,15 +75,15 @@ export default function Home() {
               <div className="grid grid-cols-3 gap-4 pt-8">
                 <div className="animate-scale-in" style={{ animationDelay: '0.1s' }}>
                   <div className="text-3xl font-bold text-accent">24+</div>
-                  <div className="text-sm text-foreground/70">Events Yearly</div>
+                  <div className="text-sm text-foreground/70"><Trans>Events Yearly</Trans></div>
                 </div>
                 <div className="animate-scale-in" style={{ animationDelay: '0.2s' }}>
                   <div className="text-3xl font-bold text-accent">10+</div>
-                  <div className="text-sm text-foreground/70">Courses</div>
+                  <div className="text-sm text-foreground/70"><Trans>Courses</Trans></div>
                 </div>
                 <div className="animate-scale-in" style={{ animationDelay: '0.3s' }}>
                   <div className="text-3xl font-bold text-accent">200+</div>
-                  <div className="text-sm text-foreground/70">Dancers</div>
+                  <div className="text-sm text-foreground/70"><Trans>Dancers</Trans></div>
                 </div>
               </div>
             </div>
@@ -103,9 +104,9 @@ export default function Home() {
         <div className="container">
           <div className="flex items-center gap-3 mb-4 animate-slide-up">
             <Sparkles className="text-accent animate-bounce-soft" size={28} />
-            <h2 className="text-4xl md:text-5xl font-bold">Featured Events</h2>
+            <h2 className="text-4xl md:text-5xl font-bold"><Trans>Featured Events</Trans></h2>
           </div>
-          <p className="text-foreground/70 mb-12 max-w-2xl animate-slide-up" style={{ animationDelay: '0.1s' }}>Don't miss our upcoming dance events. From workshops to full-night parties, there's something for everyone.</p>
+          <p className="text-foreground/70 mb-12 max-w-2xl animate-slide-up" style={{ animationDelay: '0.1s' }}><Trans>Don't miss our upcoming dance events. From workshops to full-night parties, there's something for everyone.</Trans></p>
 
           {loading ? (
             <div className="flex justify-center py-12">
@@ -122,13 +123,13 @@ export default function Home() {
               </div>
               <div className="text-center animate-fade-in" style={{ animationDelay: '0.3s' }}>
                 <Button asChild variant="outline" className="btn-modern border-2 border-accent text-accent hover:bg-accent/10">
-                  <Link href="/events">View All Events</Link>
+                  <Link href="/events"><Trans>View All Events</Trans></Link>
                 </Button>
               </div>
             </>
           ) : (
             <div className="text-center py-12 animate-fade-in">
-              <p className="text-foreground/70">No events available at the moment. Check back soon!</p>
+              <p className="text-foreground/70"><Trans>No events available at the moment. Check back soon!</Trans></p>
             </div>
           )}
         </div>
@@ -139,9 +140,9 @@ export default function Home() {
         <div className="container">
           <div className="flex items-center gap-3 mb-4 animate-slide-up">
             <Music className="text-accent animate-bounce-soft" size={28} />
-            <h2 className="text-4xl md:text-5xl font-bold">Featured Courses</h2>
+            <h2 className="text-4xl md:text-5xl font-bold"><Trans>Featured Courses</Trans></h2>
           </div>
-          <p className="text-foreground/70 mb-12 max-w-2xl animate-slide-up" style={{ animationDelay: '0.1s' }}>Learn from professional instructors with structured courses designed for all levels.</p>
+          <p className="text-foreground/70 mb-12 max-w-2xl animate-slide-up" style={{ animationDelay: '0.1s' }}><Trans>Learn from professional instructors with structured courses designed for all levels.</Trans></p>
 
           {loading ? (
             <div className="flex justify-center py-12">
@@ -158,13 +159,13 @@ export default function Home() {
               </div>
               <div className="text-center animate-fade-in" style={{ animationDelay: '0.3s' }}>
                 <Button asChild variant="outline" className="btn-modern border-2 border-accent text-accent hover:bg-accent/10">
-                  <Link href="/courses">View All Courses</Link>
+                  <Link href="/courses"><Trans>View All Courses</Trans></Link>
                 </Button>
               </div>
             </>
           ) : (
             <div className="text-center py-12 animate-fade-in">
-              <p className="text-foreground/70">No courses available at the moment. Check back soon!</p>
+              <p className="text-foreground/70"><Trans>No courses available at the moment. Check back soon!</Trans></p>
             </div>
           )}
         </div>
@@ -175,9 +176,9 @@ export default function Home() {
         <div className="container">
           <div className="flex items-center gap-3 mb-4 animate-slide-up">
             <Users className="text-accent animate-bounce-soft" size={28} />
-            <h2 className="text-4xl md:text-5xl font-bold">Our Instructors</h2>
+            <h2 className="text-4xl md:text-5xl font-bold"><Trans>Our Instructors</Trans></h2>
           </div>
-          <p className="text-foreground/70 mb-12 max-w-2xl animate-slide-up" style={{ animationDelay: '0.1s' }}>Learn from the best dancers in the Latin dance community.</p>
+          <p className="text-foreground/70 mb-12 max-w-2xl animate-slide-up" style={{ animationDelay: '0.1s' }}><Trans>Learn from the best dancers in the Latin dance community.</Trans></p>
 
           {loading ? (
             <div className="flex justify-center py-12">
@@ -195,14 +196,14 @@ export default function Home() {
               {instructors.length > 4 && (
                 <div className="text-center animate-fade-in" style={{ animationDelay: '0.4s' }}>
                   <Button asChild variant="outline" className="btn-modern border-2 border-accent text-accent hover:bg-accent/10">
-                    <Link href="/instructors">View All Instructors</Link>
+                    <Link href="/instructors"><Trans>View All Instructors</Trans></Link>
                   </Button>
                 </div>
               )}
             </>
           ) : (
             <div className="text-center py-12 animate-fade-in">
-              <p className="text-foreground/70">No instructors available at the moment.</p>
+              <p className="text-foreground/70"><Trans>No instructors available at the moment.</Trans></p>
             </div>
           )}
         </div>
@@ -214,11 +215,11 @@ export default function Home() {
         <div className="absolute inset-0 animate-gradient-shift pointer-events-none" />
         
         <div className="container text-center relative z-10">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 animate-slide-up">Ready to Dance?</h2>
-          <p className="text-lg text-foreground/80 mb-8 max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: '0.1s' }}>Join thousands of dancers and start your Latin dance journey today. Whether you're a beginner or advanced, we have something for you.</p>
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 animate-slide-up"><Trans>Ready to Dance?</Trans></h2>
+          <p className="text-lg text-foreground/80 mb-8 max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: '0.1s' }}><Trans>Join thousands of dancers and start your Latin dance journey today. Whether you're a beginner or advanced, we have something for you.</Trans></p>
           <div className="animate-scale-in" style={{ animationDelay: '0.2s' }}>
             <Button asChild className="btn-vibrant btn-modern text-lg px-8 py-6 h-auto">
-              <Link href="/events">Get Started Now</Link>
+              <Link href="/events"><Trans>Get Started Now</Trans></Link>
             </Button>
           </div>
         </div>
@@ -230,33 +231,33 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             <div className="col-span-2 md:col-span-1 animate-fade-in">
               <img src={SABOR_LOGO} alt="UK Sabor" className="h-10 w-auto mb-3" />
-              <p className="text-foreground/60 text-sm leading-relaxed">Latin dance events, courses and classes in the UK.</p>
+              <p className="text-foreground/60 text-sm leading-relaxed"><Trans>Latin dance events, courses and classes in the UK.</Trans></p>
             </div>
             <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
-              <h3 className="font-semibold text-foreground mb-3 text-sm uppercase tracking-wide">Explore</h3>
+              <h3 className="font-semibold text-foreground mb-3 text-sm uppercase tracking-wide"><Trans>Explore</Trans></h3>
               <ul className="space-y-2 text-sm text-foreground/60">
-                <li><Link href="/events" className="hover:text-accent transition-smooth hover-lift">Events</Link></li>
-                <li><Link href="/courses" className="hover:text-accent transition-smooth hover-lift">Courses</Link></li>
-                <li><Link href="/classes" className="hover:text-accent transition-smooth hover-lift">Classes</Link></li>
+                <li><Link href="/events" className="hover:text-accent transition-smooth hover-lift"><Trans>Events</Trans></Link></li>
+                <li><Link href="/courses" className="hover:text-accent transition-smooth hover-lift"><Trans>Courses</Trans></Link></li>
+                <li><Link href="/classes" className="hover:text-accent transition-smooth hover-lift"><Trans>Classes</Trans></Link></li>
               </ul>
             </div>
             <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
-              <h3 className="font-semibold text-foreground mb-3 text-sm uppercase tracking-wide">Community</h3>
+              <h3 className="font-semibold text-foreground mb-3 text-sm uppercase tracking-wide"><Trans>Community</Trans></h3>
               <ul className="space-y-2 text-sm text-foreground/60">
-                <li><Link href="/instructors" className="hover:text-accent transition-smooth hover-lift">Instructors</Link></li>
-                <li><Link href="/dashboard" className="hover:text-accent transition-smooth hover-lift">My Dashboard</Link></li>
+                <li><Link href="/instructors" className="hover:text-accent transition-smooth hover-lift"><Trans>Instructors</Trans></Link></li>
+                <li><Link href="/dashboard" className="hover:text-accent transition-smooth hover-lift"><Trans>My Dashboard</Trans></Link></li>
               </ul>
             </div>
             <div className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
-              <h3 className="font-semibold text-foreground mb-3 text-sm uppercase tracking-wide">Account</h3>
+              <h3 className="font-semibold text-foreground mb-3 text-sm uppercase tracking-wide"><Trans>Account</Trans></h3>
               <ul className="space-y-2 text-sm text-foreground/60">
-                <li><Link href="/login" className="hover:text-accent transition-smooth hover-lift">Sign In</Link></li>
-                <li><Link href="/profile" className="hover:text-accent transition-smooth hover-lift">Profile</Link></li>
+                <li><Link href="/login" className="hover:text-accent transition-smooth hover-lift"><Trans>Sign In</Trans></Link></li>
+                <li><Link href="/profile" className="hover:text-accent transition-smooth hover-lift"><Trans>Profile</Trans></Link></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-border/50 pt-6 text-center text-foreground/50 text-sm">
-            <p>&copy; {new Date().getFullYear()} UK Sabor. All rights reserved. Dance with passion, celebrate culture.</p>
+            <p>&copy; {new Date().getFullYear()} UK Sabor. <Trans>All rights reserved. Dance with passion, celebrate culture.</Trans></p>
           </div>
         </div>
       </footer>
