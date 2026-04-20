@@ -171,9 +171,11 @@ export default function UserProfile() {
                     <CardDescription className="text-lg mt-1 flex items-center justify-center sm:justify-start gap-2">
                       <Mail className="w-4 h-4" /> {user.email}
                     </CardDescription>
-                    <div className="mt-3 inline-flex items-center px-3 py-1 rounded-full bg-accent/20 text-accent text-sm font-medium border border-accent/20">
-                      Plan: {user.subscriptionPlan.charAt(0).toUpperCase() + user.subscriptionPlan.slice(1)}
-                    </div>
+                    {(user.role === "admin" || user.role === "instructor" || user.role === "promoter") && (
+                      <div className="mt-3 inline-flex items-center px-3 py-1 rounded-full bg-accent/20 text-accent text-sm font-medium border border-accent/20">
+                        Plan: {user.subscriptionPlan.charAt(0).toUpperCase() + user.subscriptionPlan.slice(1)}
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardHeader>
