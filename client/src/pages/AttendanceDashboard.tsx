@@ -125,14 +125,16 @@ export default function AttendanceDashboard() {
 }
 
 function EventsAttendanceTab({ onOpenScanner }: { onOpenScanner: (type: "event" | "class", id: number, title: string) => void }) {
-  const { data: events, isLoading } = trpc.events.list.useQuery({ limit: 100, offset: 0 });
+  // Only show events the current user created (server already scopes
+  // listMyEvents by creatorId for non-admins)
+  const { data: events, isLoading } = trpc.admin.listMyEvents.useQuery();
 
   if (isLoading) return <div className="text-center py-8 text-foreground/50">Loading...</div>;
   if (!events || events.length === 0) {
     return (
       <Card>
         <CardContent className="py-8 text-center">
-          <p className="text-foreground/60">No events found</p>
+          <p className="text-foreground/60">You haven't created any events yet</p>
         </CardContent>
       </Card>
     );
@@ -140,7 +142,7 @@ function EventsAttendanceTab({ onOpenScanner }: { onOpenScanner: (type: "event" 
 
   return (
     <div className="space-y-6">
-      {events.map((event) => (
+      {events.map((event: any) => (
         <EventAttendanceCard key={event.id} event={event} onOpenScanner={() => onOpenScanner("event", event.id, event.title)} />
       ))}
     </div>
@@ -148,14 +150,14 @@ function EventsAttendanceTab({ onOpenScanner }: { onOpenScanner: (type: "event" 
 }
 
 function ClassesAttendanceTab({ onOpenScanner }: { onOpenScanner: (type: "event" | "class", id: number, title: string) => void }) {
-  const { data: classes, isLoading } = trpc.classes.list.useQuery({ limit: 100, offset: 0 });
+  const { data: classes, isLoading } = trpc.admin.listMyClasses.useQuery();
 
   if (isLoading) return <div className="text-center py-8 text-foreground/50">Loading...</div>;
   if (!classes || classes.length === 0) {
     return (
       <Card>
         <CardContent className="py-8 text-center">
-          <p className="text-foreground/60">No classes found</p>
+          <p className="text-foreground/60">You haven't created any classes yet</p>
         </CardContent>
       </Card>
     );
@@ -163,7 +165,7 @@ function ClassesAttendanceTab({ onOpenScanner }: { onOpenScanner: (type: "event"
 
   return (
     <div className="space-y-6">
-      {classes.map((cls) => (
+      {classes.map((cls: any) => (
         <ClassAttendanceCard key={cls.id} cls={cls} onOpenScanner={() => onOpenScanner("class", cls.id, cls.title)} />
       ))}
     </div>

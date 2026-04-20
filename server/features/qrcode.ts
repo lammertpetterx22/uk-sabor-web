@@ -164,25 +164,39 @@ export const qrcodeRouter = router({
       const qr = qrResult[0];
 
       if (!qr) {
-        throw new Error("QR code no válido");
+        throw new Error("Invalid QR code");
       }
 
       // Block re-use: if QR already scanned, reject immediately
       if (qr.isUsed) {
-        const usedAtStr = qr.usedAt ? new Date(qr.usedAt).toLocaleString("es-GB") : "anteriormente";
-        throw new Error(`Este QR ya fue usado el ${usedAtStr}. Cada QR es de un solo uso.`);
+        const usedAtStr = qr.usedAt ? new Date(qr.usedAt).toLocaleString("en-GB") : "earlier";
+        throw new Error(`This QR was already used on ${usedAtStr}. Each QR is single-use.`);
       }
 
       // For personal QR codes (with userId), use the QR's owner.
       // For venue QR codes (no userId), use the provided userId or the scanner.
       const userId = qr.userId ?? input.userId ?? ctx.user.id;
 
-      // Verify the scanner has permission:
-      // - Admins/instructors can check in anyone
-      // - Regular users can only check in themselves via their own personal QR
-      if (ctx.user.role !== "admin" && ctx.user.role !== "instructor") {
-        if (qr.userId && qr.userId !== ctx.user.id) {
-          throw new Error("Este QR pertenece a otro usuario");
+      // Ownership check — only the creator of the event/class (or an admin)
+      // can scan QR codes for this specific event/class. Prevents other
+      // instructors/promoters from scanning events they didn't create.
+      const isAdmin = ctx.user.role === "admin";
+      if (!isAdmin) {
+        if (qr.itemType === "event") {
+          const [ev] = await db.select({ creatorId: events.creatorId })
+            .from(events).where(eq(events.id, qr.itemId)).limit(1);
+          if (!ev || ev.creatorId !== ctx.user.id) {
+            throw new Error("Access denied — only the event creator can scan tickets for this event");
+          }
+        } else if (qr.itemType === "class") {
+          const [cls] = await db.select({ instructorId: classes.instructorId })
+            .from(classes).where(eq(classes.id, qr.itemId)).limit(1);
+          if (!cls) throw new Error("Class not found");
+          const [inst] = await db.select({ userId: instructors.userId })
+            .from(instructors).where(eq(instructors.id, cls.instructorId)).limit(1);
+          if (!inst || inst.userId !== ctx.user.id) {
+            throw new Error("Access denied — only the class instructor can scan this class");
+          }
         }
       }
 
@@ -201,7 +215,7 @@ export const qrcodeRouter = router({
       const existing = existingAttendance[0];
 
       if (existing) {
-        throw new Error("Esta persona ya ha hecho check-in en este evento/clase");
+        throw new Error("This person has already checked in to this event/class");
       }
 
       // Mark QR as used (single-use enforcement)
@@ -277,9 +291,28 @@ export const qrcodeRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      // Only admin and instructors can view attendance
-      if (ctx.user.role !== "admin" && ctx.user.role !== "instructor") {
-        throw new Error("Only admins and instructors can view attendance");
+      // Only admins can see any event's attendance. Otherwise the requester
+      // must be the creator of the specific event/class.
+      const isAdmin = ctx.user.role === "admin";
+      if (!isAdmin) {
+        if (input.itemType === "event") {
+          const [ev] = await db.select({ creatorId: events.creatorId })
+            .from(events).where(eq(events.id, input.itemId)).limit(1);
+          if (!ev) throw new Error("Event not found");
+          if (ev.creatorId !== ctx.user.id) {
+            throw new Error("Access denied — you're not the creator of this event");
+          }
+        } else if (input.itemType === "class") {
+          // For classes, the owner is the instructor profile linked to a userId.
+          const [cls] = await db.select({ instructorId: classes.instructorId })
+            .from(classes).where(eq(classes.id, input.itemId)).limit(1);
+          if (!cls) throw new Error("Class not found");
+          const [inst] = await db.select({ userId: instructors.userId })
+            .from(instructors).where(eq(instructors.id, cls.instructorId)).limit(1);
+          if (!inst || inst.userId !== ctx.user.id) {
+            throw new Error("Access denied — you're not the instructor of this class");
+          }
+        }
       }
 
       const records = await db

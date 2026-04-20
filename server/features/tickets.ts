@@ -90,18 +90,33 @@ export const ticketsRouter = router({
                 .limit(1);
 
             if (!ticket) {
-                throw new Error("Entrada no encontrada — código inválido");
+                throw new Error("Ticket not found — invalid code");
+            }
+
+            // Get event info (needed for ownership check below)
+            const [event] = await db
+                .select({ title: events.title, eventDate: events.eventDate, venue: events.venue, creatorId: events.creatorId })
+                .from(events)
+                .where(eq(events.id, ticket.eventId))
+                .limit(1);
+
+            // Ownership check — only the event's creator (or admin) can validate
+            // QRs for this event.
+            const isAdmin = ctx.user.role === "admin";
+            const isCreator = event && !!event.creatorId && event.creatorId === ctx.user.id;
+            if (!isAdmin && !isCreator) {
+                throw new Error("Access denied — only the event creator can scan tickets for this event");
             }
 
             if (ticket.status === "used") {
                 const usedTime = ticket.usedAt
-                    ? new Date(ticket.usedAt).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })
-                    : "antes";
-                throw new Error(`Esta entrada ya fue escaneada a las ${usedTime} `);
+                    ? new Date(ticket.usedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+                    : "earlier";
+                throw new Error(`This ticket was already scanned at ${usedTime}`);
             }
 
             if (ticket.status === "cancelled") {
-                throw new Error("Esta entrada fue cancelada y no es válida");
+                throw new Error("This ticket has been cancelled and is not valid");
             }
 
             // Check if payment is pending (cash)
@@ -112,13 +127,6 @@ export const ticketsRouter = router({
                 .select({ name: users.name, email: users.email })
                 .from(users)
                 .where(eq(users.id, ticket.userId))
-                .limit(1);
-
-            // Get event info
-            const [event] = await db
-                .select({ title: events.title, eventDate: events.eventDate, venue: events.venue })
-                .from(events)
-                .where(eq(events.id, ticket.eventId))
                 .limit(1);
 
             // Mark as used AND confirm cash payment if pending
@@ -140,9 +148,9 @@ export const ticketsRouter = router({
             return {
                 success: true,
                 ticketCode: code,
-                attendeeName: buyer?.name ?? "Asistente",
+                attendeeName: buyer?.name ?? "Attendee",
                 attendeeEmail: buyer?.email ?? null,
-                eventTitle: event?.title ?? "Evento",
+                eventTitle: event?.title ?? "Event",
                 eventDate: event?.eventDate ?? null,
                 eventVenue: event?.venue ?? null,
                 wasPendingCash: isPendingCash,
@@ -158,22 +166,33 @@ export const ticketsRouter = router({
         .input(z.number().positive())
         .query(async ({ input: eventId, ctx }) => {
             if (!isStaff(ctx.user)) {
-                throw new Error("Acceso denegado — solo staff puede ver las entradas");
+                throw new Error("Access denied — only staff can view ticket lists");
             }
 
             const db = await getDb();
             if (!db) throw new Error("Database not available");
-
-            const tickets = await db
-                .select()
-                .from(eventTickets)
-                .where(eq(eventTickets.eventId, eventId));
 
             const [event] = await db
                 .select()
                 .from(events)
                 .where(eq(events.id, eventId))
                 .limit(1);
+
+            if (!event) throw new Error("Event not found");
+
+            // Ownership check: only the event's creator (or an admin) can see its tickets.
+            // Other instructors/promoters/rrps must not be able to look at events they
+            // didn't create.
+            const isAdmin = ctx.user.role === "admin";
+            const isCreator = !!event.creatorId && event.creatorId === ctx.user.id;
+            if (!isAdmin && !isCreator) {
+                throw new Error("Access denied — you're not the creator of this event");
+            }
+
+            const tickets = await db
+                .select()
+                .from(eventTickets)
+                .where(eq(eventTickets.eventId, eventId));
 
             const summary = {
                 total: tickets.length,
