@@ -1,0 +1,63 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "create": "Créer",
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "all": "Tous",
+    "yes": "Oui",
+    "no": "Non",
+    "optional": "optionnel",
+    "required": "requis",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "submit": "Valider"
+  },
+  "auth": {
+    "login": "Se connecter",
+    "logout": "Se déconnecter",
+    "register": "S'inscrire",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "rememberMe": "Se souvenir de moi",
+    "loginSuccess": "Connexion réussie",
+    "loginError": "Erreur de connexion",
+    "registerSuccess": "Compte créé avec succès",
+    "registerError": "Erreur d'inscription",
+    "logoutSuccess": "Déconnexion réussie"
+  },
+  "nav": {
+    "home": "Accueil",
+    "events": "Événements",
+    "courses": "Cours en ligne",
+    "classes": "Cours",
+    "instructors": "Professeurs",
+    "promoters": "Organisateurs",
+    "admin": "Admin",
+    "myPanel": "Mon espace",
+    "profile": "Profil",
+    "earnings": "Revenus",
+    "dashboard": "Tableau de bord",
+    "crm": "CRM",
+    "email": "E-mail",
+    "plans": "Plans",
+    "signOut": "Se déconnecter",
+    "login": "Se connecter",
+    "more": "Plus"
+  },
+  "roles": {
+    "admin": "Administrateur",
+    "instructor": "Professeur",
+    "promoter": "Organisateur",
+    "user": "Utilisateur"
+  }
+}

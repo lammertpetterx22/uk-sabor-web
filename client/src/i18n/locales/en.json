@@ -51,7 +51,8 @@
     "email": "Email",
     "plans": "Plans",
     "signOut": "Sign Out",
-    "login": "Log In"
+    "login": "Log In",
+    "more": "More"
   },
   "roles": {
     "admin": "Administrator",

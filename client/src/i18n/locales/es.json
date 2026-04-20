@@ -51,7 +51,8 @@
     "email": "Email",
     "plans": "Planes",
     "signOut": "Cerrar Sesión",
-    "login": "Iniciar Sesión"
+    "login": "Iniciar Sesión",
+    "more": "Más"
   },
   "roles": {
     "admin": "Administrador",

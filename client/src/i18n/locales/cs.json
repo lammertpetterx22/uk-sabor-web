@@ -1,0 +1,63 @@
+{
+  "common": {
+    "loading": "Načítání...",
+    "save": "Uložit",
+    "cancel": "Zrušit",
+    "delete": "Smazat",
+    "edit": "Upravit",
+    "create": "Vytvořit",
+    "close": "Zavřít",
+    "confirm": "Potvrdit",
+    "search": "Hledat",
+    "filter": "Filtr",
+    "all": "Vše",
+    "yes": "Ano",
+    "no": "Ne",
+    "optional": "volitelné",
+    "required": "povinné",
+    "back": "Zpět",
+    "next": "Další",
+    "previous": "Předchozí",
+    "submit": "Odeslat"
+  },
+  "auth": {
+    "login": "Přihlásit se",
+    "logout": "Odhlásit se",
+    "register": "Registrovat",
+    "email": "E-mailová adresa",
+    "password": "Heslo",
+    "confirmPassword": "Potvrdit heslo",
+    "forgotPassword": "Zapomněli jste heslo?",
+    "rememberMe": "Zapamatovat si mě",
+    "loginSuccess": "Úspěšně přihlášen",
+    "loginError": "Chyba přihlášení",
+    "registerSuccess": "Účet úspěšně vytvořen",
+    "registerError": "Chyba registrace",
+    "logoutSuccess": "Úspěšně odhlášen"
+  },
+  "nav": {
+    "home": "Domů",
+    "events": "Akce",
+    "courses": "Online kurzy",
+    "classes": "Lekce",
+    "instructors": "Lektoři",
+    "promoters": "Organizátoři",
+    "admin": "Admin",
+    "myPanel": "Můj panel",
+    "profile": "Profil",
+    "earnings": "Výdělky",
+    "dashboard": "Přehled",
+    "crm": "CRM",
+    "email": "E-mail",
+    "plans": "Tarify",
+    "signOut": "Odhlásit se",
+    "login": "Přihlásit se",
+    "more": "Více"
+  },
+  "roles": {
+    "admin": "Administrátor",
+    "instructor": "Lektor",
+    "promoter": "Organizátor",
+    "user": "Uživatel"
+  }
+}

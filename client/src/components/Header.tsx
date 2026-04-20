@@ -1,176 +1,482 @@
-import { useState } from "react";
-import { Link } from "wouter";
+import { useMemo, useState } from "react";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Menu,
+  X,
+  ChevronDown,
+  Calendar,
+  GraduationCap,
+  BookOpen,
+  Users,
+  Megaphone,
+  Ticket,
+  LayoutDashboard,
+  Radio,
+  Shield,
+  LogOut,
+  UserCircle,
+  Globe,
+  ArrowRight,
+} from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useTranslations } from "@/hooks/useTranslations";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { SUPPORTED_LANGUAGES } from "@/i18n/config";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const SABOR_LOGO = "https://d2xsxph8kpxj0f.cloudfront.net/310519663400274503/DGihaPaJvnMFHruoq9jmVQ/sabor-logo_7c905b38.png";
 
+type User = {
+  id: number;
+  name?: string | null;
+  email?: string | null;
+  role: string;
+  roles?: string | null;
+  subscriptionPlan?: string | null;
+};
+
+function parseRolesJson(s: string | null | undefined): string[] {
+  if (!s) return [];
+  try {
+    const parsed = JSON.parse(s);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function getAllRoles(user: User | null | undefined): string[] {
+  if (!user) return [];
+  const all = [user.role, ...parseRolesJson(user.roles)];
+  return Array.from(new Set(all));
+}
+
+function roleChips(roles: string[]): Array<{ label: string; className: string }> {
+  const chips: Array<{ label: string; className: string }> = [];
+  if (roles.includes("admin")) chips.push({ label: "Admin", className: "bg-red-500/15 text-red-400 border-red-500/30" });
+  if (roles.includes("instructor")) chips.push({ label: "Instructor", className: "bg-purple-500/15 text-purple-400 border-purple-500/30" });
+  if (roles.includes("promoter")) chips.push({ label: "Promoter", className: "bg-blue-500/15 text-blue-400 border-blue-500/30" });
+  if (roles.includes("rrp")) chips.push({ label: "RRP", className: "bg-orange-500/15 text-orange-400 border-orange-500/30" });
+  if (chips.length === 0) chips.push({ label: "Usuario", className: "bg-foreground/10 text-foreground/60 border-foreground/20" });
+  return chips;
+}
+
 export default function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [, setLocation] = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
   const { t } = useTranslations();
+  const { i18n } = useTranslation();
+
+  const [open, setOpen] = useState(false);
+  const [exploreOpen, setExploreOpen] = useState(false);
+
+  const roles = useMemo(() => getAllRoles(user as any), [user]);
+  const isCreator = roles.some(r => r === "instructor" || r === "promoter");
+  const isRrp = roles.includes("rrp");
+  const isAdmin = roles.includes("admin");
+  const hasAnyManagement = isCreator || isAdmin;
 
   const handleLogout = async () => {
     await logout();
-    setMobileMenuOpen(false);
+    setOpen(false);
     window.location.href = "/";
   };
 
+  const closeMenu = () => setOpen(false);
+  const go = (path: string) => { setOpen(false); setLocation(path); };
+
+  const currentLang = SUPPORTED_LANGUAGES.find(l => l.code === i18n.language) ?? SUPPORTED_LANGUAGES[0];
+  const [langMenuOpen, setLangMenuOpen] = useState(false);
+  const changeLang = (code: string) => {
+    i18n.changeLanguage(code);
+    setLangMenuOpen(false);
+  };
+
   return (
-    <header className="sticky top-0 z-50 bg-gradient-to-r from-background via-background to-background border-b border-accent/20 backdrop-blur-md shadow-lg shadow-accent/10 animate-slide-down">
-      <nav className="container flex items-center justify-between h-20" aria-label="Main navigation">
+    <header className="sticky top-0 z-50 bg-background/95 border-b border-border/40 backdrop-blur-md shadow-md">
+      <nav className="container flex items-center justify-between h-16 md:h-20" aria-label="Main navigation">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0 hover-glow rounded-lg px-2 py-1 transition-smooth">
-          <img src={SABOR_LOGO} alt="UK Sabor" className="h-12 w-auto animate-float" />
-          <span className="hidden sm:inline text-xl font-bold gradient-text animate-gradient-shift">SABOR</span>
+        <Link href="/" className="flex items-center gap-2 shrink-0 hover:opacity-80 transition-opacity">
+          <img src={SABOR_LOGO} alt="UK Sabor" className="h-10 md:h-12 w-auto" />
+          <span className="hidden sm:inline text-lg md:text-xl font-bold gradient-text">SABOR</span>
         </Link>
 
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-8">
-          <Link href="/events" className="text-foreground/70 hover:text-accent transition-smooth font-medium hover:underline underline-offset-4 decoration-accent/50 relative group">
-            {t('nav.events')}
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-accent to-transparent group-hover:w-full transition-all duration-300" />
+        {/* ═══════════════════ DESKTOP NAV ═══════════════════ */}
+        <div className="hidden md:flex items-center gap-6">
+          <Link href="/events" className="text-sm font-medium text-foreground/70 hover:text-accent transition-colors">
+            {t("nav.events")}
           </Link>
-          <Link href="/courses" className="text-foreground/70 hover:text-accent transition-smooth font-medium hover:underline underline-offset-4 decoration-accent/50 relative group">
-            {t('nav.courses')}
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-accent to-transparent group-hover:w-full transition-all duration-300" />
+          <Link href="/classes" className="text-sm font-medium text-foreground/70 hover:text-accent transition-colors">
+            {t("nav.classes")}
           </Link>
-          <Link href="/classes" className="text-foreground/70 hover:text-accent transition-smooth font-medium hover:underline underline-offset-4 decoration-accent/50 relative group">
-            {t('nav.classes')}
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-accent to-transparent group-hover:w-full transition-all duration-300" />
+          <Link href="/courses" className="text-sm font-medium text-foreground/70 hover:text-accent transition-colors">
+            {t("nav.courses")}
           </Link>
-          <Link href="/instructors" className="text-foreground/70 hover:text-accent transition-smooth font-medium hover:underline underline-offset-4 decoration-accent/50 relative group">
-            {t('nav.instructors')}
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-accent to-transparent group-hover:w-full transition-all duration-300" />
-          </Link>
-          <Link href="/promoters" className="text-foreground/70 hover:text-accent transition-smooth font-medium hover:underline underline-offset-4 decoration-accent/50 relative group">
-            {t('nav.promoters')}
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-accent to-transparent group-hover:w-full transition-all duration-300" />
-          </Link>
+          {/* More dropdown for secondary links */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="text-sm font-medium text-foreground/70 hover:text-accent transition-colors inline-flex items-center gap-1">
+                {t("nav.more") || "Más"} <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem onClick={() => setLocation("/instructors")}>
+                <GraduationCap className="h-4 w-4 mr-2" /> {t("nav.instructors")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLocation("/promoters")}>
+                <Megaphone className="h-4 w-4 mr-2" /> {t("nav.promoters")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
-        {/* Auth Buttons */}
-        <div className="hidden md:flex items-center gap-4">
-          <LanguageSwitcher />
+        {/* ═══════════════════ DESKTOP RIGHT ═══════════════════ */}
+        <div className="hidden md:flex items-center gap-3">
           {isAuthenticated ? (
             <>
-              <Link href="/dashboard" className="text-foreground/80 hover:text-accent transition-smooth font-medium text-sm hover-lift">
-                {t('nav.dashboard')}
-              </Link>
-              <Link href="/profile" className="text-foreground/80 hover:text-accent transition-smooth font-medium text-sm hover-lift">
-                {t('nav.profile')}
-              </Link>
-              {(user?.role === "admin" || user?.role === "instructor" || user?.role === "promoter") && (
-                <Link href="/admin" className="text-accent font-bold hover:text-accent/80 transition-smooth hover-glow px-2 py-1 rounded-lg">
-                  {user?.role === "admin" ? t('nav.admin') : t('nav.myPanel')}
-                </Link>
+              {/* Role-based primary CTA */}
+              {hasAnyManagement && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setLocation("/admin")}
+                  className="gap-1.5 border-accent/50 text-accent hover:bg-accent/10"
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  {isAdmin ? "Admin" : "Mi Estudio"}
+                </Button>
               )}
-              {user?.role === "admin" && (
-                <Link href="/crm" className="text-accent font-bold hover:text-accent/80 transition-smooth hover-glow px-2 py-1 rounded-lg">
-                  {t('nav.crm')}
-                </Link>
+              {isRrp && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setLocation("/rrp-dashboard")}
+                  className="gap-1.5 border-orange-500/50 text-orange-400 hover:bg-orange-500/10"
+                >
+                  <Radio className="h-4 w-4" /> RRP
+                </Button>
               )}
-              {user?.role === "admin" && (
-                <Link href="/email-marketing" className="text-accent font-bold hover:text-accent/80 transition-smooth hover-glow px-2 py-1 rounded-lg">
-                  {t('nav.email')}
-                </Link>
-              )}
-              {(user?.role === "admin" || user?.role === "instructor" || user?.role === "promoter") && (
-                <Link href="/pricing" className="text-accent font-bold hover:text-accent/80 transition-smooth hover-glow px-2 py-1 rounded-lg">
-                  {t('nav.plans')}
-                </Link>
-              )}
-              <Button onClick={handleLogout} variant="outline" size="sm" className="btn-modern hover-lift">
-                {t('nav.signOut')}
-              </Button>
+
+              {/* Profile dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-1.5 px-2">
+                    <UserCircle className="h-5 w-5" />
+                    <span className="max-w-[100px] truncate">{(user?.name || user?.email || "Perfil").split(" ")[0]}</span>
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="px-2 py-2 border-b border-border/40">
+                    <div className="font-medium text-sm truncate">{user?.name || "Perfil"}</div>
+                    <div className="text-xs text-foreground/60 truncate">{user?.email}</div>
+                    <div className="flex gap-1 flex-wrap mt-2">
+                      {roleChips(roles).map(c => (
+                        <Badge key={c.label} variant="outline" className={`text-xs ${c.className}`}>{c.label}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <DropdownMenuItem onClick={() => setLocation("/dashboard")}>
+                    <Ticket className="h-4 w-4 mr-2" /> Mis tickets
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLocation("/profile")}>
+                    <UserCircle className="h-4 w-4 mr-2" /> Configuración
+                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setLocation("/crm")}>CRM</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setLocation("/email-marketing")}>Email Marketing</DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-xs text-foreground/50">Idioma / Language</DropdownMenuLabel>
+                  {SUPPORTED_LANGUAGES.map(l => (
+                    <DropdownMenuItem
+                      key={l.code}
+                      onClick={() => changeLang(l.code)}
+                      className={l.code === i18n.language ? "bg-accent/10 text-accent" : ""}
+                    >
+                      <span className="mr-2">{l.flag}</span> {l.name}
+                      {l.code === i18n.language && <span className="ml-auto text-xs">✓</span>}
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-400 focus:text-red-400">
+                    <LogOut className="h-4 w-4 mr-2" /> {t("nav.signOut")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
-            <Button asChild className="btn-vibrant btn-modern" size="sm">
-              <a href="/login">{t('nav.login')}</a>
-            </Button>
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-1.5 px-2">
+                    <Globe className="h-4 w-4" /> {currentLang.flag}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Idioma / Language</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {SUPPORTED_LANGUAGES.map(l => (
+                    <DropdownMenuItem
+                      key={l.code}
+                      onClick={() => changeLang(l.code)}
+                      className={l.code === i18n.language ? "bg-accent/10 text-accent" : ""}
+                    >
+                      <span className="mr-2">{l.flag}</span> {l.name}
+                      {l.code === i18n.language && <span className="ml-auto text-xs">✓</span>}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button asChild className="btn-vibrant" size="sm">
+                <a href="/login">{t("nav.login")}</a>
+              </Button>
+            </>
           )}
         </div>
 
-        {/* Mobile Menu Button */}
+        {/* ═══════════════════ MOBILE TRIGGER ═══════════════════ */}
         <button
-          className="md:hidden p-2 hover:bg-card rounded-lg transition-smooth hover-glow"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden p-2 -mr-2 hover:bg-foreground/5 rounded-lg transition-colors"
+          onClick={() => setOpen(v => !v)}
           aria-label="Toggle menu"
         >
-          {mobileMenuOpen ? <X size={24} className="animate-rotate" /> : <Menu size={24} />}
+          {open ? <X size={24} /> : <Menu size={24} />}
         </button>
       </nav>
 
-      {/* Mobile Navigation */}
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border/50 bg-card/80 backdrop-blur-sm max-h-[calc(100vh-80px)] overflow-y-auto animate-slide-down">
-          <div className="container py-3 flex flex-col gap-2">
-            <Link href="/events" className="text-foreground/80 hover:text-accent transition-smooth font-medium py-1.5 text-sm hover-lift px-2 rounded-lg">
-              {t('nav.events')}
-            </Link>
-            <Link href="/courses" className="text-foreground/80 hover:text-accent transition-smooth font-medium py-1.5 text-sm hover-lift px-2 rounded-lg">
-              {t('nav.courses')}
-            </Link>
-            <Link href="/classes" className="text-foreground/80 hover:text-accent transition-smooth font-medium py-1.5 text-sm hover-lift px-2 rounded-lg">
-              {t('nav.classes')}
-            </Link>
-            <Link href="/instructors" className="text-foreground/80 hover:text-accent transition-smooth font-medium py-1.5 text-sm hover-lift px-2 rounded-lg">
-              {t('nav.instructors')}
-            </Link>
-            <Link href="/promoters" className="text-foreground/80 hover:text-accent transition-smooth font-medium py-1.5 text-sm hover-lift px-2 rounded-lg">
-              {t('nav.promoters')}
-            </Link>
+      {/* ═══════════════════ MOBILE DRAWER ═══════════════════ */}
+      {open && (
+        <div className="md:hidden fixed inset-0 top-16 bg-background/98 backdrop-blur-sm z-40 overflow-y-auto">
+          <div className="container py-6 flex flex-col gap-5">
 
-            {/* Language Switcher in Mobile */}
-            <div className="py-2">
-              <LanguageSwitcher />
-            </div>
+            {/* User card */}
+            {isAuthenticated ? (
+              <button
+                onClick={() => go("/profile")}
+                className="text-left bg-gradient-to-br from-accent/10 to-purple-500/10 border border-accent/30 rounded-xl p-4 hover:border-accent/60 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-purple-500 flex items-center justify-center shrink-0">
+                    <UserCircle className="h-7 w-7 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold truncate">{user?.name || "Hola"}</div>
+                    <div className="text-xs text-foreground/60 truncate">{user?.email}</div>
+                    <div className="flex gap-1 flex-wrap mt-1.5">
+                      {roleChips(roles).map(c => (
+                        <Badge key={c.label} variant="outline" className={`text-[10px] px-1.5 py-0 ${c.className}`}>{c.label}</Badge>
+                      ))}
+                      {user?.subscriptionPlan && user.subscriptionPlan !== "starter" && (
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-amber-500/15 text-amber-400 border-amber-500/30">
+                          {user.subscriptionPlan}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <ChevronDown className="h-5 w-5 text-foreground/40 rotate-[-90deg]" />
+                </div>
+              </button>
+            ) : (
+              <Button asChild className="btn-vibrant w-full" size="lg" onClick={closeMenu}>
+                <a href="/login">{t("nav.login")}</a>
+              </Button>
+            )}
 
-            <div className="border-t border-border/50 pt-2 mt-2 flex flex-col gap-1.5">
-              {isAuthenticated ? (
-                <>
-                  <Link href="/dashboard" className="text-foreground/80 hover:text-accent transition-smooth font-medium py-1.5 text-sm hover-lift px-2 rounded-lg">
-                    {t('nav.dashboard')}
-                  </Link>
-                  <Link href="/profile" className="text-foreground/80 hover:text-accent transition-smooth font-medium py-1.5 text-sm hover-lift px-2 rounded-lg">
-                    {t('nav.profile')}
-                  </Link>
-                  {(user?.role === "admin" || user?.role === "instructor" || user?.role === "promoter") && (
-                    <Link href="/admin" className="text-accent font-bold hover:text-accent/80 transition-smooth py-1.5 text-sm hover-glow px-2 rounded-lg">
-                      {user?.role === "admin" ? t('nav.admin') : t('nav.myPanel')}
-                    </Link>
-                  )}
-                  {user?.role === "admin" && (
-                    <Link href="/crm" className="text-accent font-bold hover:text-accent/80 transition-smooth py-1.5 text-sm hover-glow px-2 rounded-lg">
-                      {t('nav.crm')}
-                    </Link>
-                  )}
-                  {user?.role === "admin" && (
-                    <Link href="/email-marketing" className="text-accent font-bold hover:text-accent/80 transition-smooth py-1.5 text-sm hover-glow px-2 rounded-lg">
-                      {t('nav.email')}
-                    </Link>
-                  )}
-                  {(user?.role === "admin" || user?.role === "instructor" || user?.role === "promoter") && (
-                    <Link href="/pricing" className="text-accent font-bold hover:text-accent/80 transition-smooth py-1.5 text-sm hover-glow px-2 rounded-lg">
-                      {t('nav.plans')}
-                    </Link>
-                  )}
-                  <Button onClick={handleLogout} variant="outline" className="w-full mt-2 h-9 text-sm btn-modern hover-lift">
-                    {t('nav.signOut')}
-                  </Button>
-                </>
-              ) : (
-                <Button asChild className="btn-vibrant btn-modern w-full">
-                  <a href="/login">{t('nav.login')}</a>
-                </Button>
+            {/* EXPLORE (collapsible) */}
+            <div className="rounded-xl border border-border/50 overflow-hidden">
+              <button
+                onClick={() => setExploreOpen(v => !v)}
+                className="w-full flex items-center justify-between px-4 py-3.5 bg-card/50 hover:bg-card transition-colors"
+              >
+                <span className="text-xs font-bold uppercase tracking-wider text-foreground/60">Explorar</span>
+                <ChevronDown className={`h-4 w-4 text-foreground/60 transition-transform ${exploreOpen ? "rotate-180" : ""}`} />
+              </button>
+              {exploreOpen && (
+                <div className="divide-y divide-border/30 bg-card/20">
+                  <MobileMenuItem icon={Calendar} label={t("nav.events") || "Eventos"} onClick={() => go("/events")} />
+                  <MobileMenuItem icon={GraduationCap} label={t("nav.classes") || "Clases"} onClick={() => go("/classes")} />
+                  <MobileMenuItem icon={BookOpen} label={t("nav.courses") || "Cursos"} onClick={() => go("/courses")} />
+                  <MobileMenuItem icon={Users} label={t("nav.instructors") || "Profesores"} onClick={() => go("/instructors")} />
+                  <MobileMenuItem icon={Megaphone} label={t("nav.promoters") || "Promoters"} onClick={() => go("/promoters")} />
+                </div>
               )}
             </div>
+
+            {/* Mis tickets (only if logged in) */}
+            {isAuthenticated && (
+              <MobileMenuItem
+                icon={Ticket}
+                label="Mis tickets"
+                onClick={() => go("/dashboard")}
+                variant="framed"
+              />
+            )}
+
+            {/* Role shortcuts */}
+            {isAuthenticated && hasAnyManagement && (
+              <MobileMenuItem
+                icon={LayoutDashboard}
+                label={isAdmin ? "Admin Panel" : "Mi Estudio"}
+                onClick={() => go("/admin")}
+                trailing={<ArrowRight className="h-4 w-4" />}
+                variant="highlighted"
+                description={isAdmin ? "Gestión completa de la plataforma" : "Gestiona tus eventos, clases y ganancias"}
+              />
+            )}
+            {isAuthenticated && isRrp && (
+              <MobileMenuItem
+                icon={Radio}
+                label="RRP Dashboard"
+                onClick={() => go("/rrp-dashboard")}
+                trailing={<ArrowRight className="h-4 w-4" />}
+                variant="rrp"
+                description="Tu código, ventas y comisiones"
+              />
+            )}
+            {isAuthenticated && isAdmin && (
+              <div className="grid grid-cols-2 gap-2">
+                <MobileSubItem label="CRM" onClick={() => go("/crm")} />
+                <MobileSubItem label="Email Marketing" onClick={() => go("/email-marketing")} />
+              </div>
+            )}
+
+            {/* Settings + language + logout */}
+            {isAuthenticated && (
+              <div className="rounded-xl border border-border/50 divide-y divide-border/30 bg-card/20 overflow-hidden">
+                <MobileMenuItem icon={UserCircle} label="Configuración" onClick={() => go("/profile")} />
+                <button
+                  onClick={() => setLangMenuOpen(v => !v)}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-card transition-colors text-left"
+                >
+                  <Globe className="h-5 w-5 text-foreground/60 shrink-0" />
+                  <span className="flex-1 font-medium text-sm">Idioma / Language</span>
+                  <span className="text-xs text-foreground/60 flex items-center gap-1">
+                    {currentLang.flag} {currentLang.name}
+                    <ChevronDown className={`h-4 w-4 transition-transform ${langMenuOpen ? "rotate-180" : ""}`} />
+                  </span>
+                </button>
+                {langMenuOpen && (
+                  <div className="bg-background/40 divide-y divide-border/20">
+                    {SUPPORTED_LANGUAGES.map(l => (
+                      <button
+                        key={l.code}
+                        onClick={() => changeLang(l.code)}
+                        className={`w-full flex items-center gap-3 px-6 py-3 text-sm text-left hover:bg-card/50 transition-colors ${
+                          l.code === i18n.language ? "text-accent font-semibold" : ""
+                        }`}
+                      >
+                        <span className="text-base">{l.flag}</span>
+                        <span className="flex-1">{l.name}</span>
+                        {l.code === i18n.language && <span className="text-accent">✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-red-500/10 transition-colors text-left text-red-400"
+                >
+                  <LogOut className="h-5 w-5 shrink-0" />
+                  <span className="flex-1 font-medium text-sm">Cerrar sesión</span>
+                </button>
+              </div>
+            )}
+
+            {/* Language switcher when logged out */}
+            {!isAuthenticated && (
+              <div className="rounded-xl border border-border/50 overflow-hidden bg-card/20">
+                <button
+                  onClick={() => setLangMenuOpen(v => !v)}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-card transition-colors text-left"
+                >
+                  <Globe className="h-5 w-5 text-foreground/60 shrink-0" />
+                  <span className="flex-1 font-medium text-sm">Idioma / Language</span>
+                  <span className="text-xs text-foreground/60 flex items-center gap-1">
+                    {currentLang.flag} {currentLang.name}
+                    <ChevronDown className={`h-4 w-4 transition-transform ${langMenuOpen ? "rotate-180" : ""}`} />
+                  </span>
+                </button>
+                {langMenuOpen && (
+                  <div className="bg-background/40 divide-y divide-border/20 border-t border-border/30">
+                    {SUPPORTED_LANGUAGES.map(l => (
+                      <button
+                        key={l.code}
+                        onClick={() => changeLang(l.code)}
+                        className={`w-full flex items-center gap-3 px-6 py-3 text-sm text-left hover:bg-card/50 transition-colors ${
+                          l.code === i18n.language ? "text-accent font-semibold" : ""
+                        }`}
+                      >
+                        <span className="text-base">{l.flag}</span>
+                        <span className="flex-1">{l.name}</span>
+                        {l.code === i18n.language && <span className="text-accent">✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
     </header>
+  );
+}
+
+// ─── Subcomponents ─────────────────────────────────────────────────────────────
+
+interface MobileMenuItemProps {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  onClick: () => void;
+  description?: string;
+  trailing?: React.ReactNode;
+  variant?: "default" | "framed" | "highlighted" | "rrp";
+}
+
+function MobileMenuItem({ icon: Icon, label, onClick, description, trailing, variant = "default" }: MobileMenuItemProps) {
+  const wrapperClass =
+    variant === "framed" ? "rounded-xl border border-border/50 bg-card/20 hover:bg-card/50"
+    : variant === "highlighted" ? "rounded-xl bg-gradient-to-br from-accent/15 to-purple-500/15 border border-accent/40 hover:border-accent/70"
+    : variant === "rrp" ? "rounded-xl bg-gradient-to-br from-orange-500/15 to-red-500/10 border border-orange-500/40 hover:border-orange-500/70"
+    : "hover:bg-card/50";
+
+  const iconColor =
+    variant === "highlighted" ? "text-accent"
+    : variant === "rrp" ? "text-orange-400"
+    : "text-foreground/70";
+
+  return (
+    <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3.5 transition-colors text-left ${wrapperClass}`}>
+      <Icon className={`h-5 w-5 shrink-0 ${iconColor}`} />
+      <div className="flex-1 min-w-0">
+        <div className="font-medium text-sm">{label}</div>
+        {description && <div className="text-xs text-foreground/50 mt-0.5">{description}</div>}
+      </div>
+      {trailing ? <span className="text-foreground/40">{trailing}</span> : null}
+    </button>
+  );
+}
+
+function MobileSubItem({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="rounded-lg border border-border/50 bg-card/20 hover:bg-card/50 transition-colors py-3 text-center text-sm font-medium"
+    >
+      {label}
+    </button>
   );
 }
