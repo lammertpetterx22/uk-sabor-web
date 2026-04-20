@@ -3,7 +3,7 @@ import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { events, eventTickets, usageTracking } from "../../drizzle/schema";
 import { getAllRoles } from "../../drizzle/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, gte } from "drizzle-orm";
 import { canCreateEvent } from "../stripe/plans";
 
 // Uses getAllRoles() to support multi-role users
@@ -27,10 +27,14 @@ export const eventsRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
+      // Hide events whose date has already passed (past the start of today)
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+
       const result = await db
         .select()
         .from(events)
-        .where(eq(events.status, "published"))
+        .where(and(eq(events.status, "published"), gte(events.eventDate, startOfToday)))
         .orderBy(desc(events.eventDate))
         .limit(input.limit)
         .offset(input.offset);

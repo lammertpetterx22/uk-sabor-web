@@ -43,7 +43,10 @@ export const classesRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      const conditions = [eq(classes.status, "published"), gte(classes.classDate, new Date())];
+      // Hide classes whose date has already passed (past the start of today)
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      const conditions = [eq(classes.status, "published"), gte(classes.classDate, startOfToday)];
       if (input.instructorId) {
         conditions.push(eq(classes.instructorId, input.instructorId));
       }
