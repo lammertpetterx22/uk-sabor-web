@@ -372,7 +372,7 @@ export default function MyEventsDashboard({
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">
-              {editingEvent ? "Edit Evento" : "Create New Event"}
+              {editingEvent ? "Edit Event" : "Create New Event"}
             </DialogTitle>
             <DialogDescription>
               {editingEvent

@@ -267,253 +267,220 @@ export default function EventFormCard({
   };
 
   return (
-    <Card className="border-border/50 bg-gradient-to-br from-card/90 to-card/50 backdrop-blur-sm shadow-xl">
-      <CardHeader className="space-y-3 pb-6">
+    <div className="space-y-6">
+      {/* ───────── Basic Information ───────── */}
+      <div className="rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-500/[0.06] to-transparent p-5 md:p-6 space-y-5">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30">
-            <Calendar className="h-6 w-6 text-blue-500" />
+          <div className="p-2.5 rounded-xl bg-blue-500/15">
+            <Sparkles className="h-5 w-5 text-blue-400" />
           </div>
           <div>
-            <CardTitle className="text-2xl gradient-text">
-              {editingEvent ? "Edit Event" : t("admin.events.createNewEvent")}
-            </CardTitle>
-            <CardDescription className="text-foreground/60 mt-1">
-              {editingEvent ? "Actualiza la información del event" : t("admin.events.createDescription")}
-            </CardDescription>
+            <h3 className="font-semibold text-foreground">Basic Information</h3>
+            <p className="text-xs text-foreground/50">Name your event and tell people what it's about</p>
           </div>
         </div>
-      </CardHeader>
 
-      <CardContent className="space-y-6">
-        {/* Basic Information Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Sparkles className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Basic Information</h3>
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="event-title" className="text-foreground/70 text-xs uppercase tracking-wider font-semibold">
+            Event Title <span className="text-[#FA3698]">*</span>
+          </Label>
+          <Input
+            id="event-title"
+            placeholder="e.g. Salsa Night - Summer Festival"
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            className="bg-background/60 border-border/40 focus:border-blue-500/60 h-11 text-base"
+          />
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="event-title" className="text-foreground/80 flex items-center gap-2">
-              <Calendar className="h-3.5 w-3.5 text-accent" />
-              Event Title *
+            <Label htmlFor="event-venue" className="text-foreground/70 text-xs uppercase tracking-wider font-semibold flex items-center gap-1.5">
+              <Building2 className="h-3 w-3" /> Venue <span className="text-[#FA3698]">*</span>
             </Label>
             <Input
-              id="event-title"
-              placeholder="e.g. Salsa Night - Summer Festival"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="bg-background/50 border-border/50 focus:border-accent transition-colors"
+              id="event-venue"
+              placeholder="e.g. Revolución de Cuba"
+              value={formData.venue}
+              onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+              className="bg-background/60 border-border/40 focus:border-blue-500/60 h-11"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="event-city" className="text-foreground/70 text-xs uppercase tracking-wider font-semibold flex items-center gap-1.5">
+              <MapPin className="h-3 w-3" /> City
+            </Label>
+            <Input
+              id="event-city"
+              placeholder="e.g. Newcastle"
+              value={formData.city}
+              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+              className="bg-background/60 border-border/40 focus:border-blue-500/60 h-11"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="event-description" className="text-foreground/70 text-xs uppercase tracking-wider font-semibold">
+            Description
+          </Label>
+          <Textarea
+            id="event-description"
+            placeholder="Describe your event: music style, dance level, atmosphere..."
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            rows={4}
+            className="bg-background/60 border-border/40 focus:border-blue-500/60 resize-none"
+          />
+        </div>
+      </div>
+
+      {/* ───────── Date & Tickets ───────── */}
+      <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/[0.06] to-transparent p-5 md:p-6 space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-amber-500/15">
+            <Clock className="h-5 w-5 text-amber-400" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-foreground">Date and Tickets</h3>
+            <p className="text-xs text-foreground/50">When is it? How much? How many seats?</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="event-date" className="text-foreground/70 text-xs uppercase tracking-wider font-semibold">
+              Date & Time <span className="text-[#FA3698]">*</span>
+            </Label>
+            <Input
+              id="event-date"
+              type="datetime-local"
+              value={formData.eventDate}
+              onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
+              className="bg-background/60 border-border/40 focus:border-amber-500/60 h-11"
+              min={new Date().toISOString().slice(0, 16)}
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="event-venue" className="text-foreground/80 flex items-center gap-2">
-                <Building2 className="h-3.5 w-3.5 text-accent" />
-                Venue **
-              </Label>
+          <div className="space-y-2">
+            <Label htmlFor="event-price" className="text-foreground/70 text-xs uppercase tracking-wider font-semibold flex items-center gap-1.5">
+              <DollarSign className="h-3 w-3" /> Ticket Price <span className="text-[#FA3698]">*</span>
+            </Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/60 font-semibold">£</span>
               <Input
-                id="event-venue"
-                placeholder="e.g. Teatro Principal"
-                value={formData.venue}
-                onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                className="bg-background/50 border-border/50 focus:border-accent transition-colors"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="event-city" className="text-foreground/80 flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5 text-accent" />
-                City
-              </Label>
-              <Input
-                id="event-city"
-                placeholder="e.g. Madrid"
-                value={formData.city}
-                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                className="bg-background/50 border-border/50 focus:border-accent transition-colors"
+                id="event-price"
+                type="number"
+                placeholder="25.00"
+                value={formData.ticketPrice}
+                onChange={(e) => setFormData({ ...formData, ticketPrice: e.target.value })}
+                className="bg-background/60 border-border/40 focus:border-amber-500/60 pl-8 h-11"
+                step="0.01"
+                min="0"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="event-description" className="text-foreground/80">
-              Event Description
+            <Label htmlFor="event-max-tickets" className="text-foreground/70 text-xs uppercase tracking-wider font-semibold flex items-center gap-1.5">
+              <Users className="h-3 w-3" /> Max. Tickets
             </Label>
-            <Textarea
-              id="event-description"
-              placeholder="Describe your event: music style, dance level, atmosphere, etc."
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={4}
-              className="bg-background/50 border-border/50 focus:border-accent transition-colors resize-none"
+            <Input
+              id="event-max-tickets"
+              type="number"
+              placeholder="100"
+              value={formData.maxTickets}
+              onChange={(e) => setFormData({ ...formData, maxTickets: e.target.value })}
+              className="bg-background/60 border-border/40 focus:border-amber-500/60 h-11"
+              min="1"
             />
           </div>
         </div>
 
-        <Separator className="bg-border/50" />
+        <label htmlFor="show-low-ticket-alert" className="flex items-center gap-3 p-3 rounded-xl bg-background/40 border border-border/40 cursor-pointer hover:border-amber-500/40 transition-colors">
+          <input
+            type="checkbox"
+            id="show-low-ticket-alert"
+            checked={formData.showLowTicketAlert}
+            onChange={(e) => setFormData({ ...formData, showLowTicketAlert: e.target.checked })}
+            className="w-4 h-4 rounded"
+          />
+          <span className="text-sm text-foreground/80">Show "Only X tickets left" alert when fewer than 20 remain</span>
+        </label>
+      </div>
 
-        {/* Date & Tickets Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Clock className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Date and Tickets</h3>
+      {/* ───────── Payment Method ───────── */}
+      <div className="rounded-2xl border border-green-500/20 bg-gradient-to-br from-green-500/[0.06] to-transparent p-5 md:p-6 space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-green-500/15">
+            <CreditCard className="h-5 w-5 text-green-400" />
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2 md:col-span-1">
-              <Label htmlFor="event-date" className="text-foreground/80">
-                Date and Time *
-              </Label>
-              <Input
-                id="event-date"
-                type="datetime-local"
-                value={formData.eventDate}
-                onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
-                className="bg-background/50 border-border/50 focus:border-accent transition-colors"
-                min={new Date().toISOString().slice(0, 16)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="event-price" className="text-foreground/80 flex items-center gap-2">
-                <DollarSign className="h-3.5 w-3.5 text-accent" />
-                Ticket Price *
-              </Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50">£</span>
-                <Input
-                  id="event-price"
-                  type="number"
-                  placeholder="25.00"
-                  value={formData.ticketPrice}
-                  onChange={(e) => setFormData({ ...formData, ticketPrice: e.target.value })}
-                  className="bg-background/50 border-border/50 focus:border-accent transition-colors pl-8"
-                  step="0.01"
-                  min="0"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="event-max-tickets" className="text-foreground/80 flex items-center gap-2">
-                <Users className="h-3.5 w-3.5 text-accent" />
-                Max. Tickets
-              </Label>
-              <Input
-                id="event-max-tickets"
-                type="number"
-                placeholder="100"
-                value={formData.maxTickets}
-                onChange={(e) => setFormData({ ...formData, maxTickets: e.target.value })}
-                className="bg-background/50 border-border/50 focus:border-accent transition-colors"
-                min="1"
-              />
-            </div>
-          </div>
-        </div>
-
-        <Separator className="bg-border/50" />
-
-        {/* Payment Method Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-4">
-            <CreditCard className="h-4 w-4 text-accent" />
+          <div>
             <h3 className="font-semibold text-foreground">Payment Method</h3>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <button
-              type="button"
-              onClick={() => setFormData({ ...formData, paymentMethod: "online" })}
-              className={`p-4 rounded-xl border-2 transition-all ${
-                formData.paymentMethod === "online"
-                  ? "border-accent bg-accent/10"
-                  : "border-border/50 bg-background/30 hover:border-accent/50"
-              }`}
-            >
-              <CreditCard className={`h-5 w-5 mx-auto mb-2 ${formData.paymentMethod === "online" ? "text-accent" : "text-foreground/50"}`} />
-              <p className={`text-sm font-medium ${formData.paymentMethod === "online" ? "text-accent" : "text-foreground/70"}`}>
-                Online
-              </p>
-              <p className="text-xs text-foreground/50 mt-1">Online payment</p>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setFormData({ ...formData, paymentMethod: "cash" })}
-              className={`p-4 rounded-xl border-2 transition-all ${
-                formData.paymentMethod === "cash"
-                  ? "border-accent bg-accent/10"
-                  : "border-border/50 bg-background/30 hover:border-accent/50"
-              }`}
-            >
-              <Banknote className={`h-5 w-5 mx-auto mb-2 ${formData.paymentMethod === "cash" ? "text-accent" : "text-foreground/50"}`} />
-              <p className={`text-sm font-medium ${formData.paymentMethod === "cash" ? "text-accent" : "text-foreground/70"}`}>
-                Cash
-              </p>
-              <p className="text-xs text-foreground/50 mt-1">Pay at door</p>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setFormData({ ...formData, paymentMethod: "both" })}
-              className={`p-4 rounded-xl border-2 transition-all ${
-                formData.paymentMethod === "both"
-                  ? "border-accent bg-accent/10"
-                  : "border-border/50 bg-background/30 hover:border-accent/50"
-              }`}
-            >
-              <div className="flex items-center justify-center gap-1 mb-2">
-                <CreditCard className={`h-4 w-4 ${formData.paymentMethod === "both" ? "text-accent" : "text-foreground/50"}`} />
-                <Banknote className={`h-4 w-4 ${formData.paymentMethod === "both" ? "text-accent" : "text-foreground/50"}`} />
-              </div>
-              <p className={`text-sm font-medium ${formData.paymentMethod === "both" ? "text-accent" : "text-foreground/70"}`}>
-                Both
-              </p>
-              <p className="text-xs text-foreground/50 mt-1">Online and cash</p>
-            </button>
-          </div>
-
-          {/* Low Ticket Alert Option */}
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-background/30 border border-border/50">
-            <input
-              type="checkbox"
-              id="show-low-ticket-alert"
-              checked={formData.showLowTicketAlert}
-              onChange={(e) => setFormData({ ...formData, showLowTicketAlert: e.target.checked })}
-              className="w-4 h-4 text-accent bg-background border-border/50 rounded focus:ring-accent focus:ring-2"
-            />
-            <label htmlFor="show-low-ticket-alert" className="text-sm text-foreground/80 courser-pointer">
-              Show "Only X tickets left" alert when fewer than 20 remain
-            </label>
+            <p className="text-xs text-foreground/50">How will people pay for tickets?</p>
           </div>
         </div>
 
-        <Separator className="bg-border/50" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {[
+            { value: "online" as const, icon: CreditCard, label: "Online", desc: "Card via Stripe" },
+            { value: "cash"   as const, icon: Banknote,   label: "Cash",   desc: "Pay at the door" },
+            { value: "both"   as const, icon: CreditCard, label: "Both",   desc: "Online or at door" },
+          ].map(({ value, icon: Icon, label, desc }) => {
+            const active = formData.paymentMethod === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setFormData({ ...formData, paymentMethod: value })}
+                className={`p-4 rounded-xl border-2 transition-all text-center ${
+                  active
+                    ? "border-green-500 bg-green-500/10 shadow-lg shadow-green-500/10"
+                    : "border-border/40 bg-background/40 hover:border-green-500/40"
+                }`}
+              >
+                <Icon className={`h-6 w-6 mx-auto mb-2 ${active ? "text-green-400" : "text-foreground/50"}`} />
+                <p className={`text-sm font-semibold ${active ? "text-green-400" : "text-foreground/80"}`}>{label}</p>
+                <p className="text-xs text-foreground/50 mt-0.5">{desc}</p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-        {/* Discount Codes Section */}
+      {/* ───────── Discount Codes ───────── */}
+      <div className="rounded-2xl border border-pink-500/20 bg-gradient-to-br from-pink-500/[0.06] to-transparent p-5 md:p-6">
         <DiscountCodesSection itemType="event" itemId={editingEvent?.id} />
+      </div>
 
-        <Separator className="bg-border/50" />
-
-        {/* Guest List Section (only for existing events) */}
+      {/* ───────── Guest List ───────── */}
+      <div className="rounded-2xl border border-purple-500/20 bg-gradient-to-br from-purple-500/[0.06] to-transparent p-5 md:p-6">
         <GuestListSection eventId={editingEvent?.id} />
+      </div>
 
-        <Separator className="bg-border/50" />
-
-        {/* RRP Assignment Section (only for existing events) */}
+      {/* ───────── RRP ───────── */}
+      <div className="rounded-2xl border border-orange-500/20 bg-gradient-to-br from-orange-500/[0.06] to-transparent p-5 md:p-6">
         <RrpAssignmentSection eventId={editingEvent?.id} />
+      </div>
 
-        <Separator className="bg-border/50" />
-
-        {/* Cover Image Upload Section (Flyer/Portada - Vertical 17:25) */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-2">
-            <ImageIcon className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Event Cover (Flyer)</h3>
+      {/* ───────── Images ───────── */}
+      <div className="rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-500/[0.06] to-transparent p-5 md:p-6 space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-indigo-500/15">
+            <ImageIcon className="h-5 w-5 text-indigo-400" />
           </div>
-          <p className="text-xs text-foreground/50 -mt-2">Vertical image for event cards (1275×1875px, 17:25). Cropped automatically.</p>
+          <div>
+            <h3 className="font-semibold text-foreground">Images</h3>
+            <p className="text-xs text-foreground/50">Cover flyer (vertical) and optional landscape banner</p>
+          </div>
+        </div>
+
+        {/* Cover Image (Flyer - Vertical 17:25) */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs uppercase tracking-wider text-foreground/70 font-semibold">Cover Flyer</span>
+            <span className="text-xs text-foreground/40">17:25 vertical</span>
+          </div>
 
           {formData.imagePreview ? (
             <div className="space-y-4">
@@ -626,15 +593,12 @@ export default function EventFormCard({
           onClose={() => setCropSrc(null)}
         />
 
-        <Separator className="bg-border/50" />
-
-        {/* Banner Image Upload Section (Horizontal 16:9) */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-2">
-            <ImageIcon className="h-4 w-4 text-blue-500" />
-            <h3 className="font-semibold text-foreground">Event Banner (Landscape)</h3>
+        {/* Banner (Horizontal 16:9) */}
+        <div className="space-y-3 pt-4 border-t border-border/30">
+          <div className="flex items-center gap-2">
+            <span className="text-xs uppercase tracking-wider text-foreground/70 font-semibold">Landscape Banner</span>
+            <span className="text-xs text-foreground/40">16:9 · optional</span>
           </div>
-          <p className="text-xs text-foreground/50 -mt-2">Landscape image shown on the event detail page (16:9)</p>
 
           {formData.bannerPreview ? (
             <div className="space-y-4">
@@ -748,42 +712,36 @@ export default function EventFormCard({
           onCropComplete={handleBannerCropComplete}
           onClose={() => setCropSrcBanner(null)}
         />
+      </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-3 pt-4">
-          <Button
-            type="button"
-            onClick={handleCreateEvent}
-            disabled={createMutation.isPending || updateMutation.isPending || uploading || uploadingBanner}
-            className="btn-vibrant flex-1 h-12 text-base font-semibold shadow-lg"
-          >
-            {(createMutation.isPending || updateMutation.isPending) ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                {editingEvent ? "Updating..." : "Creating Event..."}
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-2 h-5 w-5" />
-                {editingEvent ? "Update Event" : "Create Event"}
-              </>
-            )}
-          </Button>
+      {/* ───────── Sticky Action Bar ───────── */}
+      <div className="sticky bottom-0 -mx-4 md:-mx-0 bg-background/95 backdrop-blur-md border-t border-border/40 px-4 py-4 mt-2 flex flex-col sm:flex-row gap-3 items-center sm:justify-between z-10">
+        <p className="text-xs text-foreground/40 order-last sm:order-first">
+          <span className="text-[#FA3698]">*</span> Required fields
+        </p>
+        <div className="flex gap-3 w-full sm:w-auto">
           <Button
             type="button"
             variant="outline"
             onClick={resetForm}
-            className="h-12"
+            className="h-11 px-5"
           >
-            <X className="h-4 w-4 mr-2" />
-            Cancel
+            <X className="h-4 w-4 mr-2" /> Cancel
+          </Button>
+          <Button
+            type="button"
+            onClick={handleCreateEvent}
+            disabled={createMutation.isPending || updateMutation.isPending || uploading || uploadingBanner}
+            className="btn-vibrant flex-1 sm:flex-none h-11 px-8 text-sm font-semibold shadow-lg"
+          >
+            {(createMutation.isPending || updateMutation.isPending) ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {editingEvent ? "Updating…" : "Creating…"}</>
+            ) : (
+              <><Sparkles className="mr-2 h-4 w-4" /> {editingEvent ? "Update Event" : "Publish Event"}</>
+            )}
           </Button>
         </div>
-
-        <p className="text-xs text-foreground/50 text-center">
-          * Required fields
-        </p>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
