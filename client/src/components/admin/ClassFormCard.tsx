@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,11 @@ import {
   Banknote,
   PartyPopper,
   FileText,
-  Download
+  Download,
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Tag,
 } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -104,6 +108,25 @@ export default function ClassFormCard({
 
   const [uploading, setUploading] = useState(false);
   const [uploadingMaterials, setUploadingMaterials] = useState(false);
+  const [step, setStep] = useState(0);
+
+  const steps = useMemo(() => {
+    const base = [
+      { key: "basics",   label: "Basics",   icon: Sparkles,    color: "blue" },
+      { key: "schedule", label: "Schedule", icon: Clock,       color: "amber" },
+      { key: "payment",  label: "Payment",  icon: CreditCard,  color: "green" },
+      { key: "social",   label: "Social",   icon: PartyPopper, color: "pink" },
+      { key: "image",    label: "Image",    icon: ImageIcon,   color: "indigo" },
+      { key: "files",    label: "Materials", icon: FileText,    color: "teal" },
+    ];
+    if (editingClass?.id) {
+      base.push({ key: "discounts", label: "Discounts", icon: Tag, color: "rose" });
+    }
+    return base;
+  }, [editingClass?.id]);
+
+  const currentStep = steps[step];
+  const isLastCoreStep = step === 5;
   const [cropSrc, setCropSrc] = useState<string | null>(null);
 
   // Auto-fill instructorId for instructor role users
@@ -318,30 +341,56 @@ export default function ClassFormCard({
   };
 
   return (
-    <Card className="border-border/50 bg-gradient-to-br from-card/90 to-card/50 backdrop-blur-sm shadow-xl">
-      <CardHeader className="space-y-3 pb-6">
+    <div className="space-y-6">
+      {/* ───────── Step Indicator ───────── */}
+      <div className="rounded-2xl border border-border/40 bg-card/40 backdrop-blur-sm p-3">
+        <div className="flex items-center gap-1.5 overflow-x-auto">
+          {steps.map((s, idx) => {
+            const active = idx === step;
+            const done = idx < step;
+            const disabled = !editingClass?.id && idx > 5;
+            const Icon = s.icon;
+            return (
+              <button
+                key={s.key}
+                type="button"
+                onClick={() => !disabled && setStep(idx)}
+                disabled={disabled}
+                className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                  active
+                    ? "bg-gradient-to-r from-[#FA3698]/20 to-purple-500/20 text-foreground border border-[#FA3698]/40"
+                    : done
+                      ? "text-green-400 hover:bg-white/5"
+                      : disabled
+                        ? "text-foreground/30 cursor-not-allowed"
+                        : "text-foreground/60 hover:bg-white/5"
+                }`}
+              >
+                <span className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${
+                  active ? "bg-[#FA3698] text-white" : done ? "bg-green-500/20 text-green-400" : "bg-white/10 text-foreground/50"
+                }`}>
+                  {done ? <Check className="h-3 w-3" /> : idx + 1}
+                </span>
+                <Icon className="h-3.5 w-3.5" />
+                {s.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ───────── Step 0: Basic Information ───────── */}
+      {step === 0 && (
+      <div className="rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-500/[0.06] to-transparent p-5 md:p-6 space-y-5">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 border border-orange-500/30">
-            <Clock className="h-6 w-6 text-orange-500" />
+          <div className="p-2.5 rounded-xl bg-blue-500/15">
+            <Sparkles className="h-5 w-5 text-blue-400" />
           </div>
           <div>
-            <CardTitle className="text-2xl gradient-text">
-              {editingClass ? t("admin.classes.editClass") : t("admin.classes.createClass")}
-            </CardTitle>
-            <CardDescription className="text-foreground/60 mt-1">
-              {editingClass ? "Actualiza los detalles de la class" : "Programa una nueva sesión de class en vivo"}
-            </CardDescription>
+            <h3 className="font-semibold text-foreground">Class Information</h3>
+            <p className="text-xs text-foreground/50">Name your class and tell students what it's about</p>
           </div>
         </div>
-      </CardHeader>
-
-      <CardContent className="space-y-6">
-        {/* Basic Information Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Sparkles className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Information de la Class</h3>
-          </div>
 
           <div className="space-y-2">
             <Label htmlFor="class-title" className="text-foreground/80 flex items-center gap-2">
@@ -426,15 +475,20 @@ export default function ClassFormCard({
             </div>
           )}
         </div>
+      )}
 
-        <Separator className="bg-border/50" />
-
-        {/* Schedule & Pricing Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Calendar className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Horario y Price</h3>
+      {/* ───────── Step 1: Schedule & Pricing ───────── */}
+      {step === 1 && (
+      <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/[0.06] to-transparent p-5 md:p-6 space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-amber-500/15">
+            <Clock className="h-5 w-5 text-amber-400" />
           </div>
+          <div>
+            <h3 className="font-semibold text-foreground">Schedule &amp; Pricing</h3>
+            <p className="text-xs text-foreground/50">When is the class, how much, and how many seats</p>
+          </div>
+        </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -507,15 +561,20 @@ export default function ClassFormCard({
             </div>
           </div>
         </div>
+      )}
 
-        <Separator className="bg-border/50" />
-
-        {/* Payment Method Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-4">
-            <CreditCard className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Payment Method</h3>
+      {/* ───────── Step 2: Payment Method ───────── */}
+      {step === 2 && (
+      <div className="rounded-2xl border border-green-500/20 bg-gradient-to-br from-green-500/[0.06] to-transparent p-5 md:p-6 space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-green-500/15">
+            <CreditCard className="h-5 w-5 text-green-400" />
           </div>
+          <div>
+            <h3 className="font-semibold text-foreground">Payment Method</h3>
+            <p className="text-xs text-foreground/50">How will students pay?</p>
+          </div>
+        </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <button
@@ -567,20 +626,27 @@ export default function ClassFormCard({
             </button>
           </div>
         </div>
+      )}
 
-        <Separator className="bg-border/50" />
+      {/* ───────── Discounts (edit-only, step 6) ───────── */}
+      {step === 6 && editingClass?.id && (
+      <div className="rounded-2xl border border-rose-500/20 bg-gradient-to-br from-rose-500/[0.06] to-transparent p-5 md:p-6">
+        <DiscountCodesSection itemType="class" itemId={editingClass.id} />
+      </div>
+      )}
 
-        {/* Discount Codes Section */}
-        <DiscountCodesSection itemType="class" itemId={editingClass?.id} />
-
-        <Separator className="bg-border/50" />
-
-        {/* Social Dancing Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-4">
-            <PartyPopper className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Social Dancing (Optional)</h3>
+      {/* ───────── Step 3: Social Dancing ───────── */}
+      {step === 3 && (
+      <div className="rounded-2xl border border-pink-500/20 bg-gradient-to-br from-pink-500/[0.06] to-transparent p-5 md:p-6 space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-pink-500/15">
+            <PartyPopper className="h-5 w-5 text-pink-400" />
           </div>
+          <div>
+            <h3 className="font-semibold text-foreground">Social Dancing (Optional)</h3>
+            <p className="text-xs text-foreground/50">Skip this if there's no social after class</p>
+          </div>
+        </div>
 
           <div className="flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-background/30">
             <input
@@ -643,15 +709,20 @@ export default function ClassFormCard({
             </div>
           )}
         </div>
+      )}
 
-        <Separator className="bg-border/50" />
-
-        {/* Image Upload Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-4">
-            <ImageIcon className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Image de la Class (Optional)</h3>
+      {/* ───────── Step 4: Image ───────── */}
+      {step === 4 && (
+      <div className="rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-500/[0.06] to-transparent p-5 md:p-6 space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-indigo-500/15">
+            <ImageIcon className="h-5 w-5 text-indigo-400" />
           </div>
+          <div>
+            <h3 className="font-semibold text-foreground">Class Image (Optional)</h3>
+            <p className="text-xs text-foreground/50">Landscape image displayed on the class card</p>
+          </div>
+        </div>
 
           {formData.imagePreview ? (
             <div className="space-y-4">
@@ -756,15 +827,20 @@ export default function ClassFormCard({
             className="hidden"
           />
         </div>
+      )}
 
-        <Separator className="bg-border/50" />
-
-        {/* Class Materials Upload Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-4">
-            <FileText className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Class Materials (Optional)</h3>
+      {/* ───────── Step 5: Materials ───────── */}
+      {step === 5 && (
+      <div className="rounded-2xl border border-teal-500/20 bg-gradient-to-br from-teal-500/[0.06] to-transparent p-5 md:p-6 space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-teal-500/15">
+            <FileText className="h-5 w-5 text-teal-400" />
           </div>
+          <div>
+            <h3 className="font-semibold text-foreground">Class Materials (Optional)</h3>
+            <p className="text-xs text-foreground/50">PDFs, worksheets or resources students can download</p>
+          </div>
+        </div>
 
           <p className="text-sm text-foreground/60">
             Upload PDF, ZIP, DOC, or DOCX files (max 50MB) that students can download after purchasing the class.
@@ -852,51 +928,54 @@ export default function ClassFormCard({
             disabled={uploadingMaterials}
           />
         </div>
+      )}
 
-        {/* Image Cropper Modal */}
-        <ImageCropperModal
-          imageSrc={cropSrc}
-          aspect={16 / 9}
-          label="Recorta la image de la class"
-          onCropComplete={handleCropComplete}
-          onClose={() => setCropSrc(null)}
-        />
+      {/* Image Cropper Modal */}
+      <ImageCropperModal
+        imageSrc={cropSrc}
+        aspect={16 / 9}
+        label="Crop the class image"
+        onCropComplete={handleCropComplete}
+        onClose={() => setCropSrc(null)}
+      />
 
-        {/* Action Buttons */}
-        <div className="flex gap-3 pt-4">
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            disabled={createMutation.isPending || updateMutation.isPending || uploading}
-            className="btn-vibrant flex-1 h-12 text-base font-semibold shadow-lg"
-          >
-            {createMutation.isPending || updateMutation.isPending ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                {editingClass ? "Updating..." : "Creating Class..."}
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-2 h-5 w-5" />
-                {editingClass ? "Actualizar Class" : "Crear Class"}
-              </>
-            )}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={resetForm}
-            className="h-12"
-          >
-            <X className="h-4 w-4 mr-2" />
-            Cancel
-          </Button>
+      {/* ───────── Sticky Action Bar ───────── */}
+      <div className="sticky bottom-0 -mx-4 md:-mx-0 bg-background/95 backdrop-blur-md border-t border-border/40 px-4 py-3 mt-2 flex items-center justify-between gap-3 z-10">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setStep(s => Math.max(0, s - 1))}
+          disabled={step === 0}
+          className="h-11 px-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" /> Back
+        </Button>
+        <div className="text-xs text-foreground/50 hidden sm:block">
+          Step {step + 1} of {steps.length} · <span className="font-semibold text-foreground/70">{currentStep.label}</span>
         </div>
-
-        <p className="text-xs text-foreground/50 text-center">
-          * Required fields
-        </p>
-      </CardContent>
-    </Card>
+        <div className="flex gap-2">
+          {step < 5 ? (
+            <Button type="button" onClick={() => setStep(s => Math.min(steps.length - 1, s + 1))} className="btn-vibrant h-11 px-6">
+              Next <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+          ) : step === 5 ? (
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              disabled={createMutation.isPending || updateMutation.isPending || uploading}
+              className="btn-vibrant h-11 px-6 text-sm font-semibold shadow-lg"
+            >
+              {createMutation.isPending || updateMutation.isPending ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {editingClass ? "Updating…" : "Publishing…"}</>
+              ) : (
+                <><Sparkles className="mr-2 h-4 w-4" /> {editingClass ? "Save Changes" : "Publish Class"}</>
+              )}
+            </Button>
+          ) : (
+            <Button type="button" onClick={resetForm} className="btn-vibrant h-11 px-6">Done</Button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

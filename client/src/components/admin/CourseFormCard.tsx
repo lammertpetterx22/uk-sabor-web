@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,11 @@ import {
   Clock,
   BookOpen,
   User,
-  CheckCircle
+  CheckCircle,
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Tag,
 } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -98,6 +102,21 @@ export default function CourseFormCard({
 
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [step, setStep] = useState(0);
+
+  const steps = useMemo(() => {
+    const base = [
+      { key: "basics", label: "Basics", icon: Sparkles,     color: "blue" },
+      { key: "video",  label: "Video",  icon: Video,        color: "amber" },
+      { key: "image",  label: "Cover",  icon: ImageIcon,    color: "indigo" },
+    ];
+    if (editingCourse?.id) {
+      base.push({ key: "discounts", label: "Discounts", icon: Tag, color: "rose" });
+    }
+    return base;
+  }, [editingCourse?.id]);
+
+  const currentStep = steps[step];
   const [imageUploading, setImageUploading] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
 
@@ -307,30 +326,56 @@ export default function CourseFormCard({
   };
 
   return (
-    <Card className="border-border/50 bg-gradient-to-br from-card/90 to-card/50 backdrop-blur-sm shadow-xl">
-      <CardHeader className="space-y-3 pb-6">
+    <div className="space-y-6">
+      {/* ───────── Step Indicator ───────── */}
+      <div className="rounded-2xl border border-border/40 bg-card/40 backdrop-blur-sm p-3">
+        <div className="flex items-center gap-1.5 overflow-x-auto">
+          {steps.map((s, idx) => {
+            const active = idx === step;
+            const done = idx < step;
+            const disabled = !editingCourse?.id && idx > 2;
+            const Icon = s.icon;
+            return (
+              <button
+                key={s.key}
+                type="button"
+                onClick={() => !disabled && setStep(idx)}
+                disabled={disabled}
+                className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                  active
+                    ? "bg-gradient-to-r from-[#FA3698]/20 to-purple-500/20 text-foreground border border-[#FA3698]/40"
+                    : done
+                      ? "text-green-400 hover:bg-white/5"
+                      : disabled
+                        ? "text-foreground/30 cursor-not-allowed"
+                        : "text-foreground/60 hover:bg-white/5"
+                }`}
+              >
+                <span className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${
+                  active ? "bg-[#FA3698] text-white" : done ? "bg-green-500/20 text-green-400" : "bg-white/10 text-foreground/50"
+                }`}>
+                  {done ? <Check className="h-3 w-3" /> : idx + 1}
+                </span>
+                <Icon className="h-3.5 w-3.5" />
+                {s.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ───────── Step 0: Basic Information ───────── */}
+      {step === 0 && (
+      <div className="rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-500/[0.06] to-transparent p-5 md:p-6 space-y-5">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
-            <GraduationCap className="h-6 w-6 text-purple-500" />
+          <div className="p-2.5 rounded-xl bg-blue-500/15">
+            <Sparkles className="h-5 w-5 text-blue-400" />
           </div>
           <div>
-            <CardTitle className="text-2xl gradient-text">
-              {editingCourse ? "Edit Course" : t("admin.courses.createCourseButton")}
-            </CardTitle>
-            <CardDescription className="text-foreground/60 mt-1">
-              {editingCourse ? "Actualiza la información de tu course" : "Crea un nuevo course online para tus estudibefore"}
-            </CardDescription>
+            <h3 className="font-semibold text-foreground">Course Information</h3>
+            <p className="text-xs text-foreground/50">Title, instructor and details about what students will learn</p>
           </div>
         </div>
-      </CardHeader>
-
-      <CardContent className="space-y-6">
-        {/* Basic Information Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Sparkles className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Information del Course</h3>
-          </div>
 
           <div className="space-y-2">
             <Label htmlFor="course-title" className="text-foreground/80 flex items-center gap-2">
@@ -467,20 +512,27 @@ export default function CourseFormCard({
             </div>
           )}
         </div>
+      )}
 
-        <Separator className="bg-border/50" />
+      {/* ───────── Discounts (edit-only, step 3) ───────── */}
+      {step === 3 && editingCourse?.id && (
+      <div className="rounded-2xl border border-rose-500/20 bg-gradient-to-br from-rose-500/[0.06] to-transparent p-5 md:p-6">
+        <DiscountCodesSection itemType="course" itemId={editingCourse.id} />
+      </div>
+      )}
 
-        {/* Discount Codes Section */}
-        <DiscountCodesSection itemType="course" itemId={editingCourse?.id} />
-
-        <Separator className="bg-border/50" />
-
-        {/* Video Upload Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Video className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Video Promocional (opcional)</h3>
+      {/* ───────── Step 1: Video ───────── */}
+      {step === 1 && (
+      <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/[0.06] to-transparent p-5 md:p-6 space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-amber-500/15">
+            <Video className="h-5 w-5 text-amber-400" />
           </div>
+          <div>
+            <h3 className="font-semibold text-foreground">Promotional Video (Optional)</h3>
+            <p className="text-xs text-foreground/50">Upload a preview or teaser video for the course landing page</p>
+          </div>
+        </div>
 
           <ProfessionalUploadProgress
             isUploading={uploading}
@@ -557,15 +609,20 @@ export default function CourseFormCard({
             className="hidden"
           />
         </div>
+      )}
 
-        <Separator className="bg-border/50" />
-
-        {/* Image Upload Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-4">
-            <ImageIcon className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Image de Portada (opcional)</h3>
+      {/* ───────── Step 2: Cover Image ───────── */}
+      {step === 2 && (
+      <div className="rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-500/[0.06] to-transparent p-5 md:p-6 space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-indigo-500/15">
+            <ImageIcon className="h-5 w-5 text-indigo-400" />
           </div>
+          <div>
+            <h3 className="font-semibold text-foreground">Cover Image (Optional)</h3>
+            <p className="text-xs text-foreground/50">Landscape thumbnail shown on the course card</p>
+          </div>
+        </div>
 
           {formData.imagePreview ? (
             <div className="space-y-4">
@@ -670,51 +727,54 @@ export default function CourseFormCard({
             className="hidden"
           />
         </div>
+      )}
 
-        {/* Image Cropper Modal */}
-        <ImageCropperModal
-          imageSrc={cropSrc}
-          aspect={16 / 9}
-          label={t("admin.courses.cropCover")}
-          onCropComplete={handleCropComplete}
-          onClose={() => setCropSrc(null)}
-        />
+      {/* Image Cropper Modal */}
+      <ImageCropperModal
+        imageSrc={cropSrc}
+        aspect={16 / 9}
+        label={t("admin.courses.cropCover")}
+        onCropComplete={handleCropComplete}
+        onClose={() => setCropSrc(null)}
+      />
 
-        {/* Action Buttons */}
-        <div className="flex gap-3 pt-4">
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            disabled={createMutation.isPending || updateMutation.isPending || uploading || imageUploading}
-            className="btn-vibrant flex-1 h-12 text-base font-semibold shadow-lg"
-          >
-            {createMutation.isPending || updateMutation.isPending ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                {editingCourse ? "Updating..." : "Creating Course..."}
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-2 h-5 w-5" />
-                {editingCourse ? "Actualizar Course" : "Crear Course"}
-              </>
-            )}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={resetForm}
-            className="h-12"
-          >
-            <X className="h-4 w-4 mr-2" />
-            Cancel
-          </Button>
+      {/* ───────── Sticky Action Bar ───────── */}
+      <div className="sticky bottom-0 -mx-4 md:-mx-0 bg-background/95 backdrop-blur-md border-t border-border/40 px-4 py-3 mt-2 flex items-center justify-between gap-3 z-10">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setStep(s => Math.max(0, s - 1))}
+          disabled={step === 0}
+          className="h-11 px-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" /> Back
+        </Button>
+        <div className="text-xs text-foreground/50 hidden sm:block">
+          Step {step + 1} of {steps.length} · <span className="font-semibold text-foreground/70">{currentStep.label}</span>
         </div>
-
-        <p className="text-xs text-foreground/50 text-center">
-          * Required fields
-        </p>
-      </CardContent>
-    </Card>
+        <div className="flex gap-2">
+          {step < 2 ? (
+            <Button type="button" onClick={() => setStep(s => Math.min(steps.length - 1, s + 1))} className="btn-vibrant h-11 px-6">
+              Next <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+          ) : step === 2 ? (
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              disabled={createMutation.isPending || updateMutation.isPending || uploading || imageUploading}
+              className="btn-vibrant h-11 px-6 text-sm font-semibold shadow-lg"
+            >
+              {createMutation.isPending || updateMutation.isPending ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {editingCourse ? "Updating…" : "Publishing…"}</>
+              ) : (
+                <><Sparkles className="mr-2 h-4 w-4" /> {editingCourse ? "Save Changes" : "Publish Course"}</>
+              )}
+            </Button>
+          ) : (
+            <Button type="button" onClick={resetForm} className="btn-vibrant h-11 px-6">Done</Button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
