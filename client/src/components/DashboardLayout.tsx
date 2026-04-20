@@ -185,7 +185,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             >
               <DropdownMenuItem
                 onClick={logout}
-                className="cursor-pointer text-destructive focus:text-destructive"
+                className="courser-pointer text-destructive focus:text-destructive"
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Sign out</span>

@@ -72,10 +72,10 @@ export default function StripeConnectSection() {
   const status = statusQuery.data?.status || "none";
 
   const statusBadge = {
-    none: <Badge variant="outline" className="bg-foreground/5 text-foreground/60">No conectada</Badge>,
-    pending: <Badge className="bg-amber-500/15 text-amber-500 border-amber-500/30">Pendiente de verificación</Badge>,
-    verified: <Badge className="bg-green-500/15 text-green-500 border-green-500/30"><CheckCircle2 className="h-3 w-3 mr-1" /> Verificada</Badge>,
-    restricted: <Badge className="bg-red-500/15 text-red-500 border-red-500/30"><AlertCircle className="h-3 w-3 mr-1" /> Requiere acción</Badge>,
+    none: <Badge variant="outline" className="bg-foreground/5 text-foreground/60">Not connected</Badge>,
+    pending: <Badge className="bg-amber-500/15 text-amber-500 border-amber-500/30">Pending verification</Badge>,
+    verified: <Badge className="bg-green-500/15 text-green-500 border-green-500/30"><CheckCircle2 className="h-3 w-3 mr-1" /> Verified</Badge>,
+    restricted: <Badge className="bg-red-500/15 text-red-500 border-red-500/30"><AlertCircle className="h-3 w-3 mr-1" /> Action required</Badge>,
   }[status];
 
   return (
@@ -87,8 +87,8 @@ export default function StripeConnectSection() {
               <CreditCard className="h-5 w-5 text-purple-500" />
             </div>
             <div>
-              <CardTitle className="text-xl">Cuenta Stripe</CardTitle>
-              <CardDescription>Conecta tu cuenta para recibir pagos automáticos</CardDescription>
+              <CardTitle className="text-xl">Stripe Account</CardTitle>
+              <CardDescription>Connect your account to receive automatic payouts</CardDescription>
             </div>
           </div>
           {statusBadge}
@@ -99,9 +99,9 @@ export default function StripeConnectSection() {
         {status === "none" && (
           <>
             <div className="rounded-lg border border-border/50 bg-background/40 p-4 text-sm text-foreground/80 space-y-2">
-              <p>🔒 Stripe es gratis y seguro — se usa Stripe Express para que sea lo más simple posible.</p>
-              <p>Te pedirán: <strong>DNI/pasaporte, foto, dirección y datos bancarios UK</strong>. Tarda 5-15 min.</p>
-              <p>Una vez verificada, tus ventas se te pagarán automáticamente a tu banco cada semana — sin tener que pedir retiros manuales.</p>
+              <p>🔒 Stripe is free and secure — we use Stripe Express for a smooth setup.</p>
+              <p>They will ask for: <strong>ID/passport, photo, address and UK bank details</strong>. Takes 5-15 min.</p>
+              <p>Once verified, your sales are paid to your bank automatically every week — no need to request manual withdrawals.</p>
             </div>
             <Button
               type="button"
@@ -110,9 +110,9 @@ export default function StripeConnectSection() {
               className="btn-vibrant w-full h-11"
             >
               {isProcessing || createLinkMutation.isPending ? (
-                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Abriendo Stripe…</>
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Opening Stripe…</>
               ) : (
-                <><CreditCard className="h-4 w-4 mr-2" /> Conectar con Stripe</>
+                <><CreditCard className="h-4 w-4 mr-2" /> Connect with Stripe</>
               )}
             </Button>
           </>
@@ -121,7 +121,7 @@ export default function StripeConnectSection() {
         {status === "pending" && (
           <>
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-300/90 space-y-2">
-              <p>📋 Tu cuenta está casi lista. Completa el onboarding en Stripe para empezar a recibir pagos.</p>
+              <p>📋 Your account is almost ready. Finish the Stripe onboarding to start receiving payouts.</p>
             </div>
             <Button
               type="button"
@@ -130,9 +130,9 @@ export default function StripeConnectSection() {
               className="btn-vibrant w-full h-11"
             >
               {isProcessing || createLinkMutation.isPending ? (
-                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Abriendo Stripe…</>
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Opening Stripe…</>
               ) : (
-                <>Completar verificación <ExternalLink className="h-4 w-4 ml-2" /></>
+                <>Finish verification <ExternalLink className="h-4 w-4 ml-2" /></>
               )}
             </Button>
           </>
@@ -141,7 +141,7 @@ export default function StripeConnectSection() {
         {status === "restricted" && (
           <>
             <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300/90 space-y-2">
-              <p>⚠️ Stripe necesita información adicional de tu cuenta. Por favor complétala.</p>
+              <p>⚠️ Stripe needs additional information for your account. Please provide it.</p>
             </div>
             <Button
               type="button"
@@ -150,7 +150,7 @@ export default function StripeConnectSection() {
               variant="outline"
               className="w-full h-11"
             >
-              Actualizar información <ExternalLink className="h-4 w-4 ml-2" />
+              Update information <ExternalLink className="h-4 w-4 ml-2" />
             </Button>
           </>
         )}
@@ -160,11 +160,11 @@ export default function StripeConnectSection() {
             <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-4 text-sm text-green-300/90 space-y-1.5">
               <div className="flex items-center gap-2">
                 <Banknote className="h-4 w-4" />
-                <span><strong>Payouts habilitados</strong> — recibirás tu dinero automáticamente</span>
+                <span><strong>Payouts enabled</strong> — you will receive payouts automatically</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4" />
-                <span><strong>Identidad verificada</strong> por Stripe</span>
+                <span><strong>Identity verified</strong> by Stripe</span>
               </div>
             </div>
             <Button
@@ -175,9 +175,9 @@ export default function StripeConnectSection() {
               className="w-full h-11"
             >
               {dashboardMutation.isPending ? (
-                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Abriendo…</>
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Opening…</>
               ) : (
-                <>Abrir dashboard de Stripe <ExternalLink className="h-4 w-4 ml-2" /></>
+                <>Open Stripe dashboard <ExternalLink className="h-4 w-4 ml-2" /></>
               )}
             </Button>
           </>

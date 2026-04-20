@@ -28,8 +28,8 @@ export default function InstagramCropSelector({
   onImageReady,
   targetWidth = 1080,
   targetHeight = 1080,
-  title = "Recortar Imagen",
-  description = "Mueve y ajusta el cuadrado para seleccionar el área",
+  title = "Recortar Image",
+  description = "Mueve y ajusta el cuadrado para select el área",
 }: InstagramCropSelectorProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -84,7 +84,7 @@ export default function InstagramCropSelector({
         setCropFrame({ x: initialX, y: initialY, size: initialSize });
         setIsProcessing(false);
 
-        toast.success("Imagen cargada - ajusta el cuadrado de recorte");
+        toast.success("Image cargada - ajusta el cuadrado de recorte");
       };
 
       img.onerror = () => {
@@ -226,7 +226,7 @@ export default function InstagramCropSelector({
       const resultDataUrl = canvas.toDataURL("image/jpeg", 0.95);
 
       onImageReady(resultDataUrl);
-      toast.success("¡Imagen recortada perfectamente!");
+      toast.success("¡Image recortada perfectamente!");
       handleClose();
     } catch (error) {
       console.error("Error processing image:", error);
@@ -287,19 +287,19 @@ export default function InstagramCropSelector({
             // Upload area
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-border rounded-lg p-12 flex flex-col items-center justify-center cursor-pointer hover:border-accent hover:bg-accent/5 transition-all bg-card/50"
+              className="border-2 border-dashed border-border rounded-lg p-12 flex flex-col items-center justify-center courser-pointer hover:border-accent hover:bg-accent/5 transition-all bg-card/50"
             >
               <Upload className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-sm font-medium mb-1">Haz clic para subir imagen</p>
+              <p className="text-sm font-medium mb-1">Click para subir image</p>
               <p className="text-xs text-muted-foreground text-center">
-                Cualquier tamaño • Se recortará a {targetWidth}×{targetHeight}px
+                Cualquier tamyear • Se recortará a {targetWidth}×{targetHeight}px
               </p>
             </div>
           ) : isProcessing ? (
             // Processing state
             <div className="border-2 border-accent/30 rounded-lg p-12 flex flex-col items-center justify-center bg-card/50">
               <Loader2 className="h-12 w-12 text-accent animate-spin mb-4" />
-              <p className="text-sm font-medium">Procesando imagen...</p>
+              <p className="text-sm font-medium">Processing image...</p>
             </div>
           ) : (
             // Crop selector area
@@ -350,7 +350,7 @@ export default function InstagramCropSelector({
 
                   {/* Draggable crop frame */}
                   <div
-                    className="absolute border-4 border-white cursor-move select-none"
+                    className="absolute border-4 border-white courser-move select-none"
                     style={{
                       left: `${cropFrame.x}px`,
                       top: `${cropFrame.y}px`,
@@ -372,7 +372,7 @@ export default function InstagramCropSelector({
 
                     {/* Resize handle (bottom-right corner) */}
                     <div
-                      className="resize-handle absolute -bottom-2 -right-2 w-6 h-6 bg-white rounded-full border-2 border-accent cursor-nwse-resize shadow-lg flex items-center justify-center"
+                      className="resize-handle absolute -bottom-2 -right-2 w-6 h-6 bg-white rounded-full border-2 border-accent courser-nwse-resize shadow-lg flex items-center justify-center"
                       onMouseDown={handleResizeMouseDown}
                     >
                       <Maximize2 className="h-3 w-3 text-accent" />
@@ -432,12 +432,12 @@ export default function InstagramCropSelector({
             {isProcessing ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Procesando...
+                Processing...
               </>
             ) : (
               <>
                 <Check className="h-4 w-4 mr-2" />
-                Usar Imagen
+                Usar Image
               </>
             )}
           </Button>

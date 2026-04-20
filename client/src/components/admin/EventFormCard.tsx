@@ -60,7 +60,7 @@ export default function EventFormCard({
 
   const updateMutation = trpc.admin.updateEvent.useMutation({
     onSuccess: () => {
-      toast.success("✅ Evento actualizado exitosamente");
+      toast.success("✅ Event updated successfully");
       resetForm();
       onSuccess?.();
     },
@@ -149,11 +149,11 @@ export default function EventFormCard({
     setFormData(prev => ({ ...prev, imagePreview: croppedDataUrl, imageUrl: "" }));
     setUploading(true);
     try {
-      // Generate unique filename: event-{id}-{timestamp}.jpg
-      const timestamp = Date.now();
+      // Generate unique filename: event-{id}-{timonthtamp}.jpg
+      const timonthtamp = Date.now();
       const uniqueFileName = editingEvent?.id
-        ? `event-${editingEvent.id}-${timestamp}.jpg`
-        : `event-new-${timestamp}.jpg`;
+        ? `event-${editingEvent.id}-${timonthtamp}.jpg`
+        : `event-new-${timonthtamp}.jpg`;
 
       const result = await uploadFileMutation.mutateAsync({
         fileBase64: croppedDataUrl,
@@ -178,7 +178,7 @@ export default function EventFormCard({
     }
     const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
     if (file.size > MAX_IMAGE_SIZE) {
-      toast.error(`La imagen es demasiado grande (${(file.size / 1024 / 1024).toFixed(1)}MB). Máximo 10MB.`);
+      toast.error(`Image is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum 10MB.`);
       return;
     }
     const reader = new FileReader();
@@ -191,10 +191,10 @@ export default function EventFormCard({
     setFormData(prev => ({ ...prev, bannerPreview: croppedDataUrl, bannerUrl: "" }));
     setUploadingBanner(true);
     try {
-      const timestamp = Date.now();
+      const timonthtamp = Date.now();
       const uniqueFileName = editingEvent?.id
-        ? `event-banner-${editingEvent.id}-${timestamp}.jpg`
-        : `event-banner-new-${timestamp}.jpg`;
+        ? `event-banner-${editingEvent.id}-${timonthtamp}.jpg`
+        : `event-banner-new-${timonthtamp}.jpg`;
 
       const result = await uploadFileMutation.mutateAsync({
         fileBase64: croppedDataUrl,
@@ -203,7 +203,7 @@ export default function EventFormCard({
         folder: "events",
       });
       setFormData(prev => ({ ...prev, bannerUrl: result.url }));
-      toast.success("✅ Banner subido exitosamente");
+      toast.success("✅ Banner uploaded successfully");
     } catch (uploadErr: any) {
       toast.error(`Error uploading banner: ${uploadErr.message}`);
       setFormData(prev => ({ ...prev, bannerPreview: "", bannerUrl: "" }));
@@ -275,10 +275,10 @@ export default function EventFormCard({
           </div>
           <div>
             <CardTitle className="text-2xl gradient-text">
-              {editingEvent ? "Editar Evento" : t("admin.events.createNewEvent")}
+              {editingEvent ? "Edit Event" : t("admin.events.createNewEvent")}
             </CardTitle>
             <CardDescription className="text-foreground/60 mt-1">
-              {editingEvent ? "Actualiza la información del evento" : t("admin.events.createDescription")}
+              {editingEvent ? "Actualiza la información del event" : t("admin.events.createDescription")}
             </CardDescription>
           </div>
         </div>
@@ -289,17 +289,17 @@ export default function EventFormCard({
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-4">
             <Sparkles className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Información Básica</h3>
+            <h3 className="font-semibold text-foreground">Basic Information</h3>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="event-title" className="text-foreground/80 flex items-center gap-2">
               <Calendar className="h-3.5 w-3.5 text-accent" />
-              Título del Evento *
+              Event Title *
             </Label>
             <Input
               id="event-title"
-              placeholder="Ej: Salsa Night - Festival de Verano"
+              placeholder="e.g. Salsa Night - Summer Festival"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               className="bg-background/50 border-border/50 focus:border-accent transition-colors"
@@ -310,11 +310,11 @@ export default function EventFormCard({
             <div className="space-y-2">
               <Label htmlFor="event-venue" className="text-foreground/80 flex items-center gap-2">
                 <Building2 className="h-3.5 w-3.5 text-accent" />
-                Lugar *
+                Venue **
               </Label>
               <Input
                 id="event-venue"
-                placeholder="Ej: Teatro Principal"
+                placeholder="e.g. Teatro Principal"
                 value={formData.venue}
                 onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
                 className="bg-background/50 border-border/50 focus:border-accent transition-colors"
@@ -324,11 +324,11 @@ export default function EventFormCard({
             <div className="space-y-2">
               <Label htmlFor="event-city" className="text-foreground/80 flex items-center gap-2">
                 <MapPin className="h-3.5 w-3.5 text-accent" />
-                Ciudad
+                City
               </Label>
               <Input
                 id="event-city"
-                placeholder="Ej: Madrid"
+                placeholder="e.g. Madrid"
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                 className="bg-background/50 border-border/50 focus:border-accent transition-colors"
@@ -338,11 +338,11 @@ export default function EventFormCard({
 
           <div className="space-y-2">
             <Label htmlFor="event-description" className="text-foreground/80">
-              Descripción del Evento
+              Event Description
             </Label>
             <Textarea
               id="event-description"
-              placeholder="Describe tu evento: qué tipo de música, nivel de baile, ambiente, etc."
+              placeholder="Describe your event: music style, dance level, atmosphere, etc."
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={4}
@@ -357,13 +357,13 @@ export default function EventFormCard({
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-4">
             <Clock className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Fecha y Entradas</h3>
+            <h3 className="font-semibold text-foreground">Date and Tickets</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2 md:col-span-1">
               <Label htmlFor="event-date" className="text-foreground/80">
-                Fecha y Hora *
+                Date and Time *
               </Label>
               <Input
                 id="event-date"
@@ -378,7 +378,7 @@ export default function EventFormCard({
             <div className="space-y-2">
               <Label htmlFor="event-price" className="text-foreground/80 flex items-center gap-2">
                 <DollarSign className="h-3.5 w-3.5 text-accent" />
-                Precio de Entrada *
+                Ticket Price *
               </Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50">£</span>
@@ -398,7 +398,7 @@ export default function EventFormCard({
             <div className="space-y-2">
               <Label htmlFor="event-max-tickets" className="text-foreground/80 flex items-center gap-2">
                 <Users className="h-3.5 w-3.5 text-accent" />
-                Máx. Entradas
+                Max. Tickets
               </Label>
               <Input
                 id="event-max-tickets"
@@ -419,7 +419,7 @@ export default function EventFormCard({
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-4">
             <CreditCard className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Método de Pago</h3>
+            <h3 className="font-semibold text-foreground">Payment Method</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -436,7 +436,7 @@ export default function EventFormCard({
               <p className={`text-sm font-medium ${formData.paymentMethod === "online" ? "text-accent" : "text-foreground/70"}`}>
                 Online
               </p>
-              <p className="text-xs text-foreground/50 mt-1">Pago en línea</p>
+              <p className="text-xs text-foreground/50 mt-1">Online payment</p>
             </button>
 
             <button
@@ -450,9 +450,9 @@ export default function EventFormCard({
             >
               <Banknote className={`h-5 w-5 mx-auto mb-2 ${formData.paymentMethod === "cash" ? "text-accent" : "text-foreground/50"}`} />
               <p className={`text-sm font-medium ${formData.paymentMethod === "cash" ? "text-accent" : "text-foreground/70"}`}>
-                Efectivo
+                Cash
               </p>
-              <p className="text-xs text-foreground/50 mt-1">Pago en puerta</p>
+              <p className="text-xs text-foreground/50 mt-1">Pay at door</p>
             </button>
 
             <button
@@ -469,9 +469,9 @@ export default function EventFormCard({
                 <Banknote className={`h-4 w-4 ${formData.paymentMethod === "both" ? "text-accent" : "text-foreground/50"}`} />
               </div>
               <p className={`text-sm font-medium ${formData.paymentMethod === "both" ? "text-accent" : "text-foreground/70"}`}>
-                Ambos
+                Both
               </p>
-              <p className="text-xs text-foreground/50 mt-1">Online y efectivo</p>
+              <p className="text-xs text-foreground/50 mt-1">Online and cash</p>
             </button>
           </div>
 
@@ -484,8 +484,8 @@ export default function EventFormCard({
               onChange={(e) => setFormData({ ...formData, showLowTicketAlert: e.target.checked })}
               className="w-4 h-4 text-accent bg-background border-border/50 rounded focus:ring-accent focus:ring-2"
             />
-            <label htmlFor="show-low-ticket-alert" className="text-sm text-foreground/80 cursor-pointer">
-              Mostrar alerta "Solo quedan X entradas" cuando queden ≤20 tickets
+            <label htmlFor="show-low-ticket-alert" className="text-sm text-foreground/80 courser-pointer">
+              Show "Only X tickets left" alert when fewer than 20 remain
             </label>
           </div>
         </div>
@@ -511,30 +511,30 @@ export default function EventFormCard({
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-2">
             <ImageIcon className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Portada del Evento (Flyer)</h3>
+            <h3 className="font-semibold text-foreground">Event Cover (Flyer)</h3>
           </div>
-          <p className="text-xs text-foreground/50 -mt-2">Imagen vertical para las tarjetas de eventos (1275×1875px, ratio 17:25). Se recorta automáticamente.</p>
+          <p className="text-xs text-foreground/50 -mt-2">Vertical image for event cards (1275×1875px, 17:25). Cropped automatically.</p>
 
           {formData.imagePreview ? (
             <div className="space-y-4">
               <div className="relative w-full aspect-[17/25] rounded-xl overflow-hidden border-2 border-accent/30">
                 <img
                   src={formData.imagePreview}
-                  alt="Preview portada"
+                  alt="Cover preview"
                   className="w-full h-full object-cover"
                 />
                 {!formData.imageUrl && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
                     <div className="text-center">
                       <Loader2 className="h-10 w-10 animate-spin text-white mx-auto mb-3" />
-                      <p className="text-white font-medium">Subiendo imagen...</p>
+                      <p className="text-white font-medium">Uploading image...</p>
                     </div>
                   </div>
                 )}
                 {formData.imageUrl && (
                   <div className="absolute top-4 right-4">
                     <Badge className="bg-green-500 text-white border-0 shadow-lg">
-                      ✓ Subida completada
+                      ✓ Upload complete
                     </Badge>
                   </div>
                 )}
@@ -549,7 +549,7 @@ export default function EventFormCard({
                   className="flex-1"
                 >
                   <ImageIcon className="h-4 w-4 mr-2" />
-                  Cambiar Imagen
+                  Change Image
                 </Button>
                 <Button
                   type="button"
@@ -559,13 +559,13 @@ export default function EventFormCard({
                   className="text-red-600 hover:text-red-700 hover:border-red-300"
                 >
                   <X className="h-4 w-4 mr-2" />
-                  Eliminar
+                  Delete
                 </Button>
               </div>
             </div>
           ) : (
             <div
-              className="relative border-2 border-dashed border-accent/30 rounded-xl p-10 bg-gradient-to-br from-accent/5 to-transparent hover:border-accent/50 transition-all duration-300 cursor-pointer group"
+              className="relative border-2 border-dashed border-accent/30 rounded-xl p-10 bg-gradient-to-br from-accent/5 to-transparent hover:border-accent/50 transition-all duration-300 courser-pointer group"
               onClick={() => imageInputRef.current?.click()}
             >
               <div className="text-center">
@@ -573,10 +573,10 @@ export default function EventFormCard({
                   <Upload className="h-10 w-10 text-accent" />
                 </div>
                 <p className="font-semibold text-foreground mb-2">
-                  Arrastra una imagen aquí
+                  Drag an image here
                 </p>
                 <p className="text-sm text-foreground/60 mb-6">
-                  o haz clic para seleccionar (máx. 10MB)
+                  or click to select (max. 10MB)
                 </p>
                 <Button
                   type="button"
@@ -590,12 +590,12 @@ export default function EventFormCard({
                   {uploading ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Subiendo...
+                      Uploading...
                     </>
                   ) : (
                     <>
                       <Upload className="h-4 w-4 mr-2" />
-                      Seleccionar Imagen
+                      Select Image
                     </>
                   )}
                 </Button>
@@ -621,7 +621,7 @@ export default function EventFormCard({
         <ImageCropperModal
           imageSrc={cropSrc}
           aspect={17 / 25}
-          label="Recortar Portada (Formato Flyer)"
+          label="Crop Cover (Flyer format)"
           onCropComplete={handleCropComplete}
           onClose={() => setCropSrc(null)}
         />
@@ -632,9 +632,9 @@ export default function EventFormCard({
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-2">
             <ImageIcon className="h-4 w-4 text-blue-500" />
-            <h3 className="font-semibold text-foreground">Banner del Evento (Horizontal)</h3>
+            <h3 className="font-semibold text-foreground">Event Banner (Landscape)</h3>
           </div>
-          <p className="text-xs text-foreground/50 -mt-2">Imagen horizontal que se muestra en la página de detalle del evento (formato panorámico 16:9)</p>
+          <p className="text-xs text-foreground/50 -mt-2">Landscape image shown on the event detail page (16:9)</p>
 
           {formData.bannerPreview ? (
             <div className="space-y-4">
@@ -648,14 +648,14 @@ export default function EventFormCard({
                   <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
                     <div className="text-center">
                       <Loader2 className="h-10 w-10 animate-spin text-white mx-auto mb-3" />
-                      <p className="text-white font-medium">Subiendo banner...</p>
+                      <p className="text-white font-medium">Uploading...nner...</p>
                     </div>
                   </div>
                 )}
                 {formData.bannerUrl && (
                   <div className="absolute top-4 right-4">
                     <Badge className="bg-blue-500 text-white border-0 shadow-lg">
-                      ✓ Banner subido
+                      ✓ Banner uploaded
                     </Badge>
                   </div>
                 )}
@@ -670,7 +670,7 @@ export default function EventFormCard({
                   className="flex-1"
                 >
                   <ImageIcon className="h-4 w-4 mr-2" />
-                  Cambiar Banner
+                  Change Banner
                 </Button>
                 <Button
                   type="button"
@@ -680,13 +680,13 @@ export default function EventFormCard({
                   className="text-red-600 hover:text-red-700 hover:border-red-300"
                 >
                   <X className="h-4 w-4 mr-2" />
-                  Eliminar
+                  Delete
                 </Button>
               </div>
             </div>
           ) : (
             <div
-              className="relative border-2 border-dashed border-blue-500/30 rounded-xl p-8 bg-gradient-to-br from-blue-500/5 to-transparent hover:border-blue-500/50 transition-all duration-300 cursor-pointer group"
+              className="relative border-2 border-dashed border-blue-500/30 rounded-xl p-8 bg-gradient-to-br from-blue-500/5 to-transparent hover:border-blue-500/50 transition-all duration-300 courser-pointer group"
               onClick={() => bannerInputRef.current?.click()}
             >
               <div className="text-center">
@@ -694,10 +694,10 @@ export default function EventFormCard({
                   <Upload className="h-8 w-8 text-blue-500" />
                 </div>
                 <p className="font-semibold text-foreground mb-1">
-                  Subir Banner Horizontal
+                  Upload landscape banner
                 </p>
                 <p className="text-xs text-foreground/50 mb-4">
-                  Formato panorámico (16:9) • Máx. 10MB
+                  Landscape format (16:9) • Max. 10MB
                 </p>
                 <Button
                   type="button"
@@ -713,12 +713,12 @@ export default function EventFormCard({
                   {uploadingBanner ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Subiendo...
+                      Uploading...
                     </>
                   ) : (
                     <>
                       <Upload className="h-4 w-4 mr-2" />
-                      Seleccionar Banner
+                      Select Banner
                     </>
                   )}
                 </Button>
@@ -744,7 +744,7 @@ export default function EventFormCard({
         <ImageCropperModal
           imageSrc={cropSrcBanner}
           aspect={16 / 9}
-          label="Recortar Banner (Horizontal)"
+          label="Crop Banner (Landscape)"
           onCropComplete={handleBannerCropComplete}
           onClose={() => setCropSrcBanner(null)}
         />
@@ -760,12 +760,12 @@ export default function EventFormCard({
             {(createMutation.isPending || updateMutation.isPending) ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                {editingEvent ? "Actualizando..." : "Creando Evento..."}
+                {editingEvent ? "Updating..." : "Creating Event..."}
               </>
             ) : (
               <>
                 <Sparkles className="mr-2 h-5 w-5" />
-                {editingEvent ? "Actualizar Evento" : "Crear Evento"}
+                {editingEvent ? "Update Event" : "Create Event"}
               </>
             )}
           </Button>
@@ -776,12 +776,12 @@ export default function EventFormCard({
             className="h-12"
           >
             <X className="h-4 w-4 mr-2" />
-            Cancelar
+            Cancel
           </Button>
         </div>
 
         <p className="text-xs text-foreground/50 text-center">
-          * Campos requeridos
+          * Required fields
         </p>
       </CardContent>
     </Card>

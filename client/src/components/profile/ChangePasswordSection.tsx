@@ -16,7 +16,7 @@ export default function ChangePasswordSection() {
 
   const changeMutation = trpc.adminAuth.changePassword.useMutation({
     onSuccess: () => {
-      toast.success("✅ Contraseña actualizada");
+      toast.success("✅ Password updated");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -27,11 +27,11 @@ export default function ChangePasswordSection() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword.length < 6) {
-      toast.error("La nueva contraseña debe tener al menos 6 caracteres");
+      toast.error("New password must be at least 6 characters");
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast.error("Las contraseñas nuevas no coinciden");
+      toast.error("Passwords do not match");
       return;
     }
     changeMutation.mutate({
@@ -48,8 +48,8 @@ export default function ChangePasswordSection() {
             <Lock className="h-5 w-5 text-accent" />
           </div>
           <div>
-            <CardTitle className="text-xl">Cambiar Contraseña</CardTitle>
-            <CardDescription>Actualiza la contraseña de tu cuenta</CardDescription>
+            <CardTitle className="text-xl">Change Password</CardTitle>
+            <CardDescription>Update your account password</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -57,7 +57,7 @@ export default function ChangePasswordSection() {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="current-password">Contraseña actual</Label>
+            <Label htmlFor="current-password">Current password</Label>
             <div className="relative">
               <Input
                 id="current-password"
@@ -78,19 +78,19 @@ export default function ChangePasswordSection() {
               </button>
             </div>
             <p className="text-xs text-foreground/50">
-              Déjalo vacío si todavía no tienes contraseña (cuenta creada por invitación).
+              Leave blank if you don't have a password yet (account created by invitation).
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="new-password">Nueva contraseña</Label>
+            <Label htmlFor="new-password">New password</Label>
             <div className="relative">
               <Input
                 id="new-password"
                 type={showNew ? "text" : "password"}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Mínimo 6 caracteres"
+                placeholder="At least 6 characters"
                 className="bg-background border-border/50 h-11 pr-10"
                 autoComplete="new-password"
                 minLength={6}
@@ -107,13 +107,13 @@ export default function ChangePasswordSection() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirm-password">Confirmar nueva contraseña</Label>
+            <Label htmlFor="confirm-password">Confirm new password</Label>
             <Input
               id="confirm-password"
               type={showNew ? "text" : "password"}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Repite la nueva contraseña"
+              placeholder="Repeat the new password"
               className="bg-background border-border/50 h-11"
               autoComplete="new-password"
               minLength={6}
@@ -126,9 +126,9 @@ export default function ChangePasswordSection() {
             className="btn-vibrant w-full h-11 mt-2"
           >
             {changeMutation.isPending ? (
-              <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Guardando…</>
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving…</>
             ) : (
-              <><Lock className="h-4 w-4 mr-2" /> Actualizar contraseña</>
+              <><Lock className="h-4 w-4 mr-2" /> Update password</>
             )}
           </Button>
         </form>

@@ -133,7 +133,7 @@ export default function ClassDetail() {
               ) : null}
               <div className="px-4 py-3 bg-card/80 border-t border-border/30 flex items-center gap-3">
                 <Play size={14} className="text-[#FA3698]" />
-                <p className="text-sm font-medium text-foreground/80">Grabación de la clase</p>
+                <p className="text-sm font-medium text-foreground/80">Grabación de la class</p>
               </div>
             </Card>
           ) : (classItem as any).imageUrl && (

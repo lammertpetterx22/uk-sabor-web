@@ -153,19 +153,19 @@ export default function MyClassesDashboard({
   const getLevelLabel = (level: string) => {
     switch (level) {
       case "beginner":
-        return "Principiante";
+        return "Beginner";
       case "intermediate":
-        return "Intermedio";
+        return "Intermediate";
       case "advanced":
-        return "Avanzado";
+        return "Advanced";
       default:
-        return "Todos";
+        return "All";
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Header - mismo estilo que MyCoursesDashboard */}
+      {/* Header - mismo style que MyCoursesDashboard */}
       <Card className="border-border/50 bg-gradient-to-br from-card/90 to-card/50 backdrop-blur-sm">
         <CardHeader>
           <div className="flex items-center justify-between gap-3">
@@ -191,7 +191,7 @@ export default function MyClassesDashboard({
         </CardHeader>
       </Card>
 
-      {/* Classes Grid - mismo estilo que MyCoursesDashboard */}
+      {/* Classes Grid - mismo style que MyCoursesDashboard */}
       {isLoadingClasses ? (
         <div className="flex justify-center py-16">
           <div className="text-center">
@@ -204,7 +204,7 @@ export default function MyClassesDashboard({
           {classes.map((cls) => (
             <Card
               key={cls.id}
-              className="border-border/50 bg-card/50 backdrop-blur-sm hover:border-accent/50 transition-all cursor-pointer group overflow-hidden"
+              className="border-border/50 bg-card/50 backdrop-blur-sm hover:border-accent/50 transition-all courser-pointer group overflow-hidden"
               onClick={() => handleToggleExpanded(cls.id, {} as React.MouseEvent)}
             >
               {/* Class Image */}
@@ -310,7 +310,7 @@ export default function MyClassesDashboard({
                   {cls.maxParticipants && (
                     <div className="flex items-center gap-2 text-foreground/80">
                       <Users className="h-4 w-4 text-accent" />
-                      <span className="text-xs">{cls.maxParticipants} participantes</span>
+                      <span className="text-xs">{cls.maxParticipants} participbefore</span>
                     </div>
                   )}
 
@@ -338,7 +338,7 @@ export default function MyClassesDashboard({
                     className="flex-1 text-xs"
                   >
                     <Edit2 className="h-3 w-3 mr-1" />
-                    Editar
+                    Edit
                   </Button>
                   <Button
                     variant="outline"
@@ -349,12 +349,12 @@ export default function MyClassesDashboard({
                     {cls.status === "published" ? (
                       <>
                         <EyeOff className="h-3 w-3 mr-1" />
-                        Ocultar
+                        Hide
                       </>
                     ) : (
                       <>
                         <Eye className="h-3 w-3 mr-1" />
-                        Publicar
+                        Publish
                       </>
                     )}
                   </Button>
@@ -368,7 +368,7 @@ export default function MyClassesDashboard({
                     className="flex-1 text-xs"
                   >
                     <QrCode className="h-3 w-3 mr-1" />
-                    {expandedClassId === cls.id ? "Ocultar QR" : "Ver QR"}
+                    {expandedClassId === cls.id ? "Hide QR" : "Ver QR"}
                   </Button>
                   <Button
                     variant={confirmDeleteId === cls.id ? "destructive" : "outline"}
@@ -377,7 +377,7 @@ export default function MyClassesDashboard({
                     className="text-xs"
                   >
                     <Trash2 className="h-3 w-3 mr-1" />
-                    {confirmDeleteId === cls.id ? "Confirm" : "Eliminar"}
+                    {confirmDeleteId === cls.id ? "Confirm" : "Delete"}
                   </Button>
                 </div>
 
@@ -385,7 +385,7 @@ export default function MyClassesDashboard({
                 {expandedClassId === cls.id && classQRCodes && (
                   <div className="pt-3 border-t space-y-3 animate-in slide-in-from-top-2">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-xs">Código QR</h4>
+                      <h4 className="font-semibold text-xs">Code QR</h4>
                       <Button
                         variant="outline"
                         size="sm"
@@ -395,7 +395,7 @@ export default function MyClassesDashboard({
                         }}
                       >
                         <Download className="h-3 w-3 mr-1" />
-                        Descargar
+                        Download
                       </Button>
                     </div>
                     {classQRCodes.qrData && (

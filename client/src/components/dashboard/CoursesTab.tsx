@@ -115,10 +115,10 @@ export function UserCoursesTab() {
         icon={<GraduationCap className="h-10 w-10 text-blue-400/60" />}
         gradientFrom="from-blue-500/20"
         gradientTo="to-purple-500/20"
-        title="No hay cursos aún"
-        description="Inscríbete en nuestros cursos de baile online y obtén acceso a videos exclusivos de instructores profesionales."
+        title="No hay courses aún"
+        description="Inscríbete en nuestros courses de baile online y obtén acceso a videos exclusivos de instructores profesionales."
         linkHref="/courses"
-        linkText="Explorar Cursos"
+        linkText="Explorar Courses"
         linkIcon={<BookOpen className="h-4 w-4 mr-2" />}
       />
     );
@@ -137,7 +137,7 @@ export function UserCoursesTab() {
                 )}
               </div>
               <Badge className={purchase.completed ? "bg-green-500/20 text-green-400" : "bg-accent/20 text-accent"}>
-                {purchase.completed ? "Completado" : `${purchase.progress || 0}%`}
+                {purchase.completed ? "Completed" : `${purchase.progress || 0}%`}
               </Badge>
             </div>
 
@@ -152,7 +152,7 @@ export function UserCoursesTab() {
             <Link href={`/courses/${purchase.courseId}`}>
               <Button className="w-full" variant="outline">
                 <Play className="h-4 w-4 mr-2" />
-                {purchase.progress && purchase.progress > 0 ? "Continuar Viendo" : "Empezar Curso"}
+                {purchase.progress && purchase.progress > 0 ? "Continue Viendo" : "Empezar Course"}
               </Button>
             </Link>
             {purchase.orderId && (

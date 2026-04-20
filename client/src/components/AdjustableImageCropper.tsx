@@ -31,8 +31,8 @@ export default function AdjustableImageCropper({
   onImageReady,
   targetWidth = 1080,
   targetHeight = 1080,
-  title = "Ajustar Imagen",
-  description = "Arrastra y ajusta el zoom para seleccionar la mejor área",
+  title = "Ajustar Image",
+  description = "Arrastra y ajusta el zoom para select la mejor área",
 }: AdjustableImageCropperProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -252,20 +252,20 @@ export default function AdjustableImageCropper({
             // Upload area
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-border rounded-lg p-12 flex flex-col items-center justify-center cursor-pointer hover:border-accent hover:bg-accent/5 transition-all bg-card/50"
+              className="border-2 border-dashed border-border rounded-lg p-12 flex flex-col items-center justify-center courser-pointer hover:border-accent hover:bg-accent/5 transition-all bg-card/50"
             >
               <Upload className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-sm font-medium mb-1">Haz clic para subir imagen</p>
+              <p className="text-sm font-medium mb-1">Click para subir image</p>
               <p className="text-xs text-muted-foreground text-center">
-                Cualquier tamaño • Se ajustará a {targetWidth}×{targetHeight}px<br />
-                Podrás mover y hacer zoom después
+                Cualquier tamyear • Se ajustará a {targetWidth}×{targetHeight}px<br />
+                Podrás mover y hacer zoom after
               </p>
             </div>
           ) : isProcessing ? (
             // Processing state
             <div className="border-2 border-accent/30 rounded-lg p-12 flex flex-col items-center justify-center bg-card/50">
               <Loader2 className="h-12 w-12 text-accent animate-spin mb-4" />
-              <p className="text-sm font-medium">Procesando imagen...</p>
+              <p className="text-sm font-medium">Processing image...</p>
             </div>
           ) : (
             // Editor area
@@ -283,7 +283,7 @@ export default function AdjustableImageCropper({
                 >
                   {/* Image container (draggable) */}
                   <div
-                    className="absolute inset-0 flex items-center justify-center cursor-move select-none"
+                    className="absolute inset-0 flex items-center justify-center courser-move select-none"
                     onMouseDown={handleMouseDown}
                     style={{
                       transform: `translate(${position.x}px, ${position.y}px)`,
@@ -384,12 +384,12 @@ export default function AdjustableImageCropper({
             {isProcessing ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Procesando...
+                Processing...
               </>
             ) : (
               <>
                 <Check className="h-4 w-4 mr-2" />
-                Usar Imagen
+                Usar Image
               </>
             )}
           </Button>

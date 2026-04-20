@@ -39,23 +39,23 @@ export function useLessonsManager(courseId: number | null) {
 
   const createLessonMutation = trpc.lessons.create.useMutation({
     onSuccess: () => {
-      toast.success("✅ Lección creada exitosamente");
+      toast.success("✅ Lesson creada successfully");
       utils.lessons.getByCourseId.invalidate();
       resetForm();
     },
     onError: (err) => {
-      toast.error(`Error al crear lección: ${err.message}`);
+      toast.error(`Error al crear lesson: ${err.message}`);
     },
   });
 
   // const updateLessonMutation = trpc.lessons.update.useMutation({
   //   onSuccess: () => {
-  //     toast.success("✅ Lección actualizada exitosamente");
+  //     toast.success("✅ Lesson actualizada successfully");
   //     utils.lessons.getByCourseId.invalidate();
   //     resetForm();
   //   },
   //   onError: (err: any) => {
-  //     toast.error(`Error al actualizar lección: ${err.message}`);
+  //     toast.error(`Error al actualizar lesson: ${err.message}`);
   //   },
   // });
 
@@ -86,7 +86,7 @@ export function useLessonsManager(courseId: number | null) {
 
     if (fileSizeMB > MAX_VIDEO_SIZE_MB) {
       toast.error(
-        `Video demasiado grande: ${fileSizeMB.toFixed(1)}MB. Máximo: ${MAX_VIDEO_SIZE_MB}MB`
+        `Video demasiado grande: ${fileSizeMB.toFixed(1)}MB. Maximum: ${MAX_VIDEO_SIZE_MB}MB`
       );
       return;
     }
@@ -138,8 +138,8 @@ export function useLessonsManager(courseId: number | null) {
         videoFile: file,
       }));
 
-      toast.success("Video cargado exitosamente", {
-        description: "Ahora puedes completar la información de la lección",
+      toast.success("Video cargado successfully", {
+        description: "Ahour puedes completar la información de la lesson",
         duration: 3000,
       });
     } catch (err: any) {
@@ -161,7 +161,7 @@ export function useLessonsManager(courseId: number | null) {
     }
 
     if (!formData.title.trim()) {
-      toast.error("El título de la lección es requerido");
+      toast.error("El título de la lesson es requerido");
       return;
     }
 

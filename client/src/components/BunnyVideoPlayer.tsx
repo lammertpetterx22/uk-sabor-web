@@ -203,10 +203,10 @@ export default function BunnyVideoPlayer({
                 <Lock className="h-10 w-10 text-white" strokeWidth={2.5} />
               </div>
               <h3 className="font-bold text-white text-xl mb-3 tracking-tight">
-                Lección bloqueada
+                Lesson bloqueada
               </h3>
               <p className="text-sm text-white/60 leading-relaxed">
-                Completa la lección anterior para desbloquear este contenido
+                Completa la lesson anterior para desbloquear este contenido
               </p>
             </div>
           </div>

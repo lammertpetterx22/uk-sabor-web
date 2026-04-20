@@ -135,7 +135,7 @@ export default function AdminDashboard() {
             </a>
             <div className="flex flex-col items-end gap-1">
               <Badge className={isAdmin ? "bg-gradient-to-r from-red-500/20 to-orange-500/20 text-red-400 border-red-500/50" : isPromoter ? "bg-accent/20 text-accent border-accent/50" : "bg-purple-500/20 text-purple-400 border-purple-500/50"}>
-                {isAdmin ? "Administrador" : isPromoter ? t("roles.promoter") : t("roles.instructor")}
+                {isAdmin ? "Administrator" : isPromoter ? t("roles.promoter") : t("roles.instructor")}
               </Badge>
               <span className="text-xs text-foreground/60">{user?.name || user?.email}</span>
             </div>
@@ -158,7 +158,7 @@ export default function AdminDashboard() {
               </TabsTrigger>
               <TabsTrigger value="my-courses" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:border-purple-500/50">
                 <Video className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Cursos</span>
+                <span className="hidden sm:inline">Courses</span>
               </TabsTrigger>
               <TabsTrigger value="management" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-green-500/20 data-[state=active]:to-emerald-500/20 data-[state=active]:border-green-500/50">
                 <Users className="h-4 w-4 mr-2" />
@@ -272,18 +272,18 @@ export default function AdminDashboard() {
             </TabsContent>
           )}
 
-          {/* CONTENT TAB - Admin only (Eventos + Clases con subtabs) */}
+          {/* CONTENT TAB - Admin only (Events + Classs con subtabs) */}
           {isAdmin && (
             <TabsContent value="content" className="space-y-6">
               <Tabs defaultValue="events" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6">
                   <TabsTrigger value="events" className="data-[state=active]:bg-blue-500/20">
                     <Calendar className="h-4 w-4 mr-2" />
-                    Eventos
+                    Events
                   </TabsTrigger>
                   <TabsTrigger value="classes" className="data-[state=active]:bg-orange-500/20">
                     <Users className="h-4 w-4 mr-2" />
-                    Clases
+                    Classs
                   </TabsTrigger>
                 </TabsList>
 
@@ -336,7 +336,7 @@ export default function AdminDashboard() {
             </TabsContent>
           )}
 
-          {/* MANAGEMENT TAB - Admin only (Instructores + Usuarios con subtabs) */}
+          {/* MANAGEMENT TAB - Admin only (Instructores + Users con subtabs) */}
           {isAdmin && (
             <TabsContent value="management" className="space-y-6">
               <Tabs defaultValue="instructors" className="w-full">
@@ -347,7 +347,7 @@ export default function AdminDashboard() {
                   </TabsTrigger>
                   <TabsTrigger value="users" className="data-[state=active]:bg-yellow-500/20">
                     <Users className="h-4 w-4 mr-2" />
-                    Usuarios
+                    Users
                   </TabsTrigger>
                 </TabsList>
 
@@ -370,7 +370,7 @@ export default function AdminDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <UserPlus className="h-5 w-5" />
-                    Solicitudes de Instructor / Promotor
+                    Solicitudes de Instructor / Promoter
                   </CardTitle>
                   <CardDescription>
                     Revisa y gestiona las solicitudes para convertirse en instructor o promotor
@@ -1373,7 +1373,7 @@ function CoursesTab() {
     if (file.size > MAX_VIDEO_SIZE) {
       toast.error(
         `❌ El video es demasiado grande.\n\n` +
-        `📦 Tamaño máximo: 2GB (2048MB)\n` +
+        `📦 Tamyear maximum: 2GB (2048MB)\n` +
         `📁 Tu archivo: ${fileSizeMB.toFixed(1)}MB\n\n` +
         `💡 Tip: Comprime el video con Handbrake o similar.`,
         { duration: 8000 }
@@ -1384,15 +1384,15 @@ function CoursesTab() {
     // UX: Show informative toast based on file size
     if (fileSizeMB > 500) {
       toast.info(
-        `📤 Subiendo video grande: ${fileSizeMB.toFixed(1)}MB\n` +
-        `⏱️ Tiempo estimado: ${Math.ceil(fileSizeMB / 10)} minutos\n` +
-        `⚠️ No cierres esta ventana hasta que termine.`,
+        `📤 Uploading...deo grande: ${fileSizeMB.toFixed(1)}MB\n` +
+        `⏱️ Tiempo estimado: ${Math.ceil(fileSizeMB / 10)} minutes\n` +
+        `⚠️ No cierres esta salena hasta que termine.`,
         { duration: 10000 }
       );
     } else if (fileSizeMB > 100) {
       toast.info(
-        `📤 Subiendo video de ${fileSizeMB.toFixed(1)}MB...\n` +
-        `⏱️ Esto puede tardar unos minutos.`,
+        `📤 Uploading...deo de ${fileSizeMB.toFixed(1)}MB...\n` +
+        `⏱️ Esto puede tardar unos minutes.`,
         { duration: 6000 }
       );
     }
@@ -1424,7 +1424,7 @@ function CoursesTab() {
 
         // Upload to Bunny.net Stream API (NOT Storage - videos use Stream)
         try {
-          toast.info('☁️ Subiendo a Bunny.net...', { duration: 3000 });
+          toast.info('☁️ Uploading...Bunny.net...', { duration: 3000 });
 
           // Use uploadVideoToBunny for videos (NOT uploadFile)
           const result = await uploadVideoMutation.mutateAsync({
@@ -1445,12 +1445,12 @@ function CoursesTab() {
           }));
 
           toast.success(
-            `✅ ¡Video subido exitosamente a Bunny.net!\n\n` +
+            `✅ ¡Video subido successfully a Bunny.net!\n\n` +
             `📁 ${file.name}\n` +
             `📦 ${fileSizeMB.toFixed(1)}MB\n` +
             `⏱️ ${totalTime}s (${uploadSpeed}MB/s)\n` +
             `🎬 Video ID: ${result.bunnyVideoId.substring(0, 20)}...\n\n` +
-            `⚠️ El video se está procesando en Bunny.net`,
+            `⚠️ El video se is procesando en Bunny.net`,
             { duration: 10000 }
           );
 
@@ -1543,7 +1543,7 @@ function CoursesTab() {
           <div>
             <p className="font-medium text-yellow-400">Perfil de instructor no encontrado</p>
             <p className="text-sm text-foreground/70 mt-1">
-              Para subir cursos, el administrador debe crear tu perfil de instructor con el mismo nombre que tu cuenta de usuario (<strong>{user?.name}</strong>).
+              Para subir courses, el administrador debe crear tu perfil de instructor con el mismo nombre que tu account de user (<strong>{user?.name}</strong>).
             </p>
           </div>
         </div>
@@ -1702,7 +1702,7 @@ function CoursesTab() {
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={() => imageInputRef.current?.click()} disabled={imageUploading}>
-                    <ImageIcon className="h-4 w-4 mr-2" />Cambiar imagen
+                    <ImageIcon className="h-4 w-4 mr-2" />Cambiar image
                   </Button>
                   <Button variant="destructive" size="sm" onClick={() => setFormData(prev => ({ ...prev, imageUrl: "", imagePreview: "" }))}>
                     <X className="h-4 w-4" />
@@ -1811,7 +1811,7 @@ function CoursesTab() {
                         ? 'border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10'
                         : 'border-green-500/50 text-green-400 hover:bg-green-500/10'}
                     >
-                      {course.status === 'published' ? 'Despublicar' : 'Publicar'}
+                      {course.status === 'published' ? 'Despublicar' : 'Publish'}
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => setEmailingCourse(course)} className="gap-2">
                       <Mail className="h-4 w-4" />
@@ -2231,7 +2231,7 @@ function ClassesTab() {
           <div>
             <p className="font-medium text-yellow-400">Perfil de instructor no encontrado</p>
             <p className="text-sm text-foreground/70 mt-1">
-              Para crear clases, primero ve a la pestaña <strong>My Profile</strong> y guarda tu perfil de instructor. Esto lo vinculará automáticamente a tu cuenta.
+              Para crear classs, primero ve a la pestaña <strong>My Profile</strong> y guarda tu perfil de instructor. Esto lo vinculará automáticamente a tu account.
             </p>
           </div>
         </div>
@@ -2310,7 +2310,7 @@ function ClassesTab() {
           <div>
             <p className="text-sm font-medium text-foreground/80 mb-2">Cover image</p>
             <div
-              className="border-2 border-dashed border-border/50 rounded-lg p-4 text-center cursor-pointer hover:border-accent/50 transition-colors relative"
+              className="border-2 border-dashed border-border/50 rounded-lg p-4 text-center courser-pointer hover:border-accent/50 transition-colors relative"
               onClick={() => imageInputRef.current?.click()}
             >
               {uploading ? (
@@ -2365,7 +2365,7 @@ function ClassesTab() {
           <div className="border-t border-border/30 pt-4 mt-4">
             <div className="flex items-center gap-3 mb-4">
               <div
-                className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors duration-200 ${formData.hasSocial ? "bg-accent" : "bg-border"
+                className={`relative w-11 h-6 rounded-full courser-pointer transition-colors duration-200 ${formData.hasSocial ? "bg-accent" : "bg-border"
                   }`}
                 onClick={() => setFormData({ ...formData, hasSocial: !formData.hasSocial })}
               >
@@ -2375,7 +2375,7 @@ function ClassesTab() {
                 />
               </div>
               <div>
-                <label className="text-sm font-semibold text-foreground cursor-pointer" onClick={() => setFormData({ ...formData, hasSocial: !formData.hasSocial })}>
+                <label className="text-sm font-semibold text-foreground courser-pointer" onClick={() => setFormData({ ...formData, hasSocial: !formData.hasSocial })}>
                   🎉 Social after class?
                 </label>
                 <p className="text-xs text-foreground/50">{t("admin.classes.socialDescription")}</p>
@@ -2457,7 +2457,7 @@ function ClassesTab() {
             </Button>
             {editingId && (
               <Button variant="outline" onClick={resetForm} className="flex-1">
-                Cancelar
+                Cancel
               </Button>
             )}
           </div>
@@ -2470,9 +2470,9 @@ function ClassesTab() {
           <CardTitle>{isAdmin ? t("admin.classes.allClasses") : t("admin.classes.myClasses")}</CardTitle>
           <CardDescription>
             {isAdmin
-              ? `${classes?.length || 0} clases en total`
+              ? `${classes?.length || 0} classs en total`
               : myInstructorProfile
-                ? `Clases impartidas por ${myInstructorProfile.name}`
+                ? `Classs impartidas por ${myInstructorProfile.name}`
                 : t("admin.classes.manageClasses")}
           </CardDescription>
         </CardHeader>
@@ -2916,11 +2916,11 @@ function InstructorsTab() {
     setFormData(prev => ({ ...prev, photoPreview: autoFittedDataUrl, photoUrl: "" }));
     setUploading(true);
     try {
-      // Generate unique filename: instructor-{id}-{timestamp}.jpg
-      const timestamp = Date.now();
+      // Generate unique filename: instructor-{id}-{timonthtamp}.jpg
+      const timonthtamp = Date.now();
       const uniqueFileName = editingId
-        ? `instructor-${editingId}-${timestamp}.jpg`
-        : `instructor-new-${timestamp}.jpg`;
+        ? `instructor-${editingId}-${timonthtamp}.jpg`
+        : `instructor-new-${timonthtamp}.jpg`;
 
       const result = await uploadFileMutation.mutateAsync({
         fileBase64: autoFittedDataUrl,
@@ -2929,7 +2929,7 @@ function InstructorsTab() {
         folder: "instructors",
       });
       setFormData(prev => ({ ...prev, photoUrl: result.url }));
-      toast.success('Foto subida correctamente');
+      toast.success('Photo subida correctamente');
     } catch (uploadErr: any) {
       toast.error(t("admin.events.errorUpload", { message: uploadErr.message }));
       setFormData(prev => ({ ...prev, photoPreview: "", photoUrl: "" }));
@@ -3123,8 +3123,8 @@ function InstructorsTab() {
             onImageReady={handleImageReady}
             targetWidth={1080}
             targetHeight={1080}
-            title="Recortar Foto del Profesor"
-            description="Mueve y ajusta el cuadrado para seleccionar el área"
+            title="Recortar Photo del Profesor"
+            description="Mueve y ajusta el cuadrado para select el área"
           />
 
           <div className="flex gap-2">
@@ -3294,7 +3294,7 @@ function UsersTab() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="flex-1 min-w-[200px]"
           />
-          <label className="flex items-center gap-2 text-sm text-foreground/70 cursor-pointer">
+          <label className="flex items-center gap-2 text-sm text-foreground/70 courser-pointer">
             <input
               type="checkbox"
               checked={onlyUnverified}
@@ -3343,13 +3343,13 @@ function UsersTab() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="user">
-                              <span className="flex items-center gap-2">👤 Usuario</span>
+                              <span className="flex items-center gap-2">👤 User</span>
                             </SelectItem>
                             <SelectItem value="instructor">
                               <span className="flex items-center gap-2">🎓 Instructor</span>
                             </SelectItem>
                             <SelectItem value="promoter">
-                              <span className="flex items-center gap-2">📣 Promotor</span>
+                              <span className="flex items-center gap-2">📣 Promoter</span>
                             </SelectItem>
                             <SelectItem value="rrp">
                               <span className="flex items-center gap-2">📢 RRP</span>
@@ -3424,7 +3424,7 @@ function UsersTab() {
                       {(() => {
                         const st = (u as any).stripeAccountStatus as string | undefined;
                         if (st === "verified") return <Badge className="bg-green-500/15 text-green-500 border-green-500/30 text-xs">✓ Verificado</Badge>;
-                        if (st === "pending") return <Badge className="bg-amber-500/15 text-amber-500 border-amber-500/30 text-xs">⏳ Pendiente</Badge>;
+                        if (st === "pending") return <Badge className="bg-amber-500/15 text-amber-500 border-amber-500/30 text-xs">⏳ Pending</Badge>;
                         if (st === "restricted") return <Badge className="bg-red-500/15 text-red-500 border-red-500/30 text-xs">⚠️ Acción</Badge>;
                         return <Badge variant="outline" className="text-xs bg-foreground/5 text-foreground/40">Sin conectar</Badge>;
                       })()}
@@ -3452,7 +3452,7 @@ function UsersTab() {
                             onClick={() => deleteUserMutation.mutate({ id: u.id })}
                             disabled={deleteUserMutation.isPending}
                           >
-                            {deleteUserMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Confirmar"}
+                            {deleteUserMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Confirm"}
                           </Button>
                           <Button
                             size="sm"
@@ -3460,7 +3460,7 @@ function UsersTab() {
                             className="h-7 text-xs"
                             onClick={() => setConfirmDelete(null)}
                           >
-                            Cancelar
+                            Cancel
                           </Button>
                         </div>
                       ) : (
@@ -3486,11 +3486,11 @@ function UsersTab() {
         )}
 
         <div className="pt-4 border-t border-border/50 flex items-center justify-between text-sm text-foreground/60">
-          <p>Total usuarios: <span className="font-semibold text-foreground">{usersList?.length || 0}</span></p>
+          <p>Total users: <span className="font-semibold text-foreground">{usersList?.length || 0}</span></p>
           <div className="flex gap-3">
-            <span>👤 Usuarios: {usersList?.filter(u => u.role === "user").length || 0}</span>
+            <span>👤 Users: {usersList?.filter(u => u.role === "user").length || 0}</span>
             <span>🎓 Instructores: {usersList?.filter(u => u.role === "instructor").length || 0}</span>
-            <span>📣 Promotores: {usersList?.filter(u => u.role === "promoter").length || 0}</span>
+            <span>📣 Promoteres: {usersList?.filter(u => u.role === "promoter").length || 0}</span>
             <span>🛡️ Admins: {usersList?.filter(u => u.role === "admin").length || 0}</span>
           </div>
         </div>
@@ -3930,9 +3930,9 @@ function InstructorProfileTab() {
     setCropSrc(null);
     setUploading(true);
     try {
-      // Generate unique filename: instructor-{userId}-{timestamp}.jpg
-      const timestamp = Date.now();
-      const uniqueFileName = `instructor-${user?.id || 'unknown'}-${timestamp}.jpg`;
+      // Generate unique filename: instructor-{userId}-{timonthtamp}.jpg
+      const timonthtamp = Date.now();
+      const uniqueFileName = `instructor-${user?.id || 'unknown'}-${timonthtamp}.jpg`;
 
       const result = await uploadFileMutation.mutateAsync({
         fileBase64: croppedDataUrl,

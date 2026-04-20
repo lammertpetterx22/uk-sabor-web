@@ -341,7 +341,7 @@ export default function StaffScanner() {
                                     {validateMutation.isPending ? (
                                         <>
                                             <div className="h-2 w-2 bg-[#FCC500] rounded-full animate-pulse" />
-                                            <span className="text-xs text-white font-medium">Procesando...</span>
+                                            <span className="text-xs text-white font-medium">Processing...</span>
                                         </>
                                     ) : (
                                         <>
@@ -353,7 +353,7 @@ export default function StaffScanner() {
                             </div>
 
                             <style>{`
-                @keyframes scanLine {
+                @keyframonth scanLine {
                   0% { top: 8px; opacity: 0; }
                   10% { opacity: 1; }
                   90% { opacity: 1; }
@@ -401,13 +401,13 @@ export default function StaffScanner() {
                             className="w-full text-white/40 hover:text-white text-sm"
                             onClick={() => setShowManual(v => !v)}
                         >
-                            {showManual ? "Ocultar entrada manual" : "Introducir código manualmente"}
+                            {showManual ? "Hide entrada manual" : "Introducir code manualmente"}
                         </Button>
 
                         {showManual && (
                             <div className="flex gap-2">
                                 <input
-                                    placeholder="Pega o escribe el código QR…"
+                                    placeholder="Pega o escribe el code QR…"
                                     value={manualCode}
                                     onChange={e => setManualCode(e.target.value)}
                                     onKeyDown={e => {
@@ -449,7 +449,7 @@ export default function StaffScanner() {
                         {scanHistory.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
                                 <ScanLine size={32} className="text-white/20" />
-                                <p className="text-sm text-white/30">Los resultados aparecerán aquí</p>
+                                <p className="text-sm text-white/30">Los resultados aparecerán here</p>
                             </div>
                         ) : (
                             scanHistory.map((r, i) => <ScanResultCard key={i} result={r} />)

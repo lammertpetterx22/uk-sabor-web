@@ -199,9 +199,9 @@ export default function ResponsiveBunnyPlayer({
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#FA3698]/20 mx-auto">
               <Lock className="h-8 w-8 text-[#FA3698]" />
             </div>
-            <p className="font-semibold text-white text-lg mb-2">Lección bloqueada</p>
+            <p className="font-semibold text-white text-lg mb-2">Lesson bloqueada</p>
             <p className="text-sm text-white/70">
-              Completa la lección anterior para desbloquear este contenido
+              Completa la lesson anterior para desbloquear este contenido
             </p>
           </div>
         </div>

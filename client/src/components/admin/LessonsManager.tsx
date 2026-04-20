@@ -53,21 +53,21 @@ export default function LessonsManager({ courses, isLoadingCourses }: LessonsMan
       {/* Course Selector */}
       <Card>
         <CardHeader>
-          <CardTitle>Gestión de Lecciones</CardTitle>
-          <CardDescription>Sube videos y crea lecciones para tus cursos</CardDescription>
+          <CardTitle>Gestión de Lessons</CardTitle>
+          <CardDescription>Sube videos y crea lessons para tus courses</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium text-foreground/70 mb-2 block">
-                Selecciona un curso
+                Select un course
               </label>
               <Select
                 value={selectedCourseId?.toString() || ""}
                 onValueChange={handleCourseSelect}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Elige un curso..." />
+                  <SelectValue placeholder="Elige un course..." />
                 </SelectTrigger>
                 <SelectContent>
                   {isLoadingCourses ? (
@@ -76,7 +76,7 @@ export default function LessonsManager({ courses, isLoadingCourses }: LessonsMan
                     </div>
                   ) : courses?.length === 0 ? (
                     <div className="p-4 text-center text-sm text-foreground/60">
-                      No hay cursos disponibles
+                      No hay courses disponibles
                     </div>
                   ) : (
                     courses?.map((course) => (
@@ -120,15 +120,15 @@ export default function LessonsManager({ courses, isLoadingCourses }: LessonsMan
       {selectedCourseId && (
         <Card>
           <CardHeader>
-            <CardTitle>Crear Nueva Lección</CardTitle>
+            <CardTitle>Crear Nueva Lesson</CardTitle>
             <CardDescription>
-              Sube un video y agrega la información de la lección
+              Sube un video y agrega la información de la lesson
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                placeholder="Título de la lección *"
+                placeholder="Title de la lesson *"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               />
@@ -144,7 +144,7 @@ export default function LessonsManager({ courses, isLoadingCourses }: LessonsMan
             </div>
 
             <Textarea
-              placeholder="Descripción de la lección (opcional)"
+              placeholder="Description de la lesson (opcional)"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={3}
@@ -153,7 +153,7 @@ export default function LessonsManager({ courses, isLoadingCourses }: LessonsMan
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 type="number"
-                placeholder="Duración en segundos (opcional)"
+                placeholder="Duration en segundos (opcional)"
                 value={formData.durationSeconds || ""}
                 onChange={(e) =>
                   setFormData({
@@ -171,7 +171,7 @@ export default function LessonsManager({ courses, isLoadingCourses }: LessonsMan
                   className="w-4 h-4"
                 />
                 <label htmlFor="isPreview" className="text-sm text-foreground/70">
-                  Lección de vista previa (gratuita)
+                  Lesson de vista previa (gratuita)
                 </label>
               </div>
             </div>
@@ -180,7 +180,7 @@ export default function LessonsManager({ courses, isLoadingCourses }: LessonsMan
             <div className="space-y-4">
               <label className="text-sm font-medium text-foreground/70 flex items-center gap-2">
                 <Video className="h-4 w-4 text-accent" />
-                Video de la lección *
+                Video de la lesson *
               </label>
 
               {/* Professional Upload Progress Component */}
@@ -194,23 +194,23 @@ export default function LessonsManager({ courses, isLoadingCourses }: LessonsMan
 
               {/* Upload area when no video */}
               {!uploading && !formData.bunnyVideoId && (
-                <div className="relative border-2 border-dashed border-accent/30 rounded-xl p-8 bg-gradient-to-br from-accent/5 to-transparent hover:border-accent/50 transition-all duration-300 cursor-pointer group">
+                <div className="relative border-2 border-dashed border-accent/30 rounded-xl p-8 bg-gradient-to-br from-accent/5 to-transparent hover:border-accent/50 transition-all duration-300 courser-pointer group">
                   <div className="text-center">
                     <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 mb-4 border border-accent/20 group-hover:scale-110 transition-transform duration-300">
                       <Upload className="h-10 w-10 text-accent" />
                     </div>
                     <p className="font-medium text-foreground mb-2">
-                      Arrastra un video aquí
+                      Arrastra un video here
                     </p>
                     <p className="text-sm text-foreground/60 mb-6">
-                      o haz clic para seleccionar (máx. 2GB)
+                      o haz clic para select (máx. 2GB)
                     </p>
                     <Button
                       onClick={() => videoInputRef.current?.click()}
                       className="bg-gradient-to-r from-[#FA3698] to-purple-600 hover:from-[#FA3698]/90 hover:to-purple-600/90 text-white border-0 shadow-lg shadow-[#FA3698]/25"
                     >
                       <Upload className="h-4 w-4 mr-2" />
-                      Seleccionar Video
+                      Selectr Video
                     </Button>
                   </div>
                   <input
@@ -279,17 +279,17 @@ export default function LessonsManager({ courses, isLoadingCourses }: LessonsMan
                 {isCreating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creando...
+                    Creating...
                   </>
                 ) : (
                   <>
                     <Plus className="mr-2 h-4 w-4" />
-                    Crear Lección
+                    Crear Lesson
                   </>
                 )}
               </Button>
               <Button variant="outline" onClick={resetForm}>
-                Cancelar
+                Cancel
               </Button>
             </div>
           </CardContent>
@@ -300,9 +300,9 @@ export default function LessonsManager({ courses, isLoadingCourses }: LessonsMan
       {selectedCourseId && (
         <Card>
           <CardHeader>
-            <CardTitle>Lecciones del Curso</CardTitle>
+            <CardTitle>Lessons del Course</CardTitle>
             <CardDescription>
-              {lessons?.length || 0} lección(es) creada(s)
+              {lessons?.length || 0} lesson(es) creada(s)
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -357,8 +357,8 @@ export default function LessonsManager({ courses, isLoadingCourses }: LessonsMan
             ) : (
               <div className="text-center py-8 text-foreground/60">
                 <Video className="h-12 w-12 mx-auto mb-3 text-accent/30" />
-                <p>No hay lecciones creadas aún</p>
-                <p className="text-sm mt-1">Crea tu primera lección usando el formulario de arriba</p>
+                <p>No hay lessons creadas aún</p>
+                <p className="text-sm mt-1">Crea tu primera lesson usando el formulario de arriba</p>
               </div>
             )}
           </CardContent>

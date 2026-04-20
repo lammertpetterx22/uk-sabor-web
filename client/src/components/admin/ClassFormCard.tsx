@@ -188,11 +188,11 @@ export default function ClassFormCard({
     setFormData(prev => ({ ...prev, imagePreview: croppedDataUrl, imageUrl: "" }));
     setUploading(true);
     try {
-      // Generate unique filename: class-{id}-{timestamp}.jpg
-      const timestamp = Date.now();
+      // Generate unique filename: class-{id}-{timonthtamp}.jpg
+      const timonthtamp = Date.now();
       const uniqueFileName = editingClass?.id
-        ? `class-${editingClass.id}-${timestamp}.jpg`
-        : `class-new-${timestamp}.jpg`;
+        ? `class-${editingClass.id}-${timonthtamp}.jpg`
+        : `class-new-${timonthtamp}.jpg`;
 
       const result = await uploadFileMutation.mutateAsync({
         fileBase64: croppedDataUrl,
@@ -238,11 +238,11 @@ export default function ClassFormCard({
       reader.onload = async (e) => {
         const base64 = e.target?.result as string;
 
-        const timestamp = Date.now();
+        const timonthtamp = Date.now();
         const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const uniqueFileName = editingClass?.id
-          ? `class-${editingClass.id}-materials-${timestamp}-${sanitizedFileName}`
-          : `class-new-materials-${timestamp}-${sanitizedFileName}`;
+          ? `class-${editingClass.id}-materials-${timonthtamp}-${sanitizedFileName}`
+          : `class-new-materials-${timonthtamp}-${sanitizedFileName}`;
 
         try {
           const result = await uploadFileMutation.mutateAsync({
@@ -329,7 +329,7 @@ export default function ClassFormCard({
               {editingClass ? t("admin.classes.editClass") : t("admin.classes.createClass")}
             </CardTitle>
             <CardDescription className="text-foreground/60 mt-1">
-              {editingClass ? "Actualiza los detalles de la clase" : "Programa una nueva sesión de clase en vivo"}
+              {editingClass ? "Actualiza los detalles de la class" : "Programa una nueva sesión de class en vivo"}
             </CardDescription>
           </div>
         </div>
@@ -340,17 +340,17 @@ export default function ClassFormCard({
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-4">
             <Sparkles className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Información de la Clase</h3>
+            <h3 className="font-semibold text-foreground">Information de la Class</h3>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="class-title" className="text-foreground/80 flex items-center gap-2">
               <Music className="h-3.5 w-3.5 text-accent" />
-              Título de la Clase *
+              Title de la Class *
             </Label>
             <Input
               id="class-title"
-              placeholder="Ej: Salsa On2 - Nivel Intermedio"
+              placeholder="Ej: Salsa On2 - Level Intermediate"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               className="bg-background/50 border-border/50 focus:border-accent transition-colors"
@@ -359,11 +359,11 @@ export default function ClassFormCard({
 
           <div className="space-y-2">
             <Label htmlFor="class-description" className="text-foreground/80">
-              Descripción
+              Description
             </Label>
             <Textarea
               id="class-description"
-              placeholder="Describe la clase: qué se va a enseñar, requisitos, qué traer, etc."
+              placeholder="Describe la class: qué se va a enseñar, requisitos, qué traer, etc."
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={3}
@@ -375,7 +375,7 @@ export default function ClassFormCard({
             <div className="space-y-2">
               <Label htmlFor="class-style" className="text-foreground/80 flex items-center gap-2">
                 <Music className="h-3.5 w-3.5 text-accent" />
-                Estilo de Baile
+                Dance Style
               </Label>
               <Input
                 id="class-style"
@@ -389,17 +389,17 @@ export default function ClassFormCard({
             <div className="space-y-2">
               <Label htmlFor="class-level" className="text-foreground/80 flex items-center gap-2">
                 <Signal className="h-3.5 w-3.5 text-accent" />
-                Nivel
+                Level
               </Label>
               <Select value={formData.level} onValueChange={(val: any) => setFormData({ ...formData, level: val })}>
                 <SelectTrigger id="class-level" className="bg-background/50 border-border/50 focus:border-accent">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all-levels">Todos los niveles</SelectItem>
-                  <SelectItem value="beginner">Principiante</SelectItem>
-                  <SelectItem value="intermediate">Intermedio</SelectItem>
-                  <SelectItem value="advanced">Avanzado</SelectItem>
+                  <SelectItem value="all-levels">All levels</SelectItem>
+                  <SelectItem value="beginner">Beginner</SelectItem>
+                  <SelectItem value="intermediate">Intermediate</SelectItem>
+                  <SelectItem value="advanced">Advanced</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -413,7 +413,7 @@ export default function ClassFormCard({
               </Label>
               <Select value={formData.instructorId} onValueChange={(val) => setFormData({ ...formData, instructorId: val })}>
                 <SelectTrigger id="class-instructor" className="bg-background/50 border-border/50 focus:border-accent">
-                  <SelectValue placeholder="Selecciona un instructor" />
+                  <SelectValue placeholder="Select an instructor" />
                 </SelectTrigger>
                 <SelectContent>
                   {instructors?.map((instructor) => (
@@ -433,13 +433,13 @@ export default function ClassFormCard({
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-4">
             <Calendar className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Horario y Precio</h3>
+            <h3 className="font-semibold text-foreground">Horario y Price</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="class-date" className="text-foreground/80">
-                Fecha y Hora *
+                Date and Time *
               </Label>
               <Input
                 id="class-date"
@@ -454,7 +454,7 @@ export default function ClassFormCard({
             <div className="space-y-2">
               <Label htmlFor="class-duration" className="text-foreground/80 flex items-center gap-2">
                 <Clock className="h-3.5 w-3.5 text-accent" />
-                Duración (minutos)
+                Duration (minutes)
               </Label>
               <Input
                 id="class-duration"
@@ -473,7 +473,7 @@ export default function ClassFormCard({
             <div className="space-y-2">
               <Label htmlFor="class-price" className="text-foreground/80 flex items-center gap-2">
                 <DollarSign className="h-3.5 w-3.5 text-accent" />
-                Precio *
+                Price *
               </Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50">£</span>
@@ -493,7 +493,7 @@ export default function ClassFormCard({
             <div className="space-y-2">
               <Label htmlFor="class-max" className="text-foreground/80 flex items-center gap-2">
                 <Users className="h-3.5 w-3.5 text-accent" />
-                Máx. Participantes
+                Máx. Participbefore
               </Label>
               <Input
                 id="class-max"
@@ -514,7 +514,7 @@ export default function ClassFormCard({
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-4">
             <CreditCard className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Método de Pago</h3>
+            <h3 className="font-semibold text-foreground">Payment Method</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -544,7 +544,7 @@ export default function ClassFormCard({
             >
               <Banknote className={`h-4 w-4 mx-auto mb-1 ${formData.paymentMethod === "cash" ? "text-accent" : "text-foreground/50"}`} />
               <p className={`text-xs font-medium ${formData.paymentMethod === "cash" ? "text-accent" : "text-foreground/70"}`}>
-                Efectivo
+                Cash
               </p>
             </button>
 
@@ -562,7 +562,7 @@ export default function ClassFormCard({
                 <Banknote className={`h-3 w-3 ${formData.paymentMethod === "both" ? "text-accent" : "text-foreground/50"}`} />
               </div>
               <p className={`text-xs font-medium ${formData.paymentMethod === "both" ? "text-accent" : "text-foreground/70"}`}>
-                Ambos
+                Both
               </p>
             </button>
           </div>
@@ -579,7 +579,7 @@ export default function ClassFormCard({
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-4">
             <PartyPopper className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Social Dancing (Opcional)</h3>
+            <h3 className="font-semibold text-foreground">Social Dancing (Optional)</h3>
           </div>
 
           <div className="flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-background/30">
@@ -590,8 +590,8 @@ export default function ClassFormCard({
               onChange={(e) => setFormData({ ...formData, hasSocial: e.target.checked })}
               className="w-5 h-5 rounded border-border/50 text-accent focus:ring-accent"
             />
-            <Label htmlFor="has-social" className="text-foreground/80 cursor-pointer flex-1">
-              Esta clase incluye social dancing después
+            <Label htmlFor="has-social" className="text-foreground/80 courser-pointer flex-1">
+              Esta class incluye social dancing after
             </Label>
           </div>
 
@@ -650,7 +650,7 @@ export default function ClassFormCard({
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-4">
             <ImageIcon className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Imagen de la Clase (Opcional)</h3>
+            <h3 className="font-semibold text-foreground">Image de la Class (Optional)</h3>
           </div>
 
           {formData.imagePreview ? (
@@ -665,7 +665,7 @@ export default function ClassFormCard({
                   <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
                     <div className="text-center">
                       <Loader2 className="h-8 w-8 animate-spin text-white mx-auto mb-2" />
-                      <p className="text-white text-sm font-medium">Subiendo imagen...</p>
+                      <p className="text-white text-sm font-medium">Uploading image...</p>
                     </div>
                   </div>
                 )}
@@ -688,7 +688,7 @@ export default function ClassFormCard({
                   className="flex-1"
                 >
                   <ImageIcon className="h-4 w-4 mr-2" />
-                  Cambiar Imagen
+                  Change Image
                 </Button>
                 <Button
                   type="button"
@@ -698,13 +698,13 @@ export default function ClassFormCard({
                   className="text-red-600 hover:text-red-700 hover:border-red-300"
                 >
                   <X className="h-4 w-4 mr-2" />
-                  Eliminar
+                  Delete
                 </Button>
               </div>
             </div>
           ) : (
             <div
-              className="relative border-2 border-dashed border-accent/30 rounded-xl p-6 bg-gradient-to-br from-accent/5 to-transparent hover:border-accent/50 transition-all duration-300 cursor-pointer group"
+              className="relative border-2 border-dashed border-accent/30 rounded-xl p-6 bg-gradient-to-br from-accent/5 to-transparent hover:border-accent/50 transition-all duration-300 courser-pointer group"
               onClick={() => imageInputRef.current?.click()}
             >
               <div className="text-center">
@@ -712,7 +712,7 @@ export default function ClassFormCard({
                   <Upload className="h-7 w-7 text-accent" />
                 </div>
                 <p className="font-medium text-foreground mb-1 text-sm">
-                  Sube una imagen para la clase
+                  Sube una image para la class
                 </p>
                 <p className="text-xs text-foreground/60 mb-3">
                   Máx. 10MB (JPG, PNG, etc.)
@@ -730,12 +730,12 @@ export default function ClassFormCard({
                   {uploading ? (
                     <>
                       <Loader2 className="h-3 w-3 mr-2 animate-spin" />
-                      Subiendo...
+                      Uploading...
                     </>
                   ) : (
                     <>
                       <Upload className="h-3 w-3 mr-2" />
-                      Seleccionar Imagen
+                      Select Image
                     </>
                   )}
                 </Button>
@@ -814,7 +814,7 @@ export default function ClassFormCard({
           ) : (
             <div
               onClick={() => materialsInputRef.current?.click()}
-              className="relative group cursor-pointer rounded-xl border-2 border-dashed border-border/50 bg-background/30 hover:border-accent/50 hover:bg-accent/5 transition-all p-8"
+              className="relative group courser-pointer rounded-xl border-2 border-dashed border-border/50 bg-background/30 hover:border-accent/50 hover:bg-accent/5 transition-all p-8"
             >
               <div className="text-center">
                 {uploadingMaterials ? (
@@ -857,7 +857,7 @@ export default function ClassFormCard({
         <ImageCropperModal
           imageSrc={cropSrc}
           aspect={16 / 9}
-          label="Recorta la imagen de la clase"
+          label="Recorta la image de la class"
           onCropComplete={handleCropComplete}
           onClose={() => setCropSrc(null)}
         />
@@ -873,12 +873,12 @@ export default function ClassFormCard({
             {createMutation.isPending || updateMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                {editingClass ? "Actualizando..." : "Creando Clase..."}
+                {editingClass ? "Updating..." : "Creating Class..."}
               </>
             ) : (
               <>
                 <Sparkles className="mr-2 h-5 w-5" />
-                {editingClass ? "Actualizar Clase" : "Crear Clase"}
+                {editingClass ? "Actualizar Class" : "Crear Class"}
               </>
             )}
           </Button>
@@ -889,12 +889,12 @@ export default function ClassFormCard({
             className="h-12"
           >
             <X className="h-4 w-4 mr-2" />
-            Cancelar
+            Cancel
           </Button>
         </div>
 
         <p className="text-xs text-foreground/50 text-center">
-          * Campos requeridos
+          * Required fields
         </p>
       </CardContent>
     </Card>

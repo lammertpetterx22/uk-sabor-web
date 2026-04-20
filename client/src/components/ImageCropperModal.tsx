@@ -31,7 +31,7 @@ async function getCroppedImg(canvas: HTMLCanvasElement): Promise<string> {
 export default function ImageCropperModal({
   imageSrc,
   aspect,
-  label = "Recortar Imagen",
+  label = "Recortar Image",
   onCropComplete,
   onClose,
 }: ImageCropperModalProps) {
@@ -231,7 +231,7 @@ export default function ImageCropperModal({
             </div>
             <div>
               <DialogTitle className="text-xl font-bold gradient-text">{label}</DialogTitle>
-              <p className="text-sm text-foreground/60 mt-1">Ajusta, recorta y perfecciona tu imagen</p>
+              <p className="text-sm text-foreground/60 mt-1">Ajusta, recorta y perfecciona tu image</p>
             </div>
           </div>
         </DialogHeader>
@@ -366,10 +366,10 @@ export default function ImageCropperModal({
 
           {/* Image Editor Area */}
           <div className="space-y-3">
-            <label className="text-sm font-semibold text-foreground/80">Editor de Imagen</label>
+            <label className="text-sm font-semibold text-foreground/80">Editor de Image</label>
             <div
               ref={containerRef}
-              className="relative border-2 border-dashed border-accent/40 rounded-xl bg-black overflow-hidden cursor-grab active:cursor-grabbing shadow-xl"
+              className="relative border-2 border-dashed border-accent/40 rounded-xl bg-black overflow-hidden courser-grab active:courser-grabbing shadow-xl"
               style={{
                 width: "100%",
                 height: "420px",
@@ -491,7 +491,7 @@ export default function ImageCropperModal({
             {isProcessing ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Procesando...
+                Processing...
               </>
             ) : (
               <>

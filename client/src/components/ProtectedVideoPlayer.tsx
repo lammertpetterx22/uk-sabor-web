@@ -256,8 +256,8 @@ export default function ProtectedVideoPlayer({
                     d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
-              <p className="font-semibold text-white">Lección bloqueada</p>
-              <p className="mt-1 text-sm text-white/60">Completa la lección anterior para desbloquear</p>
+              <p className="font-semibold text-white">Lesson bloqueada</p>
+              <p className="mt-1 text-sm text-white/60">Completa la lesson anterior para desbloquear</p>
             </div>
           </div>
         )}
@@ -330,8 +330,8 @@ export default function ProtectedVideoPlayer({
                   d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
-            <p className="font-semibold text-white">Lección bloqueada</p>
-            <p className="mt-1 text-sm text-white/60">Completa la lección anterior para desbloquear</p>
+            <p className="font-semibold text-white">Lesson bloqueada</p>
+            <p className="mt-1 text-sm text-white/60">Completa la lesson anterior para desbloquear</p>
           </div>
         </div>
       )}
@@ -346,7 +346,7 @@ export default function ProtectedVideoPlayer({
       {/* Click to play/pause overlay */}
       {!locked && (
         <div
-          className="absolute inset-0 z-20 cursor-pointer"
+          className="absolute inset-0 z-20 courser-pointer"
           onClick={togglePlay}
           style={{ pointerEvents: "auto" }}
         />
@@ -365,7 +365,7 @@ export default function ProtectedVideoPlayer({
           <div className="relative px-4 pb-3 pt-8">
             {/* Progress bar */}
             <div
-              className="w-full h-1.5 bg-white/20 rounded-full cursor-pointer mb-3 hover:h-2.5 transition-all"
+              className="w-full h-1.5 bg-white/20 rounded-full courser-pointer mb-3 hover:h-2.5 transition-all"
               onClick={handleProgressClick}
             >
               <div
@@ -409,7 +409,7 @@ export default function ProtectedVideoPlayer({
                 type="range" min="0" max="1" step="0.05"
                 value={isMuted ? 0 : volume}
                 onChange={handleVolumeChange}
-                className="w-14 h-1 cursor-pointer hidden sm:block accent-[#FA3698]"
+                className="w-14 h-1 courser-pointer hidden sm:block accent-[#FA3698]"
               />
 
               {/* Time */}

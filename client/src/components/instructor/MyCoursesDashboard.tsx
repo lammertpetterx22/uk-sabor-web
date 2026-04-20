@@ -84,7 +84,7 @@ export default function MyCoursesDashboard({
   // Course mutations
   const deleteCurseMutation = trpc.courses.delete.useMutation({
     onSuccess: () => {
-      toast.success("Curso eliminado exitosamente");
+      toast.success("Course deleted successfully");
       setConfirmDeleteCourseId(null);
       if (selectedCourse?.id === confirmDeleteCourseId) {
         setSelectedCourse(null);
@@ -201,7 +201,7 @@ export default function MyCoursesDashboard({
             {courses.map((course) => (
               <Card
                 key={course.id}
-                className="border-border/50 bg-card/50 backdrop-blur-sm hover:border-accent/50 transition-all cursor-pointer group overflow-hidden"
+                className="border-border/50 bg-card/50 backdrop-blur-sm hover:border-accent/50 transition-all courser-pointer group overflow-hidden"
                 onClick={() => handleSelectCourse(course)}
               >
                 {/* Course Image */}
@@ -251,7 +251,7 @@ export default function MyCoursesDashboard({
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-1 text-foreground/60">
                       <Video className="h-4 w-4" />
-                      <span>{course._count?.lessons || 0} lecciones</span>
+                      <span>{course._count?.lessons || 0} lessons</span>
                     </div>
                     <div className="font-semibold text-accent">
                       £{course.price}
@@ -322,14 +322,14 @@ export default function MyCoursesDashboard({
               <div className="text-center">
                 <GraduationCap className="h-16 w-16 mx-auto mb-4 text-foreground/20" />
                 <h3 className="text-lg font-semibold text-foreground/80 mb-2">
-                  No tienes cursos aún
+                  No tienes courses aún
                 </h3>
                 <p className="text-foreground/60 text-sm mb-4">
-                  Crea tu primer curso para comenzar
+                  Crea tu primer course para comenzar
                 </p>
                 <Button onClick={handleOpenCourseDialog} className="btn-vibrant">
                   <Plus className="h-4 w-4 mr-2" />
-                  Crear Mi Primer Curso
+                  Crear Mi Primer Course
                 </Button>
               </div>
             </CardContent>
@@ -370,7 +370,7 @@ export default function MyCoursesDashboard({
               className="mt-1"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Volver
+              Back
             </Button>
 
             <div className="flex-1">
@@ -421,10 +421,10 @@ export default function MyCoursesDashboard({
             <div>
               <CardTitle className="flex items-center gap-2">
                 <List className="h-5 w-5 text-accent" />
-                Lecciones del Curso
+                Lessons del Course
               </CardTitle>
               <CardDescription>
-                {lessons?.length || 0} lección(es) creada(s)
+                {lessons?.length || 0} lesson(es) creada(s)
               </CardDescription>
             </div>
             <Button
@@ -432,7 +432,7 @@ export default function MyCoursesDashboard({
               className="btn-vibrant"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Añadir Lección
+              Añadir Lesson
             </Button>
           </div>
         </CardHeader>
@@ -531,17 +531,17 @@ export default function MyCoursesDashboard({
                 <Video className="h-10 w-10 text-accent" />
               </div>
               <h3 className="font-semibold text-foreground/80 mb-2">
-                No hay lecciones aún
+                No hay lessons aún
               </h3>
               <p className="text-sm text-foreground/60 mb-4">
-                Comienza añadiendo tu primera lección a este curso
+                Comienza añadiendo tu primera lesson a este course
               </p>
               <Button
                 onClick={handleOpenLessonDialog}
                 className="btn-vibrant"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Crear Primera Lección
+                Crear Primera Lesson
               </Button>
             </div>
           )}
@@ -568,7 +568,7 @@ export default function MyCoursesDashboard({
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="lesson-title">Título de la Lección *</Label>
+                  <Label htmlFor="lesson-title">Title de la Lesson *</Label>
                   <Input
                     id="lesson-title"
                     placeholder="e.g. Introduction to the basic step"
@@ -595,7 +595,7 @@ export default function MyCoursesDashboard({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="lesson-description">Descripción</Label>
+                <Label htmlFor="lesson-description">Description</Label>
                 <Textarea
                   id="lesson-description"
                   placeholder="Describe what they will learn in this lesson..."
@@ -608,7 +608,7 @@ export default function MyCoursesDashboard({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="lesson-duration">Duración (minutos)</Label>
+                  <Label htmlFor="lesson-duration">Duration (minutes)</Label>
                   <Input
                     id="lesson-duration"
                     type="number"
@@ -635,8 +635,8 @@ export default function MyCoursesDashboard({
                       onChange={(e) => setFormData({ ...formData, isPreview: e.target.checked })}
                       className="w-4 h-4 rounded border-border/50"
                     />
-                    <Label htmlFor="lesson-preview" className="cursor-pointer text-sm">
-                      Lección gratuita (preview)
+                    <Label htmlFor="lesson-preview" className="courser-pointer text-sm">
+                      Lesson gratuita (preview)
                     </Label>
                   </div>
                 </div>
@@ -649,7 +649,7 @@ export default function MyCoursesDashboard({
             <div className="space-y-4">
               <Label className="flex items-center gap-2 text-base">
                 <Video className="h-5 w-5 text-accent" />
-                Video de la Lección *
+                Video de la Lesson *
               </Label>
 
               <ProfessionalUploadProgress
@@ -667,7 +667,7 @@ export default function MyCoursesDashboard({
                       <Upload className="h-10 w-10 text-accent" />
                     </div>
                     <p className="font-semibold text-foreground mb-2">
-                      Sube el video de la lección
+                      Sube el video de la lesson
                     </p>
                     <p className="text-sm text-foreground/60 mb-6">
                       Formatos aceptados: MP4, MOV, AVI, WebM (máx. 2GB)
@@ -690,7 +690,7 @@ export default function MyCoursesDashboard({
                       className="bg-gradient-to-r from-[#FA3698] to-purple-600 hover:from-[#FA3698]/90 hover:to-purple-600/90 text-white border-0 shadow-lg"
                     >
                       <Upload className="h-4 w-4 mr-2" />
-                      Seleccionar Video
+                      Selectr Video
                     </Button>
                   </div>
                 </div>
@@ -734,7 +734,7 @@ export default function MyCoursesDashboard({
               onClick={() => setShowLessonDialog(false)}
               className="flex-1"
             >
-              Cancelar
+              Cancel
             </Button>
             <Button
               onClick={handleSaveLesson}
@@ -744,7 +744,7 @@ export default function MyCoursesDashboard({
               {isCreating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {editingLessonId ? "Actualizando..." : "Guardando..."}
+                  {editingLessonId ? "Updating..." : "Saving..."}
                 </>
               ) : (
                 <>

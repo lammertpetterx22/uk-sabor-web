@@ -174,11 +174,11 @@ export default function CourseFormCard({
     setFormData(prev => ({ ...prev, imagePreview: croppedDataUrl, imageUrl: "" }));
     setImageUploading(true);
     try {
-      // Generate unique filename: course-{id}-{timestamp}.jpg
-      const timestamp = Date.now();
+      // Generate unique filename: course-{id}-{timonthtamp}.jpg
+      const timonthtamp = Date.now();
       const uniqueFileName = editingCourse?.id
-        ? `course-${editingCourse.id}-${timestamp}.jpg`
-        : `course-new-${timestamp}.jpg`;
+        ? `course-${editingCourse.id}-${timonthtamp}.jpg`
+        : `course-new-${timonthtamp}.jpg`;
 
       const result = await uploadFileMutation.mutateAsync({
         fileBase64: croppedDataUrl,
@@ -244,7 +244,7 @@ export default function CourseFormCard({
             videoUrl: "",
           }));
 
-          toast.success(`¡Video subido exitosamente! (${fileSizeMB.toFixed(1)}MB)`);
+          toast.success(`¡Video subido successfully! (${fileSizeMB.toFixed(1)}MB)`);
         } catch (uploadErr: any) {
           toast.error(`Error al subir el video: ${uploadErr.message}`);
           setFormData(prev => ({ ...prev, videoFile: null, videoPreview: "", videoUrl: "", bunnyVideoId: undefined, bunnyLibraryId: undefined }));
@@ -315,10 +315,10 @@ export default function CourseFormCard({
           </div>
           <div>
             <CardTitle className="text-2xl gradient-text">
-              {editingCourse ? "Editar Curso" : t("admin.courses.createCourseButton")}
+              {editingCourse ? "Edit Course" : t("admin.courses.createCourseButton")}
             </CardTitle>
             <CardDescription className="text-foreground/60 mt-1">
-              {editingCourse ? "Actualiza la información de tu curso" : "Crea un nuevo curso online para tus estudiantes"}
+              {editingCourse ? "Actualiza la información de tu course" : "Crea un nuevo course online para tus estudibefore"}
             </CardDescription>
           </div>
         </div>
@@ -329,17 +329,17 @@ export default function CourseFormCard({
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-4">
             <Sparkles className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Información del Curso</h3>
+            <h3 className="font-semibold text-foreground">Information del Course</h3>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="course-title" className="text-foreground/80 flex items-center gap-2">
               <BookOpen className="h-3.5 w-3.5 text-accent" />
-              Título del Curso *
+              Title del Course *
             </Label>
             <Input
               id="course-title"
-              placeholder="Ej: Bachata Sensual para Principiantes"
+              placeholder="Ej: Bachata Sensual para Beginners"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               className="bg-background/50 border-border/50 focus:border-accent transition-colors"
@@ -348,11 +348,11 @@ export default function CourseFormCard({
 
           <div className="space-y-2">
             <Label htmlFor="course-description" className="text-foreground/80">
-              Descripción del Curso
+              Description del Course
             </Label>
             <Textarea
               id="course-description"
-              placeholder="Describe qué aprenderán los estudiantes, nivel requerido, duración estimada, etc."
+              placeholder="Describe qué aprenderán los estudibefore, nivel requerido, duración estimada, etc."
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={4}
@@ -364,7 +364,7 @@ export default function CourseFormCard({
             <div className="space-y-2">
               <Label htmlFor="course-style" className="text-foreground/80 flex items-center gap-2">
                 <Music className="h-3.5 w-3.5 text-accent" />
-                Estilo de Baile
+                Dance Style
               </Label>
               <Input
                 id="course-style"
@@ -378,17 +378,17 @@ export default function CourseFormCard({
             <div className="space-y-2">
               <Label htmlFor="course-level" className="text-foreground/80 flex items-center gap-2">
                 <Signal className="h-3.5 w-3.5 text-accent" />
-                Nivel
+                Level
               </Label>
               <Select value={formData.level} onValueChange={(val: any) => setFormData({ ...formData, level: val })}>
                 <SelectTrigger id="course-level" className="bg-background/50 border-border/50 focus:border-accent">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all-levels">Todos los niveles</SelectItem>
-                  <SelectItem value="beginner">Principiante</SelectItem>
-                  <SelectItem value="intermediate">Intermedio</SelectItem>
-                  <SelectItem value="advanced">Avanzado</SelectItem>
+                  <SelectItem value="all-levels">All levels</SelectItem>
+                  <SelectItem value="beginner">Beginner</SelectItem>
+                  <SelectItem value="intermediate">Intermediate</SelectItem>
+                  <SelectItem value="advanced">Advanced</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -398,7 +398,7 @@ export default function CourseFormCard({
             <div className="space-y-2">
               <Label htmlFor="course-price" className="text-foreground/80 flex items-center gap-2">
                 <DollarSign className="h-3.5 w-3.5 text-accent" />
-                Precio *
+                Price *
               </Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50">£</span>
@@ -418,7 +418,7 @@ export default function CourseFormCard({
             <div className="space-y-2">
               <Label htmlFor="course-duration" className="text-foreground/80 flex items-center gap-2">
                 <Clock className="h-3.5 w-3.5 text-accent" />
-                Duración
+                Duration
               </Label>
               <Input
                 id="course-duration"
@@ -432,7 +432,7 @@ export default function CourseFormCard({
             <div className="space-y-2">
               <Label htmlFor="course-lessons" className="text-foreground/80 flex items-center gap-2">
                 <BookOpen className="h-3.5 w-3.5 text-accent" />
-                # Lecciones
+                # Lessons
               </Label>
               <Input
                 id="course-lessons"
@@ -454,7 +454,7 @@ export default function CourseFormCard({
               </Label>
               <Select value={formData.instructorId} onValueChange={(val) => setFormData({ ...formData, instructorId: val })}>
                 <SelectTrigger id="course-instructor" className="bg-background/50 border-border/50 focus:border-accent">
-                  <SelectValue placeholder="Selecciona un instructor" />
+                  <SelectValue placeholder="Select an instructor" />
                 </SelectTrigger>
                 <SelectContent>
                   {instructors?.map((instructor) => (
@@ -492,7 +492,7 @@ export default function CourseFormCard({
 
           {!uploading && !formData.bunnyVideoId && !formData.videoPreview && (
             <div
-              className="relative border-2 border-dashed border-accent/30 rounded-xl p-8 bg-gradient-to-br from-accent/5 to-transparent hover:border-accent/50 transition-all duration-300 cursor-pointer group"
+              className="relative border-2 border-dashed border-accent/30 rounded-xl p-8 bg-gradient-to-br from-accent/5 to-transparent hover:border-accent/50 transition-all duration-300 courser-pointer group"
               onClick={() => videoInputRef.current?.click()}
             >
               <div className="text-center">
@@ -514,7 +514,7 @@ export default function CourseFormCard({
                   className="bg-gradient-to-r from-[#FA3698] to-purple-600 hover:from-[#FA3698]/90 hover:to-purple-600/90 text-white border-0 shadow-lg shadow-[#FA3698]/25"
                 >
                   <Upload className="h-4 w-4 mr-2" />
-                  Seleccionar Video
+                  Selectr Video
                 </Button>
               </div>
             </div>
@@ -564,7 +564,7 @@ export default function CourseFormCard({
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-4">
             <ImageIcon className="h-4 w-4 text-accent" />
-            <h3 className="font-semibold text-foreground">Imagen de Portada (opcional)</h3>
+            <h3 className="font-semibold text-foreground">Image de Portada (opcional)</h3>
           </div>
 
           {formData.imagePreview ? (
@@ -579,7 +579,7 @@ export default function CourseFormCard({
                   <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
                     <div className="text-center">
                       <Loader2 className="h-8 w-8 animate-spin text-white mx-auto mb-2" />
-                      <p className="text-white text-sm font-medium">Subiendo imagen...</p>
+                      <p className="text-white text-sm font-medium">Uploading image...</p>
                     </div>
                   </div>
                 )}
@@ -602,7 +602,7 @@ export default function CourseFormCard({
                   className="flex-1"
                 >
                   <ImageIcon className="h-4 w-4 mr-2" />
-                  Cambiar Imagen
+                  Change Image
                 </Button>
                 <Button
                   type="button"
@@ -612,13 +612,13 @@ export default function CourseFormCard({
                   className="text-red-600 hover:text-red-700 hover:border-red-300"
                 >
                   <X className="h-4 w-4 mr-2" />
-                  Eliminar
+                  Delete
                 </Button>
               </div>
             </div>
           ) : (
             <div
-              className="relative border-2 border-dashed border-accent/30 rounded-xl p-6 bg-gradient-to-br from-accent/5 to-transparent hover:border-accent/50 transition-all duration-300 cursor-pointer group"
+              className="relative border-2 border-dashed border-accent/30 rounded-xl p-6 bg-gradient-to-br from-accent/5 to-transparent hover:border-accent/50 transition-all duration-300 courser-pointer group"
               onClick={() => imageInputRef.current?.click()}
             >
               <div className="text-center">
@@ -626,7 +626,7 @@ export default function CourseFormCard({
                   <Upload className="h-7 w-7 text-accent" />
                 </div>
                 <p className="font-medium text-foreground mb-1 text-sm">
-                  Sube una imagen de portada
+                  Sube una image de portada
                 </p>
                 <p className="text-xs text-foreground/60 mb-3">
                   Máx. 10MB (JPG, PNG, etc.)
@@ -644,12 +644,12 @@ export default function CourseFormCard({
                   {imageUploading ? (
                     <>
                       <Loader2 className="h-3 w-3 mr-2 animate-spin" />
-                      Subiendo...
+                      Uploading...
                     </>
                   ) : (
                     <>
                       <Upload className="h-3 w-3 mr-2" />
-                      Seleccionar Imagen
+                      Select Image
                     </>
                   )}
                 </Button>
@@ -691,12 +691,12 @@ export default function CourseFormCard({
             {createMutation.isPending || updateMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                {editingCourse ? "Actualizando..." : "Creando Curso..."}
+                {editingCourse ? "Updating..." : "Creating Course..."}
               </>
             ) : (
               <>
                 <Sparkles className="mr-2 h-5 w-5" />
-                {editingCourse ? "Actualizar Curso" : "Crear Curso"}
+                {editingCourse ? "Actualizar Course" : "Crear Course"}
               </>
             )}
           </Button>
@@ -707,12 +707,12 @@ export default function CourseFormCard({
             className="h-12"
           >
             <X className="h-4 w-4 mr-2" />
-            Cancelar
+            Cancel
           </Button>
         </div>
 
         <p className="text-xs text-foreground/50 text-center">
-          * Campos requeridos
+          * Required fields
         </p>
       </CardContent>
     </Card>

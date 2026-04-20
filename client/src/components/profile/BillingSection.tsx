@@ -159,7 +159,7 @@ export default function BillingSection() {
                 <div className="text-zinc-500 text-xs">
                   {mySubscription?.plan.priceGBP === 0
                     ? "Gratis"
-                    : `£${mySubscription?.plan.priceGBP}/mes`}
+                    : `£${mySubscription?.plan.priceGBP}/month`}
                 </div>
               </div>
             </div>
@@ -235,25 +235,25 @@ export default function BillingSection() {
           </CardHeader>
           <CardContent className="space-y-5 pt-5">
             <UsageBar
-              label="Eventos este mes"
+              label="Events este month"
               used={usage?.eventsThisMonth ?? 0}
               limit={limits?.eventsPerMonth ?? null}
             />
             <UsageBar
-              label="Clases semanales"
+              label="Classs semanales"
               used={usage?.totalClasses ?? 0}
               limit={limits?.weeklyClasses ?? null}
             />
             {(limits?.courses !== undefined && limits.courses !== null && limits.courses > 0) || limits?.courses === null ? (
               <UsageBar
-                label="Cursos"
+                label="Courses"
                 used={usage?.totalCourses ?? 0}
                 limit={limits?.courses ?? null}
               />
             ) : (
               <div className="flex items-center gap-2 text-xs text-zinc-500 bg-zinc-800/30 rounded-lg p-3">
                 <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>La creación de cursos no está incluida en tu plan. Pásate a Academy para activarla.</span>
+                <span>La creación de courses no is incluida en tu plan. Pásate a Academy para activarla.</span>
               </div>
             )}
 
@@ -264,8 +264,8 @@ export default function BillingSection() {
                 <div>
                   <p className="text-orange-400 font-medium text-xs">Has alcanzado el límite de tu plan</p>
                   <p className="text-orange-500/60 text-[10px] mt-1">
-                    {canCreate?.event?.allowed === false && "No puedes crear más eventos este mes. "}
-                    {canCreate?.class?.allowed === false && "No puedes añadir más clases semanales. "}
+                    {canCreate?.event?.allowed === false && "No puedes crear more events este month. "}
+                    {canCreate?.class?.allowed === false && "No puedes añadir more classs semanales. "}
                     Mejora tu plan para continuar.
                   </p>
                   <Button
