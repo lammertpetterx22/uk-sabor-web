@@ -1,3 +1,4 @@
+import { Link } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -12,7 +13,10 @@ import {
   XCircle,
   Wallet,
   ShoppingCart,
-  UserCheck
+  UserCheck,
+  QrCode,
+  BarChart3,
+  ArrowRight,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -103,6 +107,49 @@ export default function DashboardOverview() {
       <div>
         <h2 className="text-3xl font-bold tracking-tight gradient-text">Dashboard Overview</h2>
         <p className="text-foreground/60 mt-2">Monitor your platform's key metrics and performance</p>
+      </div>
+
+      {/* Quick Tools — moved here from the sidebar so all creator shortcuts live under one roof */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Link
+          href="/earnings"
+          className="group rounded-xl border border-border/50 bg-gradient-to-br from-green-500/10 to-emerald-500/5 hover:border-green-500/50 p-5 transition-all flex items-center gap-4"
+        >
+          <div className="p-3 rounded-xl bg-green-500/15">
+            <Wallet className="h-6 w-6 text-green-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-foreground">Earnings</div>
+            <div className="text-xs text-foreground/60">Balance, sales & withdrawals</div>
+          </div>
+          <ArrowRight className="h-5 w-5 text-foreground/30 group-hover:text-foreground/70 transition-colors" />
+        </Link>
+        <Link
+          href="/attendance"
+          className="group rounded-xl border border-border/50 bg-gradient-to-br from-blue-500/10 to-cyan-500/5 hover:border-blue-500/50 p-5 transition-all flex items-center gap-4"
+        >
+          <div className="p-3 rounded-xl bg-blue-500/15">
+            <QrCode className="h-6 w-6 text-blue-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-foreground">Attendance</div>
+            <div className="text-xs text-foreground/60">Scan QR codes at the door</div>
+          </div>
+          <ArrowRight className="h-5 w-5 text-foreground/30 group-hover:text-foreground/70 transition-colors" />
+        </Link>
+        <Link
+          href="/pricing"
+          className="group rounded-xl border border-border/50 bg-gradient-to-br from-amber-500/10 to-orange-500/5 hover:border-amber-500/50 p-5 transition-all flex items-center gap-4"
+        >
+          <div className="p-3 rounded-xl bg-amber-500/15">
+            <BarChart3 className="h-6 w-6 text-amber-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-foreground">Plans</div>
+            <div className="text-xs text-foreground/60">Upgrade your subscription</div>
+          </div>
+          <ArrowRight className="h-5 w-5 text-foreground/30 group-hover:text-foreground/70 transition-colors" />
+        </Link>
       </div>
 
       {/* Main Metrics Grid */}

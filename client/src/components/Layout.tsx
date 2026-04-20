@@ -248,13 +248,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     </div>
                 )}
 
-                {/* Mis tickets (user area) */}
+                {/* My account */}
                 {isAuthenticated && (
                     <>
                         <p className="px-4 pt-3 pb-2 text-[10px] uppercase tracking-widest text-white/40 font-semibold">
-                            Mi cuenta
+                            My Account
                         </p>
-                        <NavLink href="/dashboard" icon={Ticket} label="Mis tickets" onClick={onClose} />
+                        <NavLink href="/dashboard" icon={Ticket} label="My Tickets" onClick={onClose} />
                         {!isCreator && !isRrp && (
                             <NavLink
                                 href="/become-instructor"
@@ -266,22 +266,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     </>
                 )}
 
-                {/* Creator / Admin primary CTA */}
+                {/* Creator / Admin primary CTA (Earnings/Attendance/Plans live INSIDE this panel) */}
                 {isAuthenticated && isCreator && (
-                    <div className="mt-4 flex flex-col gap-2 px-1">
+                    <div className="mt-4 px-1">
                         <RoleCTA
                             href="/admin"
                             icon={LayoutDashboard}
-                            label={isAdmin ? "Admin Panel" : "Mi Estudio"}
-                            description={isAdmin ? "Gestión completa de la plataforma" : "Gestiona tus eventos, clases y ganancias"}
+                            label={isAdmin ? "Admin Panel" : "My Studio"}
+                            description={isAdmin ? "Full platform management" : "Manage your events, classes, earnings & attendance"}
                             onClick={onClose}
                             tone="pink"
                         />
-                        <div className="grid grid-cols-2 gap-2">
-                            <NavLink href="/earnings" icon={Wallet} label="Earnings" onClick={onClose} />
-                            <NavLink href="/attendance" icon={QrCode} label="Attendance" onClick={onClose} />
-                        </div>
-                        <NavLink href="/pricing" icon={BarChart3} label="Plans" onClick={onClose} />
                     </div>
                 )}
 
@@ -292,7 +287,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             href="/rrp-dashboard"
                             icon={Radio}
                             label="RRP Hub"
-                            description="Tu código, ventas y comisiones"
+                            description="Your code, sales and commissions"
                             onClick={onClose}
                             tone="orange"
                         />
@@ -342,7 +337,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-white/5 transition-colors text-white/70 hover:text-white text-sm"
                     >
                         <Globe size={17} />
-                        <span className="flex-1 text-left">Idioma / Language</span>
+                        <span className="flex-1 text-left">Language</span>
                         <span className="text-xs text-white/60 flex items-center gap-1.5">
                             <span className="text-base leading-none">{currentLang.flag}</span>
                             <ChevronDown size={14} className={`transition-transform ${langMenuOpen ? "rotate-180" : ""}`} />

@@ -25,7 +25,7 @@ export function LanguageSwitcher() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuLabel>Idioma / Language</DropdownMenuLabel>
+        <DropdownMenuLabel>Language</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {SUPPORTED_LANGUAGES.map(lang => {
           const isCurrent = lang.code === i18n.language;

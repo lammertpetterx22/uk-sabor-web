@@ -66,7 +66,7 @@ function roleChips(roles: string[]): Array<{ label: string; className: string }>
   if (roles.includes("instructor")) chips.push({ label: "Instructor", className: "bg-purple-500/15 text-purple-400 border-purple-500/30" });
   if (roles.includes("promoter")) chips.push({ label: "Promoter", className: "bg-blue-500/15 text-blue-400 border-blue-500/30" });
   if (roles.includes("rrp")) chips.push({ label: "RRP", className: "bg-orange-500/15 text-orange-400 border-orange-500/30" });
-  if (chips.length === 0) chips.push({ label: "Usuario", className: "bg-foreground/10 text-foreground/60 border-foreground/20" });
+  if (chips.length === 0) chips.push({ label: "User", className: "bg-foreground/10 text-foreground/60 border-foreground/20" });
   return chips;
 }
 
@@ -125,7 +125,7 @@ export default function Header() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="text-sm font-medium text-foreground/70 hover:text-accent transition-colors inline-flex items-center gap-1">
-                {t("nav.more") || "Más"} <ChevronDown className="h-3.5 w-3.5" />
+                {t("nav.more") || "More"} <ChevronDown className="h-3.5 w-3.5" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
@@ -152,7 +152,7 @@ export default function Header() {
                   className="gap-1.5 border-accent/50 text-accent hover:bg-accent/10"
                 >
                   <LayoutDashboard className="h-4 w-4" />
-                  {isAdmin ? "Admin" : "Mi Estudio"}
+                  {isAdmin ? "Admin" : "My Studio"}
                 </Button>
               )}
               {isRrp && (
@@ -171,13 +171,13 @@ export default function Header() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="gap-1.5 px-2">
                     <UserCircle className="h-5 w-5" />
-                    <span className="max-w-[100px] truncate">{(user?.name || user?.email || "Perfil").split(" ")[0]}</span>
+                    <span className="max-w-[100px] truncate">{(user?.name || user?.email || "Profile").split(" ")[0]}</span>
                     <ChevronDown className="h-3.5 w-3.5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <div className="px-2 py-2 border-b border-border/40">
-                    <div className="font-medium text-sm truncate">{user?.name || "Perfil"}</div>
+                    <div className="font-medium text-sm truncate">{user?.name || "Profile"}</div>
                     <div className="text-xs text-foreground/60 truncate">{user?.email}</div>
                     <div className="flex gap-1 flex-wrap mt-2">
                       {roleChips(roles).map(c => (
@@ -186,10 +186,10 @@ export default function Header() {
                     </div>
                   </div>
                   <DropdownMenuItem onClick={() => setLocation("/dashboard")}>
-                    <Ticket className="h-4 w-4 mr-2" /> Mis tickets
+                    <Ticket className="h-4 w-4 mr-2" /> My Tickets
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setLocation("/profile")}>
-                    <UserCircle className="h-4 w-4 mr-2" /> Configuración
+                    <UserCircle className="h-4 w-4 mr-2" /> Settings
                   </DropdownMenuItem>
                   {isAdmin && (
                     <>
@@ -199,7 +199,7 @@ export default function Header() {
                     </>
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel className="text-xs text-foreground/50">Idioma / Language</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-xs text-foreground/50">Language</DropdownMenuLabel>
                   {SUPPORTED_LANGUAGES.map(l => (
                     <DropdownMenuItem
                       key={l.code}
@@ -226,7 +226,7 @@ export default function Header() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Idioma / Language</DropdownMenuLabel>
+                  <DropdownMenuLabel>Language</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {SUPPORTED_LANGUAGES.map(l => (
                     <DropdownMenuItem
@@ -301,25 +301,25 @@ export default function Header() {
                 onClick={() => setExploreOpen(v => !v)}
                 className="w-full flex items-center justify-between px-4 py-3.5 bg-card/50 hover:bg-card transition-colors"
               >
-                <span className="text-xs font-bold uppercase tracking-wider text-foreground/60">Explorar</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-foreground/60">Explore</span>
                 <ChevronDown className={`h-4 w-4 text-foreground/60 transition-transform ${exploreOpen ? "rotate-180" : ""}`} />
               </button>
               {exploreOpen && (
                 <div className="divide-y divide-border/30 bg-card/20">
-                  <MobileMenuItem icon={Calendar} label={t("nav.events") || "Eventos"} onClick={() => go("/events")} />
-                  <MobileMenuItem icon={GraduationCap} label={t("nav.classes") || "Clases"} onClick={() => go("/classes")} />
-                  <MobileMenuItem icon={BookOpen} label={t("nav.courses") || "Cursos"} onClick={() => go("/courses")} />
-                  <MobileMenuItem icon={Users} label={t("nav.instructors") || "Profesores"} onClick={() => go("/instructors")} />
+                  <MobileMenuItem icon={Calendar} label={t("nav.events") || "Events"} onClick={() => go("/events")} />
+                  <MobileMenuItem icon={GraduationCap} label={t("nav.classes") || "Classes"} onClick={() => go("/classes")} />
+                  <MobileMenuItem icon={BookOpen} label={t("nav.courses") || "Courses"} onClick={() => go("/courses")} />
+                  <MobileMenuItem icon={Users} label={t("nav.instructors") || "Instructors"} onClick={() => go("/instructors")} />
                   <MobileMenuItem icon={Megaphone} label={t("nav.promoters") || "Promoters"} onClick={() => go("/promoters")} />
                 </div>
               )}
             </div>
 
-            {/* Mis tickets (only if logged in) */}
+            {/* My Tickets (only if logged in) */}
             {isAuthenticated && (
               <MobileMenuItem
                 icon={Ticket}
-                label="Mis tickets"
+                label="My Tickets"
                 onClick={() => go("/dashboard")}
                 variant="framed"
               />
@@ -329,11 +329,11 @@ export default function Header() {
             {isAuthenticated && hasAnyManagement && (
               <MobileMenuItem
                 icon={LayoutDashboard}
-                label={isAdmin ? "Admin Panel" : "Mi Estudio"}
+                label={isAdmin ? "Admin Panel" : "My Studio"}
                 onClick={() => go("/admin")}
                 trailing={<ArrowRight className="h-4 w-4" />}
                 variant="highlighted"
-                description={isAdmin ? "Gestión completa de la plataforma" : "Gestiona tus eventos, clases y ganancias"}
+                description={isAdmin ? "Full platform management" : "Manage your events, classes, earnings & attendance"}
               />
             )}
             {isAuthenticated && isRrp && (
@@ -343,7 +343,7 @@ export default function Header() {
                 onClick={() => go("/rrp-dashboard")}
                 trailing={<ArrowRight className="h-4 w-4" />}
                 variant="rrp"
-                description="Tu código, ventas y comisiones"
+                description="Your code, sales and commissions"
               />
             )}
             {isAuthenticated && isAdmin && (
@@ -356,13 +356,13 @@ export default function Header() {
             {/* Settings + language + logout */}
             {isAuthenticated && (
               <div className="rounded-xl border border-border/50 divide-y divide-border/30 bg-card/20 overflow-hidden">
-                <MobileMenuItem icon={UserCircle} label="Configuración" onClick={() => go("/profile")} />
+                <MobileMenuItem icon={UserCircle} label="Settings" onClick={() => go("/profile")} />
                 <button
                   onClick={() => setLangMenuOpen(v => !v)}
                   className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-card transition-colors text-left"
                 >
                   <Globe className="h-5 w-5 text-foreground/60 shrink-0" />
-                  <span className="flex-1 font-medium text-sm">Idioma / Language</span>
+                  <span className="flex-1 font-medium text-sm">Language</span>
                   <span className="text-xs text-foreground/60 flex items-center gap-1">
                     {currentLang.flag} {currentLang.name}
                     <ChevronDown className={`h-4 w-4 transition-transform ${langMenuOpen ? "rotate-180" : ""}`} />
@@ -390,7 +390,7 @@ export default function Header() {
                   className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-red-500/10 transition-colors text-left text-red-400"
                 >
                   <LogOut className="h-5 w-5 shrink-0" />
-                  <span className="flex-1 font-medium text-sm">Cerrar sesión</span>
+                  <span className="flex-1 font-medium text-sm">Log out</span>
                 </button>
               </div>
             )}
@@ -403,7 +403,7 @@ export default function Header() {
                   className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-card transition-colors text-left"
                 >
                   <Globe className="h-5 w-5 text-foreground/60 shrink-0" />
-                  <span className="flex-1 font-medium text-sm">Idioma / Language</span>
+                  <span className="flex-1 font-medium text-sm">Language</span>
                   <span className="text-xs text-foreground/60 flex items-center gap-1">
                     {currentLang.flag} {currentLang.name}
                     <ChevronDown className={`h-4 w-4 transition-transform ${langMenuOpen ? "rotate-180" : ""}`} />
