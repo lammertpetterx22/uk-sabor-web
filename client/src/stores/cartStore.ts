@@ -13,6 +13,10 @@ export interface CartItem {
   date?: string;
   location?: string;
   quantity?: number;
+  // For events with multiple ticket tiers. tierId is the stable identity;
+  // tierName is just for display.
+  tierId?: number;
+  tierName?: string;
 }
 
 export interface AppliedDiscount {
@@ -47,15 +51,17 @@ export const useCartStore = create<CartState>()(
 
       addItem: (item) => {
         const { items } = get();
-        const existingItem = items.find(
-          (i) => i.type === item.type && i.id === item.id
-        );
+        // Tiered event tickets are distinct line items per tier — so the
+        // identity key is (type, id, tierId). Same-tier adds stack qty;
+        // different-tier adds create a new row.
+        const sameLine = (a: CartItem, b: CartItem) =>
+          a.type === b.type && a.id === b.id && (a.tierId ?? null) === (b.tierId ?? null);
+        const existingItem = items.find((i) => sameLine(i, item));
 
         if (existingItem) {
-          // Increment quantity if it already exists
           set({
-            items: items.map((i) => 
-              i.type === item.type && i.id === item.id 
+            items: items.map((i) =>
+              sameLine(i, item)
                 ? { ...i, quantity: (i.quantity || 1) + (item.quantity || 1) }
                 : i
             )

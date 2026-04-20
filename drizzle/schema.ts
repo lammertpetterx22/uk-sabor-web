@@ -188,11 +188,31 @@ export const orders = pgTable("orders", {
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
+// Event Ticket Tiers — optional multi-tier pricing for an event
+// (e.g. Early Bird, General Admission, VIP). If an event has zero rows here,
+// it falls back to the single flat events.ticketPrice/maxTickets.
+export const eventTicketTiers = pgTable("eventTicketTiers", {
+  id: serial("id").primaryKey(),
+  eventId: integer("eventId").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  maxQuantity: integer("maxQuantity"),         // null = unlimited
+  soldCount: integer("soldCount").default(0).notNull(),
+  position: integer("position").default(0).notNull(),
+  active: boolean("active").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+}, (table) => ({
+  eventIdIdx: index("event_ticket_tiers_event_idx").on(table.eventId),
+}));
+
 // Event Tickets table (user purchases for events)
 export const eventTickets = pgTable("eventTickets", {
   id: serial("id").primaryKey(),
   userId: integer("userId").notNull(),
   eventId: integer("eventId").notNull(),
+  tierId: integer("tierId"), // FK to eventTicketTiers.id — null for flat-price (legacy) tickets
   orderId: integer("orderId"),
   quantity: integer("quantity").default(1),
   instructorId: integer("instructorId"),
@@ -216,7 +236,11 @@ export const eventTickets = pgTable("eventTickets", {
   eventIdIdx: index("event_tickets_event_id_idx").on(table.eventId),
   statusIdx: index("event_tickets_status_idx").on(table.status),
   paymentStatusIdx: index("event_tickets_payment_status_idx").on(table.paymentStatus),
+  tierIdIdx: index("event_tickets_tier_id_idx").on(table.tierId),
 }));
+
+export type EventTicketTier = typeof eventTicketTiers.$inferSelect;
+export type InsertEventTicketTier = typeof eventTicketTiers.$inferInsert;
 
 // Course Purchases table
 export const coursePurchases = pgTable("coursePurchases", {

@@ -126,7 +126,7 @@ async function handleMultiItemCartCheckout(
     return;
   }
 
-  let cartItems: Array<{type: string, id: number, title: string, price: number, quantity?: number}> = [];
+  let cartItems: Array<{type: string, id: number, title: string, price: number, quantity?: number, tier_id?: number}> = [];
 
   try {
     cartItems = JSON.parse(cartItemsJson);
@@ -284,11 +284,13 @@ async function handleMultiItemCartCheckout(
       let accessCode: string | undefined;
 
       switch (itemType) {
-        case "event":
+        case "event": {
           ticketCode = generateTicketCode();
+          const tierId = item.tier_id ?? null;
           await db.insert(eventTickets).values({
             userId,
             eventId: itemId,
+            tierId,
             orderId,
             quantity,
             instructorId: creatorUserId,
@@ -298,7 +300,7 @@ async function handleMultiItemCartCheckout(
             ticketCode,
             status: "valid",
           });
-          console.log(`[Webhook] ✅ Event ticket created for event #${itemId}`);
+          console.log(`[Webhook] ✅ Event ticket created for event #${itemId}${tierId ? ` (tier ${tierId})` : ""}`);
 
           // Update ticketsSold count in events table
           await db.update(events)
@@ -307,7 +309,17 @@ async function handleMultiItemCartCheckout(
             })
             .where(eq(events.id, itemId));
           console.log(`[Webhook] ✅ Updated ticketsSold for event #${itemId} (+${quantity})`);
+
+          // Increment per-tier soldCount when this purchase came from a tier
+          if (tierId) {
+            const { eventTicketTiers } = await import("../../drizzle/schema");
+            await db.update(eventTicketTiers)
+              .set({ soldCount: sql`${eventTicketTiers.soldCount} + ${quantity}` })
+              .where(eq(eventTicketTiers.id, tierId));
+            console.log(`[Webhook] ✅ Incremented tier #${tierId} soldCount (+${quantity})`);
+          }
           break;
+        }
 
         case "course":
           await db.insert(coursePurchases).values({
@@ -379,6 +391,13 @@ async function handleMultiItemCartCheckout(
               const [eventRecord] = await db.select().from(events).where(eq(events.id, itemId)).limit(1);
               if (eventRecord) {
                 itemName = eventRecord.title;
+                // Append ticket tier to the email title so buyers see "Event Title — VIP"
+                if (item.tier_id) {
+                  const { eventTicketTiers } = await import("../../drizzle/schema");
+                  const [tier] = await db.select({ name: eventTicketTiers.name })
+                    .from(eventTicketTiers).where(eq(eventTicketTiers.id, item.tier_id)).limit(1);
+                  if (tier?.name) itemName = `${eventRecord.title} — ${tier.name}`;
+                }
                 const d = new Date(eventRecord.eventDate);
                 eventDate = d.toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
                 eventTime = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });

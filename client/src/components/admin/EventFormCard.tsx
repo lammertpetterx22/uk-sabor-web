@@ -26,6 +26,9 @@ import {
   Check,
   Tag,
   Megaphone,
+  Ticket,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -35,6 +38,7 @@ import { useTranslations } from "@/hooks/useTranslations";
 import DiscountCodesSection from "./DiscountCodesSection";
 import GuestListSection from "./GuestListSection";
 import RrpAssignmentSection from "./RrpAssignmentSection";
+import TicketTiersSection from "./TicketTiersSection";
 
 interface EventFormCardProps {
   editingEvent?: any;
@@ -127,9 +131,10 @@ export default function EventFormCard({
     ];
     if (editingEvent?.id) {
       base.push(
-        { key: "discounts", label: "Discounts",  icon: Tag,       color: "pink" },
-        { key: "guests",    label: "Guest List", icon: Users,     color: "purple" },
-        { key: "rrp",       label: "RRPs",       icon: Megaphone, color: "orange" },
+        { key: "tiers",     label: "Ticket Types", icon: Ticket,    color: "cyan" },
+        { key: "discounts", label: "Discounts",    icon: Tag,       color: "pink" },
+        { key: "guests",    label: "Guest List",   icon: Users,     color: "purple" },
+        { key: "rrp",       label: "RRPs",         icon: Megaphone, color: "orange" },
       );
     }
     return base;
@@ -525,22 +530,29 @@ export default function EventFormCard({
       </div>
       )}
 
-      {/* ───────── Discount Codes (step 4, only when editing) ───────── */}
-      {step === 4 && editingEvent?.id && (
+      {/* ───────── Ticket Types (step 4, only when editing) ───────── */}
+      {steps[step]?.key === "tiers" && editingEvent?.id && (
+      <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/[0.06] to-transparent p-5 md:p-6">
+        <TicketTiersSection eventId={editingEvent.id} flatTicketPrice={formData.ticketPrice} />
+      </div>
+      )}
+
+      {/* ───────── Discount Codes (only when editing) ───────── */}
+      {steps[step]?.key === "discounts" && editingEvent?.id && (
       <div className="rounded-2xl border border-pink-500/20 bg-gradient-to-br from-pink-500/[0.06] to-transparent p-5 md:p-6">
         <DiscountCodesSection itemType="event" itemId={editingEvent.id} />
       </div>
       )}
 
-      {/* ───────── Guest List (step 5, only when editing) ───────── */}
-      {step === 5 && editingEvent?.id && (
+      {/* ───────── Guest List (only when editing) ───────── */}
+      {steps[step]?.key === "guests" && editingEvent?.id && (
       <div className="rounded-2xl border border-purple-500/20 bg-gradient-to-br from-purple-500/[0.06] to-transparent p-5 md:p-6">
         <GuestListSection eventId={editingEvent.id} />
       </div>
       )}
 
-      {/* ───────── RRP (step 6, only when editing) ───────── */}
-      {step === 6 && editingEvent?.id && (
+      {/* ───────── RRP (only when editing) ───────── */}
+      {steps[step]?.key === "rrp" && editingEvent?.id && (
       <div className="rounded-2xl border border-orange-500/20 bg-gradient-to-br from-orange-500/[0.06] to-transparent p-5 md:p-6">
         <RrpAssignmentSection eventId={editingEvent.id} />
       </div>

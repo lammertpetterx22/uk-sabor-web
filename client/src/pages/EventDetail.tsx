@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRoute, Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -22,6 +22,16 @@ export default function EventDetail() {
 
   const { data: event, isLoading } = trpc.events.getById.useQuery(eventId, { enabled: !!eventId });
   const hasAccessQuery = trpc.events.hasAccess.useQuery(eventId, { enabled: !!eventId && isAuthenticated });
+  const { data: tiers } = trpc.events.listTiers.useQuery(eventId, { enabled: !!eventId });
+
+  const [selectedTierId, setSelectedTierId] = useState<number | null>(null);
+
+  // Default-select the first (lowest position) tier whenever tiers load
+  useEffect(() => {
+    if (tiers && tiers.length > 0 && selectedTierId === null) {
+      setSelectedTierId(tiers[0].id);
+    }
+  }, [tiers, selectedTierId]);
 
   const checkoutMutation = trpc.payments.createEventCheckout.useMutation({
     onSuccess: (data) => {
@@ -104,10 +114,25 @@ export default function EventDetail() {
   }
 
   const eventDate = new Date(event.eventDate);
-  const price = parseFloat(String(event.ticketPrice));
-  const isSoldOut = event.maxTickets ? (event.ticketsSold || 0) >= event.maxTickets : false;
+  const hasTiers = (tiers?.length ?? 0) > 0;
+  const selectedTier = hasTiers ? tiers!.find((t: any) => t.id === selectedTierId) : null;
+
+  // When an event uses tiers, pricing and remaining capacity follow the
+  // selected tier. Otherwise we fall back to the flat event fields.
+  const price = selectedTier
+    ? parseFloat(String(selectedTier.price))
+    : parseFloat(String(event.ticketPrice));
+
+  const tierSoldOut = selectedTier?.maxQuantity != null
+    ? (selectedTier.soldCount ?? 0) >= selectedTier.maxQuantity
+    : false;
+  const flatSoldOut = event.maxTickets ? (event.ticketsSold || 0) >= event.maxTickets : false;
+  const isSoldOut = hasTiers ? tierSoldOut : flatSoldOut;
+
   const hasTicket = hasAccessQuery.data === true;
-  const spotsLeft = event.maxTickets ? event.maxTickets - (event.ticketsSold || 0) : null;
+  const spotsLeft = hasTiers
+    ? (selectedTier?.maxQuantity != null ? selectedTier.maxQuantity - (selectedTier.soldCount ?? 0) : null)
+    : (event.maxTickets ? event.maxTickets - (event.ticketsSold || 0) : null);
 
   return (
     <div className="min-h-screen bg-background">
@@ -174,7 +199,9 @@ export default function EventDetail() {
               <Card className="sticky top-24 border-accent/20">
                 <CardContent className="pt-6 space-y-6">
                   <div className="text-center">
-                    <p className="text-sm text-foreground/60 mb-1"><Trans>Price per ticket</Trans></p>
+                    <p className="text-sm text-foreground/60 mb-1">
+                      {selectedTier?.name || tr("Price per ticket")}
+                    </p>
                     <p className="text-4xl font-bold text-accent">£{price.toFixed(2)}</p>
                   </div>
 
@@ -197,6 +224,54 @@ export default function EventDetail() {
                     </div>
                   ) : (
                     <div className="space-y-4">
+                      {/* Ticket Type selector (only shown when the event has 2+ tiers) */}
+                      {hasTiers && tiers!.length > 1 && (
+                        <div>
+                          <p className="text-sm text-foreground/60 mb-2"><Trans>Ticket type</Trans></p>
+                          <div className="space-y-2">
+                            {tiers!.map((t: any) => {
+                              const tierPrice = parseFloat(String(t.price));
+                              const tierRemaining = t.maxQuantity != null ? t.maxQuantity - (t.soldCount ?? 0) : null;
+                              const tierSoldOutRow = tierRemaining != null && tierRemaining <= 0;
+                              const active = selectedTierId === t.id;
+                              return (
+                                <button
+                                  key={t.id}
+                                  type="button"
+                                  disabled={tierSoldOutRow}
+                                  onClick={() => setSelectedTierId(t.id)}
+                                  className={`w-full text-left p-3 rounded-xl border-2 transition-all ${
+                                    active
+                                      ? "border-accent bg-accent/10"
+                                      : "border-border/40 bg-background/40 hover:border-accent/40"
+                                  } ${tierSoldOutRow ? "opacity-50 cursor-not-allowed" : ""}`}
+                                >
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                      <p className={`font-semibold ${active ? "text-accent" : "text-foreground"}`}>
+                                        {t.name}
+                                      </p>
+                                      {t.description && (
+                                        <p className="text-xs text-foreground/60 mt-0.5 line-clamp-2">{t.description}</p>
+                                      )}
+                                      {tierRemaining != null && tierRemaining > 0 && tierRemaining <= 10 && (
+                                        <p className="text-xs text-orange-400 mt-1">Only {tierRemaining} left</p>
+                                      )}
+                                      {tierSoldOutRow && (
+                                        <p className="text-xs text-destructive mt-1">Sold out</p>
+                                      )}
+                                    </div>
+                                    <div className="text-right shrink-0">
+                                      <p className="font-bold text-accent">£{tierPrice.toFixed(2)}</p>
+                                    </div>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Quantity selector */}
                       <div>
                         <p className="text-sm text-foreground/60 mb-2"><Trans>Quantity</Trans></p>
@@ -283,15 +358,16 @@ export default function EventDetail() {
                               item={{
                                 type: "event",
                                 id: event.id,
-                                title: event.title,
+                                title: selectedTier ? `${event.title} — ${selectedTier.name}` : event.title,
                                 price: price,
                                 imageUrl: event.imageUrl || undefined,
                                 date: eventDate.toISOString(),
                                 location: event.venue,
                                 quantity: quantity,
+                                ...(selectedTier ? { tierId: selectedTier.id, tierName: selectedTier.name } : {}),
                               }}
-                              maxStock={event.maxTickets || undefined}
-                              currentlySold={event.ticketsSold || 0}
+                              maxStock={selectedTier?.maxQuantity ?? event.maxTickets ?? undefined}
+                              currentlySold={selectedTier?.soldCount ?? event.ticketsSold ?? 0}
                               className="w-full py-6 text-lg"
                               data-cart-button="event"
                             />

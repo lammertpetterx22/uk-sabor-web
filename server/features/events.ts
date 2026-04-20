@@ -1,7 +1,7 @@
 import z from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { events, eventTickets, usageTracking } from "../../drizzle/schema";
+import { events, eventTickets, eventTicketTiers, usageTracking } from "../../drizzle/schema";
 import { getAllRoles } from "../../drizzle/schema";
 import { eq, desc, and, gte } from "drizzle-orm";
 import { canCreateEvent } from "../stripe/plans";
@@ -574,5 +574,91 @@ export const eventsRouter = router({
         .limit(1);
 
       return result || null;
+    }),
+
+  // ─── Multi-tier tickets ────────────────────────────────────────────────
+  /** Public: list ticket tiers for an event (ordered by position). */
+  listTiers: publicProcedure
+    .input(z.number())
+    .query(async ({ input: eventId }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      return db
+        .select()
+        .from(eventTicketTiers)
+        .where(and(eq(eventTicketTiers.eventId, eventId), eq(eventTicketTiers.active, true)))
+        .orderBy(eventTicketTiers.position);
+    }),
+
+  /**
+   * Replace the tier list for an event. Creators send the full desired state:
+   * new rows get inserted, edited rows get updated (preserving soldCount),
+   * removed rows get soft-deactivated so existing ticket.tierId references stay intact.
+   */
+  saveTiers: protectedProcedure
+    .input(z.object({
+      eventId: z.number(),
+      tiers: z.array(z.object({
+        id: z.number().optional(),
+        name: z.string().min(1),
+        description: z.string().optional().nullable(),
+        price: z.string().min(1),
+        maxQuantity: z.number().int().positive().optional().nullable(),
+        position: z.number().int().min(0),
+      })).max(20),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!isCreatorRole(ctx.user)) throw new Error("Unauthorized");
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Ownership check
+      const [ev] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
+      if (!ev) throw new Error("Event not found");
+      const userRoles = getAllRoles(ctx.user as any);
+      if (!userRoles.includes("admin") && ev.creatorId !== ctx.user.id) {
+        throw new Error("You do not have permission to edit this event");
+      }
+
+      const existing = await db.select().from(eventTicketTiers).where(eq(eventTicketTiers.eventId, input.eventId));
+      const existingById = new Map(existing.map(t => [t.id, t]));
+      const keptIds = new Set<number>();
+
+      for (const tier of input.tiers) {
+        if (tier.id && existingById.has(tier.id)) {
+          keptIds.add(tier.id);
+          await db.update(eventTicketTiers)
+            .set({
+              name: tier.name,
+              description: tier.description ?? null,
+              price: tier.price as any,
+              maxQuantity: tier.maxQuantity ?? null,
+              position: tier.position,
+              active: true,
+              updatedAt: new Date(),
+            })
+            .where(eq(eventTicketTiers.id, tier.id));
+        } else {
+          await db.insert(eventTicketTiers).values({
+            eventId: input.eventId,
+            name: tier.name,
+            description: tier.description ?? null,
+            price: tier.price as any,
+            maxQuantity: tier.maxQuantity ?? null,
+            position: tier.position,
+          });
+        }
+      }
+
+      // Soft-deactivate tiers that were removed — keeps historical ticket.tierId valid
+      for (const t of existing) {
+        if (!keptIds.has(t.id)) {
+          await db.update(eventTicketTiers)
+            .set({ active: false, updatedAt: new Date() })
+            .where(eq(eventTicketTiers.id, t.id));
+        }
+      }
+
+      return { ok: true };
     }),
 });

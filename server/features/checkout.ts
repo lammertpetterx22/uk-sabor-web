@@ -4,7 +4,7 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { events, courses, classes, discountCodes } from "../../drizzle/schema";
+import { events, courses, classes, discountCodes, eventTicketTiers } from "../../drizzle/schema";
 import { eq, sql, and } from "drizzle-orm";
 import Stripe from "stripe";
 
@@ -24,6 +24,8 @@ const cartItemSchema = z.object({
   date: z.string().optional(),
   location: z.string().optional(),
   quantity: z.number().int().min(1).optional(),
+  // For event items with multi-tier pricing: which tier the buyer picked
+  tierId: z.number().optional(),
 });
 
 export const checkoutRouter = router({
@@ -64,7 +66,32 @@ export const checkoutRouter = router({
             if (!event) throw new Error(`Event ${item.id} not found`);
             if (event.status !== "published") throw new Error(`Event "${event.title}" is not available`);
 
-            // Check ticket availability
+            const qty = item.quantity || 1;
+
+            // Multi-tier path: if an item specifies a tierId, validate it and
+            // use the tier's price + maxQuantity instead of the flat event fields.
+            if (item.tierId) {
+              const [tier] = await db.select()
+                .from(eventTicketTiers)
+                .where(and(
+                  eq(eventTicketTiers.id, item.tierId),
+                  eq(eventTicketTiers.eventId, event.id),
+                  eq(eventTicketTiers.active, true),
+                )).limit(1);
+              if (!tier) throw new Error(`Ticket type for "${event.title}" is no longer available`);
+              if (tier.maxQuantity != null && tier.soldCount + qty > tier.maxQuantity) {
+                throw new Error(`"${tier.name}" tickets for "${event.title}" are sold out`);
+              }
+              return {
+                ...item,
+                price: parseFloat(String(tier.price)),
+                title: `${event.title} — ${tier.name}`,
+                imageUrl: event.imageUrl || undefined,
+                tierId: tier.id,
+              };
+            }
+
+            // Flat (single-price) path — original behavior
             if (event.maxTickets && event.ticketsSold !== null && event.ticketsSold >= event.maxTickets) {
               throw new Error(`Tickets for "${event.title}" are sold out`);
             }
@@ -237,6 +264,7 @@ export const checkoutRouter = router({
                 price: adjustedPricePence / 100,
                 quantity: item.quantity || 1,
                 stripe_fee_pence: stripeFeePence,
+                ...(item.tierId ? { tier_id: item.tierId } : {}),
               };
             })
           ),
