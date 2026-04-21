@@ -748,6 +748,10 @@ export const discountCodes = pgTable("discountCodes", {
   eventId: integer("eventId"),
   classId: integer("classId"),
   courseId: integer("courseId"),
+  // Optional tier scoping: when set, the discount only applies to items
+  // purchased on the matching tier. Used together with eventId or classId.
+  eventTierId: integer("eventTierId"),
+  classTierId: integer("classTierId"),
   maxUses: integer("maxUses"),
   usesCount: integer("usesCount").default(0).notNull(),
   active: boolean("active").default(true).notNull(),

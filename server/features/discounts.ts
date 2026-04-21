@@ -15,6 +15,7 @@ export const discountRouter = router({
         id: z.number(),
         price: z.number(),
         quantity: z.number().optional(),
+        tierId: z.number().optional(),
       })),
     }))
     .mutation(async ({ input }) => {
@@ -33,28 +34,45 @@ export const discountRouter = router({
       if (dc.maxUses && dc.usesCount >= dc.maxUses)
         return { valid: false as const, error: "This code has reached its usage limit" };
 
-      // Check item scoping
-      if (dc.eventId) {
-        if (!input.items.some(i => i.type === "event" && i.id === dc.eventId))
-          return { valid: false as const, error: "This code is for a specific event only" };
-      }
-      if (dc.classId) {
-        if (!input.items.some(i => i.type === "class" && i.id === dc.classId))
-          return { valid: false as const, error: "This code is for a specific class only" };
-      }
-      if (dc.courseId) {
-        if (!input.items.some(i => i.type === "course" && i.id === dc.courseId))
-          return { valid: false as const, error: "This code is for a specific course only" };
+      // Figure out which cart items the code applies to. A code scoped to an
+      // event tier only matches items buying that specific tier; otherwise it
+      // matches by event/class/course id as before.
+      const eventTierId = (dc as any).eventTierId as number | null;
+      const classTierId = (dc as any).classTierId as number | null;
+
+      const matches = (i: { type: string; id: number; tierId?: number }) => {
+        if (dc.eventId && i.type === "event" && i.id === dc.eventId) {
+          if (eventTierId != null && i.tierId !== eventTierId) return false;
+          return true;
+        }
+        if (dc.classId && i.type === "class" && i.id === dc.classId) {
+          if (classTierId != null && i.tierId !== classTierId) return false;
+          return true;
+        }
+        if (dc.courseId && i.type === "course" && i.id === dc.courseId) return true;
+        // Global code (no parent set): applies to everything.
+        if (!dc.eventId && !dc.classId && !dc.courseId) return true;
+        return false;
+      };
+
+      const applicable = input.items.filter(matches);
+      if (applicable.length === 0) {
+        if (eventTierId != null) return { valid: false as const, error: "This code is for a specific ticket type only" };
+        if (classTierId != null) return { valid: false as const, error: "This code is for a specific ticket type only" };
+        if (dc.eventId) return { valid: false as const, error: "This code is for a specific event only" };
+        if (dc.classId) return { valid: false as const, error: "This code is for a specific class only" };
+        if (dc.courseId) return { valid: false as const, error: "This code is for a specific course only" };
+        return { valid: false as const, error: "This code doesn't apply to your cart" };
       }
 
-      const cartTotal = input.items.reduce((s, i) => s + i.price * (i.quantity || 1), 0);
+      const applicableTotal = applicable.reduce((s, i) => s + i.price * (i.quantity || 1), 0);
       const discountValue = parseFloat(String(dc.discountValue));
 
       let discountAmount: number;
       if (dc.discountType === "percentage") {
-        discountAmount = Math.round(cartTotal * (discountValue / 100) * 100) / 100;
+        discountAmount = Math.round(applicableTotal * (discountValue / 100) * 100) / 100;
       } else {
-        discountAmount = Math.min(discountValue, cartTotal);
+        discountAmount = Math.min(discountValue, applicableTotal);
       }
 
       return {
@@ -78,6 +96,10 @@ export const discountRouter = router({
       eventId: z.number().optional(),
       classId: z.number().optional(),
       courseId: z.number().optional(),
+      // Optional: scope the code to a single ticket tier within the
+      // event/class. Requires the parent eventId/classId to be set too.
+      eventTierId: z.number().optional(),
+      classTierId: z.number().optional(),
       maxUses: z.number().int().positive().optional(),
       expiresAt: z.string().optional(),
     }))
@@ -104,8 +126,8 @@ export const discountRouter = router({
         }
 
         const [created] = await pgSql`
-          INSERT INTO "discountCodes" ("code", "discountType", "discountValue", "eventId", "classId", "courseId", "maxUses", "usesCount", "active", "expiresAt", "createdBy", "createdAt")
-          VALUES (${code}, ${input.discountType}, ${input.discountValue}, ${input.eventId ?? null}, ${input.classId ?? null}, ${input.courseId ?? null}, ${input.maxUses ?? null}, ${0}, ${true}, ${input.expiresAt ? new Date(input.expiresAt) : null}, ${ctx.user.id}, ${new Date()})
+          INSERT INTO "discountCodes" ("code", "discountType", "discountValue", "eventId", "classId", "courseId", "eventTierId", "classTierId", "maxUses", "usesCount", "active", "expiresAt", "createdBy", "createdAt")
+          VALUES (${code}, ${input.discountType}, ${input.discountValue}, ${input.eventId ?? null}, ${input.classId ?? null}, ${input.courseId ?? null}, ${input.eventTierId ?? null}, ${input.classTierId ?? null}, ${input.maxUses ?? null}, ${0}, ${true}, ${input.expiresAt ? new Date(input.expiresAt) : null}, ${ctx.user.id}, ${new Date()})
           RETURNING *
         `;
         return created;

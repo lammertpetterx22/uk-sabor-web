@@ -485,6 +485,9 @@ async function startServer() {
             `CREATE INDEX IF NOT EXISTS "class_ticket_tiers_class_idx" ON "classTicketTiers" ("classId")`,
             `ALTER TABLE "classPurchases" ADD COLUMN IF NOT EXISTS "tierId" INTEGER`,
             `CREATE INDEX IF NOT EXISTS "class_purchases_tier_id_idx" ON "classPurchases" ("tierId")`,
+            // Per-tier discount code scoping
+            `ALTER TABLE "discountCodes" ADD COLUMN IF NOT EXISTS "eventTierId" INTEGER`,
+            `ALTER TABLE "discountCodes" ADD COLUMN IF NOT EXISTS "classTierId" INTEGER`,
           ];
           for (const q of autoMigrations) {
             try {

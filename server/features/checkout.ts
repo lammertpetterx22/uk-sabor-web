@@ -150,6 +150,12 @@ export const checkoutRouter = router({
       let totalDiscountPence = 0;
       const itemDiscounts = new Map<string, number>(); // "type-id" -> discount pence per unit
 
+      // Key each cart line uniquely by (type, id, tierId) because a buyer can
+      // have both e.g. "Early Bird" and "VIP" for the same event as distinct
+      // lines. itemDiscounts stores the per-unit discount for each line.
+      const itemKey = (i: { type: string; id: number; tierId?: number | null }) =>
+        `${i.type}-${i.id}-${i.tierId ?? "flat"}`;
+
       if (input.discountCode) {
         const normalized = input.discountCode.trim().toUpperCase();
         const [dc] = await db.select().from(discountCodes)
@@ -160,13 +166,32 @@ export const checkoutRouter = router({
         if (dc.expiresAt && new Date(dc.expiresAt) < new Date()) throw new Error("This discount code has expired");
         if (dc.maxUses && dc.usesCount >= dc.maxUses) throw new Error("This discount code has reached its usage limit");
 
-        // Check item scoping
-        if (dc.eventId && !validatedItems.some(i => i.type === "event" && i.id === dc.eventId))
-          throw new Error("This discount code is for a specific event only");
-        if (dc.classId && !validatedItems.some(i => i.type === "class" && i.id === dc.classId))
-          throw new Error("This discount code is for a specific class only");
-        if (dc.courseId && !validatedItems.some(i => i.type === "course" && i.id === dc.courseId))
-          throw new Error("This discount code is for a specific course only");
+        const eventTierId = (dc as any).eventTierId as number | null;
+        const classTierId = (dc as any).classTierId as number | null;
+
+        // Build the subset of items this code applies to. Codes scoped to a
+        // specific tier only match items purchased on that tier.
+        const applicableItems = validatedItems.filter((i: any) => {
+          if (dc.eventId && i.type === "event" && i.id === dc.eventId) {
+            if (eventTierId != null && i.tierId !== eventTierId) return false;
+            return true;
+          }
+          if (dc.classId && i.type === "class" && i.id === dc.classId) {
+            if (classTierId != null && i.tierId !== classTierId) return false;
+            return true;
+          }
+          if (dc.courseId && i.type === "course" && i.id === dc.courseId) return true;
+          if (!dc.eventId && !dc.classId && !dc.courseId) return true; // global
+          return false;
+        });
+
+        if (applicableItems.length === 0) {
+          if (eventTierId != null || classTierId != null) throw new Error("This discount code is for a specific ticket type only");
+          if (dc.eventId) throw new Error("This discount code is for a specific event only");
+          if (dc.classId) throw new Error("This discount code is for a specific class only");
+          if (dc.courseId) throw new Error("This discount code is for a specific course only");
+          throw new Error("This discount code doesn't apply to your cart");
+        }
 
         // Atomically claim usage
         const [updated] = await db.update(discountCodes)
@@ -183,20 +208,20 @@ export const checkoutRouter = router({
         const discountValue = parseFloat(String(dc.discountValue));
 
         if (dc.discountType === "percentage") {
-          for (const item of validatedItems) {
+          for (const item of applicableItems) {
             const perUnit = Math.round(item.price * 100 * discountValue / 100);
-            itemDiscounts.set(`${item.type}-${item.id}`, perUnit);
+            itemDiscounts.set(itemKey(item), perUnit);
             totalDiscountPence += perUnit * (item.quantity || 1);
           }
         } else {
-          // Fixed: distribute proportionally
-          const totalPence = validatedItems.reduce((s, i) => s + Math.round(i.price * 100) * (i.quantity || 1), 0);
-          const fixedPence = Math.min(Math.round(discountValue * 100), totalPence);
-          for (const item of validatedItems) {
+          // Fixed: distribute proportionally across applicable items only
+          const applicableTotalPence = applicableItems.reduce((s, i) => s + Math.round(i.price * 100) * (i.quantity || 1), 0);
+          const fixedPence = Math.min(Math.round(discountValue * 100), applicableTotalPence);
+          for (const item of applicableItems) {
             const itemTotal = Math.round(item.price * 100) * (item.quantity || 1);
-            const share = Math.round(fixedPence * (itemTotal / totalPence));
+            const share = Math.round(fixedPence * (itemTotal / applicableTotalPence));
             const perUnit = Math.round(share / (item.quantity || 1));
-            itemDiscounts.set(`${item.type}-${item.id}`, perUnit);
+            itemDiscounts.set(itemKey(item), perUnit);
             totalDiscountPence += perUnit * (item.quantity || 1);
           }
         }
@@ -228,7 +253,7 @@ export const checkoutRouter = router({
         }
 
         const originalPricePence = Math.round(item.price * 100);
-        const discountPerUnit = itemDiscounts.get(`${item.type}-${item.id}`) || 0;
+        const discountPerUnit = itemDiscounts.get(itemKey(item)) || 0;
         const itemPricePence = Math.max(0, originalPricePence - discountPerUnit);
         const quantity = item.quantity || 1;
 
@@ -276,7 +301,7 @@ export const checkoutRouter = router({
           cart_items: JSON.stringify(
             validatedItems.map((item) => {
               const originalPricePence = Math.round(item.price * 100);
-              const discPerUnit = itemDiscounts.get(`${item.type}-${item.id}`) || 0;
+              const discPerUnit = itemDiscounts.get(itemKey(item)) || 0;
               const adjustedPricePence = Math.max(0, originalPricePence - discPerUnit);
               const totalPence = Math.round((adjustedPricePence + 20) / 0.985);
               const stripeFeePence = totalPence - adjustedPricePence;

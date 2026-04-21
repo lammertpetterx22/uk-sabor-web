@@ -21,6 +21,8 @@ export default function DiscountCodesSection({ itemType, itemId }: DiscountCodes
   const [discountValue, setDiscountValue] = useState("");
   const [maxUses, setMaxUses] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
+  // "all" = applies to every tier of this event/class; a number = tier-specific
+  const [tierScope, setTierScope] = useState<"all" | number>("all");
 
   const utils = trpc.useUtils();
 
@@ -28,6 +30,12 @@ export default function DiscountCodesSection({ itemType, itemId }: DiscountCodes
     { itemType, itemId: itemId! },
     { enabled: !!itemId }
   );
+
+  // Load tiers if this is an event or class, so the creator can optionally
+  // scope the discount to a single ticket type (e.g. "15% off VIP only").
+  const eventTiers = trpc.events.listTiers.useQuery(itemId!, { enabled: !!itemId && itemType === "event" });
+  const classTiers = trpc.classes.listTiers.useQuery(itemId!, { enabled: !!itemId && itemType === "class" });
+  const availableTiers = itemType === "event" ? eventTiers.data : itemType === "class" ? classTiers.data : null;
 
   const createMutation = trpc.discounts.create.useMutation({
     onSuccess: () => {
@@ -52,6 +60,7 @@ export default function DiscountCodesSection({ itemType, itemId }: DiscountCodes
     setDiscountValue("");
     setMaxUses("");
     setExpiresAt("");
+    setTierScope("all");
     setShowForm(false);
   };
 
@@ -67,6 +76,8 @@ export default function DiscountCodesSection({ itemType, itemId }: DiscountCodes
       return;
     }
 
+    const tierScoped = tierScope !== "all" && typeof tierScope === "number";
+
     createMutation.mutate({
       code: code.trim().toUpperCase(),
       discountType,
@@ -74,6 +85,8 @@ export default function DiscountCodesSection({ itemType, itemId }: DiscountCodes
       ...(itemType === "event" && itemId ? { eventId: itemId } : {}),
       ...(itemType === "course" && itemId ? { courseId: itemId } : {}),
       ...(itemType === "class" && itemId ? { classId: itemId } : {}),
+      ...(tierScoped && itemType === "event" ? { eventTierId: tierScope as number } : {}),
+      ...(tierScoped && itemType === "class" ? { classTierId: tierScope as number } : {}),
       maxUses: maxUses ? parseInt(maxUses) : undefined,
       expiresAt: expiresAt || undefined,
     });
@@ -119,35 +132,46 @@ export default function DiscountCodesSection({ itemType, itemId }: DiscountCodes
       {/* Existing codes */}
       {discountsList.data && discountsList.data.length > 0 && (
         <div className="space-y-2">
-          {discountsList.data.filter(d => d.active).map((dc) => (
-            <div
-              key={dc.id}
-              className="flex items-center justify-between p-3 rounded-xl bg-background/30 border border-border/50"
-            >
-              <div className="flex items-center gap-3">
-                <span className="px-2.5 py-1 rounded-lg bg-accent/10 text-accent text-sm font-bold tracking-wider">
-                  {dc.code}
-                </span>
-                <span className="text-sm text-foreground/60">
-                  {dc.discountType === "percentage"
-                    ? `${parseFloat(String(dc.discountValue))}% off`
-                    : `£${parseFloat(String(dc.discountValue)).toFixed(2)} off`}
-                </span>
-                <span className="text-xs text-foreground/40">
-                  {dc.usesCount}{dc.maxUses ? `/${dc.maxUses}` : ""} uses
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => deactivateMutation.mutate({ id: dc.id })}
-                disabled={deactivateMutation.isPending}
-                className="p-1.5 rounded-lg text-foreground/30 hover:text-red-400 hover:bg-red-400/10 transition-all"
-                title="Deactivate code"
+          {discountsList.data.filter(d => d.active).map((dc) => {
+            const scopedTierId = (dc as any).eventTierId ?? (dc as any).classTierId ?? null;
+            const scopedTier = scopedTierId != null && availableTiers
+              ? availableTiers.find((t: any) => t.id === scopedTierId)
+              : null;
+            return (
+              <div
+                key={dc.id}
+                className="flex items-center justify-between p-3 rounded-xl bg-background/30 border border-border/50"
               >
-                <Trash2 size={14} />
-              </button>
-            </div>
-          ))}
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="px-2.5 py-1 rounded-lg bg-accent/10 text-accent text-sm font-bold tracking-wider">
+                    {dc.code}
+                  </span>
+                  <span className="text-sm text-foreground/60">
+                    {dc.discountType === "percentage"
+                      ? `${parseFloat(String(dc.discountValue))}% off`
+                      : `£${parseFloat(String(dc.discountValue)).toFixed(2)} off`}
+                  </span>
+                  {scopedTier && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-semibold">
+                      🎟 {scopedTier.name} only
+                    </span>
+                  )}
+                  <span className="text-xs text-foreground/40">
+                    {dc.usesCount}{dc.maxUses ? `/${dc.maxUses}` : ""} uses
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => deactivateMutation.mutate({ id: dc.id })}
+                  disabled={deactivateMutation.isPending}
+                  className="p-1.5 rounded-lg text-foreground/30 hover:text-red-400 hover:bg-red-400/10 transition-all"
+                  title="Deactivate code"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -234,6 +258,39 @@ export default function DiscountCodesSection({ itemType, itemId }: DiscountCodes
                 className="bg-background/50 border-border/50"
               />
             </div>
+
+            {/* Tier scope — only shown when the event/class has 2+ tiers */}
+            {availableTiers && availableTiers.length >= 2 && (itemType === "event" || itemType === "class") && (
+              <div className="space-y-1.5 md:col-span-2">
+                <Label className="text-foreground/70 text-xs flex items-center gap-1.5">
+                  🎟 Apply to ticket type
+                </Label>
+                <Select
+                  value={tierScope === "all" ? "all" : String(tierScope)}
+                  onValueChange={(v) => setTierScope(v === "all" ? "all" : parseInt(v, 10))}
+                >
+                  <SelectTrigger className="bg-background/50 border-border/50">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      <span className="font-medium">All ticket types</span>
+                    </SelectItem>
+                    {availableTiers.map((t: any) => (
+                      <SelectItem key={t.id} value={String(t.id)}>
+                        <span className="flex items-center gap-2">
+                          <span className="font-semibold">{t.name}</span>
+                          <span className="text-xs text-foreground/50">£{parseFloat(String(t.price)).toFixed(2)}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-foreground/40">
+                  Choose a specific tier to make this code only work on that ticket type.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2 pt-1">
