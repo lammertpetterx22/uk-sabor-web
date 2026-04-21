@@ -341,70 +341,67 @@ export default function EventDetail() {
                         </div>
                       </div>
 
-                      {/* Dynamic button based on payment methods */}
+                      {/* Payment method buttons — we render them side-by-side
+                          (or single full-width) based on what this event
+                          actually accepts. No modal: the buyer sees and
+                          picks directly which avoids the previous bug where
+                          clicking Pay Online after the modal did nothing. */}
                       {(() => {
                         const allowsCash = (event as any)?.allowCashPayment || (event as any)?.paymentMethod === "cash" || (event as any)?.paymentMethod === "both";
                         const allowsOnline = (event as any)?.allowOnlinePayment !== false && (event as any)?.paymentMethod !== "cash";
-                        const allowsBoth = allowsCash && allowsOnline;
 
-                        if (allowsBoth) {
-                          // Both methods - show button that opens modal
-                          return (
-                            <Button
-                              onClick={handleReserveClick}
-                              disabled={cashReservationMutation.isPending}
-                              className="w-full py-6 text-lg bg-gradient-to-r from-pink-500 to-red-500"
-                            >
-                              {cashReservationMutation.isPending ? (
-                                <>
-                                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                  {tr("Processing...")}
-                                </>
-                              ) : (
-                                tr("Reserve Your Spot")
-                              )}
-                            </Button>
-                          );
-                        } else if (allowsCash && !allowsOnline) {
-                          // Cash only
-                          return (
-                            <Button
-                              onClick={handleReserveClick}
-                              disabled={cashReservationMutation.isPending}
-                              className="w-full py-6 text-lg bg-gradient-to-r from-green-500 to-emerald-500"
-                            >
-                              {cashReservationMutation.isPending ? (
-                                <>
-                                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                  Reserving...
-                                </>
-                              ) : (
-                                <>💵 Reserve (Pay at Door)</>
-                              )}
-                            </Button>
-                          );
-                        } else {
-                          // Online only (default)
-                          return (
-                            <AddToCartButton
-                              item={{
-                                type: "event",
-                                id: event.id,
-                                title: selectedTier ? `${event.title} — ${selectedTier.name}` : event.title,
-                                price: price,
-                                imageUrl: event.imageUrl || undefined,
-                                date: eventDate.toISOString(),
-                                location: event.venue,
-                                quantity: quantity,
-                                ...(selectedTier ? { tierId: selectedTier.id, tierName: selectedTier.name } : {}),
-                              }}
-                              maxStock={selectedTier?.maxQuantity ?? event.maxTickets ?? undefined}
-                              currentlySold={selectedTier?.soldCount ?? event.ticketsSold ?? 0}
-                              className="w-full py-6 text-lg"
-                              data-cart-button="event"
-                            />
-                          );
-                        }
+                        const onlineBtn = allowsOnline ? (
+                          <AddToCartButton
+                            item={{
+                              type: "event",
+                              id: event.id,
+                              title: selectedTier ? `${event.title} — ${selectedTier.name}` : event.title,
+                              price: price,
+                              imageUrl: event.imageUrl || undefined,
+                              date: eventDate.toISOString(),
+                              location: event.venue,
+                              quantity: quantity,
+                              ...(selectedTier ? { tierId: selectedTier.id, tierName: selectedTier.name } : {}),
+                            }}
+                            maxStock={selectedTier?.maxQuantity ?? event.maxTickets ?? undefined}
+                            currentlySold={selectedTier?.soldCount ?? event.ticketsSold ?? 0}
+                            className="w-full py-6 text-lg"
+                            data-cart-button="event"
+                          />
+                        ) : null;
+
+                        const cashBtn = allowsCash ? (
+                          <Button
+                            onClick={() => {
+                              if (!isAuthenticated) {
+                                toast.error("Please log in to reserve your spot");
+                                setLocation("/login");
+                                return;
+                              }
+                              cashReservationMutation.mutate({ eventId });
+                            }}
+                            disabled={cashReservationMutation.isPending}
+                            variant={allowsOnline ? "outline" : "default"}
+                            className={
+                              allowsOnline
+                                ? "w-full py-6 text-lg border-green-500/40 text-green-400 hover:bg-green-500/10"
+                                : "w-full py-6 text-lg bg-gradient-to-r from-green-500 to-emerald-500 text-white"
+                            }
+                          >
+                            {cashReservationMutation.isPending ? (
+                              <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Reserving…</>
+                            ) : (
+                              <>💵 Reserve (Pay at Door)</>
+                            )}
+                          </Button>
+                        ) : null;
+
+                        return (
+                          <div className="space-y-2">
+                            {onlineBtn}
+                            {cashBtn}
+                          </div>
+                        );
                       })()}
 
                       {event.showLowTicketAlert && spotsLeft !== null && spotsLeft <= 20 && (
@@ -425,19 +422,6 @@ export default function EventDetail() {
 
       {/* Footer spacer */}
       <div className="h-16" />
-
-      {/* Payment Method Modal */}
-      {event && (
-        <PaymentMethodModal
-          open={showPaymentModal}
-          onClose={() => setShowPaymentModal(false)}
-          onSelectOnline={handlePayOnline}
-          onSelectCash={handlePayCash}
-          price={price.toFixed(2)}
-          itemTitle={event.title}
-          itemType="event"
-        />
-      )}
     </div>
   );
 }
