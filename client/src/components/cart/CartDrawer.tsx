@@ -42,9 +42,18 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const handleApplyDiscount = () => {
     if (!discountCode.trim()) return;
     setDiscountError("");
+    // Include tierId so tier-scoped codes (e.g. "VIP only 20% off") can
+    // match the actual cart line. Without this the server could never
+    // tell which tier of a multi-tier event the buyer picked.
     validateDiscount.mutate({
       code: discountCode,
-      items: items.map(i => ({ type: i.type, id: i.id, price: i.price, quantity: i.quantity })),
+      items: items.map(i => ({
+        type: i.type,
+        id: i.id,
+        price: i.price,
+        quantity: i.quantity,
+        ...(i.tierId ? { tierId: i.tierId } : {}),
+      })),
     });
   };
 
