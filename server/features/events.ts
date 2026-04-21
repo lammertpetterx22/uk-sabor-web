@@ -314,6 +314,7 @@ export const eventsRouter = router({
   createCashReservation: protectedProcedure
     .input(z.object({
       eventId: z.number(),
+      tierId: z.number().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
@@ -352,8 +353,27 @@ export const eventsRouter = router({
         throw new Error("You already have a ticket for this event");
       }
 
-      // 5. Check if there are spots available
-      if (event.maxTickets && (event.ticketsSold ?? 0) >= event.maxTickets) {
+      // 5. Tier-aware capacity + price. When the event uses multi-tier
+      // pricing the reservation must be tied to the selected tier so the
+      // price and sold counts stay in sync.
+      let pricePaid: any = event.ticketPrice;
+      let tierId: number | null = null;
+
+      if (input.tierId) {
+        const [tier] = await db.select()
+          .from(eventTicketTiers)
+          .where(and(
+            eq(eventTicketTiers.id, input.tierId),
+            eq(eventTicketTiers.eventId, event.id),
+            eq(eventTicketTiers.active, true),
+          )).limit(1);
+        if (!tier) throw new Error("Selected ticket type is no longer available");
+        if (tier.maxQuantity != null && tier.soldCount >= tier.maxQuantity) {
+          throw new Error(`"${tier.name}" tickets are sold out`);
+        }
+        pricePaid = tier.price;
+        tierId = tier.id;
+      } else if (event.maxTickets && (event.ticketsSold ?? 0) >= event.maxTickets) {
         throw new Error("This event is sold out");
       }
 
@@ -364,8 +384,9 @@ export const eventsRouter = router({
       const [ticket] = await db.insert(eventTickets).values({
         userId: ctx.user.id,
         eventId: input.eventId,
+        tierId,
         quantity: 1,
-        pricePaid: event.ticketPrice,
+        pricePaid,
         ticketCode,
         status: "valid",
         paymentStatus: "pending_cash",
@@ -374,11 +395,18 @@ export const eventsRouter = router({
         purchasedAt: new Date(),
       }).returning();
 
-      // 8. Update tickets sold count
+      // 8. Update tickets sold count (tier-level when applicable, plus
+      // event-level so the existing display stays consistent).
       const { sql } = await import("drizzle-orm");
       await db.update(events)
         .set({ ticketsSold: sql`${events.ticketsSold} + 1` })
         .where(eq(events.id, input.eventId));
+
+      if (tierId) {
+        await db.update(eventTicketTiers)
+          .set({ soldCount: sql`${eventTicketTiers.soldCount} + 1` })
+          .where(eq(eventTicketTiers.id, tierId));
+      }
 
       // 9. Generate QR code
       const QRCode = await import("qrcode");

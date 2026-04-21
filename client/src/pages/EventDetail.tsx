@@ -378,7 +378,10 @@ export default function EventDetail() {
                                 setLocation("/login");
                                 return;
                               }
-                              cashReservationMutation.mutate({ eventId });
+                              cashReservationMutation.mutate({
+                                eventId,
+                                ...(selectedTier ? { tierId: selectedTier.id } : {}),
+                              });
                             }}
                             disabled={cashReservationMutation.isPending}
                             variant={allowsOnline ? "outline" : "default"}
