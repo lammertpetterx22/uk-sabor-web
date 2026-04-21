@@ -435,7 +435,7 @@ export default function MyClassesDashboard({
 
       {/* Class Dialog */}
       <Dialog open={showClassDialog} onOpenChange={setShowClassDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl w-[95vw] max-h-[92vh] overflow-y-auto overflow-x-hidden">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">
               {editingClass ? "Edit Class" : "Create New Class"}

@@ -340,7 +340,7 @@ export default function MyCoursesDashboard({
 
         {/* Create/Edit Course Dialog */}
         <Dialog open={showCourseDialog} onOpenChange={setShowCourseDialog}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-6xl w-[95vw] max-h-[92vh] overflow-y-auto overflow-x-hidden">
             <CourseFormCard
               editingCourse={editingCourse}
               instructors={instructors}
