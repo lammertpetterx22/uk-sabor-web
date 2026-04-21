@@ -12,6 +12,7 @@ import ProtectedVideoPlayer from "@/components/ProtectedVideoPlayer";
 import { Play, BookOpen } from "lucide-react";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import PaymentMethodModal from "@/components/payment/PaymentMethodModal";
+import { useCartStore } from "@/stores/cartStore";
 
 
 export default function ClassDetail() {
@@ -70,12 +71,46 @@ export default function ClassDetail() {
     }
   };
 
+  const addToCart = useCartStore((s) => s.addItem);
+  const cartItems = useCartStore((s) => s.items);
+
   const handlePayOnline = () => {
     setShowPaymentModal(false);
-    const addToCartBtn = document.querySelector('[data-cart-button="class"]') as HTMLButtonElement;
-    if (addToCartBtn) {
-      addToCartBtn.click();
+
+    if (!classItem) return;
+
+    // Validate against the selected tier's remaining capacity (or the flat
+    // class cap when there are no tiers) so the modal path matches the
+    // AddToCartButton validation used by the online-only branch.
+    const cap = selectedTier?.maxQuantity ?? classItem.maxParticipants ?? null;
+    const sold = selectedTier?.soldCount ?? classItem.currentParticipants ?? 0;
+    if (cap != null) {
+      const alreadyInCart = cartItems
+        .filter((i) => i.type === "class" && i.id === classItem.id && (i.tierId ?? null) === (selectedTier?.id ?? null))
+        .reduce((s, i) => s + (i.quantity || 1), 0);
+      const available = Math.max(0, cap - sold - alreadyInCart);
+      const requested = 1; // ClassDetail doesn't expose a quantity selector currently
+      if (requested > available) {
+        toast.error(available === 0 ? "Class is full" : `Only ${available} spot${available === 1 ? "" : "s"} left`);
+        return;
+      }
     }
+
+    addToCart({
+      type: "class",
+      id: classItem.id,
+      title: selectedTier ? `${classItem.title} — ${selectedTier.name}` : classItem.title,
+      price,
+      imageUrl: classItem.imageUrl || undefined,
+      instructorName: instructor?.name,
+      danceStyle: classItem.danceStyle || undefined,
+      date: classDate.toISOString(),
+      quantity: 1,
+      ...(selectedTier ? { tierId: selectedTier.id, tierName: selectedTier.name } : {}),
+    });
+    toast.success("Added to cart", {
+      description: `"${selectedTier ? `${classItem.title} — ${selectedTier.name}` : classItem.title}" is in your cart`,
+    });
   };
 
   const handlePayCash = () => {

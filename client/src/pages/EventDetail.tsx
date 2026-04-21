@@ -9,6 +9,7 @@ import { Loader2, Calendar, MapPin, Clock, Users, Ticket, ArrowLeft, Minus, Plus
 import { toast } from "sonner";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import PaymentMethodModal from "@/components/payment/PaymentMethodModal";
+import { useCartStore } from "@/stores/cartStore";
 import { Trans, useTr } from "@/components/Trans";
 
 export default function EventDetail() {
@@ -75,14 +76,45 @@ export default function EventDetail() {
     }
   };
 
+  const addToCart = useCartStore((s) => s.addItem);
+  const cartItems = useCartStore((s) => s.items);
+
   const handlePayOnline = () => {
     setShowPaymentModal(false);
-    // Trigger the add to cart button click programmatically
-    // Or we can implement the checkout logic here
-    const addToCartBtn = document.querySelector('[data-cart-button="event"]') as HTMLButtonElement;
-    if (addToCartBtn) {
-      addToCartBtn.click();
+
+    if (!event) return;
+
+    // Validate against the selected tier's remaining capacity (or the flat
+    // event cap when there are no tiers) — mirrors the check that the
+    // AddToCartButton does for the online-only branch so the modal path
+    // doesn't silently bypass it.
+    const cap = selectedTier?.maxQuantity ?? event.maxTickets ?? null;
+    const sold = selectedTier?.soldCount ?? event.ticketsSold ?? 0;
+    if (cap != null) {
+      const alreadyInCart = cartItems
+        .filter((i) => i.type === "event" && i.id === event.id && (i.tierId ?? null) === (selectedTier?.id ?? null))
+        .reduce((s, i) => s + (i.quantity || 1), 0);
+      const available = Math.max(0, cap - sold - alreadyInCart);
+      if (quantity > available) {
+        toast.error(available === 0 ? "Sold out" : `Only ${available} ticket${available === 1 ? "" : "s"} left`);
+        return;
+      }
     }
+
+    addToCart({
+      type: "event",
+      id: event.id,
+      title: selectedTier ? `${event.title} — ${selectedTier.name}` : event.title,
+      price,
+      imageUrl: event.imageUrl || undefined,
+      date: eventDate.toISOString(),
+      location: event.venue,
+      quantity,
+      ...(selectedTier ? { tierId: selectedTier.id, tierName: selectedTier.name } : {}),
+    });
+    toast.success("Added to cart", {
+      description: `"${selectedTier ? `${event.title} — ${selectedTier.name}` : event.title}" is in your cart`,
+    });
   };
 
   const handlePayCash = () => {
