@@ -340,8 +340,8 @@ export default function MyCoursesDashboard({
 
         {/* Create/Edit Course Dialog */}
         <Dialog open={showCourseDialog} onOpenChange={setShowCourseDialog}>
-          <DialogContent className="!top-0 !left-0 !translate-x-0 !translate-y-0 !w-screen !h-[100dvh] !max-w-none !max-h-none !rounded-none !border-0 overflow-y-auto overflow-x-hidden p-0">
-            <div className="mx-auto w-full max-w-5xl px-4 py-8 md:px-10 md:py-12">
+          <DialogContent className="!max-w-5xl w-[95vw] max-h-[90vh] p-0 gap-0 rounded-2xl border border-white/10 shadow-2xl shadow-black/50 bg-gradient-to-br from-background via-background to-background/95 backdrop-blur-xl overflow-hidden">
+            <div className="overflow-y-auto overflow-x-hidden max-h-[90vh] px-6 md:px-10 py-8">
               <CourseFormCard
                 editingCourse={editingCourse}
                 instructors={instructors}
