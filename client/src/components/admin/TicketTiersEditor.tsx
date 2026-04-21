@@ -1,14 +1,21 @@
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Ticket, Plus, Trash2, Sparkles, Crown, Zap, Star, Tag } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Ticket, Plus, Trash2, Sparkles, Crown, Zap, Star, Tag, Percent, PoundSterling } from "lucide-react";
 
 /**
  * Shape of a tier row in the editor. `id` is set only for rows that already
  * exist on the server; new rows have no id.
  */
+export interface PendingTierCode {
+  code: string;
+  discountType: "percentage" | "fixed";
+  discountValue: string; // kept as string while the form is being edited
+}
+
 export interface TierRow {
   id?: number;
   name: string;
@@ -17,6 +24,12 @@ export interface TierRow {
   maxQuantity: string;     // "" = unlimited
   soldCount?: number;      // read-only, from server
   position: number;
+  /**
+   * Discount codes the creator has attached to this tier but haven't been
+   * saved yet (because the event/class itself hasn't been created). Flushed
+   * via discounts.create once the parent and tier are persisted.
+   */
+  pendingCodes?: PendingTierCode[];
 }
 
 interface TicketTiersEditorProps {
@@ -306,10 +319,22 @@ export default function TicketTiersEditor({ rows, onChange, showSoldCount = fals
                   />
                 </div>
 
-                {/* Extras slot — e.g. inline discount codes editor for this tier. */}
+                {/* Extras slot for saved tiers — server-backed discount codes. */}
                 {renderRowExtras && row.id && (
                   <div className="pt-4 border-t border-border/40">
                     {renderRowExtras(row)}
+                  </div>
+                )}
+
+                {/* Pending discount codes — only for rows that haven't been
+                    saved yet (no id). Codes live locally until the parent
+                    event/class is created, then get flushed to discounts.create. */}
+                {!row.id && (
+                  <div className="pt-4 border-t border-border/40">
+                    <PendingDiscountCodes
+                      row={row}
+                      onChange={(codes) => updateRow(idx, { pendingCodes: codes })}
+                    />
                   </div>
                 )}
               </div>
@@ -329,6 +354,148 @@ export default function TicketTiersEditor({ rows, onChange, showSoldCount = fals
         <Plus className="h-4 w-4 mr-2" />
         Add another ticket type
       </Button>
+    </div>
+  );
+}
+
+/**
+ * Inline pending-code editor used inside each unsaved tier card during
+ * creation. Codes live in the TierRow's `pendingCodes` array via onChange.
+ */
+function PendingDiscountCodes({ row, onChange }: { row: TierRow; onChange: (codes: PendingTierCode[]) => void }) {
+  const [showForm, setShowForm] = useState(false);
+  const [code, setCode] = useState("");
+  const [discountType, setDiscountType] = useState<"percentage" | "fixed">("percentage");
+  const [discountValue, setDiscountValue] = useState("");
+
+  const codes = row.pendingCodes ?? [];
+
+  const add = () => {
+    if (!code.trim() || !discountValue) return;
+    const val = parseFloat(discountValue);
+    if (!Number.isFinite(val) || val <= 0) return;
+    if (discountType === "percentage" && val > 100) return;
+    onChange([...codes, { code: code.trim().toUpperCase(), discountType, discountValue }]);
+    setCode("");
+    setDiscountValue("");
+    setShowForm(false);
+  };
+
+  const remove = (idx: number) => onChange(codes.filter((_, i) => i !== idx));
+
+  return (
+    <div className="space-y-2.5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Tag className="h-4 w-4 text-accent" />
+          <span className="text-sm font-semibold text-foreground">Discount codes for this tier</span>
+          <span className="text-[10px] uppercase tracking-wider text-foreground/40 font-bold">pre-set</span>
+        </div>
+        {!showForm && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowForm(true)}
+            className="h-7 px-2.5 text-xs text-accent hover:bg-accent/10"
+          >
+            <Plus className="h-3 w-3 mr-1" /> Add code
+          </Button>
+        )}
+      </div>
+
+      {codes.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {codes.map((c, i) => (
+            <span
+              key={i}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent/10 border border-accent/30 text-accent text-xs font-semibold"
+            >
+              <span className="tracking-wider">{c.code}</span>
+              <span className="text-foreground/50 font-normal">·</span>
+              <span className="text-foreground/70 font-normal">
+                {c.discountType === "percentage" ? `${c.discountValue}%` : `£${parseFloat(c.discountValue || "0").toFixed(2)}`}
+              </span>
+              <button
+                type="button"
+                onClick={() => remove(i)}
+                className="ml-0.5 text-foreground/30 hover:text-red-400 transition-colors"
+                title="Remove code"
+              >
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {codes.length === 0 && !showForm && (
+        <p className="text-xs text-foreground/40">
+          No discount codes yet — codes added here are created automatically when you publish the event.
+        </p>
+      )}
+
+      {showForm && (
+        <div className="rounded-lg bg-background/40 border border-accent/20 p-3 space-y-2.5">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-2">
+            <div className="md:col-span-3">
+              <Input
+                placeholder="CODE (e.g. EARLY20)"
+                value={code}
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                className="bg-background/60 font-mono uppercase h-9 text-sm"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <Select value={discountType} onValueChange={(v) => setDiscountType(v as any)}>
+                <SelectTrigger className="bg-background/60 h-9 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="percentage">
+                    <span className="flex items-center gap-1.5 text-sm"><Percent className="h-3 w-3" /> Percentage</span>
+                  </SelectItem>
+                  <SelectItem value="fixed">
+                    <span className="flex items-center gap-1.5 text-sm"><PoundSterling className="h-3 w-3" /> Fixed</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-1">
+              <div className="relative">
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-foreground/50 text-sm">
+                  {discountType === "percentage" ? "%" : "£"}
+                </span>
+                <Input
+                  type="number"
+                  value={discountValue}
+                  onChange={(e) => setDiscountValue(e.target.value)}
+                  placeholder={discountType === "percentage" ? "20" : "5"}
+                  className="bg-background/60 h-9 pl-7 text-sm"
+                  min="0"
+                  max={discountType === "percentage" ? "100" : undefined}
+                  step={discountType === "percentage" ? "1" : "0.01"}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button type="button" size="sm" onClick={add} className="h-8 px-3 text-xs bg-accent hover:bg-accent/90 text-white">
+              <Plus className="h-3 w-3 mr-1" /> Queue
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => { setShowForm(false); setCode(""); setDiscountValue(""); }}
+              className="h-8 px-3 text-xs text-foreground/60"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -743,6 +743,11 @@ export const classesRouter = router({
         }
       }
 
-      return { ok: true };
+      const saved = await db
+        .select()
+        .from(classTicketTiers)
+        .where(and(eq(classTicketTiers.classId, input.classId), eq(classTicketTiers.active, true)))
+        .orderBy(classTicketTiers.position);
+      return { ok: true, tiers: saved };
     }),
 });

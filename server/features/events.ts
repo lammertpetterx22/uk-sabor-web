@@ -659,6 +659,14 @@ export const eventsRouter = router({
         }
       }
 
-      return { ok: true };
+      // Return the current tier list so callers can map their in-memory
+      // positions back to the persisted tier ids (e.g. to attach pending
+      // discount codes to the right tier right after creation).
+      const saved = await db
+        .select()
+        .from(eventTicketTiers)
+        .where(and(eq(eventTicketTiers.eventId, input.eventId), eq(eventTicketTiers.active, true)))
+        .orderBy(eventTicketTiers.position);
+      return { ok: true, tiers: saved };
     }),
 });

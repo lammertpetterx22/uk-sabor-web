@@ -70,6 +70,7 @@ export default function ClassFormCard({
   const createMutation = trpc.classes.create.useMutation();
   const updateMutation = trpc.classes.update.useMutation();
   const saveTiersMutation = trpc.classes.saveTiers.useMutation();
+  const createDiscountMutation = trpc.discounts.create.useMutation();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -364,10 +365,30 @@ export default function ClassFormCard({
 
       if (hasMeaningfulTiers && newId) {
         try {
-          await saveTiersMutation.mutateAsync({
+          const tiersResult = await saveTiersMutation.mutateAsync({
             classId: newId,
             tiers: tierRowsToPayload(pendingTiers),
           });
+
+          const savedTiers = tiersResult?.tiers ?? [];
+          for (let i = 0; i < pendingTiers.length; i++) {
+            const row = pendingTiers[i];
+            const savedTier = savedTiers.find((t: any) => t.position === i);
+            if (!row.pendingCodes?.length || !savedTier) continue;
+            for (const c of row.pendingCodes) {
+              try {
+                await createDiscountMutation.mutateAsync({
+                  code: c.code.trim().toUpperCase(),
+                  discountType: c.discountType,
+                  discountValue: parseFloat(c.discountValue),
+                  classId: newId,
+                  classTierId: savedTier.id,
+                });
+              } catch (codeErr: any) {
+                toast.error(`Discount "${c.code}" failed: ${codeErr?.message || "unknown error"}`);
+              }
+            }
+          }
         } catch (tierErr: any) {
           toast.error(`Class created, but ticket types failed to save: ${tierErr?.message || "unknown error"}`);
         }

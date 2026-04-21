@@ -61,6 +61,7 @@ export default function EventFormCard({
   const createMutation = trpc.admin.createEvent.useMutation();
   const updateMutation = trpc.admin.updateEvent.useMutation();
   const saveTiersMutation = trpc.events.saveTiers.useMutation();
+  const createDiscountMutation = trpc.discounts.create.useMutation();
 
   const [formData, setFormData] = useState(() => {
     if (editingEvent) {
@@ -329,10 +330,33 @@ export default function EventFormCard({
       // immediately after the event goes up.
       if (hasMeaningfulTiers && created.id) {
         try {
-          await saveTiersMutation.mutateAsync({
+          const tiersResult = await saveTiersMutation.mutateAsync({
             eventId: created.id,
             tiers: tierRowsToPayload(pendingTiers),
           });
+
+          // Flush any pending per-tier discount codes. tiersResult.tiers is
+          // ordered by position, so we can match each row to its persisted
+          // counterpart and attach the code with the correct tier id.
+          const savedTiers = tiersResult?.tiers ?? [];
+          for (let i = 0; i < pendingTiers.length; i++) {
+            const row = pendingTiers[i];
+            const savedTier = savedTiers.find((t: any) => t.position === i);
+            if (!row.pendingCodes?.length || !savedTier) continue;
+            for (const c of row.pendingCodes) {
+              try {
+                await createDiscountMutation.mutateAsync({
+                  code: c.code.trim().toUpperCase(),
+                  discountType: c.discountType,
+                  discountValue: parseFloat(c.discountValue),
+                  eventId: created.id,
+                  eventTierId: savedTier.id,
+                });
+              } catch (codeErr: any) {
+                toast.error(`Discount "${c.code}" failed: ${codeErr?.message || "unknown error"}`);
+              }
+            }
+          }
         } catch (tierErr: any) {
           toast.error(`Event created, but ticket types failed to save: ${tierErr?.message || "unknown error"}`);
         }

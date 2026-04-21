@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -21,7 +23,9 @@ import {
   Download,
   Loader2,
   Sparkles,
-  PartyPopper
+  PartyPopper,
+  UserPlus,
+  Mail
 } from "lucide-react";
 import { useTranslations } from "@/hooks/useTranslations";
 import { Trans, useTr } from "@/components/Trans";
@@ -47,6 +51,33 @@ export default function MyEventsDashboard({
   const [editingEvent, setEditingEvent] = useState<any>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [expandedEventId, setExpandedEventId] = useState<number | null>(null);
+  // Quick-add guest: which event is having a guest added right now
+  const [guestEvent, setGuestEvent] = useState<any>(null);
+  const [guestName, setGuestName] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+
+  const addGuestMutation = trpc.guestList.add.useMutation({
+    onSuccess: () => {
+      toast.success("✉️ Guest added and invitation sent");
+      setGuestName("");
+      setGuestEmail("");
+      setGuestEvent(null);
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const handleSubmitGuest = () => {
+    if (!guestEvent) return;
+    if (!guestName.trim() || !guestEmail.trim()) {
+      toast.error("Name and email are required");
+      return;
+    }
+    addGuestMutation.mutate({
+      eventId: guestEvent.id,
+      name: guestName.trim(),
+      email: guestEmail.trim(),
+    });
+  };
 
   // Mutations
   const updateMutation = trpc.admin.updateEvent.useMutation({
@@ -302,8 +333,17 @@ export default function MyEventsDashboard({
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={(e) => { e.stopPropagation(); setGuestEvent(event); }}
+                    className="flex-1 text-xs border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50"
+                  >
+                    <UserPlus className="h-3 w-3 mr-1" />
+                    Add Guest
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={(e) => handleToggleExpanded(event.id, e)}
-                    className="flex-1 text-xs"
+                    className="text-xs"
                   >
                     <QrCode className="h-3 w-3 mr-1" />
                     {expandedEventId === event.id ? "Hide QR" : "View QR"}
@@ -396,6 +436,73 @@ export default function MyEventsDashboard({
                   toast.error("Plan limit reached");
                 }}
               />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quick Add Guest Dialog — no wizard, just name + email */}
+      <Dialog open={!!guestEvent} onOpenChange={(open) => !open && setGuestEvent(null)}>
+        <DialogContent className="!max-w-md rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-background via-background to-emerald-500/5 p-0 overflow-hidden">
+          <div className="p-6 space-y-5">
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30">
+                <UserPlus className="h-5 w-5 text-emerald-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <DialogTitle className="text-xl font-bold">Add Guest</DialogTitle>
+                <DialogDescription className="text-foreground/60 mt-0.5 line-clamp-2">
+                  Invites them to <span className="font-medium text-foreground/80">{guestEvent?.title}</span> with a free QR ticket sent by email.
+                </DialogDescription>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs uppercase tracking-wider text-foreground/70">Name</Label>
+                <Input
+                  placeholder="Full name"
+                  value={guestName}
+                  onChange={(e) => setGuestName(e.target.value)}
+                  className="h-11 bg-background/60"
+                  autoFocus
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs uppercase tracking-wider text-foreground/70">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" />
+                  <Input
+                    type="email"
+                    placeholder="guest@email.com"
+                    value={guestEmail}
+                    onChange={(e) => setGuestEmail(e.target.value)}
+                    className="h-11 pl-9 bg-background/60"
+                    onKeyDown={(e) => e.key === "Enter" && handleSubmitGuest()}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <Button
+                variant="outline"
+                onClick={() => setGuestEvent(null)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSubmitGuest}
+                disabled={addGuestMutation.isPending}
+                className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-semibold"
+              >
+                {addGuestMutation.isPending ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending…</>
+                ) : (
+                  <><UserPlus className="h-4 w-4 mr-2" /> Send Invite</>
+                )}
+              </Button>
             </div>
           </div>
         </DialogContent>

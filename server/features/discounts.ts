@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { discountCodes } from "../../drizzle/schema";
+import { discountCodes, events, classes, courses, instructors, getAllRoles } from "../../drizzle/schema";
 import { eq, sql, and } from "drizzle-orm";
 import postgres from "postgres";
 
@@ -87,8 +87,11 @@ export const discountRouter = router({
       };
     }),
 
-  /** Admin: create a discount code */
-  create: adminProcedure
+  /**
+   * Create a discount code. Admins can create anything; other creators can
+   * only create codes scoped to events/classes/courses they own.
+   */
+  create: protectedProcedure
     .input(z.object({
       code: z.string().min(1).max(50),
       discountType: z.enum(["percentage", "fixed"]),
@@ -106,6 +109,35 @@ export const discountRouter = router({
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
+
+      // Ownership check — non-admins can only create codes for their own
+      // event/class/course. A code with no parent (global) is admin-only.
+      const roles = getAllRoles(ctx.user as any);
+      const isAdmin = roles.includes("admin");
+      if (!isAdmin) {
+        if (input.eventId) {
+          const [ev] = await db.select({ creatorId: events.creatorId }).from(events).where(eq(events.id, input.eventId)).limit(1);
+          if (!ev || ev.creatorId !== ctx.user.id) {
+            throw new Error("You can only create discount codes for your own events");
+          }
+        } else if (input.classId) {
+          const [cls] = await db.select({ instructorId: classes.instructorId }).from(classes).where(eq(classes.id, input.classId)).limit(1);
+          if (!cls) throw new Error("Class not found");
+          const [inst] = await db.select({ userId: instructors.userId }).from(instructors).where(eq(instructors.id, cls.instructorId)).limit(1);
+          if (!inst || inst.userId !== ctx.user.id) {
+            throw new Error("You can only create discount codes for your own classes");
+          }
+        } else if (input.courseId) {
+          const [cs] = await db.select({ instructorId: courses.instructorId }).from(courses).where(eq(courses.id, input.courseId)).limit(1);
+          if (!cs) throw new Error("Course not found");
+          const [inst] = await db.select({ userId: instructors.userId }).from(instructors).where(eq(instructors.id, cs.instructorId)).limit(1);
+          if (!inst || inst.userId !== ctx.user.id) {
+            throw new Error("You can only create discount codes for your own courses");
+          }
+        } else {
+          throw new Error("Only admins can create global discount codes");
+        }
+      }
 
       const pgSql = postgres(process.env.DATABASE_URL!);
       try {
@@ -161,15 +193,42 @@ export const discountRouter = router({
     }),
 
   /**
-   * Admin: delete a discount code. Frees the code name so it can be re-created.
-   * (Historical `usesCount` is lost — past orders that used the code are unaffected
-   * because they store the code name in their own metadata, not as a FK to this row.)
+   * Delete a discount code. Admins can delete anything; other creators can
+   * only delete codes for their own event/class/course. Frees the code name
+   * so it can be re-created. (Historical `usesCount` is lost — past orders
+   * that used the code are unaffected because they store the code name in
+   * their own metadata, not as a FK to this row.)
    */
-  deactivate: adminProcedure
+  deactivate: protectedProcedure
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
+
+      const [dc] = await db.select().from(discountCodes).where(eq(discountCodes.id, input.id)).limit(1);
+      if (!dc) throw new Error("Discount code not found");
+
+      const roles = getAllRoles(ctx.user as any);
+      const isAdmin = roles.includes("admin");
+      if (!isAdmin) {
+        if (dc.eventId) {
+          const [ev] = await db.select({ creatorId: events.creatorId }).from(events).where(eq(events.id, dc.eventId)).limit(1);
+          if (!ev || ev.creatorId !== ctx.user.id) throw new Error("You can only remove codes for your own events");
+        } else if (dc.classId) {
+          const [cls] = await db.select({ instructorId: classes.instructorId }).from(classes).where(eq(classes.id, dc.classId)).limit(1);
+          if (!cls) throw new Error("Class not found");
+          const [inst] = await db.select({ userId: instructors.userId }).from(instructors).where(eq(instructors.id, cls.instructorId)).limit(1);
+          if (!inst || inst.userId !== ctx.user.id) throw new Error("You can only remove codes for your own classes");
+        } else if (dc.courseId) {
+          const [cs] = await db.select({ instructorId: courses.instructorId }).from(courses).where(eq(courses.id, dc.courseId)).limit(1);
+          if (!cs) throw new Error("Course not found");
+          const [inst] = await db.select({ userId: instructors.userId }).from(instructors).where(eq(instructors.id, cs.instructorId)).limit(1);
+          if (!inst || inst.userId !== ctx.user.id) throw new Error("You can only remove codes for your own courses");
+        } else {
+          throw new Error("Only admins can remove global discount codes");
+        }
+      }
+
       await db.delete(discountCodes).where(eq(discountCodes.id, input.id));
       return { success: true };
     }),
