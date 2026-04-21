@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +26,12 @@ interface TicketTiersEditorProps {
   showSoldCount?: boolean;
   /** Cap on the total number of tiers. */
   maxTiers?: number;
+  /**
+   * Optional slot for rendering extra UI inside each saved tier card —
+   * used by the server-backed wrapper to inject the per-tier discount
+   * codes editor directly under each row.
+   */
+  renderRowExtras?: (row: TierRow) => ReactNode;
 }
 
 /**
@@ -118,7 +124,7 @@ function styleForTier(name: string, idx: number): TierStyle {
   return accents[idx % accents.length];
 }
 
-export default function TicketTiersEditor({ rows, onChange, showSoldCount = false, maxTiers = 20 }: TicketTiersEditorProps) {
+export default function TicketTiersEditor({ rows, onChange, showSoldCount = false, maxTiers = 20, renderRowExtras }: TicketTiersEditorProps) {
   const addRow = () => {
     onChange([
       ...rows,
@@ -299,6 +305,13 @@ export default function TicketTiersEditor({ rows, onChange, showSoldCount = fals
                     className={`bg-background/60 border-border/60 resize-none focus-visible:ring-2 ${style.ring}`}
                   />
                 </div>
+
+                {/* Extras slot — e.g. inline discount codes editor for this tier. */}
+                {renderRowExtras && row.id && (
+                  <div className="pt-4 border-t border-border/40">
+                    {renderRowExtras(row)}
+                  </div>
+                )}
               </div>
             </div>
           );

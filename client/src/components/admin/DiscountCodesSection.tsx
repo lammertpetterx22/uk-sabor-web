@@ -259,8 +259,8 @@ export default function DiscountCodesSection({ itemType, itemId }: DiscountCodes
               />
             </div>
 
-            {/* Tier scope — only shown when the event/class has 2+ tiers */}
-            {availableTiers && availableTiers.length >= 2 && (itemType === "event" || itemType === "class") && (
+            {/* Tier scope — shown whenever the event/class has any tier defined */}
+            {availableTiers && availableTiers.length >= 1 && (itemType === "event" || itemType === "class") && (
               <div className="space-y-1.5 md:col-span-2">
                 <Label className="text-foreground/70 text-xs flex items-center gap-1.5">
                   🎟 Apply to ticket type

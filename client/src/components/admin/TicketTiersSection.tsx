@@ -4,6 +4,7 @@ import { Loader2, Check } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import TicketTiersEditor, { TierRow, validateTierRows, tierRowsToPayload } from "./TicketTiersEditor";
+import TierDiscountCodes from "./TierDiscountCodes";
 
 interface TicketTiersSectionProps {
   /** Which entity these tiers belong to. Defaults to "event" for backwards-compat. */
@@ -95,7 +96,16 @@ export default function TicketTiersSection({ parentType = "event", eventId, clas
 
   return (
     <div className="space-y-5">
-      <TicketTiersEditor rows={rows} onChange={setRows} showSoldCount />
+      <TicketTiersEditor
+        rows={rows}
+        onChange={setRows}
+        showSoldCount
+        renderRowExtras={(row) => (
+          row.id ? (
+            <TierDiscountCodes parentType={parentType} parentId={parentId} tierId={row.id} />
+          ) : null
+        )}
+      />
 
       <div className="flex justify-end">
         <Button
