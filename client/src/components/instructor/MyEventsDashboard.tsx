@@ -371,29 +371,31 @@ export default function MyEventsDashboard({
 
       {/* Event Dialog */}
       <Dialog open={showEventDialog} onOpenChange={setShowEventDialog}>
-        <DialogContent className="max-w-6xl w-[95vw] max-h-[92vh] overflow-y-auto overflow-x-hidden">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">
-              {editingEvent ? "Edit Event" : "Create New Event"}
-            </DialogTitle>
-            <DialogDescription>
-              {editingEvent
-                ? "Update event information"
-                : "Complete the details to create a new event"}
-            </DialogDescription>
-          </DialogHeader>
-          <EventFormCard
-            editingEvent={editingEvent}
-            onSuccess={() => {
-              setShowEventDialog(false);
-              setEditingEvent(null);
-              onRefresh();
-            }}
-            checkEventEntitlement={async () => ({ data: { allowed: true } })}
-            onUpgradeRequired={() => {
-              toast.error("Plan limit reached");
-            }}
-          />
+        <DialogContent className="!top-0 !left-0 !translate-x-0 !translate-y-0 !w-screen !h-[100dvh] !max-w-none !max-h-none !rounded-none !border-0 overflow-y-auto overflow-x-hidden p-0">
+          <div className="mx-auto w-full max-w-5xl px-4 py-8 md:px-10 md:py-12">
+            <DialogHeader className="mb-8">
+              <DialogTitle className="text-3xl font-bold">
+                {editingEvent ? "Edit Event" : "Create New Event"}
+              </DialogTitle>
+              <DialogDescription>
+                {editingEvent
+                  ? "Update event information"
+                  : "Complete the details to create a new event"}
+              </DialogDescription>
+            </DialogHeader>
+            <EventFormCard
+              editingEvent={editingEvent}
+              onSuccess={() => {
+                setShowEventDialog(false);
+                setEditingEvent(null);
+                onRefresh();
+              }}
+              checkEventEntitlement={async () => ({ data: { allowed: true } })}
+              onUpgradeRequired={() => {
+                toast.error("Plan limit reached");
+              }}
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </div>

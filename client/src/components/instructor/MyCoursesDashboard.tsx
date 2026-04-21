@@ -340,18 +340,20 @@ export default function MyCoursesDashboard({
 
         {/* Create/Edit Course Dialog */}
         <Dialog open={showCourseDialog} onOpenChange={setShowCourseDialog}>
-          <DialogContent className="max-w-6xl w-[95vw] max-h-[92vh] overflow-y-auto overflow-x-hidden">
-            <CourseFormCard
-              editingCourse={editingCourse}
-              instructors={instructors}
-              myInstructorProfile={myInstructorProfile}
-              isAdmin={isAdmin}
-              onSuccess={() => {
-                setShowCourseDialog(false);
-                setEditingCourse(null);
-                onRefresh();
-              }}
-            />
+          <DialogContent className="!top-0 !left-0 !translate-x-0 !translate-y-0 !w-screen !h-[100dvh] !max-w-none !max-h-none !rounded-none !border-0 overflow-y-auto overflow-x-hidden p-0">
+            <div className="mx-auto w-full max-w-5xl px-4 py-8 md:px-10 md:py-12">
+              <CourseFormCard
+                editingCourse={editingCourse}
+                instructors={instructors}
+                myInstructorProfile={myInstructorProfile}
+                isAdmin={isAdmin}
+                onSuccess={() => {
+                  setShowCourseDialog(false);
+                  setEditingCourse(null);
+                  onRefresh();
+                }}
+              />
+            </div>
           </DialogContent>
         </Dialog>
       </div>
