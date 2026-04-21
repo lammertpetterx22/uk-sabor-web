@@ -718,7 +718,7 @@ export default function EventFormCard({
         </Button>
 
         <div className="text-xs text-foreground/50 hidden sm:block">
-          Step {step + 1} of {steps.length} · <span className="font-semibold text-foreground/70">{currentStep.label}</span>
+          Step {step + 1} of {steps.length} · <span className="font-semibold text-foreground/70">{currentStep?.label}</span>
         </div>
 
         <div className="flex gap-2">
