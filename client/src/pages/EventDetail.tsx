@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import { useCartStore } from "@/stores/cartStore";
 import EventHotels from "@/components/events/EventHotels";
+import CountdownTimer from "@/components/CountdownTimer";
+import { getEventUrgencyBadges, shouldShowCountdown } from "@/lib/eventUrgency";
 import { Trans, useTr } from "@/components/Trans";
 
 export default function EventDetail() {
@@ -169,23 +171,35 @@ export default function EventDetail() {
   return (
     <div className="min-h-screen bg-background">
 
-      {/* Hero Section — prefer banner (landscape) over cover (flyer) */}
+      {/* Cinematic Hero — full-bleed banner/flyer with countdown + urgency overlay */}
       <div className="relative">
         {((event as any).bannerUrl || event.imageUrl) ? (
-          <div className="h-[400px] w-full relative">
+          <div className="h-[520px] md:h-[640px] w-full relative overflow-hidden">
             <img
               src={(event as any).bannerUrl || event.imageUrl}
               alt={event.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover scale-[1.02]"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+            {/* Layered gradients: strong bottom fade for legibility, soft radial top for depth */}
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/85 to-background/20 pointer-events-none" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_60%)] pointer-events-none" />
           </div>
         ) : (
-          <div className="h-[300px] w-full bg-gradient-to-br from-accent/20 via-background to-background" />
+          <div className="h-[340px] w-full bg-gradient-to-br from-accent/25 via-background to-background" />
         )}
 
-        <div className="container relative -mt-32 z-10">
-          <Link href="/events" className="inline-flex items-center gap-2 text-foreground/60 hover:text-accent mb-4 transition-colors">
+        {/* Countdown overlay centered on the hero */}
+        {shouldShowCountdown(event.eventDate) && (
+          <div className="absolute top-28 md:top-36 left-1/2 -translate-x-1/2 pointer-events-none z-10">
+            <CountdownTimer
+              target={event.eventDate}
+              label="Event starts in"
+            />
+          </div>
+        )}
+
+        <div className="container relative -mt-40 md:-mt-48 z-10">
+          <Link href="/events" className="inline-flex items-center gap-2 text-foreground/70 hover:text-accent mb-4 transition-colors">
             <ArrowLeft className="h-4 w-4" />
             <Trans>Back to Events</Trans>
           </Link>
@@ -194,15 +208,28 @@ export default function EventDetail() {
             {/* Event Info */}
             <div className="lg:col-span-2 space-y-6">
               <div>
-                <Badge className="mb-3 bg-accent/20 text-accent border-accent/50">
-                  {event.status === "published" ? tr("Available") : event.status}
-                </Badge>
-                <h1 className="text-4xl font-bold mb-4">{event.title}</h1>
+                {/* Urgency chips + status badge */}
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  <Badge className="bg-accent/20 text-accent border-accent/50">
+                    {event.status === "published" ? tr("Available") : event.status}
+                  </Badge>
+                  {getEventUrgencyBadges(event as any).slice(0, 2).map((b, i) => (
+                    <span
+                      key={i}
+                      className={`text-[11px] md:text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border shadow-lg ${b.className}`}
+                    >
+                      {b.label}
+                    </span>
+                  ))}
+                </div>
+                <h1 className="text-4xl md:text-6xl font-black mb-4 leading-[1.05] bg-clip-text text-transparent bg-gradient-to-br from-white via-white to-white/60">
+                  {event.title}
+                </h1>
 
-                <div className="flex flex-wrap gap-4 text-foreground/70">
+                <div className="flex flex-wrap gap-4 text-foreground/80">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-accent" />
-                    <span>{eventDate.toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
+                    <span className="font-semibold">{eventDate.toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-5 w-5 text-accent" />
