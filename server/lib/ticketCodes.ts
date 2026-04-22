@@ -1,12 +1,11 @@
 /**
  * Short ticket / access code generator.
  *
- * Format: "UK-XXXXXX" (9 chars total) using a base-32 alphabet that skips
- * visually ambiguous characters (0/O, 1/I/L). This keeps codes short enough
- * to read out loud at the door, type quickly into a search box, and still
- * gives 32^6 ≈ 1 billion combinations — collision probability stays vanishing
- * small even with millions of tickets. The DB has a UNIQUE constraint on
- * ticketCode, so we retry a few times if we're ever unlucky.
+ * Format: "UK-XXXX" (7 chars total) using a base-32 alphabet that skips
+ * visually ambiguous characters (0/O, 1/I/L). Short enough to read out
+ * loud at the door and search in a single keystroke; 31^4 ≈ 923k combos
+ * still keeps collision probability tiny for the platform's scale, and
+ * the DB's UNIQUE constraint on ticketCode catches any unlikely clash.
  */
 
 // Unambiguous base-32 alphabet (no 0/O/1/I/L)
@@ -20,22 +19,22 @@ function randomBlock(len: number): string {
   return out;
 }
 
-/** "UK-ABC123" — paid event ticket. */
+/** "UK-ABCD" — paid event ticket. */
 export function generateTicketCode(): string {
-  return `UK-${randomBlock(6)}`;
+  return `UK-${randomBlock(4)}`;
 }
 
-/** "UKC-ABC123" — paid class access code. Same length/alphabet, "C" flags it as a class. */
+/** "UKC-ABCD" — paid class access code. "C" distinguishes from event. */
 export function generateAccessCode(): string {
-  return `UKC-${randomBlock(6)}`;
+  return `UKC-${randomBlock(4)}`;
 }
 
-/** "GST-ABC123" — guest-list ticket. */
+/** "GST-ABCD" — guest-list ticket. */
 export function generateGuestTicketCode(): string {
-  return `GST-${randomBlock(6)}`;
+  return `GST-${randomBlock(4)}`;
 }
 
-/** "CASH-ABC123" — cash-reservation placeholder code. */
+/** "CSH-ABCD" — cash-reservation placeholder code. */
 export function generateCashTicketCode(): string {
-  return `CASH-${randomBlock(6)}`;
+  return `CSH-${randomBlock(4)}`;
 }
