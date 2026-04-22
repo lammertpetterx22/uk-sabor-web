@@ -437,13 +437,6 @@ export default function EventDetail() {
                         );
                       })()}
 
-                      {event.showLowTicketAlert && spotsLeft !== null && spotsLeft <= 20 && (
-                        <p className="text-sm text-center text-orange-400">
-                          Only {spotsLeft} tickets left!
-                        </p>
-                      )}
-
-
                     </div>
                   )}
                 </CardContent>

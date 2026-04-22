@@ -550,15 +550,23 @@ export default function EventFormCard({
           </div>
         </div>
 
-        <label htmlFor="show-low-ticket-alert" className="flex items-center gap-3 p-3 rounded-xl bg-background/40 border border-border/40 cursor-pointer hover:border-amber-500/40 transition-colors">
+        <label htmlFor="show-low-ticket-alert" className="flex items-start gap-3 p-3 rounded-xl bg-background/40 border border-border/40 cursor-pointer hover:border-amber-500/40 transition-colors">
           <input
             type="checkbox"
             id="show-low-ticket-alert"
             checked={formData.showLowTicketAlert}
             onChange={(e) => setFormData({ ...formData, showLowTicketAlert: e.target.checked })}
-            className="w-4 h-4 rounded"
+            className="w-4 h-4 rounded mt-0.5 flex-shrink-0"
           />
-          <span className="text-sm text-foreground/80">Show "Only X tickets left" alert when fewer than 20 remain</span>
+          <div className="text-sm">
+            <span className="text-foreground/90 font-medium">Show scarcity badges to buyers</span>
+            <p className="text-xs text-foreground/50 mt-0.5">
+              Displays <span className="text-orange-400 font-semibold">"10 tickets left"</span> (at ≤10),
+              <span className="text-red-400 font-semibold"> "Only 3 left"</span> pulsing (at ≤3),
+              <span className="text-fuchsia-400 font-semibold"> "🔥 Going fast"</span> (at 70%+ sold), and <span className="text-red-500 font-semibold">"Sold out"</span>.
+              Leave off if you don't want to advertise stock.
+            </p>
+          </div>
         </label>
       </div>
       )}
