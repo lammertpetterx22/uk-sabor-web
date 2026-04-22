@@ -33,6 +33,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import UserAvatar from "@/components/UserAvatar";
 
 const SABOR_LOGO = "https://d2xsxph8kpxj0f.cloudfront.net/310519663400274503/DGihaPaJvnMFHruoq9jmVQ/sabor-logo_7c905b38.png";
 
@@ -40,6 +41,7 @@ type User = {
   id: number;
   name?: string | null;
   email?: string | null;
+  avatarUrl?: string | null;
   role: string;
   roles?: string | null;
   subscriptionPlan?: string | null;
@@ -171,19 +173,36 @@ export default function Header() {
               {/* Profile dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-1.5 px-2">
-                    <UserCircle className="h-5 w-5" />
-                    <span className="max-w-[100px] truncate">{(user?.name || user?.email || "Profile").split(" ")[0]}</span>
-                    <ChevronDown className="h-3.5 w-3.5" />
+                  <Button variant="ghost" size="sm" className="gap-2 pl-1 pr-2 h-10 rounded-full">
+                    <UserAvatar
+                      name={user?.name}
+                      email={user?.email}
+                      avatarUrl={(user as any)?.avatarUrl}
+                      sizeClass="h-8 w-8"
+                    />
+                    <span className="max-w-[100px] truncate font-medium hidden sm:inline">
+                      {(user?.name || user?.email || "Profile").split(" ")[0]}
+                    </span>
+                    <ChevronDown className="h-3.5 w-3.5 opacity-60" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <div className="px-2 py-2 border-b border-border/40">
-                    <div className="font-medium text-sm truncate">{user?.name || "Profile"}</div>
-                    <div className="text-xs text-foreground/60 truncate">{user?.email}</div>
-                    <div className="flex gap-1 flex-wrap mt-2">
+                <DropdownMenuContent align="end" className="w-64">
+                  <div className="px-3 py-3 border-b border-border/40">
+                    <div className="flex items-center gap-3">
+                      <UserAvatar
+                        name={user?.name}
+                        email={user?.email}
+                        avatarUrl={(user as any)?.avatarUrl}
+                        sizeClass="h-11 w-11"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm truncate">{user?.name || "Profile"}</div>
+                        <div className="text-xs text-foreground/60 truncate">{user?.email}</div>
+                      </div>
+                    </div>
+                    <div className="flex gap-1 flex-wrap mt-2.5">
                       {roleChips(roles).map(c => (
-                        <Badge key={c.label} variant="outline" className={`text-xs ${c.className}`}>{c.label}</Badge>
+                        <Badge key={c.label} variant="outline" className={`text-[10px] ${c.className}`}>{c.label}</Badge>
                       ))}
                     </div>
                   </div>
@@ -270,9 +289,13 @@ export default function Header() {
                 className="text-left bg-gradient-to-br from-accent/10 to-purple-500/10 border border-accent/30 rounded-xl p-4 hover:border-accent/60 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-purple-500 flex items-center justify-center shrink-0">
-                    <UserCircle className="h-7 w-7 text-white" />
-                  </div>
+                  <UserAvatar
+                    name={user?.name}
+                    email={user?.email}
+                    avatarUrl={(user as any)?.avatarUrl}
+                    sizeClass="h-12 w-12"
+                    className="shrink-0"
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="font-bold truncate">{user?.name || "Hola"}</div>
                     <div className="text-xs text-foreground/60 truncate">{user?.email}</div>
