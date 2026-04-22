@@ -191,10 +191,25 @@ export const ticketsRouter = router({
                 throw new Error("Access denied — you're not the creator of this event");
             }
 
-            const tickets = await db
-                .select()
+            // Join the buying user so the admin can search the list by
+            // buyer name / email — not just ticket code. For guest-list
+            // entries the buyer is a placeholder account, so we also keep
+            // ticket.guestName / guestEmail in the payload.
+            const rows = await db
+                .select({
+                    ticket: eventTickets,
+                    buyerName: users.name,
+                    buyerEmail: users.email,
+                })
                 .from(eventTickets)
+                .leftJoin(users, eq(users.id, eventTickets.userId))
                 .where(eq(eventTickets.eventId, eventId));
+
+            const tickets = rows.map(r => ({
+                ...r.ticket,
+                buyerName: r.buyerName,
+                buyerEmail: r.buyerEmail,
+            }));
 
             const summary = {
                 total: tickets.length,

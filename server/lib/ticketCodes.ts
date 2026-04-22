@@ -1,15 +1,19 @@
 /**
  * Short ticket / access code generator.
  *
- * Format: "UK-XXXX" (7 chars total) using a base-32 alphabet that skips
- * visually ambiguous characters (0/O, 1/I/L). Short enough to read out
- * loud at the door and search in a single keystroke; 31^4 ≈ 923k combos
- * still keeps collision probability tiny for the platform's scale, and
- * the DB's UNIQUE constraint on ticketCode catches any unlikely clash.
+ * Format: a plain 5-character code (e.g. "K9F2X") from an unambiguous
+ * base-31 alphabet that drops 0/O/1/I/L. No prefix — the ticket type is
+ * already known from the DB record, so the code stays as short as
+ * possible for buyers to speak and for staff to search.
+ *
+ * 31^5 ≈ 28.6 million combinations, which leaves collision probability
+ * vanishing small at the platform's scale. The DB's UNIQUE constraint on
+ * ticketCode is the ultimate safety net.
  */
 
-// Unambiguous base-32 alphabet (no 0/O/1/I/L)
+// Unambiguous base-31 alphabet (no 0/O/1/I/L)
 const ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const CODE_LENGTH = 5;
 
 function randomBlock(len: number): string {
   let out = "";
@@ -19,22 +23,22 @@ function randomBlock(len: number): string {
   return out;
 }
 
-/** "UK-ABCD" — paid event ticket. */
+/** Paid event ticket code — 5 chars, e.g. "K9F2X". */
 export function generateTicketCode(): string {
-  return `UK-${randomBlock(4)}`;
+  return randomBlock(CODE_LENGTH);
 }
 
-/** "UKC-ABCD" — paid class access code. "C" distinguishes from event. */
+/** Paid class access code — 5 chars. */
 export function generateAccessCode(): string {
-  return `UKC-${randomBlock(4)}`;
+  return randomBlock(CODE_LENGTH);
 }
 
-/** "GST-ABCD" — guest-list ticket. */
+/** Guest-list ticket code — 5 chars. */
 export function generateGuestTicketCode(): string {
-  return `GST-${randomBlock(4)}`;
+  return randomBlock(CODE_LENGTH);
 }
 
-/** "CSH-ABCD" — cash-reservation placeholder code. */
+/** Cash-reservation ticket code — 5 chars. */
 export function generateCashTicketCode(): string {
-  return `CSH-${randomBlock(4)}`;
+  return randomBlock(CODE_LENGTH);
 }

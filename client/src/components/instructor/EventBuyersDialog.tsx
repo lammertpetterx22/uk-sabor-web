@@ -38,10 +38,14 @@ export default function EventBuyersDialog({ open, onClose, event }: EventBuyersD
   const tickets = (data?.tickets ?? []).filter((t: any) => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
+    // Search both the paying user and the guest fields so creators can
+    // find tickets by ticket code, buyer name or email from any source.
     return (
       (t.ticketCode ?? "").toLowerCase().includes(q) ||
-      (t.guestEmail ?? "").toLowerCase().includes(q) ||
-      (t.guestName ?? "").toLowerCase().includes(q)
+      (t.buyerName ?? "").toLowerCase().includes(q) ||
+      (t.buyerEmail ?? "").toLowerCase().includes(q) ||
+      (t.guestName ?? "").toLowerCase().includes(q) ||
+      (t.guestEmail ?? "").toLowerCase().includes(q)
     );
   });
 
@@ -135,8 +139,10 @@ export default function EventBuyersDialog({ open, onClose, event }: EventBuyersD
                           )}
                         </div>
                         <p className="text-sm font-medium truncate">
-                          {t.guestName || `Ticket #${t.id}`}
-                          {t.guestEmail && <span className="text-foreground/50 font-normal ml-2">· {t.guestEmail}</span>}
+                          {t.guestName || t.buyerName || `Ticket #${t.id}`}
+                          {(t.guestEmail || t.buyerEmail) && (
+                            <span className="text-foreground/50 font-normal ml-2">· {t.guestEmail || t.buyerEmail}</span>
+                          )}
                         </p>
                       </div>
                       <Button
