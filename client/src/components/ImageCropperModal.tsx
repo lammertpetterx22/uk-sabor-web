@@ -1,10 +1,20 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useCallback, useMemo, useState } from "react";
+import Cropper, { Area } from "react-easy-crop";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, ZoomIn, ZoomOut, RotateCw, RotateCcw, Maximize2, Square, RectangleHorizontal, Crop } from "lucide-react";
+import {
+  Loader2,
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  Maximize2,
+  Square,
+  RectangleHorizontal,
+  Crop as CropIcon,
+  Check,
+  X,
+} from "lucide-react";
 
 interface ImageCropperModalProps {
   imageSrc: string | null;
@@ -14,493 +24,306 @@ interface ImageCropperModalProps {
   onClose: () => void;
 }
 
-const ASPECT_RATIOS = {
-  "17:25": 17 / 25,  // Flyer vertical (1275x1875) - PERFECTO PARA EVENTOS
+/**
+ * The modal preset system. "17:25" is our flyer format, so default to it
+ * when the caller doesn't provide a specific aspect.
+ */
+const ASPECT_RATIOS: Record<string, number | undefined> = {
+  "17:25": 17 / 25, // Flyer vertical — 1275x1875 output
   "16:9": 16 / 9,
-  "4:3": 4 / 3,
   "1:1": 1,
   "3:4": 3 / 4,
   "9:16": 9 / 16,
   "free": undefined,
 };
 
-async function getCroppedImg(canvas: HTMLCanvasElement): Promise<string> {
-  return canvas.toDataURL("image/jpeg", 0.95);
+// Export dimensions by aspect so cropped images land at the right resolution
+const EXPORT_SIZES: Record<string, { w: number; h: number }> = {
+  "17:25": { w: 1275, h: 1875 },
+  "16:9":  { w: 1920, h: 1080 },
+  "1:1":   { w: 1200, h: 1200 },
+  "3:4":   { w: 1200, h: 1600 },
+  "9:16":  { w: 1080, h: 1920 },
+};
+
+function createImage(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.addEventListener("load", () => resolve(img));
+    img.addEventListener("error", reject);
+    img.setAttribute("crossOrigin", "anonymous");
+    img.src = url;
+  });
+}
+
+/**
+ * Draws the cropped region at the target export resolution and returns a
+ * JPEG data URL. Handles rotation correctly by drawing into an intermediate
+ * canvas first.
+ */
+async function getCroppedDataUrl(
+  imageSrc: string,
+  pixelCrop: Area,
+  rotation: number,
+  exportSize: { w: number; h: number } | undefined
+): Promise<string> {
+  const image = await createImage(imageSrc);
+  const rotRad = (rotation * Math.PI) / 180;
+
+  // Intermediate canvas: the full image at its rotated bounding box.
+  const bboxW = Math.abs(Math.cos(rotRad) * image.width) + Math.abs(Math.sin(rotRad) * image.height);
+  const bboxH = Math.abs(Math.sin(rotRad) * image.width) + Math.abs(Math.cos(rotRad) * image.height);
+  const full = document.createElement("canvas");
+  full.width = bboxW;
+  full.height = bboxH;
+  const fullCtx = full.getContext("2d")!;
+  fullCtx.translate(bboxW / 2, bboxH / 2);
+  fullCtx.rotate(rotRad);
+  fullCtx.drawImage(image, -image.width / 2, -image.height / 2);
+
+  // Final canvas: the crop region, up/downscaled to the target export size.
+  const outW = exportSize?.w ?? Math.round(pixelCrop.width);
+  const outH = exportSize?.h ?? Math.round(pixelCrop.height);
+
+  const out = document.createElement("canvas");
+  out.width = outW;
+  out.height = outH;
+  const outCtx = out.getContext("2d")!;
+  outCtx.imageSmoothingQuality = "high";
+  outCtx.drawImage(
+    full,
+    pixelCrop.x,
+    pixelCrop.y,
+    pixelCrop.width,
+    pixelCrop.height,
+    0,
+    0,
+    outW,
+    outH,
+  );
+  return out.toDataURL("image/jpeg", 0.95);
+}
+
+/**
+ * Resolve the initial aspect preset key from the aspect number passed by
+ * the parent form. Defaults to our flyer format.
+ */
+function aspectNumberToKey(aspect: number | undefined): string {
+  if (!aspect) return "17:25";
+  const entries = Object.entries(ASPECT_RATIOS).filter(([, v]) => v !== undefined) as [string, number][];
+  const match = entries.find(([, v]) => Math.abs(v - aspect) < 0.01);
+  return match?.[0] ?? "17:25";
 }
 
 export default function ImageCropperModal({
   imageSrc,
   aspect,
-  label = "Recortar Image",
+  label = "Crop image",
   onCropComplete,
   onClose,
 }: ImageCropperModalProps) {
-  const [selectedAspect, setSelectedAspect] = useState<string>(() => {
-    // Auto-detect aspect ratio
-    if (!aspect) return "17:25"; // DEFAULT: Flyer format
-    if (Math.abs(aspect - 17 / 25) < 0.01) return "17:25";
-    if (Math.abs(aspect - 16 / 9) < 0.01) return "16:9";
-    if (Math.abs(aspect - 4 / 3) < 0.01) return "4:3";
-    if (Math.abs(aspect - 1) < 0.01) return "1:1";
-    if (Math.abs(aspect - 3 / 4) < 0.01) return "3:4";
-    if (Math.abs(aspect - 9 / 16) < 0.01) return "9:16";
-    return "17:25"; // DEFAULT: Flyer format
-  });
+  const [aspectKey, setAspectKey] = useState<string>(() => aspectNumberToKey(aspect));
+  const currentAspect = ASPECT_RATIOS[aspectKey];
+
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
-  const [scale, setScale] = useState(1);
+  const [pixelCrop, setPixelCrop] = useState<Area | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [offsetX, setOffsetX] = useState(0);
-  const [offsetY, setOffsetY] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  const imgRef = useRef<HTMLImageElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const onCropCompleteInternal = useCallback((_area: Area, areaPixels: Area) => {
+    setPixelCrop(areaPixels);
+  }, []);
 
-  const currentAspect = ASPECT_RATIOS[selectedAspect as keyof typeof ASPECT_RATIOS];
-
-  const handleImageLoad = useCallback(() => {
-    // Auto-fit: calculate minimum scale to cover the frame
-    if (!imgRef.current || !containerRef.current) return;
-
-    const img = imgRef.current;
-    const containerW = containerRef.current.clientWidth;
-    const containerH = 420;
-    const availW = containerW - 32;
-    const availH = containerH - 32;
-
-    let fw: number, fh: number;
-    if (currentAspect) {
-      const byW = { fw: availW, fh: availW / currentAspect };
-      const byH = { fw: availH * currentAspect, fh: availH };
-      ({ fw, fh } = byW.fh <= availH ? byW : byH);
-    } else {
-      fw = availW;
-      fh = availH;
-    }
-
-    const scaleX = fw / img.naturalWidth;
-    const scaleY = fh / img.naturalHeight;
-    setScale(Math.max(scaleX, scaleY));
-    setOffsetX(0);
-    setOffsetY(0);
-  }, [currentAspect]);
-
-  // Auto-fit when aspect ratio changes
-  useEffect(() => {
-    if (!imgRef.current || !containerRef.current) return;
-
-    const img = imgRef.current;
-    const containerW = containerRef.current.clientWidth;
-    const containerH = 420;
-    const availW = containerW - 32;
-    const availH = containerH - 32;
-
-    let fw: number, fh: number;
-    if (currentAspect) {
-      const byW = { fw: availW, fh: availW / currentAspect };
-      const byH = { fw: availH * currentAspect, fh: availH };
-      ({ fw, fh } = byW.fh <= availH ? byW : byH);
-    } else {
-      fw = availW;
-      fh = availH;
-    }
-
-    const scaleX = fw / img.naturalWidth;
-    const scaleY = fh / img.naturalHeight;
-    setScale(Math.max(scaleX, scaleY));
-    setOffsetX(0);
-    setOffsetY(0);
-  }, [currentAspect]);
-
-  // Mouse events for dragging
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    setIsDragging(true);
-    setDragStart({ x: e.clientX - offsetX, y: e.clientY - offsetY });
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging) return;
-    setOffsetX(e.clientX - dragStart.x);
-    setOffsetY(e.clientY - dragStart.y);
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  // Touch events for mobile
-  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    const touch = e.touches[0];
-    setIsDragging(true);
-    setDragStart({ x: touch.clientX - offsetX, y: touch.clientY - offsetY });
-  };
-
-  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!isDragging) return;
-    const touch = e.touches[0];
-    setOffsetX(touch.clientX - dragStart.x);
-    setOffsetY(touch.clientY - dragStart.y);
-  };
-
-  const handleTouchEnd = () => {
-    setIsDragging(false);
-  };
-
-  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    setScale((s) => Math.max(0.5, Math.min(3, +(s + delta).toFixed(1))));
-  };
+  const ratios: { key: string; label: string; icon: React.ReactNode }[] = useMemo(
+    () => [
+      { key: "17:25", label: "Flyer",  icon: <RectangleHorizontal className="h-4 w-4 rotate-90" /> },
+      { key: "16:9",  label: "Banner", icon: <RectangleHorizontal className="h-4 w-4" /> },
+      { key: "1:1",   label: "Square", icon: <Square className="h-4 w-4" /> },
+      { key: "3:4",   label: "3:4",    icon: <RectangleHorizontal className="h-4 w-4 rotate-90" /> },
+      { key: "9:16",  label: "Story",  icon: <RectangleHorizontal className="h-4 w-4 rotate-90" /> },
+      { key: "free",  label: "Free",   icon: <Maximize2 className="h-4 w-4" /> },
+    ],
+    []
+  );
 
   const handleApply = async () => {
-    if (!containerRef.current || !imgRef.current) return;
+    if (!imageSrc || !pixelCrop) return;
     setIsProcessing(true);
     try {
-      // 1. Calculate the frame size (visible crop area) based on aspect ratio
-      const containerW = containerRef.current.clientWidth;
-      const containerH = 420;
-      const availW = containerW - 32;
-      const availH = containerH - 32;
-
-      let fw: number, fh: number;
-      if (currentAspect) {
-        const byW = { fw: availW, fh: availW / currentAspect };
-        const byH = { fw: availH * currentAspect, fh: availH };
-        ({ fw, fh } = byW.fh <= availH ? byW : byH);
-      } else {
-        fw = availW;
-        fh = availH;
-      }
-
-      // 2. Output dimensions (exact sizes for specific aspect ratios)
-      const sizes: Record<string, { w: number; h: number }> = {
-        "17:25": { w: 1275, h: 1875 },
-        "16:9": { w: 1920, h: 1080 },
-        "1:1": { w: 1200, h: 1200 },
-        "3:4": { w: 1200, h: 1600 },
-        "9:16": { w: 1080, h: 1920 },
-      };
-      const outW = sizes[selectedAspect]?.w ?? fw * 2;
-      const outH = sizes[selectedAspect]?.h ?? fh * 2;
-
-      // 3. Create final canvas and draw correctly
-      const finalCanvas = document.createElement("canvas");
-      const ctx = finalCanvas.getContext("2d")!;
-      finalCanvas.width = outW;
-      finalCanvas.height = outH;
-
-      const img = imgRef.current;
-      const scaleToOutput = outW / fw;
-
-      ctx.fillStyle = "#000000";
-      ctx.fillRect(0, 0, outW, outH);
-
-      ctx.save();
-      ctx.translate(outW / 2, outH / 2);
-      ctx.rotate((rotation * Math.PI) / 180);
-      ctx.scale(scale * scaleToOutput, scale * scaleToOutput);
-      ctx.translate(
-        -img.naturalWidth / 2 + offsetX / scale,
-        -img.naturalHeight / 2 + offsetY / scale
+      const url = await getCroppedDataUrl(
+        imageSrc,
+        pixelCrop,
+        rotation,
+        EXPORT_SIZES[aspectKey]
       );
-      ctx.drawImage(img, 0, 0);
-      ctx.restore();
-
-      const dataUrl = await getCroppedImg(finalCanvas);
-      onCropComplete(dataUrl);
+      onCropComplete(url);
     } finally {
       setIsProcessing(false);
     }
   };
 
   const resetTransform = () => {
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
     setRotation(0);
-    setScale(1);
-    setOffsetX(0);
-    setOffsetY(0);
   };
 
   return (
     <Dialog open={!!imageSrc} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[98vw] max-w-5xl max-h-[95vh] overflow-y-auto p-4 sm:p-6 bg-gradient-to-br from-background to-background/95">
-        <DialogHeader>
+      <DialogContent
+        showCloseButton={false}
+        className="!max-w-4xl w-[96vw] max-h-[95vh] p-0 gap-0 rounded-2xl border border-white/10 shadow-2xl shadow-black/60 bg-[#0a0a0a] overflow-hidden"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 md:px-6 py-4 border-b border-white/10 bg-black/40 backdrop-blur-xl">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-accent/20 to-accent/10 border border-accent/30">
-              <Crop className="h-5 w-5 text-accent" />
+            <div className="p-2 rounded-xl bg-gradient-to-br from-accent/30 to-fuchsia-500/30 border border-accent/40 shadow-lg">
+              <CropIcon className="h-5 w-5 text-white" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold gradient-text">{label}</DialogTitle>
-              <p className="text-sm text-foreground/60 mt-1">Ajusta, recorta y perfecciona tu image</p>
+              <h2 className="text-base md:text-lg font-bold text-white leading-none">{label}</h2>
+              <p className="text-xs text-white/50 mt-1">Drag to reposition · pinch or scroll to zoom</p>
             </div>
           </div>
-        </DialogHeader>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-9 h-9 rounded-lg text-white/40 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
-        <div className="space-y-6 mt-4">
-          {/* Aspect Ratio Selector */}
-          <div className="space-y-3">
-            <label className="text-sm font-semibold text-foreground/80 flex items-center gap-2">
-              <RectangleHorizontal className="h-4 w-4 text-accent" />
-              Proporción de Aspecto
-            </label>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-              {Object.keys(ASPECT_RATIOS).map((ratio) => (
-                <Button
-                  key={ratio}
-                  variant={selectedAspect === ratio ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => {
-                    setSelectedAspect(ratio);
-                    resetTransform();
-                  }}
-                  className={`relative ${
-                    selectedAspect === ratio
-                      ? "bg-gradient-to-r from-accent to-accent/80 text-white border-0 shadow-lg"
-                      : "hover:border-accent/50"
-                  }`}
-                >
-                  {ratio === "free" ? (
-                    <Maximize2 className="h-4 w-4 mr-1" />
-                  ) : ratio === "1:1" ? (
-                    <Square className="h-4 w-4 mr-1" />
-                  ) : (
-                    <RectangleHorizontal className="h-4 w-4 mr-1" />
-                  )}
-                  {ratio === "free" ? "Libre" : ratio}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Controls */}
-          <div className="bg-gradient-to-r from-accent/10 to-accent/5 p-4 rounded-xl border border-accent/20 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Zoom Slider */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-semibold text-foreground/80 flex items-center gap-2">
-                    <ZoomIn className="h-4 w-4 text-accent" />
-                    Zoom
-                  </label>
-                  <Badge variant="outline" className="text-xs">
-                    {Math.round(scale * 100)}%
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 w-8 p-0 shrink-0"
-                    onClick={() => setScale((s) => Math.max(0.5, +(s - 0.1).toFixed(1)))}
-                  >
-                    <ZoomOut className="h-4 w-4" />
-                  </Button>
-                  <Slider
-                    value={[scale]}
-                    onValueChange={(v) => setScale(v[0])}
-                    min={0.5}
-                    max={3}
-                    step={0.1}
-                    className="flex-1"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 w-8 p-0 shrink-0"
-                    onClick={() => setScale((s) => Math.min(3, +(s + 0.1).toFixed(1)))}
-                  >
-                    <ZoomIn className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Rotation Controls */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-semibold text-foreground/80 flex items-center gap-2">
-                    <RotateCw className="h-4 w-4 text-accent" />
-                    Rotación
-                  </label>
-                  <Badge variant="outline" className="text-xs">
-                    {rotation}°
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-3"
-                    onClick={() => setRotation((r) => (r - 90 + 360) % 360)}
-                  >
-                    <RotateCcw className="h-4 w-4 mr-1" />
-                    90°
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 flex-1"
-                    onClick={resetTransform}
-                  >
-                    Resetear
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-3"
-                    onClick={() => setRotation((r) => (r + 90) % 360)}
-                  >
-                    <RotateCw className="h-4 w-4 mr-1" />
-                    90°
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-2 bg-background/50 p-3 rounded-lg">
-              <div className="text-accent mt-0.5">💡</div>
-              <p className="text-xs text-foreground/70">
-                <strong>Arrastra</strong> para mover • <strong>Rueda del mouse</strong> para zoom • <strong>Botones</strong> para rotar
-              </p>
-            </div>
-          </div>
-
-          {/* Image Editor Area */}
-          <div className="space-y-3">
-            <label className="text-sm font-semibold text-foreground/80">Editor de Image</label>
-            <div
-              ref={containerRef}
-              className="relative border-2 border-dashed border-accent/40 rounded-xl bg-black overflow-hidden courser-grab active:courser-grabbing shadow-xl"
+        {/* Cropper — the only focal point */}
+        <div className="relative w-full bg-black" style={{ aspectRatio: "4/3" }}>
+          {imageSrc && (
+            <Cropper
+              image={imageSrc}
+              crop={crop}
+              zoom={zoom}
+              rotation={rotation}
+              aspect={currentAspect}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onRotationChange={setRotation}
+              onCropComplete={onCropCompleteInternal}
+              showGrid
+              objectFit="contain"
               style={{
-                width: "100%",
-                height: "420px",
-                position: "relative",
+                containerStyle: { backgroundColor: "#0a0a0a" },
+                cropAreaStyle: {
+                  border: "2px solid rgba(255,255,255,0.9)",
+                  color: "rgba(0,0,0,0.55)",
+                  boxShadow: "0 0 0 9999px rgba(0,0,0,0.55)",
+                },
               }}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              onWheel={handleWheel}
+            />
+          )}
+        </div>
+
+        {/* Controls */}
+        <div className="px-5 md:px-6 py-4 space-y-4 bg-[#0a0a0a]">
+          {/* Aspect presets — segmented control */}
+          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+            {ratios.map((r) => (
+              <button
+                key={r.key}
+                type="button"
+                onClick={() => {
+                  setAspectKey(r.key);
+                  // Small reset so the crop frame recentres nicely after
+                  // an aspect switch
+                  setCrop({ x: 0, y: 0 });
+                  setZoom(1);
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border ${
+                  aspectKey === r.key
+                    ? "bg-gradient-to-r from-accent to-fuchsia-500 text-white border-accent/40 shadow-lg shadow-accent/20"
+                    : "bg-white/5 text-white/60 border-white/10 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                {r.icon}
+                {r.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Zoom slider with -/+ buttons */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setZoom((z) => Math.max(1, +(z - 0.1).toFixed(2)))}
+              className="w-9 h-9 rounded-lg bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors flex-shrink-0"
+              aria-label="Zoom out"
             >
-              {imageSrc && (
-                <img
-                  ref={imgRef}
-                  src={imageSrc}
-                  alt="Edit"
-                  style={{
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    transform: `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px)) scale(${scale}) rotate(${rotation}deg)`,
-                    maxWidth: "none",
-                    userSelect: "none",
-                    pointerEvents: "none",
-                    WebkitUserSelect: "none",
-                  }}
-                  onLoad={handleImageLoad}
-                  draggable={false}
-                />
-              )}
-
-              {/* Crop frame overlay - shows exactly what will be exported */}
-              {(() => {
-                if (!containerRef.current) return null;
-
-                const containerW = containerRef.current.clientWidth;
-                const containerH = 420;
-                const availW = containerW - 32;
-                const availH = containerH - 32;
-
-                let fw: number, fh: number;
-                if (currentAspect) {
-                  const byW = { fw: availW, fh: availW / currentAspect };
-                  const byH = { fw: availH * currentAspect, fh: availH };
-                  ({ fw, fh } = byW.fh <= availH ? byW : byH);
-                } else {
-                  fw = availW;
-                  fh = availH;
-                }
-
-                const frameLeft = (containerW - fw) / 2;
-                const frameTop = (containerH - fh) / 2;
-
-                return (
-                  <>
-                    {/* Dark overlays outside the crop frame */}
-                    {/* Top overlay */}
-                    <div
-                      className="absolute left-0 right-0 bg-black/60 pointer-events-none"
-                      style={{ top: 0, height: `${frameTop}px` }}
-                    />
-                    {/* Bottom overlay */}
-                    <div
-                      className="absolute left-0 right-0 bg-black/60 pointer-events-none"
-                      style={{ top: `${frameTop + fh}px`, bottom: 0 }}
-                    />
-                    {/* Left overlay */}
-                    <div
-                      className="absolute top-0 bottom-0 bg-black/60 pointer-events-none"
-                      style={{ left: 0, width: `${frameLeft}px` }}
-                    />
-                    {/* Right overlay */}
-                    <div
-                      className="absolute top-0 bottom-0 bg-black/60 pointer-events-none"
-                      style={{ left: `${frameLeft + fw}px`, right: 0 }}
-                    />
-
-                    {/* White border around the crop frame */}
-                    <div
-                      className="absolute border-2 border-white/80 pointer-events-none"
-                      style={{
-                        left: `${frameLeft}px`,
-                        top: `${frameTop}px`,
-                        width: `${fw}px`,
-                        height: `${fh}px`,
-                      }}
-                    >
-                      {/* Grid of thirds inside the frame */}
-                      <div className="w-full h-full grid grid-cols-3 grid-rows-3">
-                        {[...Array(9)].map((_, i) => (
-                          <div key={i} className="border border-white/20" />
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                );
-              })()}
-            </div>
+              <ZoomOut className="h-4 w-4" />
+            </button>
+            <Slider
+              value={[zoom]}
+              onValueChange={(v) => setZoom(v[0])}
+              min={1}
+              max={5}
+              step={0.01}
+              className="flex-1"
+            />
+            <button
+              type="button"
+              onClick={() => setZoom((z) => Math.min(5, +(z + 0.1).toFixed(2)))}
+              className="w-9 h-9 rounded-lg bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors flex-shrink-0"
+              aria-label="Zoom in"
+            >
+              <ZoomIn className="h-4 w-4" />
+            </button>
+            <span className="text-xs text-white/40 font-mono tabular-nums w-10 text-right">
+              {(zoom * 100).toFixed(0)}%
+            </span>
           </div>
         </div>
 
-        <DialogFooter className="gap-3 flex-col-reverse sm:flex-row mt-6 pt-4 border-t border-border/50">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={isProcessing}
-            className="w-full sm:w-auto"
-          >
-            Cancelar
-          </Button>
-          <Button
-            className="btn-vibrant w-full sm:w-auto font-semibold shadow-lg"
-            onClick={handleApply}
-            disabled={isProcessing}
-          >
-            {isProcessing ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Processing...
-              </>
-            ) : (
-              <>
-                <Crop className="h-4 w-4 mr-2" />
-                Aplicar Recorte
-              </>
-            )}
-          </Button>
-        </DialogFooter>
+        {/* Footer — apply / cancel */}
+        <div className="px-5 md:px-6 py-4 border-t border-white/10 bg-black/40 backdrop-blur-xl flex items-center justify-between gap-3">
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setRotation((r) => (r + 90) % 360)}
+              className="px-3 py-2 rounded-lg text-xs font-medium text-white/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-1.5 transition-colors"
+            >
+              <RotateCw className="h-3.5 w-3.5" /> Rotate
+            </button>
+            <button
+              type="button"
+              onClick={resetTransform}
+              className="px-3 py-2 rounded-lg text-xs font-medium text-white/50 hover:text-white/80 transition-colors"
+            >
+              Reset
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isProcessing}
+              className="h-10 border-white/15 bg-transparent text-white hover:bg-white/5"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleApply}
+              disabled={isProcessing || !pixelCrop}
+              className="h-10 px-5 bg-gradient-to-r from-accent to-fuchsia-500 hover:from-accent/90 hover:to-fuchsia-500/90 text-white font-semibold shadow-lg shadow-accent/20"
+            >
+              {isProcessing ? (
+                <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Processing…</>
+              ) : (
+                <><Check className="h-4 w-4 mr-2" /> Apply</>
+              )}
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
