@@ -23,9 +23,10 @@ function canManageEvent(user: { id: number; role: string; roles?: string | null 
   return !!event.creatorId && event.creatorId === user.id;
 }
 
-function generateGuestTicketCode(eventId: number): string {
-  const rand = crypto.randomBytes(6).toString("hex").toUpperCase();
-  return `GUEST-${eventId}-${rand}`;
+import { generateGuestTicketCode as _genGuestCode } from "../lib/ticketCodes";
+
+function generateGuestTicketCode(_eventId: number): string {
+  return _genGuestCode();
 }
 
 /**

@@ -10,28 +10,12 @@ import { eq, desc } from "drizzle-orm";
 import Stripe from "stripe";
 import { calculateCheckoutAmounts, getPlan } from "../stripe/plans";
 import { subscriptions } from "../../drizzle/schema";
+import { generateTicketCode, generateAccessCode } from "../lib/ticketCodes";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-02-24.acacia" as any,
 });
 
-function generateTicketCode(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "UK-";
-  for (let i = 0; i < 8; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
-}
-
-function generateAccessCode(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "CLS-";
-  for (let i = 0; i < 8; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
-}
 
 export const paymentsRouter = router({
   /**

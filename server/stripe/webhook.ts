@@ -18,6 +18,7 @@ import { PRODUCT_METADATA } from "./products";
 import { sendQRCodeEmail } from "../features/email";
 import { addEarnings } from "../features/financials";
 import { PLANS, PlanKey } from "./plans";
+import { generateTicketCode, generateAccessCode } from "../lib/ticketCodes";
 import QRCode from "qrcode";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
@@ -939,16 +940,3 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
   }
 }
 
-/**
- * Generate unique ticket code
- */
-function generateTicketCode(): string {
-  return `TICKET-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-}
-
-/**
- * Generate unique access code
- */
-function generateAccessCode(): string {
-  return `ACCESS-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-}

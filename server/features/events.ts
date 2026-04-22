@@ -2,6 +2,7 @@ import z from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { events, eventTickets, eventTicketTiers, eventHotels, usageTracking } from "../../drizzle/schema";
+import { generateCashTicketCode } from "../lib/ticketCodes";
 import { getAllRoles } from "../../drizzle/schema";
 import { eq, desc, and, gte } from "drizzle-orm";
 import { canCreateEvent } from "../stripe/plans";
@@ -378,7 +379,7 @@ export const eventsRouter = router({
       }
 
       // 6. Generate unique ticket code
-      const ticketCode = `CASH-${event.id}-${ctx.user.id}-${Date.now()}`;
+      const ticketCode = generateCashTicketCode();
 
       // 7. Create ticket with pending_cash status
       const [ticket] = await db.insert(eventTickets).values({
