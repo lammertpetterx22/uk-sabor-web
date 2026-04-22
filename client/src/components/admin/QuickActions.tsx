@@ -1,29 +1,41 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Calendar,
   GraduationCap,
   Users,
   Clock,
-  Plus,
   Wallet,
   BarChart3,
-  Settings,
-  Mail
 } from "lucide-react";
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 
-interface QuickActionProps {
+/** Action keys that AdminDashboard knows how to handle. */
+export type QuickAction =
+  | "create-event"
+  | "create-class"
+  | "create-course"
+  | "manage-users";
+
+interface QuickActionsProps {
+  /** Called when the admin clicks a card that maps to an internal tab/dialog. */
+  onAction?: (action: QuickAction) => void;
+}
+
+interface CardDef {
   icon: React.ReactNode;
   title: string;
   description: string;
-  href: string;
   color: string;
+  onClick: () => void;
 }
 
-function QuickActionCard({ icon, title, description, href, color }: QuickActionProps) {
+function ActionCard({ icon, title, description, color, onClick }: CardDef) {
   return (
-    <Link href={href}>
+    <button
+      type="button"
+      onClick={onClick}
+      className="text-left"
+    >
       <Card className="cursor-pointer border-border/50 bg-card/50 backdrop-blur-sm hover:border-accent/30 hover:bg-card/70 transition-all group">
         <CardContent className="p-6">
           <div className="flex items-start gap-4">
@@ -39,61 +51,56 @@ function QuickActionCard({ icon, title, description, href, color }: QuickActionP
           </div>
         </CardContent>
       </Card>
-    </Link>
+    </button>
   );
 }
 
-export default function QuickActions() {
-  const actions: QuickActionProps[] = [
+export default function QuickActions({ onAction }: QuickActionsProps) {
+  const [, setLocation] = useLocation();
+
+  const cards: CardDef[] = [
     {
       icon: <Calendar className="h-5 w-5 text-blue-500" />,
       title: "Create Event",
       description: "Add a new event to the platform",
-      href: "/admin?tab=events&action=create",
-      color: "bg-blue-500/10"
+      color: "bg-blue-500/10",
+      onClick: () => onAction?.("create-event"),
     },
     {
       icon: <GraduationCap className="h-5 w-5 text-purple-500" />,
       title: "Create Course",
       description: "Add a new online course",
-      href: "/admin?tab=courses&action=create",
-      color: "bg-purple-500/10"
+      color: "bg-purple-500/10",
+      onClick: () => onAction?.("create-course"),
     },
     {
       icon: <Clock className="h-5 w-5 text-orange-500" />,
       title: "Create Class",
       description: "Schedule a new class session",
-      href: "/admin?tab=classes&action=create",
-      color: "bg-orange-500/10"
+      color: "bg-orange-500/10",
+      onClick: () => onAction?.("create-class"),
     },
     {
       icon: <Users className="h-5 w-5 text-green-500" />,
       title: "Manage Users",
       description: "View and edit user accounts",
-      href: "/admin?tab=users",
-      color: "bg-green-500/10"
+      color: "bg-green-500/10",
+      onClick: () => onAction?.("manage-users"),
     },
     {
       icon: <Wallet className="h-5 w-5 text-yellow-500" />,
       title: "Withdrawals",
       description: "Review pending payout requests",
-      href: "/admin/withdrawals",
-      color: "bg-yellow-500/10"
+      color: "bg-yellow-500/10",
+      onClick: () => setLocation("/admin/withdrawals"),
     },
     {
       icon: <BarChart3 className="h-5 w-5 text-cyan-500" />,
       title: "CRM Dashboard",
       description: "Manage contacts and interactions",
-      href: "/crm",
-      color: "bg-cyan-500/10"
+      color: "bg-cyan-500/10",
+      onClick: () => setLocation("/crm"),
     },
-    {
-      icon: <Settings className="h-5 w-5 text-gray-500" />,
-      title: "Settings",
-      description: "Configure platform settings",
-      href: "/admin?tab=settings",
-      color: "bg-gray-500/10"
-    }
   ];
 
   return (
@@ -102,9 +109,9 @@ export default function QuickActions() {
         <h3 className="text-xl font-semibold">Quick Actions</h3>
         <p className="text-foreground/60 text-sm mt-1">Common tasks and shortcuts</p>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {actions.map((action, index) => (
-          <QuickActionCard key={index} {...action} />
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {cards.map((c, i) => (
+          <ActionCard key={i} {...c} />
         ))}
       </div>
     </div>

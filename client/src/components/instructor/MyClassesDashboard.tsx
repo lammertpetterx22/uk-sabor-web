@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +36,8 @@ interface MyClassesDashboardProps {
   isAdmin: boolean;
   instructors: any[];
   myInstructorProfile?: any;
+  autoOpenCreate?: boolean;
+  onAutoOpenHandled?: () => void;
 }
 
 export default function MyClassesDashboard({
@@ -45,6 +47,8 @@ export default function MyClassesDashboard({
   isAdmin,
   instructors,
   myInstructorProfile,
+  autoOpenCreate,
+  onAutoOpenHandled,
 }: MyClassesDashboardProps) {
   const { t } = useTranslations();
   const { tr } = useTr();
@@ -54,6 +58,14 @@ export default function MyClassesDashboard({
   const [editingClass, setEditingClass] = useState<any>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [expandedClassId, setExpandedClassId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (autoOpenCreate) {
+      setEditingClass(null);
+      setShowClassDialog(true);
+      onAutoOpenHandled?.();
+    }
+  }, [autoOpenCreate, onAutoOpenHandled]);
 
   // Mutations
   const updateMutation = trpc.classes.update.useMutation({

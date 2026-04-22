@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +42,8 @@ interface MyCoursesDashboardProps {
   isAdmin?: boolean;
   instructors?: any[];
   myInstructorProfile?: any;
+  autoOpenCreate?: boolean;
+  onAutoOpenHandled?: () => void;
 }
 
 export default function MyCoursesDashboard({
@@ -50,7 +52,9 @@ export default function MyCoursesDashboard({
   onRefresh,
   isAdmin = false,
   instructors = [],
-  myInstructorProfile
+  myInstructorProfile,
+  autoOpenCreate,
+  onAutoOpenHandled,
 }: MyCoursesDashboardProps) {
   const { tr } = useTr();
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
@@ -59,6 +63,14 @@ export default function MyCoursesDashboard({
   const [editingCourse, setEditingCourse] = useState<any>(null);
   const [editingLesson, setEditingLesson] = useState<any>(null);
   const [confirmDeleteCourseId, setConfirmDeleteCourseId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (autoOpenCreate) {
+      setEditingCourse(null);
+      setShowCourseDialog(true);
+      onAutoOpenHandled?.();
+    }
+  }, [autoOpenCreate, onAutoOpenHandled]);
 
   const videoInputRef = useState<HTMLInputElement | null>(null)[1];
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +36,10 @@ interface MyEventsDashboardProps {
   isLoadingEvents: boolean;
   onRefresh: () => void;
   isAdmin: boolean;
+  /** When true, the dashboard opens its "create event" dialog once on mount. */
+  autoOpenCreate?: boolean;
+  /** Called after the dashboard processes an auto-open request so the parent can reset the flag. */
+  onAutoOpenHandled?: () => void;
 }
 
 export default function MyEventsDashboard({
@@ -43,6 +47,8 @@ export default function MyEventsDashboard({
   isLoadingEvents,
   onRefresh,
   isAdmin,
+  autoOpenCreate,
+  onAutoOpenHandled,
 }: MyEventsDashboardProps) {
   const { t } = useTranslations();
   const { tr } = useTr();
@@ -58,6 +64,15 @@ export default function MyEventsDashboard({
   const [guestEmail, setGuestEmail] = useState("");
   // Buyers dialog — who has a ticket for this event, with resend button
   const [buyersEvent, setBuyersEvent] = useState<any>(null);
+
+  // Auto-open the create dialog when the parent's Quick Action asks for it.
+  useEffect(() => {
+    if (autoOpenCreate) {
+      setEditingEvent(null);
+      setShowEventDialog(true);
+      onAutoOpenHandled?.();
+    }
+  }, [autoOpenCreate, onAutoOpenHandled]);
 
   const addGuestMutation = trpc.guestList.add.useMutation({
     onSuccess: () => {

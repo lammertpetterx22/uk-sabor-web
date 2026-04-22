@@ -38,6 +38,34 @@ export default function AdminDashboard() {
   const isCreator = isInstructor || isPromoter; // instructors and promoters share creator access
   const canManageCourses = isAdmin || isInstructor; // courses: instructors and admins only
   const [activeTab, setActiveTab] = useState("overview"); // All roles start at overview
+  // When a Quick Action fires "create-event/class/course", we set this so
+  // the target dashboard opens its create dialog on mount.
+  const [autoOpenCreate, setAutoOpenCreate] = useState<null | "event" | "class" | "course">(null);
+  const [contentSubTab, setContentSubTab] = useState<"events" | "classes">("events");
+
+  const handleQuickAction = (action: "create-event" | "create-class" | "create-course" | "manage-users") => {
+    if (action === "manage-users") {
+      setActiveTab("users");
+      return;
+    }
+    if (action === "create-event") {
+      setActiveTab("content");
+      setContentSubTab("events");
+      setAutoOpenCreate("event");
+      return;
+    }
+    if (action === "create-class") {
+      setActiveTab("content");
+      setContentSubTab("classes");
+      setAutoOpenCreate("class");
+      return;
+    }
+    if (action === "create-course") {
+      setActiveTab("my-courses");
+      setAutoOpenCreate("course");
+      return;
+    }
+  };
 
   // Fetch courses for LessonsManager and MyCoursesDashboard (only if user can manage courses)
   const coursesQuery = canManageCourses && isAdmin
@@ -227,7 +255,7 @@ export default function AdminDashboard() {
           {isAdmin && (
             <TabsContent value="overview" className="space-y-8">
               <DashboardOverview />
-              <QuickActions />
+              <QuickActions onAction={handleQuickAction} />
             </TabsContent>
           )}
 
@@ -275,7 +303,7 @@ export default function AdminDashboard() {
           {/* CONTENT TAB - Admin only (Events + Classs con subtabs) */}
           {isAdmin && (
             <TabsContent value="content" className="space-y-6">
-              <Tabs defaultValue="events" className="w-full">
+              <Tabs value={contentSubTab} onValueChange={(v) => setContentSubTab(v as "events" | "classes")} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6">
                   <TabsTrigger value="events" className="data-[state=active]:bg-blue-500/20">
                     <Calendar className="h-4 w-4 mr-2" />
@@ -297,6 +325,8 @@ export default function AdminDashboard() {
                         (eventsQuery as any).refetch();
                       }
                     }}
+                    autoOpenCreate={autoOpenCreate === "event"}
+                    onAutoOpenHandled={() => setAutoOpenCreate(null)}
                   />
                 </TabsContent>
 
@@ -312,6 +342,8 @@ export default function AdminDashboard() {
                         (classesQuery as any).refetch();
                       }
                     }}
+                    autoOpenCreate={autoOpenCreate === "class"}
+                    onAutoOpenHandled={() => setAutoOpenCreate(null)}
                   />
                 </TabsContent>
               </Tabs>
@@ -327,6 +359,8 @@ export default function AdminDashboard() {
                 isAdmin={isAdmin}
                 instructors={instructors || []}
                 myInstructorProfile={myInstructorProfile}
+                autoOpenCreate={autoOpenCreate === "course"}
+                onAutoOpenHandled={() => setAutoOpenCreate(null)}
                 onRefresh={() => {
                   if (coursesQuery && 'refetch' in coursesQuery) {
                     (coursesQuery as any).refetch();
