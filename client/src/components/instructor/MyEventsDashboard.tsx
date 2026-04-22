@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import EventFormCard from "@/components/admin/EventFormCard";
+import EventBuyersDialog from "./EventBuyersDialog";
 import {
   Calendar,
   MapPin,
@@ -55,6 +56,8 @@ export default function MyEventsDashboard({
   const [guestEvent, setGuestEvent] = useState<any>(null);
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
+  // Buyers dialog — who has a ticket for this event, with resend button
+  const [buyersEvent, setBuyersEvent] = useState<any>(null);
 
   const addGuestMutation = trpc.guestList.add.useMutation({
     onSuccess: () => {
@@ -342,6 +345,15 @@ export default function MyEventsDashboard({
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={(e) => { e.stopPropagation(); setBuyersEvent(event); }}
+                    className="flex-1 text-xs border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/50"
+                  >
+                    <Users className="h-3 w-3 mr-1" />
+                    Buyers
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={(e) => handleToggleExpanded(event.id, e)}
                     className="text-xs"
                   >
@@ -507,6 +519,13 @@ export default function MyEventsDashboard({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Buyers dialog — full ticket list with per-row resend */}
+      <EventBuyersDialog
+        open={!!buyersEvent}
+        onClose={() => setBuyersEvent(null)}
+        event={buyersEvent}
+      />
     </div>
   );
 }

@@ -1,8 +1,10 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { eventTickets, events, users } from "../../drizzle/schema";
+import { eventTickets, eventTicketTiers, events, users } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
+import QRCode from "qrcode";
+import { sendQRCodeEmail } from "./email";
 
 // ─── Role guards ──────────────────────────────────────────────────────────────
 
@@ -202,5 +204,84 @@ export const ticketsRouter = router({
             };
 
             return { event, tickets, summary };
+        }),
+
+    /**
+     * Re-send the ticket confirmation email for a single ticket. Used when
+     * the buyer says the original email never arrived (spam, typo, etc.).
+     * Only the event creator (or admin) can trigger this.
+     */
+    resendTicketEmail: protectedProcedure
+        .input(z.object({ ticketId: z.number().int().positive() }))
+        .mutation(async ({ ctx, input }) => {
+            const db = await getDb();
+            if (!db) throw new Error("Database not available");
+
+            const [ticket] = await db.select().from(eventTickets).where(eq(eventTickets.id, input.ticketId)).limit(1);
+            if (!ticket) throw new Error("Ticket not found");
+
+            const [event] = await db.select().from(events).where(eq(events.id, ticket.eventId)).limit(1);
+            if (!event) throw new Error("Event not found");
+
+            // Ownership: only the event's creator (or admin) can resend
+            const isAdmin = ctx.user.role === "admin";
+            const isCreator = !!event.creatorId && event.creatorId === ctx.user.id;
+            if (!isAdmin && !isCreator) {
+                throw new Error("Access denied — only the event creator can resend ticket emails");
+            }
+
+            // Where to send: guest tickets keep their guestEmail; paid tickets
+            // go to the buying user's email. Fallback keeps it defensive.
+            let toEmail: string | null = null;
+            let toName: string = "Attendee";
+
+            if (ticket.paymentStatus === "guest" && ticket.guestEmail) {
+                toEmail = ticket.guestEmail;
+                toName = ticket.guestName || "Guest";
+            } else {
+                const [buyer] = await db.select({ email: users.email, name: users.name })
+                    .from(users).where(eq(users.id, ticket.userId)).limit(1);
+                toEmail = buyer?.email ?? null;
+                toName = buyer?.name || "Attendee";
+            }
+
+            if (!toEmail) throw new Error("This ticket has no email address on file");
+
+            // Build the tier-aware title and post-purchase info (same logic as the webhook)
+            let itemName = event.title;
+            let postPurchaseInfo: string | undefined;
+            if (ticket.tierId) {
+                const [tier] = await db.select({ name: eventTicketTiers.name, postPurchaseInfo: eventTicketTiers.postPurchaseInfo })
+                    .from(eventTicketTiers).where(eq(eventTicketTiers.id, ticket.tierId)).limit(1);
+                if (tier?.name) itemName = `${event.title} — ${tier.name}`;
+                if (tier?.postPurchaseInfo) postPurchaseInfo = tier.postPurchaseInfo;
+            }
+
+            const eventDt = new Date(event.eventDate);
+            const eventDate = eventDt.toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+            const eventTime = eventDt.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+
+            // Regenerate the QR locally — used for the PNG attachment fallback.
+            // The inline QR in the HTML uses the hosted URL-based generator.
+            const qrCodeImage = await QRCode.toDataURL(`TKT-${ticket.ticketCode}`, {
+                errorCorrectionLevel: "H" as any,
+                margin: 1,
+                width: 300,
+            });
+
+            const ok = await sendQRCodeEmail({
+                to: toEmail,
+                userName: toName,
+                itemType: "event",
+                itemName,
+                qrCodeImage,
+                ticketCode: ticket.ticketCode || undefined,
+                eventDate,
+                eventTime,
+                postPurchaseInfo,
+            });
+
+            if (!ok) throw new Error("Email could not be sent — try again in a minute");
+            return { success: true, sentTo: toEmail };
         }),
 });
