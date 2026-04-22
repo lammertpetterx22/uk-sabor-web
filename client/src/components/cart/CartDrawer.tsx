@@ -158,7 +158,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             <div className="space-y-4">
               {items.map((item) => (
                 <div
-                  key={`${item.type}-${item.id}`}
+                  key={`${item.type}-${item.id}-${item.tierId ?? "flat"}`}
                   className="rounded-2xl bg-gradient-to-br from-card/70 to-card/30 border border-white/[0.08] hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300 overflow-hidden"
                 >
                   {/* Top section: Image + Details */}
@@ -188,7 +188,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            removeItem(item.type, item.id);
+                            removeItem(item.type, item.id, item.tierId ?? null);
                           }}
                           className="p-1.5 rounded-lg text-white/25 hover:text-red-400 hover:bg-red-400/10 transition-all flex-shrink-0"
                           aria-label="Remove item"
@@ -228,6 +228,11 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         <span className="text-[11px] text-white/40 capitalize px-2 py-0.5 bg-white/5 rounded-md font-medium">
                           {item.type === 'class' ? 'Live Class' : item.type}
                         </span>
+                        {item.tierName && (
+                          <span className="text-[11px] text-cyan-300 px-2 py-0.5 bg-cyan-500/15 border border-cyan-500/30 rounded-md font-semibold">
+                            🎟 {item.tierName}
+                          </span>
+                        )}
                         {item.danceStyle && (
                           <span className="text-[11px] text-accent/70 px-2 py-0.5 bg-accent/5 rounded-md font-medium">
                             {item.danceStyle}
@@ -247,9 +252,9 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             e.stopPropagation();
                             const newQty = (item.quantity || 1) - 1;
                             if (newQty < 1) {
-                              removeItem(item.type, item.id);
+                              removeItem(item.type, item.id, item.tierId ?? null);
                             } else {
-                              updateQuantity(item.type, item.id, newQty);
+                              updateQuantity(item.type, item.id, newQty, item.tierId ?? null);
                             }
                           }}
                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all active:scale-90"
@@ -263,7 +268,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            updateQuantity(item.type, item.id, (item.quantity || 1) + 1);
+                            updateQuantity(item.type, item.id, (item.quantity || 1) + 1, item.tierId ?? null);
                           }}
                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-accent/20 text-white/60 hover:text-accent transition-all active:scale-90"
                           aria-label="Increase quantity"

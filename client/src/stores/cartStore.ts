@@ -27,15 +27,27 @@ export interface AppliedDiscount {
   description: string;
 }
 
+/**
+ * A cart line is uniquely identified by (type, id, tierId). Two tiers of
+ * the same event live as separate lines so the buyer can buy e.g. a GA +
+ * a VIP of the same event and the right discount / capacity / price apply
+ * per line. `tierId` is optional — a `null`/`undefined` tierId is itself a
+ * distinct identity used for flat-price (single-tier) items.
+ */
+const sameLine = (
+  a: { type: CartItem['type']; id: number; tierId?: number | null },
+  b: { type: CartItem['type']; id: number; tierId?: number | null }
+) => a.type === b.type && a.id === b.id && (a.tierId ?? null) === (b.tierId ?? null);
+
 interface CartState {
   items: CartItem[];
   appliedDiscount: AppliedDiscount | null;
-  // Actions
+  // Actions (tierId is optional for flat-price items)
   addItem: (item: CartItem) => void;
-  removeItem: (type: CartItem['type'], id: number) => void;
-  updateQuantity: (type: CartItem['type'], id: number, quantity: number) => void;
+  removeItem: (type: CartItem['type'], id: number, tierId?: number | null) => void;
+  updateQuantity: (type: CartItem['type'], id: number, quantity: number, tierId?: number | null) => void;
   clearCart: () => void;
-  isInCart: (type: CartItem['type'], id: number) => boolean;
+  isInCart: (type: CartItem['type'], id: number, tierId?: number | null) => boolean;
   getItemCount: () => number;
   getTotal: () => number;
   applyDiscount: (discount: AppliedDiscount) => void;
@@ -51,11 +63,6 @@ export const useCartStore = create<CartState>()(
 
       addItem: (item) => {
         const { items } = get();
-        // Tiered event tickets are distinct line items per tier — so the
-        // identity key is (type, id, tierId). Same-tier adds stack qty;
-        // different-tier adds create a new row.
-        const sameLine = (a: CartItem, b: CartItem) =>
-          a.type === b.type && a.id === b.id && (a.tierId ?? null) === (b.tierId ?? null);
         const existingItem = items.find((i) => sameLine(i, item));
 
         if (existingItem) {
@@ -72,22 +79,22 @@ export const useCartStore = create<CartState>()(
         set({ items: [...items, { ...item, quantity: item.quantity || 1 }] });
       },
 
-      removeItem: (type, id) => {
+      removeItem: (type, id, tierId) => {
         set((state) => ({
           items: state.items.filter(
-            (item) => !(item.type === type && item.id === id)
+            (item) => !sameLine(item, { type, id, tierId: tierId ?? null })
           ),
         }));
       },
 
-      updateQuantity: (type, id, quantity) => {
+      updateQuantity: (type, id, quantity, tierId) => {
         if (quantity < 1) {
-          get().removeItem(type, id);
+          get().removeItem(type, id, tierId);
           return;
         }
         set((state) => ({
           items: state.items.map((item) =>
-            item.type === type && item.id === id
+            sameLine(item, { type, id, tierId: tierId ?? null })
               ? { ...item, quantity }
               : item
           ),
@@ -98,8 +105,8 @@ export const useCartStore = create<CartState>()(
         set({ items: [], appliedDiscount: null });
       },
 
-      isInCart: (type, id) => {
-        return get().items.some((item) => item.type === type && item.id === id);
+      isInCart: (type, id, tierId) => {
+        return get().items.some((item) => sameLine(item, { type, id, tierId: tierId ?? null }));
       },
 
       getItemCount: () => {

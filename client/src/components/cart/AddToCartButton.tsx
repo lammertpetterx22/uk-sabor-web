@@ -27,7 +27,10 @@ export default function AddToCartButton({
   const { addItem, isInCart, items } = useCartStore();
   const { isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
-  const inCart = isInCart(item.type, item.id);
+  // Cart identity is (type, id, tierId), so two tiers of the same event
+  // can coexist as separate lines without triggering the "already in cart"
+  // branch when the buyer is actually picking a different tier.
+  const inCart = isInCart(item.type, item.id, item.tierId ?? null);
 
   const handleAddToCart = () => {
     // MUST BE LOGGED IN TO ADD TO CART
@@ -51,10 +54,12 @@ export default function AddToCartButton({
       return;
     }
 
-    // CHECK STOCK LIMITS FOR EVENTS AND CLASSES
+    // CHECK STOCK LIMITS FOR EVENTS AND CLASSES — scoped to the specific tier
+    // if this item belongs to a tier, so the count doesn't leak across tiers.
     if ((item.type === 'event' || item.type === 'class') && maxStock !== undefined) {
-      // Calculate how many of this item are already in cart
-      const itemInCart = items.find(i => i.type === item.type && i.id === item.id);
+      const itemInCart = items.find(i =>
+        i.type === item.type && i.id === item.id && (i.tierId ?? null) === (item.tierId ?? null)
+      );
       const quantityInCart = itemInCart?.quantity || 0;
       const newQuantity = quantityInCart + (item.quantity || 1);
       const spotsLeft = maxStock - currentlySold;
