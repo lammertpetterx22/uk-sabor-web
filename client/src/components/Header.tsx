@@ -197,7 +197,6 @@ export default function Header() {
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => setLocation("/crm")}>CRM</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setLocation("/email-marketing")}>Email Marketing</DropdownMenuItem>
                     </>
                   )}
                   <DropdownMenuSeparator />
@@ -349,9 +348,8 @@ export default function Header() {
               />
             )}
             {isAuthenticated && isAdmin && (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 <MobileSubItem label="CRM" onClick={() => go("/crm")} />
-                <MobileSubItem label="Email Marketing" onClick={() => go("/email-marketing")} />
               </div>
             )}
 

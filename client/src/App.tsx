@@ -30,8 +30,6 @@ const UserDashboard = lazy(() => import("./pages/UserDashboard"));
 const CRMDashboard = lazy(() => import("./pages/CRMDashboard"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const AttendanceDashboard = lazy(() => import("./pages/AttendanceDashboard"));
-const EmailMarketing = lazy(() => import("./pages/EmailMarketing"));
-const CampaignDetail = lazy(() => import("./pages/CampaignDetail"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const Earnings = lazy(() => import("./pages/Earnings"));
 const AdminWithdrawals = lazy(() => import("./pages/AdminWithdrawals"));
@@ -208,16 +206,6 @@ function Router() {
           <Route path="/admin/withdrawals">
             <ProtectedRoute allowedRoles={["admin"]}>
               <AdminWithdrawals />
-            </ProtectedRoute>
-          </Route>
-          <Route path="/email-marketing">
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <EmailMarketing />
-            </ProtectedRoute>
-          </Route>
-          <Route path="/email-marketing/campaigns/:id">
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <CampaignDetail />
             </ProtectedRoute>
           </Route>
 

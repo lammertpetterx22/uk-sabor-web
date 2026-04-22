@@ -303,7 +303,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             <Shield size={12} /> {tr("Administration")}
                         </p>
                         <NavLink href="/crm" icon={Users} label="CRM" onClick={onClose} />
-                        <NavLink href="/email-marketing" icon={Mail} label="Email Marketing" onClick={onClose} />
                         <NavLink href="/admin/withdrawals" icon={Banknote} label="Withdrawals" onClick={onClose} />
                     </div>
                 )}

@@ -81,13 +81,6 @@ export default function QuickActions() {
       color: "bg-yellow-500/10"
     },
     {
-      icon: <Mail className="h-5 w-5 text-pink-500" />,
-      title: "Email Campaign",
-      description: "Send emails to your users",
-      href: "/email-marketing",
-      color: "bg-pink-500/10"
-    },
-    {
       icon: <BarChart3 className="h-5 w-5 text-cyan-500" />,
       title: "CRM Dashboard",
       description: "Manage contacts and interactions",

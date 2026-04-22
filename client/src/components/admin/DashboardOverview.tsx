@@ -1,11 +1,6 @@
 import { Link } from "wouter";
-import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import { useAuth } from "@/_core/hooks/useAuth";
 import {
   Users,
   Calendar,
@@ -22,9 +17,6 @@ import {
   QrCode,
   BarChart3,
   ArrowRight,
-  Mail,
-  Send,
-  Loader2,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -80,14 +72,6 @@ function MetricCard({ title, value, description, icon, trend, loading }: MetricC
 }
 
 export default function DashboardOverview() {
-  const { user } = useAuth();
-  // Sample ticket-email preview tool — admin-only
-  const [previewEmail, setPreviewEmail] = useState(user?.email || "");
-  const sendSample = trpc.emailMarketing.sendSampleTicketEmail.useMutation({
-    onSuccess: (res) => toast.success(`Sample email sent to ${res.to}`),
-    onError: (err) => toast.error(err.message),
-  });
-
   // Fetch all metrics
   const { data: users, isLoading: usersLoading } = trpc.admin.listUsers.useQuery();
   const { data: events, isLoading: eventsLoading } = trpc.events.listAll.useQuery({ limit: 100, offset: 0 });
@@ -167,53 +151,6 @@ export default function DashboardOverview() {
           <ArrowRight className="h-5 w-5 text-foreground/30 group-hover:text-foreground/70 transition-colors" />
         </Link>
       </div>
-
-      {/* ─── Preview the ticket-confirmation email ──────────────────── */}
-      <Card className="border-fuchsia-500/20 bg-gradient-to-br from-fuchsia-500/5 to-transparent">
-        <CardHeader className="pb-3">
-          <div className="flex items-start gap-3">
-            <div className="p-2.5 rounded-xl bg-fuchsia-500/15 border border-fuchsia-500/30">
-              <Mail className="h-5 w-5 text-fuchsia-400" />
-            </div>
-            <div>
-              <CardTitle className="text-lg">Preview the ticket email</CardTitle>
-              <CardDescription>
-                Sends a sample confirmation email (hotel bundle example included) so you can see exactly what your buyers receive.
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Input
-              type="email"
-              placeholder="you@email.com"
-              value={previewEmail}
-              onChange={(e) => setPreviewEmail(e.target.value)}
-              className="bg-background/60 h-11 flex-1"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && previewEmail.trim()) {
-                  sendSample.mutate({ to: previewEmail.trim() });
-                }
-              }}
-            />
-            <Button
-              onClick={() => previewEmail.trim() && sendSample.mutate({ to: previewEmail.trim() })}
-              disabled={!previewEmail.trim() || sendSample.isPending}
-              className="h-11 px-5 bg-gradient-to-r from-fuchsia-500 to-pink-500 hover:from-fuchsia-400 hover:to-pink-400 text-white font-semibold"
-            >
-              {sendSample.isPending ? (
-                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending…</>
-              ) : (
-                <><Send className="h-4 w-4 mr-2" /> Send sample</>
-              )}
-            </Button>
-          </div>
-          <p className="text-xs text-foreground/50 mt-2">
-            The sample uses "UK Sabor Congress — Full Pass + Hotel Double Room" with a short hotel-bundle note so you can see the post-purchase block in action.
-          </p>
-        </CardContent>
-      </Card>
 
       {/* Main Metrics Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

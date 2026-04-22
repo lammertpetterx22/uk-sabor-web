@@ -493,14 +493,6 @@ function EventsTab() {
   const [editForm, setEditForm] = useState<any>({});
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [expandedEventId, setExpandedEventId] = useState<number | null>(null);
-  const [emailingEvent, setEmailingEvent] = useState<any>(null);
-  const [emailSubject, setEmailSubject] = useState("");
-  const [emailBody, setEmailBody] = useState("");
-  const [emailSegment, setEmailSegment] = useState("all");
-  const [emailSendNow, setEmailSendNow] = useState(true);
-  const [emailScheduledAt, setEmailScheduledAt] = useState("");
-  const [emailPreview, setEmailPreview] = useState(false);
-  const { data: emailTemplates } = trpc.emailMarketing.listTemplates.useQuery();
   // Entitlement enforcement
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState("");
@@ -509,26 +501,6 @@ function EventsTab() {
     { resourceType: "event" },
     { enabled: false }
   );
-  const createCampaignMutation = trpc.emailMarketing.createCampaign.useMutation({
-    onSuccess: (data) => {
-      if (emailSendNow) {
-        sendCampaignMutation.mutate({ campaignId: data.id });
-      } else {
-        toast.success(t("admin.events.toastCampaignScheduled"));
-        setEmailingEvent(null);
-        utils.emailMarketing.listCampaigns.invalidate();
-      }
-    },
-    onError: (e) => toast.error(e.message),
-  });
-  const sendCampaignMutation = trpc.emailMarketing.sendCampaign.useMutation({
-    onSuccess: (data) => {
-      toast.success(t("admin.events.toastEmailSent", { count: data.sent }));
-      setEmailingEvent(null);
-      utils.emailMarketing.listCampaigns.invalidate();
-    },
-    onError: (e) => toast.error(e.message),
-  });
   const { data: eventQRCodes } = trpc.qrcode.getQRCode.useQuery(
     expandedEventId ? { itemType: "event", itemId: expandedEventId } : { itemType: "event", itemId: -1 },
     { enabled: expandedEventId !== null }
@@ -987,10 +959,6 @@ function EventsTab() {
                       >
                         {event.status === 'published' ? 'Unpublish' : 'Publish'}
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => setEmailingEvent(event)} className="gap-2">
-                        <Mail className="h-4 w-4" />
-                        Send Email
-                      </Button>
                       <Button variant="outline" size="sm" onClick={() => handleEditClick(event)}>
                         <Edit2 className="h-4 w-4" />
                       </Button>
@@ -1045,91 +1013,6 @@ function EventsTab() {
         </CardContent>
       </Card>
 
-      {/* Email Campaign Modal */}
-      {emailingEvent && (
-        <Dialog open={!!emailingEvent} onOpenChange={(open) => { if (!open) { setEmailingEvent(null); setEmailSubject(""); setEmailBody(""); setEmailSegment("all"); setEmailSendNow(true); setEmailScheduledAt(""); setEmailPreview(false); } }}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2"><Send className="h-5 w-5 text-accent" />{t("admin.events.emailCampaign")}</DialogTitle>
-              <DialogDescription>Promote "{emailingEvent.title}" — pick a template or write custom HTML</DialogDescription>
-            </DialogHeader>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Template picker */}
-              <div className="md:col-span-1">
-                <h3 className="text-sm font-semibold text-foreground/70 mb-3 flex items-center gap-1"><LayoutTemplate className="h-4 w-4" /> Templates</h3>
-                <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                  {emailTemplates?.map((tpl) => (
-                    <button key={tpl.id} onClick={() => { setEmailSubject(tpl.subject); setEmailBody(tpl.htmlContent); }} className="w-full text-left p-2 rounded-lg border border-border/30 hover:border-accent/50 hover:bg-accent/5 transition-colors">
-                      <p className="text-xs font-semibold truncate">{tpl.name}</p>
-                      <p className="text-xs text-foreground/40 truncate">{tpl.subject}</p>
-                    </button>
-                  ))}
-                  {(!emailTemplates || emailTemplates.length === 0) && <p className="text-xs text-foreground/40 text-center py-4">No templates — <Link href="/email-marketing" className="text-accent underline">create some</Link></p>}
-                </div>
-                <div className="mt-4 space-y-3">
-                  <div>
-                    <label className="text-xs font-medium mb-1 block">{t("admin.events.audience")}</label>
-                    <Select value={emailSegment} onValueChange={setEmailSegment}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t("admin.events.audienceAll")}</SelectItem>
-                        <SelectItem value="customer">{t("admin.events.audienceCustomers")}</SelectItem>
-                        <SelectItem value="vip">{t("admin.events.audienceVip")}</SelectItem>
-                        <SelectItem value="lead">{t("admin.events.audienceLeads")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium mb-1 block">{t("admin.events.send")}</label>
-                    <Select value={emailSendNow ? "now" : "schedule"} onValueChange={(v) => setEmailSendNow(v === "now")}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="now">Send Immediately</SelectItem>
-                        <SelectItem value="schedule">Schedule for Later</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {!emailSendNow && (
-                    <div>
-                      <label className="text-xs font-medium mb-1 flex items-center gap-1 block"><Calendar className="h-3 w-3" /> Date & Time</label>
-                      <Input type="datetime-local" value={emailScheduledAt} onChange={(e) => setEmailScheduledAt(e.target.value)} min={new Date(Date.now() + 5 * 60000).toISOString().slice(0, 16)} className="h-8 text-xs" />
-                    </div>
-                  )}
-                </div>
-              </div>
-              {/* Compose */}
-              <div className="md:col-span-2 space-y-3">
-                <div>
-                  <label className="text-sm font-medium mb-1 block">{t("admin.events.subjectLine")}</label>
-                  <Input placeholder={t("admin.events.subjectPlaceholder")} value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-sm font-medium">{t("admin.events.emailContent")}</label>
-                    <Button variant="ghost" size="sm" onClick={() => setEmailPreview(!emailPreview)} className="text-xs h-6"><Eye className="h-3 w-3 mr-1" />{emailPreview ? t("common.edit") : t("admin.events.preview")}</Button>
-                  </div>
-                  {emailPreview ? (
-                    <div className="border border-border/50 rounded-lg overflow-hidden h-56"><iframe srcDoc={emailBody} className="w-full h-full" sandbox="allow-same-origin" title={t("admin.events.preview") || "Preview"} /></div>
-                  ) : (
-                    <Textarea placeholder={t("admin.events.contentPlaceholder")} value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={10} className="font-mono text-xs" />
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-2 justify-end mt-4 pt-4 border-t border-border/30">
-              <Button variant="outline" onClick={() => setEmailingEvent(null)}>Cancel</Button>
-              <Button
-                onClick={() => createCampaignMutation.mutate({ name: `${emailingEvent.title} – Campaign`, subject: emailSubject || `Join us at ${emailingEvent.title}!`, htmlContent: emailBody || `<p>Don't miss <strong>${emailingEvent.title}</strong>!</p>`, segment: emailSegment as any, scheduledAt: !emailSendNow && emailScheduledAt ? emailScheduledAt : undefined })}
-                disabled={createCampaignMutation.isPending || sendCampaignMutation.isPending}
-                className="btn-vibrant gap-2"
-              >
-                {(createCampaignMutation.isPending || sendCampaignMutation.isPending) ? <Loader2 className="h-4 w-4 animate-spin" /> : emailSendNow ? <Send className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
-                {emailSendNow ? t("admin.events.sendNow") : t("admin.events.schedule")}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
       {/* Upgrade plan dialog */}
       <UpgradePlanDialog
         open={upgradeDialogOpen}
@@ -1153,15 +1036,6 @@ function CoursesTab() {
   const { data: myInstructorProfile } = trpc.instructors.getMyProfile.useQuery(undefined, {
     enabled: !isAdmin,
   });
-  const [emailingCourse, setEmailingCourse] = useState<any>(null);
-  const [emailSubject, setEmailSubject] = useState("");
-  const [emailBody, setEmailBody] = useState("");
-  const [emailSegment, setEmailSegment] = useState("all");
-  const [emailSendNow, setEmailSendNow] = useState(true);
-  const [emailScheduledAt, setEmailScheduledAt] = useState("");
-  const [emailPreview, setEmailPreview] = useState(false);
-  const { data: emailTemplates } = trpc.emailMarketing.listTemplates.useQuery();
-  const utils = trpc.useUtils();
   // Entitlement enforcement
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState("");
@@ -1169,26 +1043,6 @@ function CoursesTab() {
     { resourceType: "course" },
     { enabled: false }
   );
-  const createCampaignMutation = trpc.emailMarketing.createCampaign.useMutation({
-    onSuccess: (data) => {
-      if (emailSendNow) {
-        sendCampaignMutation.mutate({ campaignId: data.id });
-      } else {
-        toast.success(t("admin.events.toastCampaignScheduled"));
-        setEmailingCourse(null);
-        utils.emailMarketing.listCampaigns.invalidate();
-      }
-    },
-    onError: (e) => toast.error(e.message),
-  });
-  const sendCampaignMutation = trpc.emailMarketing.sendCampaign.useMutation({
-    onSuccess: (data) => {
-      toast.success(t("admin.events.toastEmailSent", { count: data.sent }));
-      setEmailingCourse(null);
-      utils.emailMarketing.listCampaigns.invalidate();
-    },
-    onError: (e) => toast.error(e.message),
-  });
   const createMutation = trpc.courses.create.useMutation({
     onSuccess: () => {
       toast.success(t("admin.courses.toastCreated"));
@@ -1813,10 +1667,6 @@ function CoursesTab() {
                     >
                       {course.status === 'published' ? 'Despublicar' : 'Publish'}
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => setEmailingCourse(course)} className="gap-2">
-                      <Mail className="h-4 w-4" />
-                      Send Email
-                    </Button>
                     <Button variant="outline" size="sm" onClick={() => handleEditClick(course)}>
                       <Edit2 className="h-4 w-4" />
                     </Button>
@@ -1856,89 +1706,6 @@ function CoursesTab() {
         </CardContent>
       </Card>
 
-      {/* Email Campaign Modal */}
-      {emailingCourse && (
-        <Dialog open={!!emailingCourse} onOpenChange={(open) => { if (!open) { setEmailingCourse(null); setEmailSubject(""); setEmailBody(""); setEmailSegment("all"); setEmailSendNow(true); setEmailScheduledAt(""); setEmailPreview(false); } }}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2"><Send className="h-5 w-5 text-accent" />{t("admin.events.emailCampaign")}</DialogTitle>
-              <DialogDescription>Promote "{emailingCourse.title}" — pick a template or write custom HTML</DialogDescription>
-            </DialogHeader>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-1">
-                <h3 className="text-sm font-semibold text-foreground/70 mb-3 flex items-center gap-1"><LayoutTemplate className="h-4 w-4" /> Templates</h3>
-                <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                  {emailTemplates?.map((tpl) => (
-                    <button key={tpl.id} onClick={() => { setEmailSubject(tpl.subject); setEmailBody(tpl.htmlContent); }} className="w-full text-left p-2 rounded-lg border border-border/30 hover:border-accent/50 hover:bg-accent/5 transition-colors">
-                      <p className="text-xs font-semibold truncate">{tpl.name}</p>
-                      <p className="text-xs text-foreground/40 truncate">{tpl.subject}</p>
-                    </button>
-                  ))}
-                  {(!emailTemplates || emailTemplates.length === 0) && <p className="text-xs text-foreground/40 text-center py-4">No templates — <Link href="/email-marketing" className="text-accent underline">create some</Link></p>}
-                </div>
-                <div className="mt-4 space-y-3">
-                  <div>
-                    <label className="text-xs font-medium mb-1 block">{t("admin.events.audience")}</label>
-                    <Select value={emailSegment} onValueChange={setEmailSegment}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t("admin.events.audienceAll")}</SelectItem>
-                        <SelectItem value="customer">{t("admin.events.audienceCustomers")}</SelectItem>
-                        <SelectItem value="vip">{t("admin.events.audienceVip")}</SelectItem>
-                        <SelectItem value="lead">{t("admin.events.audienceLeads")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium mb-1 block">{t("admin.events.send")}</label>
-                    <Select value={emailSendNow ? "now" : "schedule"} onValueChange={(v) => setEmailSendNow(v === "now")}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="now">Send Immediately</SelectItem>
-                        <SelectItem value="schedule">Schedule for Later</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {!emailSendNow && (
-                    <div>
-                      <label className="text-xs font-medium mb-1 flex items-center gap-1 block"><Calendar className="h-3 w-3" /> Date & Time</label>
-                      <Input type="datetime-local" value={emailScheduledAt} onChange={(e) => setEmailScheduledAt(e.target.value)} min={new Date(Date.now() + 5 * 60000).toISOString().slice(0, 16)} className="h-8 text-xs" />
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="md:col-span-2 space-y-3">
-                <div>
-                  <label className="text-sm font-medium mb-1 block">{t("admin.events.subjectLine")}</label>
-                  <Input placeholder={t("admin.events.subjectPlaceholder")} value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-sm font-medium">{t("admin.events.emailContent")}</label>
-                    <Button variant="ghost" size="sm" onClick={() => setEmailPreview(!emailPreview)} className="text-xs h-6"><Eye className="h-3 w-3 mr-1" />{emailPreview ? t("common.edit") : t("admin.events.preview")}</Button>
-                  </div>
-                  {emailPreview ? (
-                    <div className="border border-border/50 rounded-lg overflow-hidden h-56"><iframe srcDoc={emailBody} className="w-full h-full" sandbox="allow-same-origin" title={t("admin.events.preview") || "Preview"} /></div>
-                  ) : (
-                    <Textarea placeholder={t("admin.events.contentPlaceholder")} value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={10} className="font-mono text-xs" />
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-2 justify-end mt-4 pt-4 border-t border-border/30">
-              <Button variant="outline" onClick={() => setEmailingCourse(null)}>Cancel</Button>
-              <Button
-                onClick={() => createCampaignMutation.mutate({ name: `${emailingCourse.title} – Campaign`, subject: emailSubject || `Discover ${emailingCourse.title}!`, htmlContent: emailBody || `<p>Discover <strong>${emailingCourse.title}</strong>!</p>`, segment: emailSegment as any, scheduledAt: !emailSendNow && emailScheduledAt ? emailScheduledAt : undefined })}
-                disabled={createCampaignMutation.isPending || sendCampaignMutation.isPending}
-                className="btn-vibrant gap-2"
-              >
-                {(createCampaignMutation.isPending || sendCampaignMutation.isPending) ? <Loader2 className="h-4 w-4 animate-spin" /> : emailSendNow ? <Send className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
-                {emailSendNow ? t("admin.events.sendNow") : t("admin.events.schedule")}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
       {/* Upgrade plan dialog */}
       <UpgradePlanDialog
         open={upgradeDialogOpen}
@@ -1962,15 +1729,6 @@ function ClassesTab() {
   const { data: myInstructorProfile } = trpc.instructors.getMyProfile.useQuery(undefined, {
     enabled: !isAdmin,
   });
-  const [emailingClass, setEmailingClass] = useState<any>(null);
-  const [emailSubject, setEmailSubject] = useState("");
-  const [emailBody, setEmailBody] = useState("");
-  const [emailSegment, setEmailSegment] = useState("all");
-  const [emailSendNow, setEmailSendNow] = useState(true);
-  const [emailScheduledAt, setEmailScheduledAt] = useState("");
-  const [emailPreview, setEmailPreview] = useState(false);
-  const { data: emailTemplates } = trpc.emailMarketing.listTemplates.useQuery();
-  const utils = trpc.useUtils();
   // Entitlement enforcement
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState("");
@@ -1978,26 +1736,6 @@ function ClassesTab() {
     { resourceType: "class" },
     { enabled: false }
   );
-  const createCampaignMutation = trpc.emailMarketing.createCampaign.useMutation({
-    onSuccess: (data) => {
-      if (emailSendNow) {
-        sendCampaignMutation.mutate({ campaignId: data.id });
-      } else {
-        toast.success(t("admin.events.toastCampaignScheduled"));
-        setEmailingClass(null);
-        utils.emailMarketing.listCampaigns.invalidate();
-      }
-    },
-    onError: (e) => toast.error(e.message),
-  });
-  const sendCampaignMutation = trpc.emailMarketing.sendCampaign.useMutation({
-    onSuccess: (data) => {
-      toast.success(t("admin.events.toastEmailSent", { count: data.sent }));
-      setEmailingClass(null);
-      utils.emailMarketing.listCampaigns.invalidate();
-    },
-    onError: (e) => toast.error(e.message),
-  });
 
   const createMutation = trpc.classes.create.useMutation({
     onSuccess: () => {
@@ -2554,10 +2292,6 @@ function ClassesTab() {
                           Mark Done
                         </Button>
                       )}
-                      <Button variant="outline" size="sm" onClick={() => setEmailingClass(cls)} className="gap-2">
-                        <Mail className="h-4 w-4" />
-                        Send Email
-                      </Button>
                       <Button variant="outline" size="sm" onClick={() => handleEditClick(cls)}>
                         <Edit2 className="h-4 w-4" />
                       </Button>
@@ -2644,89 +2378,6 @@ function ClassesTab() {
         </CardContent>
       </Card>
 
-      {/* Email Campaign Modal */}
-      {emailingClass && (
-        <Dialog open={!!emailingClass} onOpenChange={(open) => { if (!open) { setEmailingClass(null); setEmailSubject(""); setEmailBody(""); setEmailSegment("all"); setEmailSendNow(true); setEmailScheduledAt(""); setEmailPreview(false); } }}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2"><Send className="h-5 w-5 text-accent" />{t("admin.events.emailCampaign")}</DialogTitle>
-              <DialogDescription>Promote "{emailingClass.title}" — pick a template or write custom HTML</DialogDescription>
-            </DialogHeader>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-1">
-                <h3 className="text-sm font-semibold text-foreground/70 mb-3 flex items-center gap-1"><LayoutTemplate className="h-4 w-4" /> Templates</h3>
-                <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                  {emailTemplates?.map((tpl) => (
-                    <button key={tpl.id} onClick={() => { setEmailSubject(tpl.subject); setEmailBody(tpl.htmlContent); }} className="w-full text-left p-2 rounded-lg border border-border/30 hover:border-accent/50 hover:bg-accent/5 transition-colors">
-                      <p className="text-xs font-semibold truncate">{tpl.name}</p>
-                      <p className="text-xs text-foreground/40 truncate">{tpl.subject}</p>
-                    </button>
-                  ))}
-                  {(!emailTemplates || emailTemplates.length === 0) && <p className="text-xs text-foreground/40 text-center py-4">No templates — <Link href="/email-marketing" className="text-accent underline">create some</Link></p>}
-                </div>
-                <div className="mt-4 space-y-3">
-                  <div>
-                    <label className="text-xs font-medium mb-1 block">{t("admin.events.audience")}</label>
-                    <Select value={emailSegment} onValueChange={setEmailSegment}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t("admin.events.audienceAll")}</SelectItem>
-                        <SelectItem value="customer">{t("admin.events.audienceCustomers")}</SelectItem>
-                        <SelectItem value="vip">{t("admin.events.audienceVip")}</SelectItem>
-                        <SelectItem value="lead">{t("admin.events.audienceLeads")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium mb-1 block">{t("admin.events.send")}</label>
-                    <Select value={emailSendNow ? "now" : "schedule"} onValueChange={(v) => setEmailSendNow(v === "now")}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="now">Send Immediately</SelectItem>
-                        <SelectItem value="schedule">Schedule for Later</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {!emailSendNow && (
-                    <div>
-                      <label className="text-xs font-medium mb-1 flex items-center gap-1 block"><Calendar className="h-3 w-3" /> Date & Time</label>
-                      <Input type="datetime-local" value={emailScheduledAt} onChange={(e) => setEmailScheduledAt(e.target.value)} min={new Date(Date.now() + 5 * 60000).toISOString().slice(0, 16)} className="h-8 text-xs" />
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="md:col-span-2 space-y-3">
-                <div>
-                  <label className="text-sm font-medium mb-1 block">{t("admin.events.subjectLine")}</label>
-                  <Input placeholder={t("admin.events.subjectPlaceholder")} value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-sm font-medium">{t("admin.events.emailContent")}</label>
-                    <Button variant="ghost" size="sm" onClick={() => setEmailPreview(!emailPreview)} className="text-xs h-6"><Eye className="h-3 w-3 mr-1" />{emailPreview ? t("common.edit") : t("admin.events.preview")}</Button>
-                  </div>
-                  {emailPreview ? (
-                    <div className="border border-border/50 rounded-lg overflow-hidden h-56"><iframe srcDoc={emailBody} className="w-full h-full" sandbox="allow-same-origin" title={t("admin.events.preview") || "Preview"} /></div>
-                  ) : (
-                    <Textarea placeholder={t("admin.events.contentPlaceholder")} value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={10} className="font-mono text-xs" />
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-2 justify-end mt-4 pt-4 border-t border-border/30">
-              <Button variant="outline" onClick={() => setEmailingClass(null)}>Cancel</Button>
-              <Button
-                onClick={() => createCampaignMutation.mutate({ name: `${emailingClass.title} – Campaign`, subject: emailSubject || `Join us for ${emailingClass.title}!`, htmlContent: emailBody || `<p>Don't miss <strong>${emailingClass.title}</strong>!</p>`, segment: emailSegment as any, scheduledAt: !emailSendNow && emailScheduledAt ? emailScheduledAt : undefined })}
-                disabled={createCampaignMutation.isPending || sendCampaignMutation.isPending}
-                className="btn-vibrant gap-2"
-              >
-                {(createCampaignMutation.isPending || sendCampaignMutation.isPending) ? <Loader2 className="h-4 w-4 animate-spin" /> : emailSendNow ? <Send className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
-                {emailSendNow ? t("admin.events.sendNow") : t("admin.events.schedule")}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
       {/* Upgrade plan dialog */}
       <UpgradePlanDialog
         open={upgradeDialogOpen}

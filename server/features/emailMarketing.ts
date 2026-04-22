@@ -9,7 +9,7 @@ import {
   crmContacts,
 } from "../../drizzle/schema";
 import { eq, and, desc, sql, count } from "drizzle-orm";
-import { sendEmail, sendQRCodeEmail } from "./email";
+import { sendEmail } from "./email";
 import { buildUnsubscribeUrl } from "./emailTracking";
 
 // ─── Default templates seeded on first load ───────────────────────────────────
@@ -719,37 +719,5 @@ export const emailMarketingRouter = router({
         .where(eq(emailCampaigns.id, input.campaignId));
 
       return { success: true };
-    }),
-
-  /**
-   * Admin-only helper: send a sample ticket confirmation email to any
-   * address so creators can preview what buyers receive — including the
-   * optional post-purchase info block (e.g. hotel bundle instructions).
-   */
-  sendSampleTicketEmail: adminProcedure
-    .input(z.object({
-      to: z.string().email(),
-    }))
-    .mutation(async ({ input }) => {
-      const ok = await sendQRCodeEmail({
-        to: input.to,
-        userName: "Lammert",
-        itemType: "event",
-        itemName: "UK Sabor Congress — Full Pass + Hotel Double Room",
-        qrCodeImage: "", // buffer-only: we still render the hosted URL inline
-        ticketCode: "DEMO-TICKET-1234",
-        eventDate: "Saturday, May 17, 2026",
-        eventTime: "21:00",
-        postPurchaseInfo:
-          "Hotel bundle: 2 nights at Hotel Salsa Palace (double room, shared).\n\n" +
-          "We'll email your hotel voucher with your booking reference within 48h. " +
-          "Check-in from Friday 2pm. Bring your photo ID.\n\n" +
-          "Need to change your roommate? Reply to this email before May 10.",
-      });
-
-      if (!ok) {
-        throw new Error("Email could not be sent — check RESEND_API_KEY on the server");
-      }
-      return { success: true, to: input.to };
     }),
 });
