@@ -360,6 +360,8 @@ export async function sendQRCodeEmail(options: {
   accessCode?: string;
   eventDate?: string;
   eventTime?: string;
+  /** Extra tier-specific info (hotel bundle details, meet-up, etc.) */
+  postPurchaseInfo?: string;
 }): Promise<boolean> {
   try {
     const code = options.ticketCode || options.accessCode || "NO-CODE";
@@ -376,7 +378,8 @@ export async function sendQRCodeEmail(options: {
       inlineSrc,
       code,
       options.eventDate,
-      options.eventTime
+      options.eventTime,
+      options.postPurchaseInfo
     );
 
     const textContent = generateQRCodeEmailText(
@@ -385,7 +388,8 @@ export async function sendQRCodeEmail(options: {
       options.itemName,
       code,
       options.eventDate,
-      options.eventTime
+      options.eventTime,
+      options.postPurchaseInfo
     );
 
     // Also include the QR as a real PNG attachment for offline backup (the
@@ -516,7 +520,8 @@ export function generateQRCodeEmailTemplate(
   qrCodeImage: string,
   qrCode: string,
   eventDate?: string,
-  eventTime?: string
+  eventTime?: string,
+  postPurchaseInfo?: string
 ): string {
   const itemTypeLabel = itemType === "event" ? "Event" : "Class";
 
@@ -575,6 +580,11 @@ export function generateQRCodeEmailTemplate(
                 <li><strong>Or give the code</strong> (${qrCode}) to staff if scanning doesn't work</li>
               </ol>
             </div>
+            ${postPurchaseInfo ? `
+            <div class="item-details" style="border-left-color:#ff8c00;background:#fff4e6;">
+              <h3 style="color:#ff8c00;">Information from the organiser</h3>
+              <p style="white-space:pre-wrap;">${postPurchaseInfo}</p>
+            </div>` : ""}
             <p style="margin-top: 30px; font-size: 14px; color: #666;">
               Questions? Contact us at <a href="mailto:info@consabor.uk">info@consabor.uk</a>
             </p>
@@ -598,7 +608,8 @@ export function generateQRCodeEmailText(
   itemTitle: string,
   qrCode: string,
   eventDate?: string,
-  eventTime?: string
+  eventTime?: string,
+  postPurchaseInfo?: string
 ): string {
   const itemTypeLabel = itemType === "event" ? "Event" : "Class";
 
@@ -617,7 +628,10 @@ ${qrCode}
 HOW TO USE:
 1. Show the QR code on your phone to the staff at the entrance
 2. Or give the code above to staff if scanning doesn't work
-
+${postPurchaseInfo ? `
+INFORMATION FROM THE ORGANISER:
+${postPurchaseInfo}
+` : ""}
 Questions? Contact us at info@consabor.uk
 
 © 2026 UK Sabor. All rights reserved.

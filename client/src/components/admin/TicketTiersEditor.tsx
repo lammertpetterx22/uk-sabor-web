@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Ticket, Plus, Trash2, Sparkles, Crown, Zap, Star, Tag, Percent, PoundSterling } from "lucide-react";
+import { Ticket, Plus, Trash2, Sparkles, Crown, Zap, Star, Tag, Percent, PoundSterling, Mail } from "lucide-react";
 
 /**
  * Shape of a tier row in the editor. `id` is set only for rows that already
@@ -24,6 +24,11 @@ export interface TierRow {
   maxQuantity: string;     // "" = unlimited
   soldCount?: number;      // read-only, from server
   position: number;
+  /**
+   * Extra text appended to the confirmation email for buyers of this tier.
+   * Use it for hotel bundle instructions, meet-up points, dress code, etc.
+   */
+  postPurchaseInfo: string;
   /**
    * Discount codes the creator has attached to this tier but haven't been
    * saved yet (because the event/class itself hasn't been created). Flushed
@@ -141,7 +146,7 @@ export default function TicketTiersEditor({ rows, onChange, showSoldCount = fals
   const addRow = () => {
     onChange([
       ...rows,
-      { name: "", description: "", price: "", maxQuantity: "", position: rows.length },
+      { name: "", description: "", price: "", maxQuantity: "", position: rows.length, postPurchaseInfo: "" },
     ]);
   };
 
@@ -315,6 +320,20 @@ export default function TicketTiersEditor({ rows, onChange, showSoldCount = fals
                     placeholder="Included perks, access, meet & greet, front-row seating…"
                     value={row.description}
                     onChange={(e) => updateRow(idx, { description: e.target.value })}
+                    className={`bg-background/60 border-border/60 resize-none focus-visible:ring-2 ${style.ring}`}
+                  />
+                </div>
+
+                {/* Post-purchase info — appended to the buyer's email */}
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] uppercase tracking-wider font-semibold text-foreground/70 flex items-center gap-1.5">
+                    <Mail className="h-3 w-3" /> Post-purchase info <span className="text-foreground/40 font-normal normal-case">(optional — sent by email)</span>
+                  </Label>
+                  <Textarea
+                    rows={2}
+                    placeholder="Includes 2 nights at Hotel XYZ. We'll email your room voucher within 48h. Meet Friday 9pm at the venue reception."
+                    value={row.postPurchaseInfo}
+                    onChange={(e) => updateRow(idx, { postPurchaseInfo: e.target.value })}
                     className={`bg-background/60 border-border/60 resize-none focus-visible:ring-2 ${style.ring}`}
                   />
                 </div>
@@ -522,5 +541,6 @@ export function tierRowsToPayload(rows: TierRow[]) {
     price: r.price,
     maxQuantity: r.maxQuantity === "" ? null : parseInt(r.maxQuantity, 10),
     position: i,
+    postPurchaseInfo: r.postPurchaseInfo?.trim() || null,
   }));
 }

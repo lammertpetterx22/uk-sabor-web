@@ -120,7 +120,7 @@ export default function ClassFormCard({
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   // Pending tiers held locally before the class is saved.
   const [pendingTiers, setPendingTiers] = useState<TierRow[]>([
-    { name: "General Admission", description: "", price: "", maxQuantity: "", position: 0 },
+    { name: "General Admission", description: "", price: "", maxQuantity: "", position: 0, postPurchaseInfo: "" },
   ]);
 
   // Auto-fill instructorId for instructor role users
@@ -193,7 +193,7 @@ export default function ClassFormCard({
       materialsUrl: "",
       materialsFileName: "",
     });
-    setPendingTiers([{ name: "General Admission", description: "", price: "", maxQuantity: "", position: 0 }]);
+    setPendingTiers([{ name: "General Admission", description: "", price: "", maxQuantity: "", position: 0, postPurchaseInfo: "" }]);
     setStep(0);
     if (imageInputRef.current) imageInputRef.current.value = "";
     if (materialsInputRef.current) materialsInputRef.current.value = "";

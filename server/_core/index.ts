@@ -505,6 +505,9 @@ async function startServer() {
               "updatedAt" TIMESTAMP NOT NULL DEFAULT now()
             )`,
             `CREATE INDEX IF NOT EXISTS "event_hotels_event_idx" ON "eventHotels" ("eventId")`,
+            // Per-tier post-purchase info (hotel bundle instructions, etc.)
+            `ALTER TABLE "eventTicketTiers" ADD COLUMN IF NOT EXISTS "postPurchaseInfo" TEXT`,
+            `ALTER TABLE "classTicketTiers" ADD COLUMN IF NOT EXISTS "postPurchaseInfo" TEXT`,
           ];
           for (const q of autoMigrations) {
             try {

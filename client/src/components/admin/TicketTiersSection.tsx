@@ -43,6 +43,7 @@ export default function TicketTiersSection({ parentType = "event", eventId, clas
         price: flatTicketPrice ?? "",
         maxQuantity: "",
         position: 0,
+        postPurchaseInfo: "",
       }]);
     } else {
       setRows(
@@ -54,6 +55,7 @@ export default function TicketTiersSection({ parentType = "event", eventId, clas
           maxQuantity: t.maxQuantity?.toString() ?? "",
           soldCount: t.soldCount ?? 0,
           position: t.position ?? i,
+          postPurchaseInfo: t.postPurchaseInfo ?? "",
         }))
       );
     }

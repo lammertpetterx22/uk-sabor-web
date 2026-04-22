@@ -687,6 +687,7 @@ export const classesRouter = router({
         price: z.string().min(1),
         maxQuantity: z.number().int().positive().optional().nullable(),
         position: z.number().int().min(0),
+        postPurchaseInfo: z.string().optional().nullable(),
       })).max(20),
     }))
     .mutation(async ({ ctx, input }) => {
@@ -719,6 +720,7 @@ export const classesRouter = router({
               price: tier.price as any,
               maxQuantity: tier.maxQuantity ?? null,
               position: tier.position,
+              postPurchaseInfo: tier.postPurchaseInfo ?? null,
               active: true,
               updatedAt: new Date(),
             })
@@ -731,6 +733,7 @@ export const classesRouter = router({
             price: tier.price as any,
             maxQuantity: tier.maxQuantity ?? null,
             position: tier.position,
+            postPurchaseInfo: tier.postPurchaseInfo ?? null,
           });
         }
       }

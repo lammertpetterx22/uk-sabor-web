@@ -398,6 +398,9 @@ async function handleMultiItemCartCheckout(
             let itemName = item.title;
             let eventDate: string | undefined;
             let eventTime: string | undefined;
+            // Extra per-tier instructions appended to the ticket email
+            // (hotel bundle details, meeting points, dress code, etc.).
+            let postPurchaseInfo: string | undefined;
 
             if (itemType === "event") {
               const [eventRecord] = await db.select().from(events).where(eq(events.id, itemId)).limit(1);
@@ -406,9 +409,10 @@ async function handleMultiItemCartCheckout(
                 // Append ticket tier to the email title so buyers see "Event Title — VIP"
                 if (item.tier_id) {
                   const { eventTicketTiers } = await import("../../drizzle/schema");
-                  const [tier] = await db.select({ name: eventTicketTiers.name })
+                  const [tier] = await db.select({ name: eventTicketTiers.name, postPurchaseInfo: eventTicketTiers.postPurchaseInfo })
                     .from(eventTicketTiers).where(eq(eventTicketTiers.id, item.tier_id)).limit(1);
                   if (tier?.name) itemName = `${eventRecord.title} — ${tier.name}`;
+                  if (tier?.postPurchaseInfo) postPurchaseInfo = tier.postPurchaseInfo;
                 }
                 const d = new Date(eventRecord.eventDate);
                 eventDate = d.toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
@@ -420,9 +424,10 @@ async function handleMultiItemCartCheckout(
                 itemName = classRecord.title;
                 if (item.tier_id) {
                   const { classTicketTiers } = await import("../../drizzle/schema");
-                  const [tier] = await db.select({ name: classTicketTiers.name })
+                  const [tier] = await db.select({ name: classTicketTiers.name, postPurchaseInfo: classTicketTiers.postPurchaseInfo })
                     .from(classTicketTiers).where(eq(classTicketTiers.id, item.tier_id)).limit(1);
                   if (tier?.name) itemName = `${classRecord.title} — ${tier.name}`;
+                  if (tier?.postPurchaseInfo) postPurchaseInfo = tier.postPurchaseInfo;
                 }
                 const d = new Date(classRecord.classDate);
                 eventDate = d.toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
@@ -440,6 +445,7 @@ async function handleMultiItemCartCheckout(
               accessCode: itemType === "class" ? accessCode : undefined,
               eventDate,
               eventTime,
+              postPurchaseInfo,
             });
 
             console.log(`[Webhook] ✅ QR code email sent to ${userEmail} for ${itemType} #${itemId}`);

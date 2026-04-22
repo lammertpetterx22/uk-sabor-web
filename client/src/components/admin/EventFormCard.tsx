@@ -108,7 +108,7 @@ export default function EventFormCard({
   // clicks Publish, we create the event and then flush these into the DB
   // using the new event id.
   const [pendingTiers, setPendingTiers] = useState<TierRow[]>([
-    { name: "General Admission", description: "", price: "", maxQuantity: "", position: 0 },
+    { name: "General Admission", description: "", price: "", maxQuantity: "", position: 0, postPurchaseInfo: "" },
   ]);
 
   // Auto-seed the default tier's price from the event's base ticketPrice so
@@ -168,7 +168,7 @@ export default function EventFormCard({
       paymentMethod: "online",
       showLowTicketAlert: false,
     });
-    setPendingTiers([{ name: "General Admission", description: "", price: "", maxQuantity: "", position: 0 }]);
+    setPendingTiers([{ name: "General Admission", description: "", price: "", maxQuantity: "", position: 0, postPurchaseInfo: "" }]);
     setStep(0);
     if (imageInputRef.current) imageInputRef.current.value = "";
     if (bannerInputRef.current) bannerInputRef.current.value = "";

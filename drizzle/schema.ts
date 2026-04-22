@@ -226,6 +226,9 @@ export const eventTicketTiers = pgTable("eventTicketTiers", {
   soldCount: integer("soldCount").default(0).notNull(),
   position: integer("position").default(0).notNull(),
   active: boolean("active").default(true).notNull(),
+  // Message appended to the confirmation email for buyers of this tier —
+  // useful for hotel bundle instructions, meet-up details, dress code, etc.
+  postPurchaseInfo: text("postPurchaseInfo"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 }, (table) => ({
@@ -300,6 +303,8 @@ export const classTicketTiers = pgTable("classTicketTiers", {
   soldCount: integer("soldCount").default(0).notNull(),
   position: integer("position").default(0).notNull(),
   active: boolean("active").default(true).notNull(),
+  // Message appended to the confirmation email for buyers of this tier.
+  postPurchaseInfo: text("postPurchaseInfo"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 }, (table) => ({
