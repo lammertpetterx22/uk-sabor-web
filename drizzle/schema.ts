@@ -188,6 +188,31 @@ export const orders = pgTable("orders", {
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
+// Event Hotels — partner accommodation displayed on the event page
+// ("Where to Stay") for congress-style events. Creators add hotel cards
+// with a name, image, a public booking link (Booking.com, hotel site...),
+// an optional discount code to copy and an optional "price from" hint.
+export const eventHotels = pgTable("eventHotels", {
+  id: serial("id").primaryKey(),
+  eventId: integer("eventId").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  imageUrl: text("imageUrl"),
+  bookingUrl: text("bookingUrl").notNull(),       // external URL buyers follow
+  discountCode: varchar("discountCode", { length: 80 }), // e.g. "SABOR10"
+  priceFromGBP: decimal("priceFromGBP", { precision: 10, scale: 2 }), // "from £XX/night"
+  distanceKm: decimal("distanceKm", { precision: 6, scale: 2 }),       // distance from venue
+  position: integer("position").default(0).notNull(),
+  active: boolean("active").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+}, (table) => ({
+  eventIdIdx: index("event_hotels_event_idx").on(table.eventId),
+}));
+
+export type EventHotel = typeof eventHotels.$inferSelect;
+export type InsertEventHotel = typeof eventHotels.$inferInsert;
+
 // Event Ticket Tiers — optional multi-tier pricing for an event
 // (e.g. Early Bird, General Admission, VIP). If an event has zero rows here,
 // it falls back to the single flat events.ticketPrice/maxTickets.

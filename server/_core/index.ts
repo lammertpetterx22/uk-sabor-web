@@ -488,6 +488,23 @@ async function startServer() {
             // Per-tier discount code scoping
             `ALTER TABLE "discountCodes" ADD COLUMN IF NOT EXISTS "eventTierId" INTEGER`,
             `ALTER TABLE "discountCodes" ADD COLUMN IF NOT EXISTS "classTierId" INTEGER`,
+            // Event partner hotels
+            `CREATE TABLE IF NOT EXISTS "eventHotels" (
+              "id" SERIAL PRIMARY KEY,
+              "eventId" INTEGER NOT NULL,
+              "name" VARCHAR(255) NOT NULL,
+              "description" TEXT,
+              "imageUrl" TEXT,
+              "bookingUrl" TEXT NOT NULL,
+              "discountCode" VARCHAR(80),
+              "priceFromGBP" DECIMAL(10,2),
+              "distanceKm" DECIMAL(6,2),
+              "position" INTEGER NOT NULL DEFAULT 0,
+              "active" BOOLEAN NOT NULL DEFAULT true,
+              "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
+              "updatedAt" TIMESTAMP NOT NULL DEFAULT now()
+            )`,
+            `CREATE INDEX IF NOT EXISTS "event_hotels_event_idx" ON "eventHotels" ("eventId")`,
           ];
           for (const q of autoMigrations) {
             try {

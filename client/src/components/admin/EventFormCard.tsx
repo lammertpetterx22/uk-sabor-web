@@ -40,6 +40,7 @@ import GuestListSection from "./GuestListSection";
 import RrpAssignmentSection from "./RrpAssignmentSection";
 import TicketTiersSection from "./TicketTiersSection";
 import TicketTiersEditor, { TierRow, validateTierRows, tierRowsToPayload } from "./TicketTiersEditor";
+import HotelsSection from "./HotelsSection";
 
 interface EventFormCardProps {
   editingEvent?: any;
@@ -137,9 +138,10 @@ export default function EventFormCard({
     ];
     if (editingEvent?.id) {
       base.push(
+        { key: "hotels",    label: "Hotels",     icon: Building2, color: "orange" },
         { key: "discounts", label: "Discounts",  icon: Tag,       color: "pink" },
         { key: "guests",    label: "Guest List", icon: Users,     color: "purple" },
-        { key: "rrp",       label: "RRPs",       icon: Megaphone, color: "orange" },
+        { key: "rrp",       label: "RRPs",       icon: Megaphone, color: "red" },
       );
     }
     return base;
@@ -378,9 +380,9 @@ export default function EventFormCard({
           {steps.map((s, idx) => {
             const active = idx === step;
             const done = idx < step;
-            // Extras (Discount, Guest List, RRP) need a saved eventId.
+            // Extras (Hotels, Discount, Guest List, RRP) need a saved eventId.
             // Tiers are held locally during creation so they're always reachable.
-            const editOnlyKeys = ["discounts", "guests", "rrp"];
+            const editOnlyKeys = ["hotels", "discounts", "guests", "rrp"];
             const disabled = !editingEvent?.id && editOnlyKeys.includes(s.key);
             const Icon = s.icon;
             return (
@@ -610,6 +612,13 @@ export default function EventFormCard({
         ) : (
           <TicketTiersEditor rows={pendingTiers} onChange={setPendingTiers} />
         )}
+      </div>
+      )}
+
+      {/* ───────── Partner Hotels (only when editing) ───────── */}
+      {steps[step]?.key === "hotels" && editingEvent?.id && (
+      <div className="rounded-2xl border border-orange-500/20 bg-gradient-to-br from-orange-500/[0.06] to-transparent p-5 md:p-6">
+        <HotelsSection eventId={editingEvent.id} />
       </div>
       )}
 

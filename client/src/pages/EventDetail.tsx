@@ -8,8 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Calendar, MapPin, Clock, Users, Ticket, ArrowLeft, Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
 import AddToCartButton from "@/components/cart/AddToCartButton";
-import PaymentMethodModal from "@/components/payment/PaymentMethodModal";
 import { useCartStore } from "@/stores/cartStore";
+import EventHotels from "@/components/events/EventHotels";
 import { Trans, useTr } from "@/components/Trans";
 
 export default function EventDetail() {
@@ -224,6 +224,9 @@ export default function EventDetail() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Partner hotels — only renders if the creator added any */}
+              <EventHotels eventId={event.id} />
             </div>
 
             {/* Purchase Card */}

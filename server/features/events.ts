@@ -1,7 +1,7 @@
 import z from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { events, eventTickets, eventTicketTiers, usageTracking } from "../../drizzle/schema";
+import { events, eventTickets, eventTicketTiers, eventHotels, usageTracking } from "../../drizzle/schema";
 import { getAllRoles } from "../../drizzle/schema";
 import { eq, desc, and, gte } from "drizzle-orm";
 import { canCreateEvent } from "../stripe/plans";
@@ -696,5 +696,103 @@ export const eventsRouter = router({
         .where(and(eq(eventTicketTiers.eventId, input.eventId), eq(eventTicketTiers.active, true)))
         .orderBy(eventTicketTiers.position);
       return { ok: true, tiers: saved };
+    }),
+
+  // ─── Partner hotels (congress-style "Where to Stay") ─────────────────
+  /** Public: hotels attached to an event, ordered by position. */
+  listHotels: publicProcedure
+    .input(z.number())
+    .query(async ({ input: eventId }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      return db
+        .select()
+        .from(eventHotels)
+        .where(and(eq(eventHotels.eventId, eventId), eq(eventHotels.active, true)))
+        .orderBy(eventHotels.position);
+    }),
+
+  /**
+   * Replace the hotel list for an event. Same shape as saveTiers: creators
+   * send the desired full state, we insert new rows, update edits by id,
+   * and soft-deactivate removed ones.
+   */
+  saveHotels: protectedProcedure
+    .input(z.object({
+      eventId: z.number(),
+      hotels: z.array(z.object({
+        id: z.number().optional(),
+        name: z.string().min(1).max(255),
+        description: z.string().optional().nullable(),
+        imageUrl: z.string().url().optional().nullable(),
+        bookingUrl: z.string().url(),
+        discountCode: z.string().max(80).optional().nullable(),
+        priceFromGBP: z.string().optional().nullable(),
+        distanceKm: z.string().optional().nullable(),
+        position: z.number().int().min(0),
+      })).max(20),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!isCreatorRole(ctx.user)) throw new Error("Unauthorized");
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const [ev] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
+      if (!ev) throw new Error("Event not found");
+      const userRoles = getAllRoles(ctx.user as any);
+      if (!userRoles.includes("admin") && ev.creatorId !== ctx.user.id) {
+        throw new Error("You do not have permission to edit this event");
+      }
+
+      const existing = await db.select().from(eventHotels).where(eq(eventHotels.eventId, input.eventId));
+      const existingById = new Map(existing.map(h => [h.id, h]));
+      const keptIds = new Set<number>();
+
+      for (const hotel of input.hotels) {
+        if (hotel.id && existingById.has(hotel.id)) {
+          keptIds.add(hotel.id);
+          await db.update(eventHotels)
+            .set({
+              name: hotel.name,
+              description: hotel.description ?? null,
+              imageUrl: hotel.imageUrl ?? null,
+              bookingUrl: hotel.bookingUrl,
+              discountCode: hotel.discountCode ?? null,
+              priceFromGBP: (hotel.priceFromGBP || null) as any,
+              distanceKm: (hotel.distanceKm || null) as any,
+              position: hotel.position,
+              active: true,
+              updatedAt: new Date(),
+            })
+            .where(eq(eventHotels.id, hotel.id));
+        } else {
+          await db.insert(eventHotels).values({
+            eventId: input.eventId,
+            name: hotel.name,
+            description: hotel.description ?? null,
+            imageUrl: hotel.imageUrl ?? null,
+            bookingUrl: hotel.bookingUrl,
+            discountCode: hotel.discountCode ?? null,
+            priceFromGBP: (hotel.priceFromGBP || null) as any,
+            distanceKm: (hotel.distanceKm || null) as any,
+            position: hotel.position,
+          });
+        }
+      }
+
+      for (const h of existing) {
+        if (!keptIds.has(h.id)) {
+          await db.update(eventHotels)
+            .set({ active: false, updatedAt: new Date() })
+            .where(eq(eventHotels.id, h.id));
+        }
+      }
+
+      const saved = await db
+        .select()
+        .from(eventHotels)
+        .where(and(eq(eventHotels.eventId, input.eventId), eq(eventHotels.active, true)))
+        .orderBy(eventHotels.position);
+      return { ok: true, hotels: saved };
     }),
 });
