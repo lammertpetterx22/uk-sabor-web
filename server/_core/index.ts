@@ -9,6 +9,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { registerEmailTrackingRoutes } from "../features/emailTracking";
+import { sdk } from "./sdk";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -42,9 +43,55 @@ async function startServer() {
   // Stripe webhook MUST be registered BEFORE body parsers
   const { handleStripeWebhook } = await import("../stripe/webhook");
   app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), handleStripeWebhook);
-  // Configure body parser with larger size limit for video uploads (10GB for long videos)
-  app.use(express.json({ limit: "14gb" }));
-  app.use(express.urlencoded({ limit: "14gb", extended: true }));
+
+  // Video streaming upload — registered BEFORE body parsers so the stream is not buffered.
+  // Browser sends the raw video binary; server creates the Bunny video entry then pipes
+  // the stream directly to Bunny.net. No base64, no memory spike, no CORS issues.
+  app.post("/api/upload-video-stream", async (req, res) => {
+    try {
+      const user = await sdk.authenticateRequest(req);
+      if (!user || (user.role !== "admin" && user.role !== "instructor")) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const title = (req.headers["x-video-title"] as string) || "Untitled";
+      const contentLength = req.headers["content-length"];
+
+      const { bunnyCreateVideo } = await import("../bunny");
+      const { videoId, libraryId } = await bunnyCreateVideo(title);
+
+      const uploadUrl = `https://video.bunnycdn.com/library/${libraryId}/videos/${videoId}`;
+
+      const headers: Record<string, string> = {
+        AccessKey: process.env.BUNNY_API_KEY || "",
+        "Content-Type": "application/octet-stream",
+      };
+      if (contentLength) headers["Content-Length"] = contentLength;
+
+      // Pipe the incoming stream directly to Bunny.net — never fully buffered in memory
+      const bunnyRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers,
+        // @ts-ignore — Node.js 18+ supports passing a Readable as body
+        body: req,
+        duplex: "half",
+      } as any);
+
+      if (!bunnyRes.ok) {
+        const errText = await bunnyRes.text().catch(() => bunnyRes.statusText);
+        return res.status(500).json({ error: `Bunny upload failed: ${bunnyRes.status} ${errText}` });
+      }
+
+      return res.json({ success: true, bunnyVideoId: videoId, bunnyLibraryId: libraryId });
+    } catch (err: any) {
+      console.error("[VideoStream] Upload error:", err.message);
+      return res.status(500).json({ error: err.message || "Upload failed" });
+    }
+  });
+
+  // Configure body parser with larger size limit for normal API calls
+  app.use(express.json({ limit: "50mb" }));
+  app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
   // Extended timeout for video upload requests (10 minutes)
   app.use((req, res, next) => {
