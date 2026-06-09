@@ -172,82 +172,68 @@ export default function AdminDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="container py-8">
+      <div className="container py-4 md:py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {isAdmin ? (
-            <TabsList className="flex overflow-x-auto md:grid md:grid-cols-3 lg:grid-cols-7 gap-2 mb-8 h-auto p-2 bg-card/50 backdrop-blur-sm border border-border/50 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <TabsTrigger value="overview" className="shrink-0 flex-col gap-1 h-14 px-4 data-[state=active]:bg-gradient-to-br data-[state=active]:from-accent/20 data-[state=active]:to-purple-500/20 data-[state=active]:border-accent/50">
-                <LayoutTemplate className="h-4 w-4" />
-                <span className="text-[10px] font-medium">Home</span>
-              </TabsTrigger>
-              <TabsTrigger value="content" className="shrink-0 flex-col gap-1 h-14 px-4 data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-500/20 data-[state=active]:to-cyan-500/20 data-[state=active]:border-blue-500/50">
-                <Calendar className="h-4 w-4" />
-                <span className="text-[10px] font-medium">Content</span>
-              </TabsTrigger>
-              <TabsTrigger value="my-courses" className="shrink-0 flex-col gap-1 h-14 px-4 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:border-purple-500/50">
-                <Video className="h-4 w-4" />
-                <span className="text-[10px] font-medium">Courses</span>
-              </TabsTrigger>
-              <TabsTrigger value="management" className="shrink-0 flex-col gap-1 h-14 px-4 data-[state=active]:bg-gradient-to-br data-[state=active]:from-green-500/20 data-[state=active]:to-emerald-500/20 data-[state=active]:border-green-500/50">
-                <Users className="h-4 w-4" />
-                <span className="text-[10px] font-medium">Users</span>
-              </TabsTrigger>
-              <TabsTrigger value="applications" className="shrink-0 flex-col gap-1 h-14 px-4 data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500/20 data-[state=active]:to-yellow-500/20 data-[state=active]:border-amber-500/50">
-                <UserPlus className="h-4 w-4" />
-                <span className="text-[10px] font-medium">Requests</span>
-              </TabsTrigger>
-              <TabsTrigger value="orders" className="shrink-0 flex-col gap-1 h-14 px-4 data-[state=active]:bg-gradient-to-br data-[state=active]:from-pink-500/20 data-[state=active]:to-rose-500/20 data-[state=active]:border-pink-500/50">
-                <Mail className="h-4 w-4" />
-                <span className="text-[10px] font-medium">Orders</span>
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="shrink-0 flex-col gap-1 h-14 px-4 data-[state=active]:bg-gradient-to-br data-[state=active]:from-gray-500/20 data-[state=active]:to-slate-500/20 data-[state=active]:border-gray-500/50">
-                <Settings className="h-4 w-4" />
-                <span className="text-[10px] font-medium">Settings</span>
-              </TabsTrigger>
+            // Admin: 7 tabs — flex-1 auto-distributes, icon-only on small phones
+            <TabsList className="flex w-full gap-1 mb-6 md:mb-8 h-auto p-1.5 bg-card/50 backdrop-blur-sm border border-border/50">
+              {[
+                { value: "overview",     Icon: LayoutTemplate, label: "Home",     active: "from-accent/20 to-purple-500/20 border-accent/50" },
+                { value: "content",      Icon: Calendar,       label: "Content",  active: "from-blue-500/20 to-cyan-500/20 border-blue-500/50" },
+                { value: "my-courses",   Icon: Video,          label: "Courses",  active: "from-purple-500/20 to-pink-500/20 border-purple-500/50" },
+                { value: "management",   Icon: Users,          label: "Users",    active: "from-green-500/20 to-emerald-500/20 border-green-500/50" },
+                { value: "applications", Icon: UserPlus,       label: "Requests", active: "from-amber-500/20 to-yellow-500/20 border-amber-500/50" },
+                { value: "orders",       Icon: Mail,           label: "Orders",   active: "from-pink-500/20 to-rose-500/20 border-pink-500/50" },
+                { value: "settings",     Icon: Settings,       label: "Settings", active: "from-gray-500/20 to-slate-500/20 border-gray-500/50" },
+              ].map(({ value, Icon, label, active }) => (
+                <TabsTrigger
+                  key={value}
+                  value={value}
+                  className={`flex-1 min-w-0 flex-col gap-0.5 h-12 md:h-14 px-1 md:px-3 data-[state=active]:bg-gradient-to-br data-[state=active]:${active}`}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span className="text-[9px] sm:text-[10px] font-medium leading-none truncate w-full text-center hidden xs:block">{label}</span>
+                </TabsTrigger>
+              ))}
             </TabsList>
           ) : isInstructor ? (
-            // Instructors: Overview + Events + Classes + My Courses + Profile
-            <TabsList className="flex overflow-x-auto md:grid md:grid-cols-5 gap-2 mb-8 h-auto p-2 bg-card/50 backdrop-blur-sm border border-border/50 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <TabsTrigger value="overview" className="shrink-0 flex-col gap-1 h-14 px-4 data-[state=active]:bg-gradient-to-br data-[state=active]:from-accent/20 data-[state=active]:to-purple-500/20 data-[state=active]:border-accent/50">
-                <LayoutTemplate className="h-4 w-4" />
-                <span className="text-[10px] font-medium">Home</span>
-              </TabsTrigger>
-              <TabsTrigger value="events" className="shrink-0 flex-col gap-1 h-14 px-4 data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-500/20 data-[state=active]:to-cyan-500/20 data-[state=active]:border-blue-500/50">
-                <Calendar className="h-4 w-4" />
-                <span className="text-[10px] font-medium">Events</span>
-              </TabsTrigger>
-              <TabsTrigger value="classes" className="shrink-0 flex-col gap-1 h-14 px-4 data-[state=active]:bg-gradient-to-br data-[state=active]:from-orange-500/20 data-[state=active]:to-red-500/20 data-[state=active]:border-orange-500/50">
-                <Users className="h-4 w-4" />
-                <span className="text-[10px] font-medium">Classes</span>
-              </TabsTrigger>
-              <TabsTrigger value="my-courses" className="shrink-0 flex-col gap-1 h-14 px-4 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:border-purple-500/50">
-                <Video className="h-4 w-4" />
-                <span className="text-[10px] font-medium">Courses</span>
-              </TabsTrigger>
-              <TabsTrigger value="profile" className="shrink-0 flex-col gap-1 h-14 px-4 data-[state=active]:bg-gradient-to-br data-[state=active]:from-green-500/20 data-[state=active]:to-emerald-500/20 data-[state=active]:border-green-500/50">
-                <Users className="h-4 w-4" />
-                <span className="text-[10px] font-medium">Profile</span>
-              </TabsTrigger>
+            // Instructor: 5 tabs — flex-1 fits any screen with text always visible
+            <TabsList className="flex w-full gap-1 mb-6 md:mb-8 h-auto p-1.5 bg-card/50 backdrop-blur-sm border border-border/50">
+              {[
+                { value: "overview",   Icon: LayoutTemplate, label: "Home",    active: "from-accent/20 to-purple-500/20 border-accent/50" },
+                { value: "events",     Icon: Calendar,       label: "Events",  active: "from-blue-500/20 to-cyan-500/20 border-blue-500/50" },
+                { value: "classes",    Icon: Users,          label: "Classes", active: "from-orange-500/20 to-red-500/20 border-orange-500/50" },
+                { value: "my-courses", Icon: Video,          label: "Courses", active: "from-purple-500/20 to-pink-500/20 border-purple-500/50" },
+                { value: "profile",    Icon: Users,          label: "Profile", active: "from-green-500/20 to-emerald-500/20 border-green-500/50" },
+              ].map(({ value, Icon, label, active }) => (
+                <TabsTrigger
+                  key={value}
+                  value={value}
+                  className={`flex-1 min-w-0 flex-col gap-0.5 h-12 md:h-14 px-1 md:px-3 data-[state=active]:bg-gradient-to-br data-[state=active]:${active}`}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span className="text-[10px] font-medium leading-none truncate w-full text-center">{label}</span>
+                </TabsTrigger>
+              ))}
             </TabsList>
           ) : (
-            // Promoters: Overview + Events + Classes + Profile
-            <TabsList className="flex overflow-x-auto md:grid md:grid-cols-4 gap-2 mb-8 h-auto p-2 bg-card/50 backdrop-blur-sm border border-border/50 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <TabsTrigger value="overview" className="shrink-0 flex-col gap-1 h-14 px-4 data-[state=active]:bg-gradient-to-br data-[state=active]:from-accent/20 data-[state=active]:to-purple-500/20 data-[state=active]:border-accent/50">
-                <LayoutTemplate className="h-4 w-4" />
-                <span className="text-[10px] font-medium">Home</span>
-              </TabsTrigger>
-              <TabsTrigger value="events" className="shrink-0 flex-col gap-1 h-14 px-4 data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-500/20 data-[state=active]:to-cyan-500/20 data-[state=active]:border-blue-500/50">
-                <Calendar className="h-4 w-4" />
-                <span className="text-[10px] font-medium">Events</span>
-              </TabsTrigger>
-              <TabsTrigger value="classes" className="shrink-0 flex-col gap-1 h-14 px-4 data-[state=active]:bg-gradient-to-br data-[state=active]:from-orange-500/20 data-[state=active]:to-red-500/20 data-[state=active]:border-orange-500/50">
-                <Users className="h-4 w-4" />
-                <span className="text-[10px] font-medium">Classes</span>
-              </TabsTrigger>
-              <TabsTrigger value="profile" className="shrink-0 flex-col gap-1 h-14 px-4 data-[state=active]:bg-gradient-to-br data-[state=active]:from-green-500/20 data-[state=active]:to-emerald-500/20 data-[state=active]:border-green-500/50">
-                <Users className="h-4 w-4" />
-                <span className="text-[10px] font-medium">Profile</span>
-              </TabsTrigger>
+            // Promoter: 4 tabs
+            <TabsList className="flex w-full gap-1 mb-6 md:mb-8 h-auto p-1.5 bg-card/50 backdrop-blur-sm border border-border/50">
+              {[
+                { value: "overview", Icon: LayoutTemplate, label: "Home",    active: "from-accent/20 to-purple-500/20 border-accent/50" },
+                { value: "events",   Icon: Calendar,       label: "Events",  active: "from-blue-500/20 to-cyan-500/20 border-blue-500/50" },
+                { value: "classes",  Icon: Users,          label: "Classes", active: "from-orange-500/20 to-red-500/20 border-orange-500/50" },
+                { value: "profile",  Icon: Users,          label: "Profile", active: "from-green-500/20 to-emerald-500/20 border-green-500/50" },
+              ].map(({ value, Icon, label, active }) => (
+                <TabsTrigger
+                  key={value}
+                  value={value}
+                  className={`flex-1 min-w-0 flex-col gap-0.5 h-12 md:h-14 px-1 md:px-3 data-[state=active]:bg-gradient-to-br data-[state=active]:${active}`}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span className="text-[10px] font-medium leading-none truncate w-full text-center">{label}</span>
+                </TabsTrigger>
+              ))}
             </TabsList>
           )}
 
