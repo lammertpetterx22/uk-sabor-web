@@ -70,7 +70,6 @@ export function useLessonsManager(courseId: number | null) {
       videoFile: null,
     });
     setEditingLessonId(null);
-    setUploadProgress(0);
   };
 
   const handleVideoUpload = async (file: File) => {
