@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import {
   Loader2, ArrowLeft, BookOpen, CheckCircle2, Clock,
-  Star, AlertCircle, Play,
+  Star, AlertCircle, Play, RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useCallback } from "react";
@@ -470,9 +470,22 @@ export default function CourseDetail() {
           <div>
             <Card className="sticky top-24 border-accent/20">
               <CardContent className="pt-6 space-y-6">
+                {/* Price */}
                 <div className="text-center">
-                  <p className="text-sm text-foreground/60 mb-1">Course price</p>
-                  <p className="text-4xl font-bold text-accent">£{price.toFixed(2)}</p>
+                  {(course as any).paymentType === "monthly" ? (
+                    <>
+                      <p className="text-sm text-foreground/60 mb-1">Monthly subscription</p>
+                      <div className="flex items-end justify-center gap-1">
+                        <p className="text-4xl font-bold text-accent">£{price.toFixed(2)}</p>
+                        <span className="text-foreground/50 mb-1">/month</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm text-foreground/60 mb-1">Course price</p>
+                      <p className="text-4xl font-bold text-accent">£{price.toFixed(2)}</p>
+                    </>
+                  )}
                 </div>
 
                 {hasPurchased ? (
@@ -503,16 +516,27 @@ export default function CourseDetail() {
                         <p className="font-semibold text-green-400">Course completed!</p>
                       </div>
                     )}
+
+                    {(course as any).paymentType === "monthly" && (
+                      <p className="text-xs text-foreground/40 text-center">
+                        Active subscription — renews monthly
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-4">
                     <ul className="space-y-2.5">
-                      {[
-                        "Unlimited access",
+                      {(course as any).paymentType === "monthly" ? [
+                        "Full access while subscribed",
+                        "All lessons included",
+                        "Cancel anytime",
+                        "Professional instructor",
+                      ] : [
+                        "Lifetime access",
                         "All lessons included",
                         "Learn at your own pace",
                         "Professional instructor",
-                      ].map(item => (
+                      ].map((item: string) => (
                         <li key={item} className="flex items-center gap-3">
                           <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
                           <span className="text-sm text-foreground/80">{item}</span>
@@ -520,17 +544,38 @@ export default function CourseDetail() {
                       ))}
                     </ul>
 
-                    <AddToCartButton
-                      item={{
-                        type: "course",
-                        id: course.id,
-                        title: course.title,
-                        price: price,
-                        imageUrl: course.imageUrl || undefined,
-                        instructorName: instructor?.name,
-                      }}
-                      className="w-full py-5 text-base"
-                    />
+                    {(course as any).paymentType === "monthly" ? (
+                      <Button
+                        onClick={() => checkoutMutation.mutate({ courseId: course.id })}
+                        disabled={checkoutMutation.isPending || !isAuthenticated}
+                        className="w-full py-5 text-base btn-vibrant"
+                      >
+                        {checkoutMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                        )}
+                        Subscribe — £{price.toFixed(2)}/month
+                      </Button>
+                    ) : (
+                      <AddToCartButton
+                        item={{
+                          type: "course",
+                          id: course.id,
+                          title: course.title,
+                          price: price,
+                          imageUrl: course.imageUrl || undefined,
+                          instructorName: instructor?.name,
+                        }}
+                        className="w-full py-5 text-base"
+                      />
+                    )}
+
+                    {!isAuthenticated && (
+                      <p className="text-xs text-foreground/40 text-center">
+                        Sign in to purchase this course
+                      </p>
+                    )}
                   </div>
                 )}
               </CardContent>
