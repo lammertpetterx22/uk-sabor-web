@@ -362,6 +362,85 @@ export async function bunnyCreateVideoWithTUSCredentials(
   };
 }
 
+// ─── Server-Side TUS (Chunked Upload Relay) ──────────────────────────────────
+
+export interface TUSSessionInfo {
+  tusUrl: string;
+  authSignature: string;
+  authExpiration: number;
+  libraryId: string;
+  videoId: string;
+}
+
+export async function bunnyCreateTUSSession(
+  videoId: string,
+  totalSize: number,
+  title: string,
+  mimeType: string
+): Promise<TUSSessionInfo> {
+  validateBunnyConfig();
+  const libraryId = BUNNY_CONFIG.libraryId;
+
+  const authExpiration = Math.floor(Date.now() / 1000) + 6 * 60 * 60;
+  const signatureString = `${libraryId}${BUNNY_CONFIG.apiKey}${authExpiration}${videoId}`;
+  const authSignature = crypto.createHash("sha256").update(signatureString).digest("hex");
+
+  const toB64 = (s: string) => Buffer.from(s).toString("base64");
+
+  const response = await fetch("https://video.bunnycdn.com/tusupload", {
+    method: "POST",
+    headers: {
+      AuthorizationSignature: authSignature,
+      AuthorizationExpire: String(authExpiration),
+      VideoLibraryId: libraryId,
+      LibraryId: libraryId,
+      "Tus-Resumable": "1.0.0",
+      "Upload-Length": String(totalSize),
+      "Upload-Metadata": `filetype ${toB64(mimeType || "video/mp4")},title ${toB64(title)},videoid ${toB64(videoId)}`,
+    },
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`TUS session failed (${response.status}): ${text}`);
+  }
+
+  let location = response.headers.get("location");
+  if (!location) throw new Error("TUS session created but no Location header");
+  if (location.startsWith("/")) location = `https://video.bunnycdn.com${location}`;
+
+  console.log(`[Bunny.net] ✓ TUS session created: ${videoId}`);
+  return { tusUrl: location, authSignature, authExpiration, libraryId, videoId };
+}
+
+export async function bunnyPatchTUSChunk(
+  session: TUSSessionInfo,
+  offset: number,
+  data: Buffer
+): Promise<number> {
+  const response = await fetch(session.tusUrl, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/offset+octet-stream",
+      "Upload-Offset": String(offset),
+      "Tus-Resumable": "1.0.0",
+      AuthorizationSignature: session.authSignature,
+      AuthorizationExpire: String(session.authExpiration),
+      VideoLibraryId: session.libraryId,
+      LibraryId: session.libraryId,
+    },
+    body: new Uint8Array(data),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`TUS PATCH failed (${response.status}): ${text}`);
+  }
+
+  const newOffset = response.headers.get("upload-offset");
+  return newOffset ? parseInt(newOffset) : offset + data.length;
+}
+
 // ─── Configuration Exports ────────────────────────────────────────────────────
 
 export function getBunnyLibraryId(): string {

@@ -1,9 +1,9 @@
 import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
-import https from "https";
 import net from "net";
 import helmet from "helmet";
+import type { TUSSessionInfo } from "../bunny";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
@@ -45,17 +45,21 @@ async function startServer() {
   const { handleStripeWebhook } = await import("../stripe/webhook");
   app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), handleStripeWebhook);
 
-  // Video streaming upload — registered BEFORE body parsers so the stream is not buffered.
-  // Browser sends raw video binary → server pipes directly to Bunny.net via https.request.
-  // No base64, no full-file buffering in memory, no CORS issues.
-  app.post("/api/upload-video-stream", async (req, res) => {
-    // Disable ALL timeouts for this endpoint — 40-min videos can take 30+ min to upload
-    req.setTimeout(0);
-    res.setTimeout(0);
-    if ((req.socket as any)) {
-      req.socket.setTimeout(0);
-    }
+  // Configure body parser with larger size limit for normal API calls
+  app.use(express.json({ limit: "50mb" }));
+  app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
+  // ── Chunked video upload (browser → server → Bunny.net via TUS) ─────────────
+  // We split the file into 10MB chunks on the browser so each HTTP request is
+  // small enough to pass through Koyeb's proxy without buffering/rejection.
+  interface ActiveUploadSession extends TUSSessionInfo {
+    offset: number;
+    totalSize: number;
+  }
+  const uploadSessions = new Map<string, ActiveUploadSession>();
+
+  // Step 1 — Init: create Bunny video entry + TUS session, return session ID
+  app.post("/api/upload-video-init", async (req, res) => {
     try {
       const user = await sdk.authenticateRequest(req);
       if (!user || (user.role !== "admin" && user.role !== "instructor")) {
@@ -67,56 +71,72 @@ async function startServer() {
       if (typeof titleHeader === "string") {
         try { title = decodeURIComponent(titleHeader); } catch { title = titleHeader; }
       }
-      const contentLength = req.headers["content-length"];
+      const totalSizeStr = req.headers["x-video-size"];
+      const totalSize = totalSizeStr ? parseInt(String(totalSizeStr)) : 0;
+      if (!totalSize || isNaN(totalSize)) {
+        return res.status(400).json({ error: "Missing or invalid X-Video-Size header" });
+      }
+      const mimeType = String(req.headers["x-video-type"] || "video/mp4");
 
-      const { bunnyCreateVideo } = await import("../bunny");
+      const { bunnyCreateVideo, bunnyCreateTUSSession } = await import("../bunny");
       const { videoId, libraryId } = await bunnyCreateVideo(title);
+      const session = await bunnyCreateTUSSession(videoId, totalSize, title, mimeType);
 
-      console.log(`[VideoStream] Starting upload: "${title}" (${contentLength ? Math.round(parseInt(contentLength)/1024/1024) + "MB" : "unknown size"})`);
+      uploadSessions.set(videoId, { ...session, offset: 0, totalSize });
+      console.log(`[Upload] Session created: ${videoId} (${Math.round(totalSize / 1024 / 1024)}MB)`);
 
-      await new Promise<void>((resolve, reject) => {
-        const bunnyReq = https.request(
-          {
-            hostname: "video.bunnycdn.com",
-            path: `/library/${libraryId}/videos/${videoId}`,
-            method: "PUT",
-            timeout: 0, // no timeout on the Bunny.net connection either
-            headers: {
-              AccessKey: process.env.BUNNY_API_KEY || "",
-              "Content-Type": "application/octet-stream",
-              ...(contentLength ? { "Content-Length": contentLength } : {}),
-            },
-          },
-          (bunnyRes) => {
-            let body = "";
-            bunnyRes.on("data", (chunk) => (body += chunk));
-            bunnyRes.on("end", () => {
-              if (bunnyRes.statusCode && bunnyRes.statusCode >= 200 && bunnyRes.statusCode < 300) {
-                console.log(`[VideoStream] ✅ Upload complete: ${videoId}`);
-                resolve();
-              } else {
-                reject(new Error(`Bunny upload failed: ${bunnyRes.statusCode} ${body}`));
-              }
-            });
-          }
-        );
-
-        bunnyReq.on("error", reject);
-        req.on("error", reject);
-        // Stream browser bytes directly to Bunny.net — never buffered in memory
-        req.pipe(bunnyReq);
-      });
-
-      return res.json({ success: true, bunnyVideoId: videoId, bunnyLibraryId: libraryId });
+      return res.json({ videoId, libraryId });
     } catch (err: any) {
-      console.error("[VideoStream] Upload error:", err.message);
-      return res.status(500).json({ error: err.message || "Upload failed" });
+      console.error("[Upload] Init error:", err.message);
+      return res.status(500).json({ error: err.message || "Init failed" });
     }
   });
 
-  // Configure body parser with larger size limit for normal API calls
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  // Step 2 — Chunk: relay one binary chunk to Bunny.net via TUS PATCH
+  app.post(
+    "/api/upload-video-chunk",
+    express.raw({ type: "application/octet-stream", limit: "30mb" }),
+    async (req, res) => {
+      try {
+        const user = await sdk.authenticateRequest(req);
+        if (!user || (user.role !== "admin" && user.role !== "instructor")) {
+          return res.status(401).json({ error: "Unauthorized" });
+        }
+
+        const videoId = String(req.headers["x-video-id"] || "");
+        const offsetStr = req.headers["x-chunk-offset"];
+        const offset = offsetStr !== undefined ? parseInt(String(offsetStr)) : -1;
+
+        if (!videoId || offset < 0) {
+          return res.status(400).json({ error: "Missing X-Video-Id or X-Chunk-Offset" });
+        }
+
+        const session = uploadSessions.get(videoId);
+        if (!session) {
+          return res.status(404).json({ error: "Upload session not found. Please restart the upload." });
+        }
+
+        const data = req.body as Buffer;
+        if (!Buffer.isBuffer(data) || data.length === 0) {
+          return res.status(400).json({ error: "Empty chunk body" });
+        }
+
+        const { bunnyPatchTUSChunk } = await import("../bunny");
+        const newOffset = await bunnyPatchTUSChunk(session, offset, data);
+        session.offset = newOffset;
+
+        if (newOffset >= session.totalSize) {
+          uploadSessions.delete(videoId);
+          console.log(`[Upload] ✅ Complete: ${videoId}`);
+        }
+
+        return res.json({ success: true, offset: newOffset });
+      } catch (err: any) {
+        console.error("[Upload] Chunk error:", err.message);
+        return res.status(500).json({ error: err.message || "Chunk upload failed" });
+      }
+    }
+  );
 
   // Extended timeout for video upload requests (10 minutes)
   app.use((req, res, next) => {
