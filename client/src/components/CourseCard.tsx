@@ -3,7 +3,7 @@ import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, DollarSign, Clock, Users, Video } from "lucide-react";
+import { BookOpen, Clock, Video, RefreshCw } from "lucide-react";
 import type { Course } from "@shared/types";
 import { Trans } from "@/components/Trans";
 
@@ -82,11 +82,27 @@ const CourseCard = memo(function CourseCard({ course, instructorName }: CourseCa
             </div>
           )}
 
-          <div className="flex items-center gap-2 text-accent font-semibold pt-2 border-t border-border/50">
-            <DollarSign size={16} />
-            <span>£{typeof course.price === 'string' ? parseFloat(course.price).toFixed(2) : Number(course.price).toFixed(2)}</span>
-            {(course as any).paymentType === "monthly" && (
-              <span className="ml-1 text-[10px] font-bold uppercase tracking-wide bg-accent/20 text-accent px-1.5 py-0.5 rounded-full">/mo</span>
+          <div className="pt-2 border-t border-border/50">
+            {(course as any).paymentType === "monthly" ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-xl font-bold text-accent">
+                    £{typeof course.price === 'string' ? parseFloat(course.price).toFixed(2) : Number(course.price).toFixed(2)}
+                  </span>
+                  <span className="text-xs text-foreground/50 font-medium">/month</span>
+                </div>
+                <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide bg-accent/15 text-accent border border-accent/30 px-2 py-0.5 rounded-full">
+                  <RefreshCw size={9} />
+                  Monthly
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm font-semibold text-foreground/50">GBP</span>
+                <span className="text-xl font-bold text-accent">
+                  £{typeof course.price === 'string' ? parseFloat(course.price).toFixed(2) : Number(course.price).toFixed(2)}
+                </span>
+              </div>
             )}
           </div>
         </div>
