@@ -475,16 +475,19 @@ export const classesRouter = router({
 
       // 10. Send confirmation email
       try {
+        const userEmail = ctx.user.email || "";
+        if (!userEmail) throw new Error("User has no email address");
+
         const { generateCashReservationEmail, generateCashReservationEmailPlainText } = await import("../emails/cashReservationConfirmation");
-        const { sendEmail } = await import("../emails/emailService");
+        const { sendEmail } = await import("./email");
 
         const emailHtml = generateCashReservationEmail({
-          to: ctx.user.email,
-          userName: ctx.user.name || ctx.user.email.split('@')[0],
+          to: userEmail,
+          userName: ctx.user.name || userEmail.split('@')[0],
           itemType: "class",
           itemTitle: classRecord.title,
           itemDate: classRecord.classDate,
-          venue: classRecord.venue || undefined,
+          venue: classRecord.socialLocation || undefined,
           price: classRecord.price,
           qrCode: qrDataUrl,
           confirmationCode: purchase.accessCode || "",
@@ -492,12 +495,12 @@ export const classesRouter = router({
         });
 
         const emailText = generateCashReservationEmailPlainText({
-          to: ctx.user.email,
-          userName: ctx.user.name || ctx.user.email.split('@')[0],
+          to: userEmail,
+          userName: ctx.user.name || userEmail.split('@')[0],
           itemType: "class",
           itemTitle: classRecord.title,
           itemDate: classRecord.classDate,
-          venue: classRecord.venue || undefined,
+          venue: classRecord.socialLocation || undefined,
           price: classRecord.price,
           qrCode: qrDataUrl,
           confirmationCode: purchase.accessCode || "",
@@ -505,13 +508,13 @@ export const classesRouter = router({
         });
 
         await sendEmail({
-          to: ctx.user.email,
+          to: userEmail,
           subject: `Spot Reserved: ${classRecord.title} - Pay at Door`,
-          html: emailHtml,
-          text: emailText,
+          htmlContent: emailHtml,
+          textContent: emailText,
         });
 
-        console.log(`[CashReservation] 📧 Email sent to ${ctx.user.email}`);
+        console.log(`[CashReservation] 📧 Email sent to ${userEmail}`);
       } catch (emailError) {
         console.error(`[CashReservation] ⚠️ Failed to send email:`, emailError);
         // Don't throw - reservation was successful even if email fails

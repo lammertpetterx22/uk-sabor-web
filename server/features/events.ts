@@ -432,12 +432,15 @@ export const eventsRouter = router({
 
       // 10. Send confirmation email
       try {
+        const userEmail = ctx.user.email || "";
+        if (!userEmail) throw new Error("User has no email address");
+
         const { generateCashReservationEmail, generateCashReservationEmailPlainText } = await import("../emails/cashReservationConfirmation");
-        const { sendEmail } = await import("../emails/emailService");
+        const { sendEmail } = await import("./email");
 
         const emailHtml = generateCashReservationEmail({
-          to: ctx.user.email,
-          userName: ctx.user.name || ctx.user.email.split('@')[0],
+          to: userEmail,
+          userName: ctx.user.name || userEmail.split('@')[0],
           itemType: "event",
           itemTitle: event.title,
           itemDate: event.eventDate,
@@ -449,8 +452,8 @@ export const eventsRouter = router({
         });
 
         const emailText = generateCashReservationEmailPlainText({
-          to: ctx.user.email,
-          userName: ctx.user.name || ctx.user.email.split('@')[0],
+          to: userEmail,
+          userName: ctx.user.name || userEmail.split('@')[0],
           itemType: "event",
           itemTitle: event.title,
           itemDate: event.eventDate,
@@ -462,13 +465,13 @@ export const eventsRouter = router({
         });
 
         await sendEmail({
-          to: ctx.user.email,
+          to: userEmail,
           subject: `Spot Reserved: ${event.title} - Pay at Door`,
-          html: emailHtml,
-          text: emailText,
+          htmlContent: emailHtml,
+          textContent: emailText,
         });
 
-        console.log(`[CashReservation] 📧 Email sent to ${ctx.user.email}`);
+        console.log(`[CashReservation] 📧 Email sent to ${userEmail}`);
       } catch (emailError) {
         console.error(`[CashReservation] ⚠️ Failed to send email:`, emailError);
         // Don't throw - reservation was successful even if email fails
