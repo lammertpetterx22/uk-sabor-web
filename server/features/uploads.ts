@@ -139,10 +139,10 @@ export const uploadsRouter = router({
       const fileSizeMB = buffer.length / 1024 / 1024;
 
       // Validate video size
-      const MAX_VIDEO_SIZE_MB = 2048; // 2GB limit for Bunny.net
+      const MAX_VIDEO_SIZE_MB = 10240; // 10GB limit for Bunny.net
       if (fileSizeMB > MAX_VIDEO_SIZE_MB) {
         throw new Error(
-          `Video demasiado grande: ${fileSizeMB.toFixed(1)}MB. Máximo permitido: ${MAX_VIDEO_SIZE_MB}MB (2GB)`
+          `Video too large: ${fileSizeMB.toFixed(1)}MB. Maximum allowed: ${MAX_VIDEO_SIZE_MB}MB (10GB)`
         );
       }
 

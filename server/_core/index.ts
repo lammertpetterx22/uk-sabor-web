@@ -42,9 +42,9 @@ async function startServer() {
   // Stripe webhook MUST be registered BEFORE body parsers
   const { handleStripeWebhook } = await import("../stripe/webhook");
   app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), handleStripeWebhook);
-  // Configure body parser with larger size limit for video uploads (2GB for 20-40 min videos)
-  app.use(express.json({ limit: "2gb" }));
-  app.use(express.urlencoded({ limit: "2gb", extended: true }));
+  // Configure body parser with larger size limit for video uploads (10GB for long videos)
+  app.use(express.json({ limit: "14gb" }));
+  app.use(express.urlencoded({ limit: "14gb", extended: true }));
 
   // Extended timeout for video upload requests (10 minutes)
   app.use((req, res, next) => {

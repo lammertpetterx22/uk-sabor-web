@@ -203,7 +203,7 @@ export default function LessonsManager({ courses, isLoadingCourses }: LessonsMan
                       Arrastra un video here
                     </p>
                     <p className="text-sm text-foreground/60 mb-6">
-                      o haz clic para select (máx. 2GB)
+                      or click to select (max. 10GB)
                     </p>
                     <Button
                       onClick={() => videoInputRef.current?.click()}

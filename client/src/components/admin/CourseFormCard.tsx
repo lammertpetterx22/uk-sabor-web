@@ -227,11 +227,11 @@ export default function CourseFormCard({
       return;
     }
 
-    const MAX_VIDEO_SIZE = 2 * 1024 * 1024 * 1024;
+    const MAX_VIDEO_SIZE = 10 * 1024 * 1024 * 1024;
     const fileSizeMB = file.size / 1024 / 1024;
 
     if (file.size > MAX_VIDEO_SIZE) {
-      toast.error(`El video es demasiado grande (máx. 2GB). Tu archivo: ${fileSizeMB.toFixed(1)}MB`);
+      toast.error(`Video too large (max. 10GB). Your file: ${fileSizeMB.toFixed(1)}MB`);
       return;
     }
 
@@ -602,7 +602,7 @@ export default function CourseFormCard({
                   Sube un video promocional
                 </p>
                 <p className="text-sm text-foreground/60 mb-4">
-                  Máx. 2GB (mp4, mov, avi, webm, etc.)
+                  Max. 10GB (mp4, mov, avi, webm, etc.)
                 </p>
                 <Button
                   type="button"

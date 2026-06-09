@@ -82,11 +82,11 @@ export function useLessonsManager(courseId: number | null) {
     }
 
     const fileSizeMB = file.size / 1024 / 1024;
-    const MAX_VIDEO_SIZE_MB = 2048; // 2GB
+    const MAX_VIDEO_SIZE_MB = 10240; // 10GB
 
     if (fileSizeMB > MAX_VIDEO_SIZE_MB) {
       toast.error(
-        `Video demasiado grande: ${fileSizeMB.toFixed(1)}MB. Maximum: ${MAX_VIDEO_SIZE_MB}MB`
+        `Video too large: ${fileSizeMB.toFixed(1)}MB. Maximum: ${MAX_VIDEO_SIZE_MB}MB`
       );
       return;
     }

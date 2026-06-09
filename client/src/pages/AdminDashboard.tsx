@@ -1240,16 +1240,16 @@ function CoursesTab() {
       return;
     }
 
-    // SECURITY: Validate file size (max 2GB for Bunny.net)
-    const MAX_VIDEO_SIZE = 2 * 1024 * 1024 * 1024; // 2GB
+    // SECURITY: Validate file size (max 10GB for Bunny.net)
+    const MAX_VIDEO_SIZE = 10 * 1024 * 1024 * 1024; // 10GB
     const fileSizeMB = file.size / 1024 / 1024;
 
     if (file.size > MAX_VIDEO_SIZE) {
       toast.error(
-        `❌ El video es demasiado grande.\n\n` +
-        `📦 Tamyear maximum: 2GB (2048MB)\n` +
-        `📁 Tu archivo: ${fileSizeMB.toFixed(1)}MB\n\n` +
-        `💡 Tip: Comprime el video con Handbrake o similar.`,
+        `❌ Video too large.\n\n` +
+        `📦 Maximum: 10GB (10240MB)\n` +
+        `📁 Your file: ${fileSizeMB.toFixed(1)}MB\n\n` +
+        `💡 Tip: Compress the video with Handbrake or similar.`,
         { duration: 8000 }
       );
       return;

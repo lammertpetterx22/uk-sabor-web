@@ -686,7 +686,7 @@ export default function MyCoursesDashboard({
                       Sube el video de la lesson
                     </p>
                     <p className="text-sm text-foreground/60 mb-6">
-                      Formatos aceptados: MP4, MOV, AVI, WebM (máx. 2GB)
+                      Accepted formats: MP4, MOV, AVI, WebM (max. 10GB)
                     </p>
                     <input
                       ref={(ref) => videoInputRef(ref)}
