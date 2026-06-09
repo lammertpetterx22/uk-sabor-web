@@ -78,6 +78,9 @@ export function useLessonsManager(courseId: number | null) {
       return;
     }
 
+    // Show file name immediately — don't wait for upload to finish
+    setFormData((prev) => ({ ...prev, videoFile: file }));
+
     const title = formData.title || file.name.replace(/\.[^/.]+$/, "");
     const result = await uploadVideoTUS(file, title);
 
@@ -86,9 +89,10 @@ export function useLessonsManager(courseId: number | null) {
         ...prev,
         bunnyVideoId: result.bunnyVideoId,
         bunnyLibraryId: result.bunnyLibraryId,
-        videoFile: file,
       }));
       toast.success("Video uploaded successfully", { duration: 3000 });
+    } else {
+      setFormData((prev) => ({ ...prev, videoFile: null }));
     }
   };
 

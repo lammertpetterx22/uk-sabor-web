@@ -31,7 +31,6 @@ import {
   List
 } from "lucide-react";
 import { toast } from "sonner";
-import { ProfessionalUploadProgress } from "@/../components/video/ProfessionalUploadProgress";
 import CourseFormCard from "@/components/admin/CourseFormCard";
 import { useTr } from "@/components/Trans";
 
@@ -662,20 +661,36 @@ export default function MyCoursesDashboard({
             <Separator />
 
             {/* Video Upload */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <Label className="flex items-center gap-2 text-base">
                 <Video className="h-5 w-5 text-accent" />
                 Video de la Lesson *
               </Label>
 
-              <ProfessionalUploadProgress
-                isUploading={uploading}
-                progress={uploadProgress}
-                uploadComplete={!!formData.bunnyVideoId}
-                uploadType="video"
-                fileName={formData.videoFile?.name}
-              />
+              {/* UPLOADING STATE — full-area loading block */}
+              {uploading && (
+                <div className="rounded-2xl border-2 border-accent/40 bg-gradient-to-br from-accent/10 to-purple-500/10 p-6 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FA3698] to-purple-600 flex items-center justify-center animate-pulse shrink-0">
+                      <Upload className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground">Uploading video...</p>
+                      <p className="text-sm text-foreground/60 truncate">{formData.videoFile?.name}</p>
+                    </div>
+                    <span className="text-2xl font-bold text-accent tabular-nums">{uploadProgress}%</span>
+                  </div>
+                  <div className="w-full h-3 rounded-full bg-white/10 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-[#FA3698] to-purple-500 transition-all duration-300"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-foreground/50 text-center">Do not close this window until the upload completes</p>
+                </div>
+              )}
 
+              {/* IDLE — no video yet */}
               {!uploading && !formData.bunnyVideoId && (
                 <div className="relative border-2 border-dashed border-accent/30 rounded-xl p-10 bg-gradient-to-br from-accent/5 to-transparent hover:border-accent/50 transition-all duration-300">
                   <div className="text-center">
@@ -683,10 +698,10 @@ export default function MyCoursesDashboard({
                       <Upload className="h-10 w-10 text-accent" />
                     </div>
                     <p className="font-semibold text-foreground mb-2">
-                      Sube el video de la lesson
+                      Upload lesson video
                     </p>
                     <p className="text-sm text-foreground/60 mb-6">
-                      Accepted formats: MP4, MOV, AVI, WebM (max. 10GB)
+                      MP4, MOV, AVI, WebM — max. 10GB
                     </p>
                     <input
                       ref={(ref) => videoInputRef(ref)}
@@ -706,35 +721,40 @@ export default function MyCoursesDashboard({
                       className="bg-gradient-to-r from-[#FA3698] to-purple-600 hover:from-[#FA3698]/90 hover:to-purple-600/90 text-white border-0 shadow-lg"
                     >
                       <Upload className="h-4 w-4 mr-2" />
-                      Selectr Video
+                      Select Video
                     </Button>
                   </div>
                 </div>
               )}
 
+              {/* DONE — video uploaded */}
               {!uploading && formData.bunnyVideoId && (
-                <div className="flex gap-3">
+                <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 flex items-center gap-3">
+                  <CheckCircle2 className="h-6 w-6 text-emerald-400 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-emerald-300 text-sm">Video uploaded successfully</p>
+                    <p className="text-xs text-foreground/50 truncate">{formData.videoFile?.name}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Replace/remove buttons when video is done */}
+              {!uploading && formData.bunnyVideoId && (
+                <div className="flex gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => document.getElementById("video-upload-input")?.click()}
-                    className="flex-1"
+                    className="flex-1 text-xs"
                   >
-                    <Video className="h-4 w-4 mr-2" />
-                    Cambiar Video
+                    <Video className="h-3 w-3 mr-1" />
+                    Replace Video
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        bunnyVideoId: "",
-                        bunnyLibraryId: "",
-                        videoFile: null,
-                      })
-                    }
-                    className="text-red-600 hover:text-red-700 hover:border-red-300"
+                    onClick={() => setFormData({ ...formData, bunnyVideoId: "", bunnyLibraryId: "", videoFile: null })}
+                    className="text-red-500 hover:text-red-600 hover:border-red-300 px-2"
                   >
                     <X className="h-4 w-4" />
                   </Button>
