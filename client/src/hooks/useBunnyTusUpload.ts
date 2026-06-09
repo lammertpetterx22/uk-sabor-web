@@ -57,6 +57,8 @@ export function useBunnyTusUpload(): UseBunnyTusUploadReturn {
         const buffer = await chunk.arrayBuffer();
 
         // Retry each chunk up to 3 times
+        const isLastChunk = end >= file.size;
+
         let lastErr: Error | null = null;
         for (let attempt = 0; attempt < 3; attempt++) {
           try {
@@ -86,8 +88,12 @@ export function useBunnyTusUpload(): UseBunnyTusUploadReturn {
 
         if (lastErr) throw lastErr;
 
-        // Progress = bytes sent so far / total
-        setUploadProgress(Math.round((end / file.size) * 100));
+        // Reserve last 5% for the server→Bunny transfer on the final chunk
+        if (isLastChunk) {
+          setUploadProgress(100);
+        } else {
+          setUploadProgress(Math.round((end / file.size) * 95));
+        }
       }
 
       setUploadProgress(100);
