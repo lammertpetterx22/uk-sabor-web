@@ -526,7 +526,7 @@ export default function CourseDetail() {
                 ) : (
                   <div className="space-y-4">
                     <ul className="space-y-2.5">
-                      {(course as any).paymentType === "monthly" ? [
+                      {((course as any).paymentType === "monthly" ? [
                         "Full access while subscribed",
                         "All lessons included",
                         "Cancel anytime",
@@ -536,7 +536,7 @@ export default function CourseDetail() {
                         "All lessons included",
                         "Learn at your own pace",
                         "Professional instructor",
-                      ].map((item: string) => (
+                      ]).map((item: string) => (
                         <li key={item} className="flex items-center gap-3">
                           <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
                           <span className="text-sm text-foreground/80">{item}</span>
