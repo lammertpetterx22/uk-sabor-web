@@ -49,6 +49,13 @@ async function startServer() {
   // Browser sends raw video binary → server pipes directly to Bunny.net via https.request.
   // No base64, no full-file buffering in memory, no CORS issues.
   app.post("/api/upload-video-stream", async (req, res) => {
+    // Disable ALL timeouts for this endpoint — 40-min videos can take 30+ min to upload
+    req.setTimeout(0);
+    res.setTimeout(0);
+    if ((req.socket as any)) {
+      req.socket.setTimeout(0);
+    }
+
     try {
       const user = await sdk.authenticateRequest(req);
       if (!user || (user.role !== "admin" && user.role !== "instructor")) {
@@ -58,19 +65,14 @@ async function startServer() {
       let title = "Untitled";
       const titleHeader = req.headers["x-video-title"];
       if (typeof titleHeader === "string") {
-        try {
-          title = decodeURIComponent(titleHeader);
-        } catch {
-          title = titleHeader;
-        }
+        try { title = decodeURIComponent(titleHeader); } catch { title = titleHeader; }
       }
       const contentLength = req.headers["content-length"];
 
       const { bunnyCreateVideo } = await import("../bunny");
       const { videoId, libraryId } = await bunnyCreateVideo(title);
 
-      // Set a long timeout for this specific response
-      res.setTimeout(3600000); // 1 hour
+      console.log(`[VideoStream] Starting upload: "${title}" (${contentLength ? Math.round(parseInt(contentLength)/1024/1024) + "MB" : "unknown size"})`);
 
       await new Promise<void>((resolve, reject) => {
         const bunnyReq = https.request(
@@ -78,6 +80,7 @@ async function startServer() {
             hostname: "video.bunnycdn.com",
             path: `/library/${libraryId}/videos/${videoId}`,
             method: "PUT",
+            timeout: 0, // no timeout on the Bunny.net connection either
             headers: {
               AccessKey: process.env.BUNNY_API_KEY || "",
               "Content-Type": "application/octet-stream",
@@ -89,6 +92,7 @@ async function startServer() {
             bunnyRes.on("data", (chunk) => (body += chunk));
             bunnyRes.on("end", () => {
               if (bunnyRes.statusCode && bunnyRes.statusCode >= 200 && bunnyRes.statusCode < 300) {
+                console.log(`[VideoStream] ✅ Upload complete: ${videoId}`);
                 resolve();
               } else {
                 reject(new Error(`Bunny upload failed: ${bunnyRes.statusCode} ${body}`));
@@ -98,7 +102,8 @@ async function startServer() {
         );
 
         bunnyReq.on("error", reject);
-        // Pipe incoming browser stream directly to Bunny.net — never buffered
+        req.on("error", reject);
+        // Stream browser bytes directly to Bunny.net — never buffered in memory
         req.pipe(bunnyReq);
       });
 
