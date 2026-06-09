@@ -55,7 +55,15 @@ async function startServer() {
         return res.status(401).json({ error: "Unauthorized" });
       }
 
-      const title = (req.headers["x-video-title"] as string) || "Untitled";
+      let title = "Untitled";
+      const titleHeader = req.headers["x-video-title"];
+      if (typeof titleHeader === "string") {
+        try {
+          title = decodeURIComponent(titleHeader);
+        } catch {
+          title = titleHeader;
+        }
+      }
       const contentLength = req.headers["content-length"];
 
       const { bunnyCreateVideo } = await import("../bunny");

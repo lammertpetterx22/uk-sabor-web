@@ -60,8 +60,8 @@ export function useBunnyTusUpload(): UseBunnyTusUploadReturn {
 
         xhr.open("POST", "/api/upload-video-stream");
         xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
-        xhr.setRequestHeader("X-Video-Title", title);
-        xhr.setRequestHeader("X-Video-Filename", file.name);
+        xhr.setRequestHeader("X-Video-Title", encodeURIComponent(title));
+        xhr.setRequestHeader("X-Video-Filename", encodeURIComponent(file.name));
         xhr.withCredentials = true; // Send session cookie
         xhr.send(file);
       });
