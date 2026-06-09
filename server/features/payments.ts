@@ -159,11 +159,16 @@ export const paymentsRouter = router({
       if (!course) throw new Error("Curso no encontrado");
       if (course.status !== "published") throw new Error("Este curso no está disponible");
 
-      // Check if already purchased
+      // Check if already purchased / subscribed
       const existing = await db.select().from(coursePurchases)
         .where(and(eq(coursePurchases.userId, ctx.user.id), eq(coursePurchases.courseId, input.courseId)))
         .limit(1);
-      if (existing.length > 0) throw new Error("Ya tienes acceso a este curso");
+      if (existing.length > 0) {
+        // For monthly courses, allow re-subscribe if subscription was cancelled
+        if (course.paymentType !== "monthly" || existing[0].subscriptionStatus === "active") {
+          throw new Error("Ya tienes acceso a este curso");
+        }
+      }
 
       const price = Math.round(parseFloat(String(course.price)) * 100);
       const origin = ctx.req.headers.origin || "https://consabor.uk";
@@ -176,6 +181,63 @@ export const paymentsRouter = router({
       const [creatorRow] = await db.select({ subscriptionPlan: users.subscriptionPlan, stripeAccountId: users.stripeAccountId })
         .from(users).where(eq(users.id, creatorId)).limit(1);
 
+      // ── Monthly subscription checkout ──────────────────────────────────────
+      if (course.paymentType === "monthly") {
+        const fees = calculateCheckoutAmounts(price, (creatorRow?.subscriptionPlan as any) ?? "starter", true);
+        const commissionRate = fees.platformFeePence / fees.ticketPricePence;
+        const applicationFeePercent = Math.round(commissionRate * 100 * 100) / 100; // e.g. 15.00
+
+        const subscriptionData: any = {
+          metadata: {
+            user_id: ctx.user.id.toString(),
+            item_type: "course",
+            item_id: course.id.toString(),
+            ticket_price_pence: price.toString(),
+            platform_fee_pence: fees.platformFeePence.toString(),
+          },
+        };
+        if (creatorRow?.stripeAccountId) {
+          subscriptionData.application_fee_percent = applicationFeePercent;
+          subscriptionData.transfer_data = { destination: creatorRow.stripeAccountId };
+        }
+
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ["card"],
+          line_items: [
+            {
+              price_data: {
+                currency: "gbp",
+                product_data: {
+                  name: `📚 ${course.title} — Mensualidad`,
+                  description: `Suscripción mensual: ${course.title}${course.danceStyle ? ` — ${course.danceStyle}` : ""}`,
+                  ...(course.imageUrl ? { images: [course.imageUrl] } : {}),
+                },
+                unit_amount: price,
+                recurring: { interval: "month" },
+              },
+              quantity: 1,
+            },
+          ],
+          mode: "subscription",
+          subscription_data: subscriptionData,
+          success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${origin}/courses/${course.id}`,
+          client_reference_id: ctx.user.id.toString(),
+          customer_email: ctx.user.email || undefined,
+          metadata: {
+            user_id: ctx.user.id.toString(),
+            item_type: "course",
+            item_id: course.id.toString(),
+            payment_type: "monthly",
+            customer_email: ctx.user.email || "",
+            customer_name: ctx.user.name || "",
+          },
+        });
+
+        return { checkoutUrl: session.url };
+      }
+
+      // ── One-time payment checkout ──────────────────────────────────────────
       const fees = calculateCheckoutAmounts(price, (creatorRow?.subscriptionPlan as any) ?? "starter", true);
 
       const payment_intent_data = creatorRow?.stripeAccountId ? {

@@ -128,6 +128,7 @@ export const coursesRouter = router({
 
   /**
    * Check if user has access to course
+   * For monthly courses: access is only granted while subscriptionStatus = 'active'
    */
   hasAccess: protectedProcedure.input(z.number()).query(async ({ ctx, input }) => {
     const db = await getDb();
@@ -139,7 +140,13 @@ export const coursesRouter = router({
       .where(and(eq(coursePurchases.userId, ctx.user.id), eq(coursePurchases.courseId, input)))
       .limit(1);
 
-    return result.length > 0;
+    if (result.length === 0) return false;
+    const purchase = result[0];
+    // Subscription purchases require active status
+    if (purchase.stripeSubscriptionId) {
+      return purchase.subscriptionStatus === "active";
+    }
+    return true;
   }),
 
   /**
@@ -184,6 +191,7 @@ export const coursesRouter = router({
         danceStyle: z.string().optional(),
         duration: z.string().optional(),
         lessonsCount: z.number().optional(),
+        paymentType: z.enum(["one_time", "monthly"]).default("one_time"),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -203,6 +211,7 @@ export const coursesRouter = router({
         danceStyle: input.danceStyle,
         duration: input.duration,
         lessonsCount: input.lessonsCount,
+        paymentType: input.paymentType,
         status: "published",
       });
 
@@ -227,6 +236,7 @@ export const coursesRouter = router({
         duration: z.string().optional(),
         lessonsCount: z.number().optional(),
         status: z.enum(["draft", "published", "archived"]).optional(),
+        paymentType: z.enum(["one_time", "monthly"]).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {

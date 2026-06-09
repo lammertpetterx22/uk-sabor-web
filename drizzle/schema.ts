@@ -129,6 +129,7 @@ export const courses = pgTable("courses", {
   duration: varchar("duration", { length: 255 }), // e.g., "4 weeks", "8 hours"
   lessonsCount: integer("lessonsCount"),
   status: varchar("status", { length: 255 }).default("draft"),
+  paymentType: varchar("paymentType", { length: 20 }).default("one_time").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 }, (table) => ({
@@ -282,6 +283,8 @@ export const coursePurchases = pgTable("coursePurchases", {
   instructorEarnings: decimal("instructorEarnings", { precision: 10, scale: 2 }),
   progress: integer("progress").default(0), // percentage 0-100
   completed: boolean("completed").default(false),
+  stripeSubscriptionId: text("stripeSubscriptionId"),
+  subscriptionStatus: varchar("subscriptionStatus", { length: 20 }).default("active"),
   purchasedAt: timestamp("purchasedAt").defaultNow().notNull(),
   completedAt: timestamp("completedAt"),
 }, (table) => ({

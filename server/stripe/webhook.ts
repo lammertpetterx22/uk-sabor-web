@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import { Request, Response } from "express";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import { getDb } from "../db";
 import {
   orders,
@@ -58,6 +58,10 @@ export async function handleStripeWebhook(req: Request, res: Response) {
 
       case "charge.refunded":
         await handleChargeRefunded(event.data.object as Stripe.Charge);
+        break;
+
+      case "customer.subscription.deleted":
+        await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
         break;
 
       case "account.updated": {
@@ -464,6 +468,32 @@ async function handleMultiItemCartCheckout(
 }
 
 /**
+ * Handle subscription cancelled/deleted — revoke course access
+ */
+async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
+  const db = await getDb();
+  if (!db) return;
+
+  const { eq } = await import("drizzle-orm");
+  const { coursePurchases } = await import("../../drizzle/schema");
+
+  const [purchase] = await db.select().from(coursePurchases)
+    .where(eq(coursePurchases.stripeSubscriptionId, subscription.id))
+    .limit(1);
+
+  if (!purchase) {
+    console.log(`[Webhook] subscription.deleted: no coursePurchase for sub ${subscription.id}`);
+    return;
+  }
+
+  await db.update(coursePurchases)
+    .set({ subscriptionStatus: "cancelled" })
+    .where(eq(coursePurchases.stripeSubscriptionId, subscription.id));
+
+  console.log(`[Webhook] ✅ Subscription ${subscription.id} cancelled — course access revoked for user ${purchase.userId}`);
+}
+
+/**
  * Handle successful checkout session
  * FIX: Generate personal QR codes per buyer, send correct codes via email,
  * and save with userId so users can retrieve them in their dashboard.
@@ -478,6 +508,71 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   const userId = session.client_reference_id ? parseInt(session.client_reference_id) : null;
   const metadata = session.metadata || {};
   const livemode = session.livemode; // Capture test vs production mode
+
+  // ── Monthly course subscription ─────────────────────────────────────────
+  if (session.mode === "subscription" && metadata.payment_type === "monthly") {
+    if (!userId) {
+      console.error("[Webhook] ❌ No user ID for subscription checkout");
+      return;
+    }
+    const courseId = metadata.item_id ? parseInt(metadata.item_id) : null;
+    const subscriptionId = typeof session.subscription === "string" ? session.subscription : session.subscription?.id;
+
+    if (!courseId || !subscriptionId) {
+      console.error("[Webhook] ❌ Missing courseId or subscriptionId for monthly checkout");
+      return;
+    }
+
+    const pricePaid = parseInt(metadata.ticket_price_pence || "0") / 100;
+    const platformFeePence = parseInt(metadata.platform_fee_pence || "0");
+    const platformFee = platformFeePence / 100;
+    const instructorEarnings = pricePaid - platformFee;
+
+    // Resolve instructor user for earnings
+    const [course] = await db.select({ instructorId: courses.instructorId }).from(courses).where(eq(courses.id, courseId)).limit(1);
+    let creatorUserId: number | null = null;
+    if (course) {
+      const [instr] = await db.select({ userId: instructors.userId }).from(instructors).where(eq(instructors.id, course.instructorId)).limit(1);
+      creatorUserId = instr?.userId ?? null;
+    }
+
+    // Upsert: update if cancelled row exists, otherwise insert
+    const [existing] = await db.select().from(coursePurchases)
+      .where(and(eq(coursePurchases.userId, userId), eq(coursePurchases.courseId, courseId)))
+      .limit(1);
+
+    if (existing) {
+      await db.update(coursePurchases)
+        .set({ stripeSubscriptionId: subscriptionId, subscriptionStatus: "active", pricePaid: pricePaid.toFixed(2) as any })
+        .where(and(eq(coursePurchases.userId, userId), eq(coursePurchases.courseId, courseId)));
+    } else {
+      await db.insert(coursePurchases).values({
+        userId,
+        courseId,
+        instructorId: creatorUserId,
+        stripeSubscriptionId: subscriptionId,
+        subscriptionStatus: "active",
+        pricePaid: pricePaid.toFixed(2) as any,
+        platformFee: platformFee.toFixed(2) as any,
+        instructorEarnings: instructorEarnings.toFixed(2) as any,
+        progress: 0,
+        completed: false,
+      });
+    }
+
+    // Record instructor earnings (first month)
+    if (creatorUserId && instructorEarnings > 0) {
+      await addEarnings({
+        userId: creatorUserId,
+        amount: instructorEarnings,
+        description: `${livemode ? "Sub" : "Test Sub"}: course #${courseId} (monthly) — first payment`,
+        orderId: undefined as any,
+      });
+    }
+
+    console.log(`[Webhook] ✅ Monthly course subscription created — user ${userId}, course ${courseId}, sub ${subscriptionId}`);
+    return;
+  }
 
   // Check if this is a multi-item cart purchase
   if (metadata.is_multi_item_cart === "true") {

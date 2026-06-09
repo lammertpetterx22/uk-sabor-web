@@ -26,6 +26,8 @@ import {
   ArrowRight,
   Check,
   Tag,
+  RefreshCw,
+  ShoppingCart,
 } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -89,6 +91,7 @@ export default function CourseFormCard({
     danceStyle: "",
     level: "all-levels" as const,
     price: "",
+    paymentType: "one_time" as "one_time" | "monthly",
     instructorId: "",
     duration: "",
     lessonsCount: "",
@@ -137,6 +140,7 @@ export default function CourseFormCard({
         danceStyle: editingCourse.danceStyle || "",
         level: editingCourse.level || "all-levels",
         price: editingCourse.price?.toString() || "",
+        paymentType: (editingCourse.paymentType as "one_time" | "monthly") || "one_time",
         instructorId: editingCourse.instructorId?.toString() || "",
         duration: editingCourse.duration || "",
         lessonsCount: editingCourse.lessonsCount?.toString() || "",
@@ -158,6 +162,7 @@ export default function CourseFormCard({
       danceStyle: "",
       level: "all-levels",
       price: "",
+      paymentType: "one_time",
       instructorId: !isAdmin && myInstructorProfile ? myInstructorProfile.id.toString() : "",
       duration: "",
       lessonsCount: "",
@@ -312,6 +317,7 @@ export default function CourseFormCard({
       danceStyle: formData.danceStyle,
       level: formData.level,
       price: formData.price,
+      paymentType: formData.paymentType,
       instructorId: parseInt(formData.instructorId),
       duration: formData.duration,
       lessonsCount: formData.lessonsCount ? parseInt(formData.lessonsCount) : undefined,
@@ -440,18 +446,58 @@ export default function CourseFormCard({
             </div>
           </div>
 
+          {/* Payment type toggle */}
+          <div className="space-y-2">
+            <Label className="text-foreground/80 flex items-center gap-2">
+              <DollarSign className="h-3.5 w-3.5 text-accent" />
+              Tipo de pago *
+            </Label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, paymentType: "one_time" })}
+                className={`flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
+                  formData.paymentType === "one_time"
+                    ? "border-accent bg-accent/10 text-foreground"
+                    : "border-border/40 bg-background/30 text-foreground/50 hover:bg-white/5"
+                }`}
+              >
+                <ShoppingCart className="h-4 w-4 shrink-0" />
+                <div className="text-left">
+                  <div className="font-semibold">Pago único</div>
+                  <div className="text-xs text-foreground/50">Acceso permanente</div>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, paymentType: "monthly" })}
+                className={`flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
+                  formData.paymentType === "monthly"
+                    ? "border-accent bg-accent/10 text-foreground"
+                    : "border-border/40 bg-background/30 text-foreground/50 hover:bg-white/5"
+                }`}
+              >
+                <RefreshCw className="h-4 w-4 shrink-0" />
+                <div className="text-left">
+                  <div className="font-semibold">Mensualidad</div>
+                  <div className="text-xs text-foreground/50">Acceso mensual renovable</div>
+                </div>
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="course-price" className="text-foreground/80 flex items-center gap-2">
                 <DollarSign className="h-3.5 w-3.5 text-accent" />
-                Price *
+                {formData.paymentType === "monthly" ? "Precio mensual *" : "Price *"}
               </Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50">£</span>
                 <Input
                   id="course-price"
                   type="number"
-                  placeholder="49.99"
+                  placeholder={formData.paymentType === "monthly" ? "19.99" : "49.99"}
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                   className="bg-background/50 border-border/50 focus:border-accent transition-colors pl-8"
