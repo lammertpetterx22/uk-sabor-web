@@ -109,16 +109,15 @@ export default function MyCoursesDashboard({
     },
   });
 
-  // Lesson mutations
-  // const deleteLessonMutation = trpc.lessons.delete.useMutation({
-  //   onSuccess: () => {
-  //     toast.success("Lesson deleted");
-  //     onRefresh();
-  //   },
-  //   onError: (err: any) => {
-  //     toast.error(`Error: ${err.message}`);
-  //   },
-  // });
+  const deleteLessonMutation = trpc.lessons.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Lesson deleted");
+      onRefresh();
+    },
+    onError: (err: any) => {
+      toast.error(`Error: ${err.message}`);
+    },
+  });
 
   const handleSelectCourse = (course: any) => {
     setSelectedCourse(course);
@@ -145,8 +144,7 @@ export default function MyCoursesDashboard({
 
   const handleDeleteLesson = (lessonId: number) => {
     if (confirm("Are you sure you want to delete this lesson?")) {
-      // deleteLessonMutation.mutate(lessonId);
-      toast.error("Deleting lessons is not implemented yet");
+      deleteLessonMutation.mutate(lessonId);
     }
   };
 

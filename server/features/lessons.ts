@@ -208,6 +208,51 @@ export const lessonsRouter = router({
             return { success: true };
         }),
 
+    delete: protectedProcedure
+        .input(z.number().positive())
+        .mutation(async ({ input: lessonId, ctx }) => {
+            if (!["instructor", "admin"].includes(ctx.user.role)) {
+                throw new Error("Only instructors and admins can delete lessons");
+            }
+            const db = await getDb();
+            if (!db) throw new Error("Database not available");
+
+            // Verify the lesson belongs to a course owned by this instructor
+            const [lesson] = await db
+                .select()
+                .from(lessons)
+                .where(eq(lessons.id, lessonId))
+                .limit(1);
+
+            if (!lesson) throw new Error("Lesson not found");
+
+            if (ctx.user.role !== "admin") {
+                const [course] = await db
+                    .select()
+                    .from(courses)
+                    .where(eq(courses.id, lesson.courseId))
+                    .limit(1);
+
+                if (!course) throw new Error("Course not found");
+
+                const [instructor] = await db
+                    .select()
+                    .from(instructors)
+                    .where(eq(instructors.userId, ctx.user.id))
+                    .limit(1);
+
+                if (!instructor || course.instructorId !== instructor.id) {
+                    throw new Error("You can only delete lessons from your own courses");
+                }
+            }
+
+            // Delete progress records first (foreign key)
+            await db.delete(lessonProgress).where(eq(lessonProgress.lessonId, lessonId));
+            await db.delete(lessons).where(eq(lessons.id, lessonId));
+
+            return { success: true };
+        }),
+
     /**
      * Get secure video URL for a lesson
      * SECURITY: Only returns video URL if:
