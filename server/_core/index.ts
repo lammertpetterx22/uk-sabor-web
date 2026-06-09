@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
+import https from "https";
 import net from "net";
 import helmet from "helmet";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
@@ -45,8 +46,8 @@ async function startServer() {
   app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), handleStripeWebhook);
 
   // Video streaming upload — registered BEFORE body parsers so the stream is not buffered.
-  // Browser sends the raw video binary; server creates the Bunny video entry then pipes
-  // the stream directly to Bunny.net. No base64, no memory spike, no CORS issues.
+  // Browser sends raw video binary → server pipes directly to Bunny.net via https.request.
+  // No base64, no full-file buffering in memory, no CORS issues.
   app.post("/api/upload-video-stream", async (req, res) => {
     try {
       const user = await sdk.authenticateRequest(req);
@@ -60,27 +61,38 @@ async function startServer() {
       const { bunnyCreateVideo } = await import("../bunny");
       const { videoId, libraryId } = await bunnyCreateVideo(title);
 
-      const uploadUrl = `https://video.bunnycdn.com/library/${libraryId}/videos/${videoId}`;
+      // Set a long timeout for this specific response
+      res.setTimeout(3600000); // 1 hour
 
-      const headers: Record<string, string> = {
-        AccessKey: process.env.BUNNY_API_KEY || "",
-        "Content-Type": "application/octet-stream",
-      };
-      if (contentLength) headers["Content-Length"] = contentLength;
+      await new Promise<void>((resolve, reject) => {
+        const bunnyReq = https.request(
+          {
+            hostname: "video.bunnycdn.com",
+            path: `/library/${libraryId}/videos/${videoId}`,
+            method: "PUT",
+            headers: {
+              AccessKey: process.env.BUNNY_API_KEY || "",
+              "Content-Type": "application/octet-stream",
+              ...(contentLength ? { "Content-Length": contentLength } : {}),
+            },
+          },
+          (bunnyRes) => {
+            let body = "";
+            bunnyRes.on("data", (chunk) => (body += chunk));
+            bunnyRes.on("end", () => {
+              if (bunnyRes.statusCode && bunnyRes.statusCode >= 200 && bunnyRes.statusCode < 300) {
+                resolve();
+              } else {
+                reject(new Error(`Bunny upload failed: ${bunnyRes.statusCode} ${body}`));
+              }
+            });
+          }
+        );
 
-      // Pipe the incoming stream directly to Bunny.net — never fully buffered in memory
-      const bunnyRes = await fetch(uploadUrl, {
-        method: "PUT",
-        headers,
-        // @ts-ignore — Node.js 18+ supports passing a Readable as body
-        body: req,
-        duplex: "half",
-      } as any);
-
-      if (!bunnyRes.ok) {
-        const errText = await bunnyRes.text().catch(() => bunnyRes.statusText);
-        return res.status(500).json({ error: `Bunny upload failed: ${bunnyRes.status} ${errText}` });
-      }
+        bunnyReq.on("error", reject);
+        // Pipe incoming browser stream directly to Bunny.net — never buffered
+        req.pipe(bunnyReq);
+      });
 
       return res.json({ success: true, bunnyVideoId: videoId, bunnyLibraryId: libraryId });
     } catch (err: any) {
