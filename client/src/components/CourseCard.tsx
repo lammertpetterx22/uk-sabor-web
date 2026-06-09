@@ -86,7 +86,7 @@ const CourseCard = memo(function CourseCard({ course, instructorName }: CourseCa
             <DollarSign size={16} />
             <span>£{typeof course.price === 'string' ? parseFloat(course.price).toFixed(2) : Number(course.price).toFixed(2)}</span>
             {(course as any).paymentType === "monthly" && (
-              <span className="ml-1 text-[10px] font-bold uppercase tracking-wide bg-accent/20 text-accent px-1.5 py-0.5 rounded-full">/mes</span>
+              <span className="ml-1 text-[10px] font-bold uppercase tracking-wide bg-accent/20 text-accent px-1.5 py-0.5 rounded-full">/mo</span>
             )}
           </div>
         </div>
