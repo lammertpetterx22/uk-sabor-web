@@ -2,6 +2,7 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
+import { useBunnyTusUpload } from "@/hooks/useBunnyTusUpload";
 
 interface LessonFormData {
   courseId: number;
@@ -28,14 +29,11 @@ export function useLessonsManager(courseId: number | null) {
     videoFile: null,
   });
 
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [editingLessonId, setEditingLessonId] = useState<number | null>(null);
 
   const utils = trpc.useUtils();
 
-  // Mutations
-  const uploadVideoMutation = trpc.uploads.uploadVideoToBunny.useMutation();
+  const { uploadVideo: uploadVideoTUS, uploading, uploadProgress } = useBunnyTusUpload();
 
   const createLessonMutation = trpc.lessons.create.useMutation({
     onSuccess: () => {
@@ -81,76 +79,17 @@ export function useLessonsManager(courseId: number | null) {
       return;
     }
 
-    const fileSizeMB = file.size / 1024 / 1024;
-    const MAX_VIDEO_SIZE_MB = 10240; // 10GB
+    const title = formData.title || file.name.replace(/\.[^/.]+$/, "");
+    const result = await uploadVideoTUS(file, title);
 
-    if (fileSizeMB > MAX_VIDEO_SIZE_MB) {
-      toast.error(
-        `Video too large: ${fileSizeMB.toFixed(1)}MB. Maximum: ${MAX_VIDEO_SIZE_MB}MB`
-      );
-      return;
-    }
-
-    setUploading(true);
-    setUploadProgress(0);
-
-    try {
-      // Simulate progress for better UX
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 90) return prev;
-          return prev + Math.random() * 10;
-        });
-      }, 500);
-
-      // Read file as base64
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => {
-          const result = reader.result as string;
-          const base64 = result.split(",")[1];
-          resolve(base64);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-
-      setUploadProgress(10);
-      const base64 = await base64Promise;
-
-      setUploadProgress(30);
-
-      // Upload video
-      const result = await uploadVideoMutation.mutateAsync({
-        videoBase64: base64,
-        fileName: file.name,
-        title: formData.title || file.name.replace(/\.[^/.]+$/, ""),
-      });
-
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-
-      // Update form with video IDs
+    if (result) {
       setFormData((prev) => ({
         ...prev,
         bunnyVideoId: result.bunnyVideoId,
         bunnyLibraryId: result.bunnyLibraryId,
         videoFile: file,
       }));
-
-      toast.success("Video cargado successfully", {
-        description: "Ahour puedes completar la información de la lesson",
-        duration: 3000,
-      });
-    } catch (err: any) {
-      toast.error("Error al procesar el video", {
-        description: "Please verify the file and try again",
-        duration: 5000,
-      });
-      logger.error('[Video Upload] Error', err);
-    } finally {
-      setUploading(false);
-      setTimeout(() => setUploadProgress(0), 1000);
+      toast.success("Video uploaded successfully", { duration: 3000 });
     }
   };
 

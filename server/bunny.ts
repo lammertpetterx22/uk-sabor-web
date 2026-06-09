@@ -320,6 +320,48 @@ export async function bunnyUploadVideo(
   return { videoId, libraryId };
 }
 
+// ─── TUS Direct Upload Credentials ───────────────────────────────────────────
+
+/**
+ * Generates credentials for a direct TUS upload from browser to Bunny.net.
+ * Creates the video entry and returns auth headers the browser needs.
+ *
+ * @param title - Video title
+ * @returns videoId, libraryId, auth signature/expiration for TUS headers
+ */
+export async function bunnyCreateVideoWithTUSCredentials(
+  title: string
+): Promise<{
+  videoId: string;
+  libraryId: string;
+  tusEndpoint: string;
+  authSignature: string;
+  authExpiration: number;
+}> {
+  validateBunnyConfig();
+
+  // Step 1: Create the video entry to get a videoId
+  const { videoId, libraryId } = await bunnyCreateVideo(title);
+
+  // Step 2: Generate TUS auth signature (valid for 6 hours)
+  const authExpiration = Math.floor(Date.now() / 1000) + 6 * 60 * 60;
+  const signatureString = `${libraryId}${BUNNY_CONFIG.apiKey}${authExpiration}${videoId}`;
+  const authSignature = crypto
+    .createHash("sha256")
+    .update(signatureString)
+    .digest("hex");
+
+  console.log(`[Bunny.net] 🔑 TUS credentials generated for ${videoId}`);
+
+  return {
+    videoId,
+    libraryId,
+    tusEndpoint: "https://video.bunnycdn.com/tusupload",
+    authSignature,
+    authExpiration,
+  };
+}
+
 // ─── Configuration Exports ────────────────────────────────────────────────────
 
 export function getBunnyLibraryId(): string {

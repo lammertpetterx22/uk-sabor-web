@@ -35,6 +35,7 @@ import ImageCropperModal from "@/components/ImageCropperModal";
 import ModernImageUpload from "@/components/ModernImageUpload";
 import { ProfessionalUploadProgress } from "@/../components/video/ProfessionalUploadProgress";
 import { useTranslations } from "@/hooks/useTranslations";
+import { useBunnyTusUpload } from "@/hooks/useBunnyTusUpload";
 import DiscountCodesSection from "./DiscountCodesSection";
 
 interface CourseFormCardProps {
@@ -61,7 +62,7 @@ export default function CourseFormCard({
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   const uploadFileMutation = trpc.uploads.uploadFile.useMutation();
-  const uploadVideoMutation = trpc.uploads.uploadVideoToBunny.useMutation();
+  const { uploadVideo: uploadVideoTUS, uploading: videoUploading, uploadProgress: videoTUSProgress } = useBunnyTusUpload();
 
   const createMutation = trpc.courses.create.useMutation({
     onSuccess: () => {
@@ -104,8 +105,6 @@ export default function CourseFormCard({
     imagePreview: "",
   });
 
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [step, setStep] = useState(0);
 
   const steps = useMemo(() => {
@@ -174,7 +173,6 @@ export default function CourseFormCard({
       imageUrl: "",
       imagePreview: "",
     });
-    setUploadProgress(0);
     if (videoInputRef.current) videoInputRef.current.value = "";
     if (imageInputRef.current) imageInputRef.current.value = "";
   };
@@ -223,72 +221,25 @@ export default function CourseFormCard({
 
   const handleVideoUpload = async (file: File) => {
     if (!file.type.startsWith('video/') && !file.name.match(/\.(mp4|mov|avi|webm|mkv|mpeg|flv|3gp|wmv)$/i)) {
-      toast.error('Por favor selecciona un archivo de video válido');
+      toast.error('Please select a valid video file');
       return;
     }
 
-    const MAX_VIDEO_SIZE = 10 * 1024 * 1024 * 1024;
-    const fileSizeMB = file.size / 1024 / 1024;
+    setFormData(prev => ({ ...prev, videoFile: file, videoPreview: file.name }));
 
-    if (file.size > MAX_VIDEO_SIZE) {
-      toast.error(`Video too large (max. 10GB). Your file: ${fileSizeMB.toFixed(1)}MB`);
-      return;
-    }
+    const title = formData.title || file.name.replace(/\.[^/.]+$/, "");
+    const result = await uploadVideoTUS(file, title);
 
-    setUploading(true);
-    setUploadProgress(10);
-
-    try {
-      const reader = new FileReader();
-
-      reader.onprogress = (e) => {
-        if (e.lengthComputable) {
-          const percentLoaded = Math.round((e.loaded / e.total) * 100 * 0.3);
-          setUploadProgress(percentLoaded);
-        }
-      };
-
-      reader.onload = async (e) => {
-        const base64 = e.target?.result as string;
-        setUploadProgress(40);
-        setFormData(prev => ({ ...prev, videoFile: file, videoPreview: file.name }));
-
-        try {
-          setUploadProgress(50);
-          const result = await uploadVideoMutation.mutateAsync({
-            videoBase64: base64,
-            fileName: file.name,
-            title: formData.title || file.name.replace(/\.[^/.]+$/, ""),
-          });
-
-          setUploadProgress(100);
-          setFormData(prev => ({
-            ...prev,
-            bunnyVideoId: result.bunnyVideoId,
-            bunnyLibraryId: result.bunnyLibraryId,
-            videoUrl: "",
-          }));
-
-          toast.success(`¡Video subido successfully! (${fileSizeMB.toFixed(1)}MB)`);
-        } catch (uploadErr: any) {
-          toast.error(`Error al subir el video: ${uploadErr.message}`);
-          setFormData(prev => ({ ...prev, videoFile: null, videoPreview: "", videoUrl: "", bunnyVideoId: undefined, bunnyLibraryId: undefined }));
-          setUploadProgress(0);
-        }
-      };
-
-      reader.onerror = () => {
-        toast.error('Error al leer el archivo');
-        setUploading(false);
-        setUploadProgress(0);
-      };
-
-      reader.readAsDataURL(file);
-    } catch (error) {
-      toast.error('Error inesperado al procesar el video');
-      setUploadProgress(0);
-    } finally {
-      setUploading(false);
+    if (result) {
+      setFormData(prev => ({
+        ...prev,
+        bunnyVideoId: result.bunnyVideoId,
+        bunnyLibraryId: result.bunnyLibraryId,
+        videoUrl: "",
+      }));
+      toast.success(`Video uploaded successfully! (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+    } else {
+      setFormData(prev => ({ ...prev, videoFile: null, videoPreview: "", videoUrl: "", bunnyVideoId: undefined, bunnyLibraryId: undefined }));
     }
   };
 
@@ -582,14 +533,14 @@ export default function CourseFormCard({
         </div>
 
           <ProfessionalUploadProgress
-            isUploading={uploading}
-            progress={uploadProgress}
+            isUploading={videoUploading}
+            progress={videoTUSProgress}
             uploadComplete={!!formData.bunnyVideoId || !!formData.videoPreview}
             uploadType="video"
             fileName={formData.videoFile?.name}
           />
 
-          {!uploading && !formData.bunnyVideoId && !formData.videoPreview && (
+          {!videoUploading && !formData.bunnyVideoId && !formData.videoPreview && (
             <div
               className="relative border-2 border-dashed border-accent/30 rounded-xl p-8 bg-gradient-to-br from-accent/5 to-transparent hover:border-accent/50 transition-all duration-300 courser-pointer group"
               onClick={() => videoInputRef.current?.click()}
@@ -619,7 +570,7 @@ export default function CourseFormCard({
             </div>
           )}
 
-          {!uploading && (formData.bunnyVideoId || formData.videoPreview) && (
+          {!videoUploading && (formData.bunnyVideoId || formData.videoPreview) && (
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -716,7 +667,7 @@ export default function CourseFormCard({
             <Button
               type="button"
               onClick={handleSubmit}
-              disabled={createMutation.isPending || updateMutation.isPending || uploading || imageUploading}
+              disabled={createMutation.isPending || updateMutation.isPending || videoUploading || imageUploading}
               className="btn-vibrant h-11 px-6 text-sm font-semibold shadow-lg"
             >
               {createMutation.isPending || updateMutation.isPending ? (

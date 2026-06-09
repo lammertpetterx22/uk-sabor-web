@@ -1,6 +1,6 @@
 import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
-import { bunnyUploadVideo, bunnyGetVideoInfo, bunnyGenerateSignedUrl, getBunnyLibraryId } from "../bunny";
+import { bunnyUploadVideo, bunnyGetVideoInfo, bunnyGenerateSignedUrl, getBunnyLibraryId, bunnyCreateVideoWithTUSCredentials } from "../bunny";
 
 // Bunny.net Storage configuration for images/files
 const BUNNY_STORAGE_CONFIG = {
@@ -162,6 +162,31 @@ export const uploadsRouter = router({
         bunnyVideoId: videoId,
         bunnyLibraryId: libraryId,
         message: "Video subido exitosamente. Bunny.net está procesando el video.",
+      };
+    }),
+
+  /**
+   * Returns TUS upload credentials so the browser can upload a video
+   * directly to Bunny.net without routing gigabytes through this server.
+   * Creates the video entry in Bunny.net and returns auth tokens.
+   */
+  getVideoUploadCredentials: protectedProcedure
+    .input(
+      z.object({
+        title: z.string(),
+        fileName: z.string(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user?.role !== "admin" && ctx.user?.role !== "instructor") {
+        throw new Error("Only admins and instructors can upload videos");
+      }
+
+      const credentials = await bunnyCreateVideoWithTUSCredentials(input.title);
+
+      return {
+        success: true,
+        ...credentials,
       };
     }),
 

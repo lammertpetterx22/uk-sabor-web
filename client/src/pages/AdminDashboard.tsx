@@ -26,6 +26,7 @@ import MyEventsDashboard from "@/components/instructor/MyEventsDashboard";
 import MyClassesDashboard from "@/components/instructor/MyClassesDashboard";
 import InstructorApplicationsManager from "@/components/admin/InstructorApplicationsManager";
 import { useTranslations } from "@/hooks/useTranslations";
+import { useBunnyTusUpload } from "@/hooks/useBunnyTusUpload";
 import { logger } from "@/lib/logger";
 
 export default function AdminDashboard() {
@@ -1093,7 +1094,7 @@ function CoursesTab() {
     },
   });
   const uploadFileMutation = trpc.uploads.uploadFile.useMutation();
-  const uploadVideoMutation = trpc.uploads.uploadVideoToBunny.useMutation();
+  const { uploadVideo: uploadVideoTUS, uploading: videoUploading, uploadProgress: videoTUSProgress } = useBunnyTusUpload();
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
@@ -1114,7 +1115,6 @@ function CoursesTab() {
     imageUrl: "" as string,
     imagePreview: "" as string,
   });
-  const [uploading, setUploading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -1222,137 +1222,25 @@ function CoursesTab() {
   };
 
   const handleVideoUpload = async (file: File) => {
-    // SECURITY & UX: Validate video file type - support all common formats
-    const validVideoTypes = [
-      'video/mp4',
-      'video/quicktime',      // .mov
-      'video/x-msvideo',      // .avi
-      'video/webm',
-      'video/x-matroska',     // .mkv
-      'video/mpeg',
-      'video/x-flv',          // .flv
-      'video/3gpp',           // .3gp
-      'video/x-ms-wmv',       // .wmv
-    ];
-
     if (!file.type.startsWith('video/') && !file.name.match(/\.(mp4|mov|avi|webm|mkv|mpeg|flv|3gp|wmv)$/i)) {
-      toast.error('❌ Por favor selecciona un archivo de video válido\n(.mp4, .mov, .avi, .webm, .mkv, etc.)');
+      toast.error('Please select a valid video file (.mp4, .mov, .avi, .webm, .mkv, etc.)');
       return;
     }
 
-    // SECURITY: Validate file size (max 10GB for Bunny.net)
-    const MAX_VIDEO_SIZE = 10 * 1024 * 1024 * 1024; // 10GB
-    const fileSizeMB = file.size / 1024 / 1024;
+    setFormData(prev => ({ ...prev, videoFile: file, videoPreview: file.name }));
 
-    if (file.size > MAX_VIDEO_SIZE) {
-      toast.error(
-        `❌ Video too large.\n\n` +
-        `📦 Maximum: 10GB (10240MB)\n` +
-        `📁 Your file: ${fileSizeMB.toFixed(1)}MB\n\n` +
-        `💡 Tip: Compress the video with Handbrake or similar.`,
-        { duration: 8000 }
-      );
-      return;
-    }
+    const title = formData.title || file.name.replace(/\.[^/.]+$/, "");
+    const result = await uploadVideoTUS(file, title);
 
-    // UX: Show informative toast based on file size
-    if (fileSizeMB > 500) {
-      toast.info(
-        `📤 Uploading...deo grande: ${fileSizeMB.toFixed(1)}MB\n` +
-        `⏱️ Tiempo estimado: ${Math.ceil(fileSizeMB / 10)} minutes\n` +
-        `⚠️ No cierres esta salena hasta que termine.`,
-        { duration: 10000 }
-      );
-    } else if (fileSizeMB > 100) {
-      toast.info(
-        `📤 Uploading...deo de ${fileSizeMB.toFixed(1)}MB...\n` +
-        `⏱️ Esto puede tardar unos minutes.`,
-        { duration: 6000 }
-      );
-    }
-
-    setUploading(true);
-    const uploadStartTime = Date.now();
-
-    try {
-      const reader = new FileReader();
-
-      reader.onprogress = (e) => {
-        if (e.lengthComputable) {
-          const percentLoaded = Math.round((e.loaded / e.total) * 100);
-          logger.debug('[Video Upload] Reading file', {
-            percentLoaded,
-            loadedMB: (e.loaded / 1024 / 1024).toFixed(1),
-            totalMB: fileSizeMB.toFixed(1)
-          });
-        }
-      };
-
-      reader.onload = async (e) => {
-        const base64 = e.target?.result as string;
-        const readTime = ((Date.now() - uploadStartTime) / 1000).toFixed(1);
-        logger.info('[Video Upload] File read complete', { readTime: `${readTime}s` });
-
-        // Show file name as preview indicator
-        setFormData(prev => ({ ...prev, videoFile: file, videoPreview: file.name }));
-
-        // Upload to Bunny.net Stream API (NOT Storage - videos use Stream)
-        try {
-          toast.info('☁️ Uploading...Bunny.net...', { duration: 3000 });
-
-          // Use uploadVideoToBunny for videos (NOT uploadFile)
-          const result = await uploadVideoMutation.mutateAsync({
-            videoBase64: base64,
-            fileName: file.name,
-            title: formData.title || file.name.replace(/\.[^/.]+$/, ""),
-          });
-
-          const totalTime = ((Date.now() - uploadStartTime) / 1000).toFixed(1);
-          const uploadSpeed = (fileSizeMB / (totalTime as any)).toFixed(2);
-
-          // Save bunnyVideoId to use when creating lessons
-          setFormData(prev => ({
-            ...prev,
-            bunnyVideoId: result.bunnyVideoId,
-            bunnyLibraryId: result.bunnyLibraryId,
-            videoUrl: "", // Clear old videoUrl, we use bunnyVideoId now
-          }));
-
-          toast.success(
-            `✅ ¡Video subido successfully a Bunny.net!\n\n` +
-            `📁 ${file.name}\n` +
-            `📦 ${fileSizeMB.toFixed(1)}MB\n` +
-            `⏱️ ${totalTime}s (${uploadSpeed}MB/s)\n` +
-            `🎬 Video ID: ${result.bunnyVideoId.substring(0, 20)}...\n\n` +
-            `⚠️ El video se is procesando en Bunny.net`,
-            { duration: 10000 }
-          );
-
-          logger.info('[Video Upload] SUCCESS', { bunnyVideoId: result.bunnyVideoId });
-        } catch (uploadErr: any) {
-          logger.error('[Video Upload] Bunny.net upload failed', uploadErr);
-          toast.error(
-            `❌ Error al subir el video al servidor:\n\n` +
-            `${uploadErr.message}\n\n` +
-            `💡 Intenta de nuevo o contacta soporte si persiste.`,
-            { duration: 8000 }
-          );
-          setFormData(prev => ({ ...prev, videoFile: null, videoPreview: "", videoUrl: "", bunnyVideoId: undefined, bunnyLibraryId: undefined }));
-        }
-      };
-
-      reader.onerror = () => {
-        logger.error('[Video Upload] File read error');
-        toast.error('❌ Error al leer el archivo. Por favor intenta de nuevo.');
-        setUploading(false);
-      };
-
-      reader.readAsDataURL(file);
-    } catch (error) {
-      logger.error('[Video Upload] Unexpected error', error);
-      toast.error('❌ Error inesperado al procesar el video. Intenta de nuevo.');
-    } finally {
-      setUploading(false);
+    if (result) {
+      setFormData(prev => ({
+        ...prev,
+        bunnyVideoId: result.bunnyVideoId,
+        bunnyLibraryId: result.bunnyLibraryId,
+        videoUrl: "",
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, videoFile: null, videoPreview: "", videoUrl: "", bunnyVideoId: undefined, bunnyLibraryId: undefined }));
     }
   };
 
@@ -1528,12 +1416,12 @@ function CoursesTab() {
                 <Button
                   variant="outline"
                   onClick={() => videoInputRef.current?.click()}
-                  disabled={uploading}
+                  disabled={videoUploading}
                 >
-                  {uploading ? (
+                  {videoUploading ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Uploading...
+                      Uploading... {videoTUSProgress}%
                     </>
                   ) : (
                     <>
