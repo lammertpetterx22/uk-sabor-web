@@ -229,6 +229,8 @@ export const paymentsRouter = router({
             item_type: "course",
             item_id: course.id.toString(),
             payment_type: "monthly",
+            ticket_price_pence: price.toString(),
+            platform_fee_pence: fees.platformFeePence.toString(),
             customer_email: ctx.user.email || "",
             customer_name: ctx.user.name || "",
           },

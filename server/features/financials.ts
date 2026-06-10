@@ -291,6 +291,42 @@ export const financialsRouter = router({
 
   // ─── Admin Procedures ──────────────────────────────────────────────────────
 
+  /** Admin: Manually credit earnings to a user (backfill for missed webhook earnings) */
+  adminCreditEarnings: adminProcedure
+    .input(z.object({
+      userId: z.number().positive(),
+      amount: z.number().positive(),
+      description: z.string().min(1),
+    }))
+    .mutation(async ({ input }) => {
+      await addEarnings({ userId: input.userId, amount: input.amount, description: input.description });
+      return { success: true };
+    }),
+
+  /** Admin: List all course purchases with instructor info (for diagnosing missing earnings) */
+  adminListCoursePurchases: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+
+    return await db
+      .select({
+        id: coursePurchases.id,
+        userId: coursePurchases.userId,
+        courseId: coursePurchases.courseId,
+        courseTitle: courses.title,
+        instructorId: coursePurchases.instructorId,
+        pricePaid: coursePurchases.pricePaid,
+        platformFee: coursePurchases.platformFee,
+        instructorEarnings: coursePurchases.instructorEarnings,
+        purchasedAt: coursePurchases.purchasedAt,
+        subscriptionStatus: coursePurchases.subscriptionStatus,
+      })
+      .from(coursePurchases)
+      .leftJoin(courses, eq(coursePurchases.courseId, courses.id))
+      .orderBy(desc(coursePurchases.purchasedAt))
+      .limit(50);
+  }),
+
   /** Admin: List all pending and recent withdrawals */
   adminListWithdrawals: adminProcedure.query(async () => {
     const db = await getDb();
