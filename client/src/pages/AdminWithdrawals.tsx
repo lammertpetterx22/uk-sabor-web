@@ -7,7 +7,8 @@ import {
   Banknote,
   ExternalLink,
   Search,
-  AlertCircle
+  AlertCircle,
+  PlusCircle
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -30,6 +31,20 @@ export default function AdminWithdrawals() {
   const [filter, setFilter] = useState<"all" | "pending" | "paid" | "rejected">("pending");
 
   const { data: requests, isLoading, refetch } = trpc.financials.adminListWithdrawals.useQuery();
+  const { data: coursePurchases, refetch: refetchPurchases } = trpc.financials.adminListCoursePurchases.useQuery();
+
+  const [creditUserId, setCreditUserId] = useState("");
+  const [creditAmount, setCreditAmount] = useState("");
+  const [creditDesc, setCreditDesc] = useState("");
+
+  const creditEarnings = trpc.financials.adminCreditEarnings.useMutation({
+    onSuccess: () => {
+      toast.success(`Earnings credited successfully`);
+      setCreditUserId(""); setCreditAmount(""); setCreditDesc("");
+      refetchPurchases();
+    },
+    onError: (err) => toast.error(err.message),
+  });
 
   const updateWithdrawal = trpc.financials.adminUpdateWithdrawal.useMutation({
     onSuccess: () => {
@@ -179,6 +194,100 @@ export default function AdminWithdrawals() {
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* ── Course Sales Diagnosis ──────────────────────────────────────── */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-white">Course Purchases (recent 50)</h2>
+        <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="bg-white/5 text-white/40 border-b border-white/10">
+                  <th className="px-4 py-3 text-xs uppercase tracking-wider">ID</th>
+                  <th className="px-4 py-3 text-xs uppercase tracking-wider">Course</th>
+                  <th className="px-4 py-3 text-xs uppercase tracking-wider">Buyer userId</th>
+                  <th className="px-4 py-3 text-xs uppercase tracking-wider">Instructor userId</th>
+                  <th className="px-4 py-3 text-xs uppercase tracking-wider">Paid</th>
+                  <th className="px-4 py-3 text-xs uppercase tracking-wider">Instructor earns</th>
+                  <th className="px-4 py-3 text-xs uppercase tracking-wider">Sub status</th>
+                  <th className="px-4 py-3 text-xs uppercase tracking-wider">Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {!coursePurchases || coursePurchases.length === 0 ? (
+                  <tr><td colSpan={8} className="px-4 py-8 text-center text-white/20 italic">No purchases</td></tr>
+                ) : coursePurchases.map((p) => (
+                  <tr key={p.id} className="hover:bg-white/[0.02]">
+                    <td className="px-4 py-3 text-white/50 font-mono text-xs">{p.id}</td>
+                    <td className="px-4 py-3 text-white text-xs max-w-[140px] truncate">{p.courseTitle ?? `#${p.courseId}`}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-white/60">{p.userId}</td>
+                    <td className={`px-4 py-3 font-mono text-xs font-bold ${p.instructorId ? "text-emerald-400" : "text-red-400"}`}>
+                      {p.instructorId ?? "NULL ❌"}
+                    </td>
+                    <td className="px-4 py-3 text-white text-xs">{formatCurrency(p.pricePaid ?? 0)}</td>
+                    <td className={`px-4 py-3 text-xs font-bold ${parseFloat(String(p.instructorEarnings ?? "0")) > 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      {formatCurrency(p.instructorEarnings ?? 0)}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-white/40">{p.subscriptionStatus ?? "one-time"}</td>
+                    <td className="px-4 py-3 text-xs text-white/40">{p.purchasedAt ? new Date(p.purchasedAt).toLocaleDateString("en-GB") : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Manual Earnings Credit ──────────────────────────────────────── */}
+      <div className="bg-[#0a0a0a] border border-amber-500/30 rounded-2xl p-6 space-y-4">
+        <div className="flex items-center gap-3">
+          <PlusCircle className="text-amber-400" size={20} />
+          <h2 className="text-lg font-bold text-white">Manual Earnings Credit</h2>
+          <span className="text-xs text-white/30">Use the Instructor userId from the table above</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div>
+            <label className="text-xs text-white/40 mb-1 block">Instructor userId</label>
+            <input
+              type="number"
+              value={creditUserId}
+              onChange={(e) => setCreditUserId(e.target.value)}
+              placeholder="e.g. 42"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-amber-500/50"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-white/40 mb-1 block">Amount (GBP)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={creditAmount}
+              onChange={(e) => setCreditAmount(e.target.value)}
+              placeholder="e.g. 0.68"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-amber-500/50"
+            />
+          </div>
+          <div className="md:col-span-1">
+            <label className="text-xs text-white/40 mb-1 block">Description</label>
+            <input
+              type="text"
+              value={creditDesc}
+              onChange={(e) => setCreditDesc(e.target.value)}
+              placeholder="e.g. Backfill: course sale £0.80"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-amber-500/50"
+            />
+          </div>
+          <div className="flex items-end">
+            <button
+              disabled={creditEarnings.isPending || !creditUserId || !creditAmount || !creditDesc}
+              onClick={() => creditEarnings.mutate({ userId: parseInt(creditUserId), amount: parseFloat(creditAmount), description: creditDesc })}
+              className="w-full h-10 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-black font-bold rounded-xl text-sm transition-colors"
+            >
+              {creditEarnings.isPending ? "Crediting…" : "Credit Earnings"}
+            </button>
+          </div>
         </div>
       </div>
 
