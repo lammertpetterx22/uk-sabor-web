@@ -109,7 +109,7 @@ export const paymentsRouter = router({
         }
       }
 
-      const origin = ctx.req.headers.origin || "https://uksabor.com";
+      const origin = ctx.req.headers.origin || "https://www.consabor.uk";
 
       // Determine seller's plan for commission rate (fees computed on discounted price)
       const creatorId = event.creatorId || 0;
@@ -208,7 +208,7 @@ export const paymentsRouter = router({
       }
 
       const price = Math.round(parseFloat(String(course.price)) * 100);
-      const origin = ctx.req.headers.origin || "https://uksabor.com";
+      const origin = ctx.req.headers.origin || "https://www.consabor.uk";
 
       // Get instructor's user to determine seller's plan config
       const creatorId = await resolveInstructorUserId(course.instructorId) ?? 0;
@@ -358,7 +358,7 @@ export const paymentsRouter = router({
       if (existing.length > 0) throw new Error("Ya tienes acceso a esta clase");
 
       const price = Math.round(parseFloat(String(classItem.price)) * 100);
-      const origin = ctx.req.headers.origin || "https://uksabor.com";
+      const origin = ctx.req.headers.origin || "https://www.consabor.uk";
 
       const creatorId = await resolveInstructorUserId(classItem.instructorId) ?? 0;
       const [creatorRow] = await db.select({ subscriptionPlan: users.subscriptionPlan, stripeAccountId: users.stripeAccountId })

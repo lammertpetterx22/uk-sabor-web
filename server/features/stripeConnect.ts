@@ -11,7 +11,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
 });
 
 function getBaseUrl(reqOrigin?: string | null): string {
-  return (process.env.PUBLIC_BASE_URL || reqOrigin || "https://uksabor.com").replace(/\/$/, "");
+  return (process.env.PUBLIC_BASE_URL || reqOrigin || "https://www.consabor.uk").replace(/\/$/, "");
 }
 
 /**
