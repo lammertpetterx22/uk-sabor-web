@@ -523,10 +523,16 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       return;
     }
 
-    const pricePaid = parseInt(metadata.ticket_price_pence || "0") / 100;
-    const platformFeePence = parseInt(metadata.platform_fee_pence || "0");
+    const grossPricePence = parseInt(metadata.ticket_price_pence || "0");
+    const pricePaid = grossPricePence / 100;
+    // Monthly subscriptions have no Stripe-fee gross-up (price is fixed in Stripe catalog).
+    // Stripe deducts their fee from our net. Estimate: 1.5% + £0.20 (UK standard, ceil to be safe).
+    const estimatedStripePence = Math.ceil(grossPricePence * 0.015) + 20;
+    const netPricePence = Math.max(0, grossPricePence - estimatedStripePence);
+    const platformFeePence = parseInt(metadata.platform_fee_pence || "0"); // platform commission
     const platformFee = platformFeePence / 100;
-    const instructorEarnings = pricePaid - platformFee;
+    // Instructor earns what's left after platform commission, from the NET amount only
+    const instructorEarnings = Math.max(0, (netPricePence - platformFeePence) / 100);
 
     // Resolve instructor user for earnings (with name-matching fallback)
     const [course] = await db.select({ instructorId: courses.instructorId }).from(courses).where(eq(courses.id, courseId)).limit(1);
