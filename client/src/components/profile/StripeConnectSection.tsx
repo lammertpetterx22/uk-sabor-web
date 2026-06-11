@@ -48,11 +48,18 @@ export default function StripeConnectSection() {
 
   const handleConnect = async () => {
     setIsProcessing(true);
+    // Open a blank window synchronously (before the async call) so browsers
+    // don't treat it as a popup and block it.
+    const win = window.open("", "_blank", "noopener,noreferrer");
     try {
       const { url } = await createLinkMutation.mutateAsync();
-      // Open in new tab so it works even if the user is already logged into Stripe
-      window.open(url, "_blank", "noopener,noreferrer");
+      if (win) {
+        win.location.href = url;
+      } else {
+        window.location.href = url;
+      }
     } catch (err: any) {
+      win?.close();
       toast.error(err.message || "Could not start Stripe onboarding");
     } finally {
       setIsProcessing(false);
