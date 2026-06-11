@@ -50,7 +50,8 @@ export default function StripeConnectSection() {
     setIsProcessing(true);
     // Open a blank window synchronously (before the async call) so browsers
     // don't treat it as a popup and block it.
-    const win = window.open("", "_blank", "noopener,noreferrer");
+    // Note: no "noopener" — we need the reference to navigate it after the async call.
+    const win = window.open("", "_blank");
     try {
       const { url } = await createLinkMutation.mutateAsync();
       if (win) {
