@@ -45,6 +45,12 @@ export default function AdminWithdrawals() {
   const [stripeUserId, setStripeUserId] = useState("");
   const [stripeAccountId, setStripeAccountId] = useState("");
 
+  const [fixPurchaseId, setFixPurchaseId] = useState("");
+  const [fixPricePaid, setFixPricePaid] = useState("");
+  const [fixPlatformFee, setFixPlatformFee] = useState("");
+  const [fixInstructorEarnings, setFixInstructorEarnings] = useState("");
+  const [fixInstructorUserId, setFixInstructorUserId] = useState("");
+
   const setStripeAccount = trpc.financials.adminSetStripeAccount.useMutation({
     onSuccess: () => {
       toast.success("Stripe account linked successfully");
@@ -59,6 +65,15 @@ export default function AdminWithdrawals() {
       toast.success("Instructor linked to user successfully");
       setLinkInstructorId(""); setLinkUserId("");
       refetchInstructors(); refetchPurchases();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const fixCoursePurchase = trpc.financials.adminFixCoursePurchase.useMutation({
+    onSuccess: () => {
+      toast.success("Purchase record fixed + earnings credited");
+      setFixPurchaseId(""); setFixPricePaid(""); setFixPlatformFee(""); setFixInstructorEarnings(""); setFixInstructorUserId("");
+      refetchPurchases();
     },
     onError: (err) => toast.error(err.message),
   });
@@ -401,6 +416,59 @@ export default function AdminWithdrawals() {
             </table>
           </div>
         </div>
+      </div>
+
+      {/* ── Fix Purchase Record ──────────────────────────────────────────── */}
+      <div className="bg-[#0a0a0a] border border-orange-500/30 rounded-2xl p-5 space-y-4">
+        <div className="flex items-center gap-3">
+          <span className="text-orange-400 text-xl">🔧</span>
+          <h2 className="text-lg font-bold text-white">Fix Course Purchase Record</h2>
+          <span className="text-xs text-white/30">Repair £0 records — updates amounts + credits instructor earnings</span>
+        </div>
+        <p className="text-xs text-white/40">Use the Purchase ID from the table above. Instructor userId from the Instructor Profiles table.</p>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div>
+            <label className="text-xs text-white/40 mb-1 block">Purchase ID</label>
+            <input type="number" value={fixPurchaseId} onChange={(e) => setFixPurchaseId(e.target.value)} placeholder="e.g. 1"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500/50" />
+          </div>
+          <div>
+            <label className="text-xs text-white/40 mb-1 block">Price paid (£)</label>
+            <input type="number" step="0.01" value={fixPricePaid} onChange={(e) => setFixPricePaid(e.target.value)} placeholder="0.80"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500/50" />
+          </div>
+          <div>
+            <label className="text-xs text-white/40 mb-1 block">Platform fee (£)</label>
+            <input type="number" step="0.01" value={fixPlatformFee} onChange={(e) => setFixPlatformFee(e.target.value)} placeholder="0.12"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500/50" />
+          </div>
+          <div>
+            <label className="text-xs text-white/40 mb-1 block">Instructor earns (£)</label>
+            <input type="number" step="0.01" value={fixInstructorEarnings} onChange={(e) => setFixInstructorEarnings(e.target.value)} placeholder="0.68"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500/50" />
+          </div>
+          <div>
+            <label className="text-xs text-white/40 mb-1 block">Instructor userId</label>
+            <select value={fixInstructorUserId} onChange={(e) => setFixInstructorUserId(e.target.value)}
+              className="w-full bg-[#0f0f0f] border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500/50">
+              <option value="">— select —</option>
+              {allUsers?.map((u) => <option key={u.id} value={u.id}>{u.name} [id:{u.id}]</option>)}
+            </select>
+          </div>
+        </div>
+        <button
+          disabled={fixCoursePurchase.isPending || !fixPurchaseId || !fixPricePaid || !fixInstructorEarnings || !fixInstructorUserId}
+          onClick={() => fixCoursePurchase.mutate({
+            purchaseId: parseInt(fixPurchaseId),
+            pricePaid: parseFloat(fixPricePaid),
+            platformFee: parseFloat(fixPlatformFee || "0"),
+            instructorEarnings: parseFloat(fixInstructorEarnings),
+            instructorUserId: parseInt(fixInstructorUserId),
+          })}
+          className="h-10 px-6 bg-orange-500 hover:bg-orange-400 disabled:opacity-40 text-black font-bold rounded-xl text-sm transition-colors"
+        >
+          {fixCoursePurchase.isPending ? "Fixing…" : "Fix Purchase + Credit Earnings"}
+        </button>
       </div>
 
       {/* ── Manual Earnings Credit ──────────────────────────────────────── */}

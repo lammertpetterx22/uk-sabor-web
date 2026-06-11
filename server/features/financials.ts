@@ -321,6 +321,37 @@ export const financialsRouter = router({
       return { success: true };
     }),
 
+  /** Admin: Fix a course purchase record with correct financial amounts + credit earnings */
+  adminFixCoursePurchase: adminProcedure
+    .input(z.object({
+      purchaseId: z.number().positive(),
+      pricePaid: z.number().min(0),
+      platformFee: z.number().min(0),
+      instructorEarnings: z.number().min(0),
+      instructorUserId: z.number().positive(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db.update(coursePurchases)
+        .set({
+          instructorId: input.instructorUserId,
+          pricePaid: input.pricePaid.toFixed(2) as any,
+          platformFee: input.platformFee.toFixed(2) as any,
+          instructorEarnings: input.instructorEarnings.toFixed(2) as any,
+        })
+        .where(eq(coursePurchases.id, input.purchaseId));
+
+      await addEarnings({
+        userId: input.instructorUserId,
+        amount: input.instructorEarnings,
+        description: `Admin fix: backfill earnings for purchase #${input.purchaseId}`,
+      });
+
+      return { success: true };
+    }),
+
   /** Admin: List all course purchases with instructor info (for diagnosing missing earnings) */
   adminListCoursePurchases: adminProcedure.query(async () => {
     const db = await getDb();

@@ -528,12 +528,20 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     const platformFee = platformFeePence / 100;
     const instructorEarnings = pricePaid - platformFee;
 
-    // Resolve instructor user for earnings
+    // Resolve instructor user for earnings (with name-matching fallback)
     const [course] = await db.select({ instructorId: courses.instructorId }).from(courses).where(eq(courses.id, courseId)).limit(1);
     let creatorUserId: number | null = null;
     if (course) {
-      const [instr] = await db.select({ userId: instructors.userId }).from(instructors).where(eq(instructors.id, course.instructorId)).limit(1);
+      const [instr] = await db.select({ id: instructors.id, userId: instructors.userId, name: instructors.name }).from(instructors).where(eq(instructors.id, course.instructorId)).limit(1);
       creatorUserId = instr?.userId ?? null;
+      if (!creatorUserId && instr?.name) {
+        const [matchedUser] = await db.select({ id: users.id }).from(users).where(sql`LOWER(${users.name}) = LOWER(${instr.name})`).limit(1);
+        if (matchedUser) {
+          creatorUserId = matchedUser.id;
+          await db.update(instructors).set({ userId: matchedUser.id }).where(eq(instructors.id, instr.id));
+          console.log(`[Webhook] 🔗 Monthly sub: auto-linked instructor #${instr.id} (${instr.name}) → user #${matchedUser.id}`);
+        }
+      }
     }
 
     // Upsert: update if cancelled row exists, otherwise insert
@@ -543,7 +551,14 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
     if (existing) {
       await db.update(coursePurchases)
-        .set({ stripeSubscriptionId: subscriptionId, subscriptionStatus: "active", pricePaid: pricePaid.toFixed(2) as any })
+        .set({
+          stripeSubscriptionId: subscriptionId,
+          subscriptionStatus: "active",
+          pricePaid: pricePaid.toFixed(2) as any,
+          platformFee: platformFee.toFixed(2) as any,
+          instructorEarnings: instructorEarnings.toFixed(2) as any,
+          ...(creatorUserId ? { instructorId: creatorUserId } : {}),
+        })
         .where(and(eq(coursePurchases.userId, userId), eq(coursePurchases.courseId, courseId)));
     } else {
       await db.insert(coursePurchases).values({
@@ -560,7 +575,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       });
     }
 
-    // Record instructor earnings (first month)
+    // Record instructor earnings (first month / re-subscribe)
     if (creatorUserId && instructorEarnings > 0) {
       await addEarnings({
         userId: creatorUserId,
@@ -568,9 +583,11 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         description: `${livemode ? "Sub" : "Test Sub"}: course #${courseId} (monthly) — first payment`,
         orderId: undefined as any,
       });
+    } else {
+      console.error(`[Webhook] ⚠️ Monthly sub: no earnings — creatorUserId: ${creatorUserId}, instructorEarnings: ${instructorEarnings}, course #${courseId}`);
     }
 
-    console.log(`[Webhook] ✅ Monthly course subscription created — user ${userId}, course ${courseId}, sub ${subscriptionId}`);
+    console.log(`[Webhook] ✅ Monthly course subscription created — user ${userId}, course ${courseId}, sub ${subscriptionId}, pricePaid: £${pricePaid.toFixed(2)}, instructorEarnings: £${instructorEarnings.toFixed(2)}, creatorUserId: ${creatorUserId}`);
     return;
   }
 
