@@ -633,8 +633,18 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       } else if (itemType === "course") {
         const [course] = await db.select({ instructorId: courses.instructorId }).from(courses).where(eq(courses.id, itemId)).limit(1);
         if (course) {
-          const [instr] = await db.select({ userId: instructors.userId }).from(instructors).where(eq(instructors.id, course.instructorId)).limit(1);
+          const [instr] = await db.select({ id: instructors.id, userId: instructors.userId, name: instructors.name }).from(instructors).where(eq(instructors.id, course.instructorId)).limit(1);
           creatorUserId = instr?.userId || null;
+          // Fallback: if instructors.userId is null, find the user by matching name (instructor created by admin without linking)
+          if (!creatorUserId && instr?.name) {
+            const [matchedUser] = await db.select({ id: users.id }).from(users).where(sql`LOWER(${users.name}) = LOWER(${instr.name})`).limit(1);
+            if (matchedUser) {
+              creatorUserId = matchedUser.id;
+              // Persist the link so future purchases resolve correctly
+              await db.update(instructors).set({ userId: matchedUser.id }).where(eq(instructors.id, instr.id));
+              console.log(`[Webhook] 🔗 Auto-linked instructor profile #${instr.id} (${instr.name}) → user #${matchedUser.id}`);
+            }
+          }
           if (creatorUserId) {
             const [u] = await db.select({ subscriptionPlan: users.subscriptionPlan, role: users.role }).from(users).where(eq(users.id, creatorUserId)).limit(1);
             sellerPlan = u?.subscriptionPlan || "starter";

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { protectedProcedure, adminProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { balances, ledgerTransactions, withdrawalRequests, users, coursePurchases, courses, eventTickets, events, classPurchases, classes } from "../../drizzle/schema";
+import { balances, ledgerTransactions, withdrawalRequests, users, coursePurchases, courses, eventTickets, events, classPurchases, classes, instructors } from "../../drizzle/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
@@ -325,6 +325,52 @@ export const financialsRouter = router({
       .leftJoin(courses, eq(coursePurchases.courseId, courses.id))
       .orderBy(desc(coursePurchases.purchasedAt))
       .limit(50);
+  }),
+
+  /** Admin: List all instructor profiles with their linked user accounts */
+  adminListInstructors: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+
+    return await db
+      .select({
+        id: instructors.id,
+        name: instructors.name,
+        userId: instructors.userId,
+        userName: users.name,
+        userEmail: users.email,
+      })
+      .from(instructors)
+      .leftJoin(users, eq(instructors.userId, users.id))
+      .orderBy(instructors.name);
+  }),
+
+  /** Admin: Link an instructor profile to a user account (fix missing userId) */
+  adminLinkInstructorToUser: adminProcedure
+    .input(z.object({
+      instructorId: z.number().positive(),
+      userId: z.number().positive(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db.update(instructors)
+        .set({ userId: input.userId })
+        .where(eq(instructors.id, input.instructorId));
+
+      return { success: true };
+    }),
+
+  /** Admin: List all users (for userId lookup when linking instructors) */
+  adminListUsers: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+
+    return await db
+      .select({ id: users.id, name: users.name, email: users.email, role: users.role })
+      .from(users)
+      .orderBy(users.name);
   }),
 
   /** Admin: List all pending and recent withdrawals */

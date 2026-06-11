@@ -32,10 +32,24 @@ export default function AdminWithdrawals() {
 
   const { data: requests, isLoading, refetch } = trpc.financials.adminListWithdrawals.useQuery();
   const { data: coursePurchases, refetch: refetchPurchases } = trpc.financials.adminListCoursePurchases.useQuery();
+  const { data: instructorProfiles, refetch: refetchInstructors } = trpc.financials.adminListInstructors.useQuery();
+  const { data: allUsers } = trpc.financials.adminListUsers.useQuery();
 
   const [creditUserId, setCreditUserId] = useState("");
   const [creditAmount, setCreditAmount] = useState("");
   const [creditDesc, setCreditDesc] = useState("");
+
+  const [linkInstructorId, setLinkInstructorId] = useState("");
+  const [linkUserId, setLinkUserId] = useState("");
+
+  const linkInstructor = trpc.financials.adminLinkInstructorToUser.useMutation({
+    onSuccess: () => {
+      toast.success("Instructor linked to user successfully");
+      setLinkInstructorId(""); setLinkUserId("");
+      refetchInstructors(); refetchPurchases();
+    },
+    onError: (err) => toast.error(err.message),
+  });
 
   const creditEarnings = trpc.financials.adminCreditEarnings.useMutation({
     onSuccess: () => {
@@ -194,6 +208,81 @@ export default function AdminWithdrawals() {
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* ── Instructor Profiles (link userId) ─────────────────────────── */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-white">Instructor Profiles</h2>
+        <p className="text-white/40 text-sm">If an instructor's earnings show £0, their profile may not be linked to a user account. Fix it below.</p>
+        <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="bg-white/5 text-white/40 border-b border-white/10">
+                  <th className="px-4 py-3 text-xs uppercase tracking-wider">ID</th>
+                  <th className="px-4 py-3 text-xs uppercase tracking-wider">Name</th>
+                  <th className="px-4 py-3 text-xs uppercase tracking-wider">Linked userId</th>
+                  <th className="px-4 py-3 text-xs uppercase tracking-wider">User name</th>
+                  <th className="px-4 py-3 text-xs uppercase tracking-wider">User email</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {!instructorProfiles || instructorProfiles.length === 0 ? (
+                  <tr><td colSpan={5} className="px-4 py-8 text-center text-white/20 italic">No instructors</td></tr>
+                ) : instructorProfiles.map((instr) => (
+                  <tr key={instr.id} className="hover:bg-white/[0.02]">
+                    <td className="px-4 py-3 text-white/50 font-mono text-xs">{instr.id}</td>
+                    <td className="px-4 py-3 text-white font-bold text-sm">{instr.name}</td>
+                    <td className={`px-4 py-3 font-mono text-xs font-bold ${instr.userId ? "text-emerald-400" : "text-red-400"}`}>
+                      {instr.userId ?? "NULL ❌"}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-white/60">{instr.userName ?? "—"}</td>
+                    <td className="px-4 py-3 text-xs text-white/40">{instr.userEmail ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Link form */}
+        <div className="bg-[#0a0a0a] border border-blue-500/30 rounded-2xl p-5 space-y-4">
+          <p className="text-sm font-bold text-blue-300">Link Instructor Profile → User Account</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="text-xs text-white/40 mb-1 block">Instructor profile ID (from table above)</label>
+              <input
+                type="number"
+                value={linkInstructorId}
+                onChange={(e) => setLinkInstructorId(e.target.value)}
+                placeholder="e.g. 3"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500/50"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-white/40 mb-1 block">User ID to link to</label>
+              <select
+                value={linkUserId}
+                onChange={(e) => setLinkUserId(e.target.value)}
+                className="w-full bg-[#0f0f0f] border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500/50"
+              >
+                <option value="">— select user —</option>
+                {allUsers?.map((u) => (
+                  <option key={u.id} value={u.id}>{u.name} ({u.email}) [id:{u.id}]</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button
+                disabled={linkInstructor.isPending || !linkInstructorId || !linkUserId}
+                onClick={() => linkInstructor.mutate({ instructorId: parseInt(linkInstructorId), userId: parseInt(linkUserId) })}
+                className="w-full h-10 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-bold rounded-xl text-sm transition-colors"
+              >
+                {linkInstructor.isPending ? "Linking…" : "Link Instructor"}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
