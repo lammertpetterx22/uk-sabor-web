@@ -50,9 +50,11 @@ export default function StripeConnectSection() {
     setIsProcessing(true);
     try {
       const { url } = await createLinkMutation.mutateAsync();
-      window.location.href = url;
+      // Open in new tab so it works even if the user is already logged into Stripe
+      window.open(url, "_blank", "noopener,noreferrer");
     } catch (err: any) {
       toast.error(err.message || "Could not start Stripe onboarding");
+    } finally {
       setIsProcessing(false);
     }
   };
@@ -102,6 +104,7 @@ export default function StripeConnectSection() {
               <p>🔒 Stripe is free and secure — we use Stripe Express for a smooth setup.</p>
               <p>They will ask for: <strong>ID/passport, photo, address and UK bank details</strong>. Takes 5-15 min.</p>
               <p>Once verified, your sales are paid to your bank automatically every week — no need to request manual withdrawals.</p>
+              <p className="text-foreground/50 text-xs">💡 The link opens in a new tab. If you already have a Stripe account, make sure you're logged out of Stripe first, or use a private/incognito window.</p>
             </div>
             <Button
               type="button"
@@ -122,6 +125,7 @@ export default function StripeConnectSection() {
           <>
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-300/90 space-y-2">
               <p>📋 Your account is almost ready. Finish the Stripe onboarding to start receiving payouts.</p>
+              <p className="text-amber-300/60 text-xs">💡 Opens in a new tab. If Stripe shows an error, try opening it in a private/incognito window.</p>
             </div>
             <Button
               type="button"
