@@ -94,7 +94,7 @@ export const stripeConnectRouter = router({
           console.error("[StripeConnect] Failed to create Express account:", stripeErr?.message, stripeErr?.code, stripeErr?.type);
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: stripeErr?.message || "Stripe error: could not create account. Make sure Connect is enabled in your Stripe dashboard.",
+            message: "Stripe payments are being set up. Please try again in a few minutes or contact support.",
           });
         }
         accountId = account.id;
@@ -120,7 +120,7 @@ export const stripeConnectRouter = router({
         console.error("[StripeConnect] Failed to create account link:", stripeErr?.message);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: stripeErr?.message || "Could not generate Stripe onboarding link",
+          message: "Could not open Stripe. Please try again or contact support.",
         });
       }
 
