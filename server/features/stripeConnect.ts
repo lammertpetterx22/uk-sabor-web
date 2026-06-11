@@ -11,7 +11,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
 });
 
 function getBaseUrl(reqOrigin?: string | null): string {
-  return (process.env.PUBLIC_BASE_URL || reqOrigin || "https://www.consabor.uk").replace(/\/$/, "");
+  return (process.env.PUBLIC_BASE_URL || reqOrigin || "https://uksabor.com").replace(/\/$/, "");
 }
 
 /**
@@ -75,34 +75,54 @@ export const stripeConnectRouter = router({
       let accountId = me.stripeAccountId;
 
       if (!accountId) {
-        const account = await stripe.accounts.create({
-          type: "express",
-          country: "GB",
-          email: me.email || undefined,
-          capabilities: {
-            card_payments: { requested: true },
-            transfers: { requested: true },
-          },
-          business_type: "individual",
-          metadata: {
-            userId: String(me.id),
-            platform: "uk-sabor",
-          },
-        });
+        let account: Stripe.Account;
+        try {
+          account = await stripe.accounts.create({
+            type: "express",
+            country: "GB",
+            email: me.email || undefined,
+            capabilities: {
+              transfers: { requested: true },
+            },
+            business_type: "individual",
+            metadata: {
+              userId: String(me.id),
+              platform: "uk-sabor",
+            },
+          });
+        } catch (stripeErr: any) {
+          console.error("[StripeConnect] Failed to create Express account:", stripeErr?.message, stripeErr?.code, stripeErr?.type);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: stripeErr?.message || "Stripe error: could not create account. Make sure Connect is enabled in your Stripe dashboard.",
+          });
+        }
         accountId = account.id;
         await db.update(users).set({
           stripeAccountId: accountId,
           stripeAccountStatus: "pending",
         }).where(eq(users.id, me.id));
+        console.log(`[StripeConnect] Created Express account ${accountId} for user ${me.id}`);
       }
 
       const baseUrl = getBaseUrl(ctx.req.headers.origin as string | undefined);
-      const link = await stripe.accountLinks.create({
-        account: accountId,
-        refresh_url: `${baseUrl}/profile?stripe=refresh`,
-        return_url: `${baseUrl}/profile?stripe=success`,
-        type: "account_onboarding",
-      });
+      console.log(`[StripeConnect] Creating onboarding link for account ${accountId}, baseUrl=${baseUrl}`);
+
+      let link: Stripe.AccountLink;
+      try {
+        link = await stripe.accountLinks.create({
+          account: accountId,
+          refresh_url: `${baseUrl}/profile?stripe=refresh`,
+          return_url: `${baseUrl}/profile?stripe=success`,
+          type: "account_onboarding",
+        });
+      } catch (stripeErr: any) {
+        console.error("[StripeConnect] Failed to create account link:", stripeErr?.message);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: stripeErr?.message || "Could not generate Stripe onboarding link",
+        });
+      }
 
       return { url: link.url, accountId };
     }),

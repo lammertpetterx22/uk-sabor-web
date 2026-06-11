@@ -2,7 +2,7 @@ import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { orders, eventTickets, coursePurchases, classPurchases, qrCodes, events, courses, classes, users, instructors } from "../../drizzle/schema";
-import { and } from "drizzle-orm";
+import { and, sql } from "drizzle-orm";
 import { sendQRCodeEmail, sendOrderConfirmationEmail } from "./email";
 import { generateInvoicePdf } from "./invoicePdf";
 import QRCode from "qrcode";
@@ -11,6 +11,43 @@ import Stripe from "stripe";
 import { calculateCheckoutAmounts, getPlan } from "../stripe/plans";
 import { subscriptions } from "../../drizzle/schema";
 import { generateTicketCode, generateAccessCode } from "../lib/ticketCodes";
+
+/**
+ * Resolve the userId for an instructor profile.
+ * Falls back to name-matching the users table if instructors.userId is null
+ * (happens when an instructor profile was created by admin without linking).
+ * Auto-persists the link when found so future lookups don't need the fallback.
+ */
+async function resolveInstructorUserId(instructorId: number): Promise<number | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  const [instr] = await db
+    .select({ id: instructors.id, userId: instructors.userId, name: instructors.name })
+    .from(instructors)
+    .where(eq(instructors.id, instructorId))
+    .limit(1);
+
+  if (!instr) return null;
+  if (instr.userId) return instr.userId;
+
+  // Fallback: match by name
+  if (instr.name) {
+    const [matched] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(sql`LOWER(${users.name}) = LOWER(${instr.name})`)
+      .limit(1);
+
+    if (matched) {
+      await db.update(instructors).set({ userId: matched.id }).where(eq(instructors.id, instr.id));
+      console.log(`[Payments] Auto-linked instructor #${instr.id} (${instr.name}) → user #${matched.id}`);
+      return matched.id;
+    }
+  }
+
+  return null;
+}
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-02-24.acacia" as any,
@@ -72,7 +109,7 @@ export const paymentsRouter = router({
         }
       }
 
-      const origin = ctx.req.headers.origin || "https://consabor.uk";
+      const origin = ctx.req.headers.origin || "https://uksabor.com";
 
       // Determine seller's plan for commission rate (fees computed on discounted price)
       const creatorId = event.creatorId || 0;
@@ -171,13 +208,10 @@ export const paymentsRouter = router({
       }
 
       const price = Math.round(parseFloat(String(course.price)) * 100);
-      const origin = ctx.req.headers.origin || "https://consabor.uk";
+      const origin = ctx.req.headers.origin || "https://uksabor.com";
 
       // Get instructor's user to determine seller's plan config
-      const [instructorData] = await db.select({ userId: instructors.userId })
-        .from(instructors).where(eq(instructors.id, course.instructorId)).limit(1);
-
-      const creatorId = instructorData?.userId || 0;
+      const creatorId = await resolveInstructorUserId(course.instructorId) ?? 0;
       const [creatorRow] = await db.select({ subscriptionPlan: users.subscriptionPlan, stripeAccountId: users.stripeAccountId })
         .from(users).where(eq(users.id, creatorId)).limit(1);
 
@@ -324,12 +358,9 @@ export const paymentsRouter = router({
       if (existing.length > 0) throw new Error("Ya tienes acceso a esta clase");
 
       const price = Math.round(parseFloat(String(classItem.price)) * 100);
-      const origin = ctx.req.headers.origin || "https://consabor.uk";
+      const origin = ctx.req.headers.origin || "https://uksabor.com";
 
-      const [instructorData] = await db.select({ userId: instructors.userId })
-        .from(instructors).where(eq(instructors.id, classItem.instructorId)).limit(1);
-
-      const creatorId = instructorData?.userId || 0;
+      const creatorId = await resolveInstructorUserId(classItem.instructorId) ?? 0;
       const [creatorRow] = await db.select({ subscriptionPlan: users.subscriptionPlan, stripeAccountId: users.stripeAccountId })
         .from(users).where(eq(users.id, creatorId)).limit(1);
 
