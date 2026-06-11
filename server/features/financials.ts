@@ -291,6 +291,24 @@ export const financialsRouter = router({
 
   // ─── Admin Procedures ──────────────────────────────────────────────────────
 
+  /** Admin: Manually set a user's Stripe Connect account ID */
+  adminSetStripeAccount: adminProcedure
+    .input(z.object({
+      userId: z.number().positive(),
+      stripeAccountId: z.string().min(1).startsWith("acct_"),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db.update(users).set({
+        stripeAccountId: input.stripeAccountId,
+        stripeAccountStatus: "pending",
+      }).where(eq(users.id, input.userId));
+
+      return { success: true };
+    }),
+
   /** Admin: Manually credit earnings to a user (backfill for missed webhook earnings) */
   adminCreditEarnings: adminProcedure
     .input(z.object({
@@ -339,6 +357,8 @@ export const financialsRouter = router({
         userId: instructors.userId,
         userName: users.name,
         userEmail: users.email,
+        stripeAccountId: users.stripeAccountId,
+        stripeAccountStatus: users.stripeAccountStatus,
       })
       .from(instructors)
       .leftJoin(users, eq(instructors.userId, users.id))

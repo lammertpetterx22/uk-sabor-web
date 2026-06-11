@@ -42,6 +42,18 @@ export default function AdminWithdrawals() {
   const [linkInstructorId, setLinkInstructorId] = useState("");
   const [linkUserId, setLinkUserId] = useState("");
 
+  const [stripeUserId, setStripeUserId] = useState("");
+  const [stripeAccountId, setStripeAccountId] = useState("");
+
+  const setStripeAccount = trpc.financials.adminSetStripeAccount.useMutation({
+    onSuccess: () => {
+      toast.success("Stripe account linked successfully");
+      setStripeUserId(""); setStripeAccountId("");
+      refetchInstructors();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
   const linkInstructor = trpc.financials.adminLinkInstructorToUser.useMutation({
     onSuccess: () => {
       toast.success("Instructor linked to user successfully");
@@ -225,11 +237,13 @@ export default function AdminWithdrawals() {
                   <th className="px-4 py-3 text-xs uppercase tracking-wider">Linked userId</th>
                   <th className="px-4 py-3 text-xs uppercase tracking-wider">User name</th>
                   <th className="px-4 py-3 text-xs uppercase tracking-wider">User email</th>
+                  <th className="px-4 py-3 text-xs uppercase tracking-wider">Stripe account</th>
+                  <th className="px-4 py-3 text-xs uppercase tracking-wider">Stripe status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {!instructorProfiles || instructorProfiles.length === 0 ? (
-                  <tr><td colSpan={5} className="px-4 py-8 text-center text-white/20 italic">No instructors</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-8 text-center text-white/20 italic">No instructors</td></tr>
                 ) : instructorProfiles.map((instr) => (
                   <tr key={instr.id} className="hover:bg-white/[0.02]">
                     <td className="px-4 py-3 text-white/50 font-mono text-xs">{instr.id}</td>
@@ -239,6 +253,18 @@ export default function AdminWithdrawals() {
                     </td>
                     <td className="px-4 py-3 text-xs text-white/60">{instr.userName ?? "—"}</td>
                     <td className="px-4 py-3 text-xs text-white/40">{instr.userEmail ?? "—"}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-purple-300">{instr.stripeAccountId ?? <span className="text-white/20">none</span>}</td>
+                    <td className="px-4 py-3 text-xs">
+                      {instr.stripeAccountStatus === "verified" ? (
+                        <span className="text-emerald-400 font-bold">✓ verified</span>
+                      ) : instr.stripeAccountStatus === "pending" ? (
+                        <span className="text-amber-400">pending</span>
+                      ) : instr.stripeAccountStatus === "restricted" ? (
+                        <span className="text-red-400">restricted</span>
+                      ) : (
+                        <span className="text-white/20">—</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -282,6 +308,54 @@ export default function AdminWithdrawals() {
                 {linkInstructor.isPending ? "Linking…" : "Link Instructor"}
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Set Stripe Account for Instructor ─────────────────────────── */}
+      <div className="bg-[#0a0a0a] border border-purple-500/30 rounded-2xl p-5 space-y-4">
+        <div className="flex items-center gap-3">
+          <span className="text-purple-400 text-xl">💳</span>
+          <h2 className="text-lg font-bold text-white">Link Stripe Account to Instructor</h2>
+          <span className="text-xs text-white/30">For instructors who can't self-connect or need manual setup</span>
+        </div>
+        <ol className="text-xs text-white/40 space-y-1 list-decimal list-inside">
+          <li>Go to <strong className="text-white/60">Stripe Dashboard → Connect → Accounts</strong></li>
+          <li>Find or create the instructor's Express account and copy the ID (starts with <code className="text-purple-300">acct_</code>)</li>
+          <li>Enter the instructor's userId (from the table above) and paste the Stripe account ID below</li>
+        </ol>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div>
+            <label className="text-xs text-white/40 mb-1 block">Instructor userId</label>
+            <select
+              value={stripeUserId}
+              onChange={(e) => setStripeUserId(e.target.value)}
+              className="w-full bg-[#0f0f0f] border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500/50"
+            >
+              <option value="">— select user —</option>
+              {allUsers?.filter(u => u.role === "instructor" || u.role === "admin").map((u) => (
+                <option key={u.id} value={u.id}>{u.name} ({u.email}) [id:{u.id}]</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-white/40 mb-1 block">Stripe Account ID</label>
+            <input
+              type="text"
+              value={stripeAccountId}
+              onChange={(e) => setStripeAccountId(e.target.value)}
+              placeholder="acct_1ABC123..."
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm font-mono focus:outline-none focus:border-purple-500/50"
+            />
+          </div>
+          <div className="flex items-end">
+            <button
+              disabled={setStripeAccount.isPending || !stripeUserId || !stripeAccountId.startsWith("acct_")}
+              onClick={() => setStripeAccount.mutate({ userId: parseInt(stripeUserId), stripeAccountId })}
+              className="w-full h-10 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-bold rounded-xl text-sm transition-colors"
+            >
+              {setStripeAccount.isPending ? "Saving…" : "Set Stripe Account"}
+            </button>
           </div>
         </div>
       </div>

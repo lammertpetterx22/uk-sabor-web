@@ -528,7 +528,9 @@ async function startServer() {
             )`,
             `CREATE INDEX IF NOT EXISTS "password_reset_tokens_token_idx" ON "passwordResetTokens" ("token")`,
             `CREATE INDEX IF NOT EXISTS "password_reset_tokens_user_idx" ON "passwordResetTokens" ("userId")`,
-            // Stripe Connect onboarding status columns on users
+            // Stripe Connect columns on users
+            `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "stripeCustomerId" VARCHAR(255)`,
+            `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "stripeAccountId" VARCHAR(255)`,
             `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "stripeAccountStatus" VARCHAR(32) DEFAULT 'none'`,
             `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "stripeChargesEnabled" BOOLEAN DEFAULT false`,
             `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "stripePayoutsEnabled" BOOLEAN DEFAULT false`,
