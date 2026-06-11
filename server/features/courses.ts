@@ -134,6 +134,24 @@ export const coursesRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
+    // Admins always have access
+    if (isAdminRole(ctx.user)) return true;
+
+    // Course creator always has access to their own course
+    const [course] = await db
+      .select({ instructorId: courses.instructorId })
+      .from(courses)
+      .where(eq(courses.id, input))
+      .limit(1);
+    if (course) {
+      const [instr] = await db
+        .select({ userId: instructors.userId })
+        .from(instructors)
+        .where(eq(instructors.id, course.instructorId))
+        .limit(1);
+      if (instr?.userId === ctx.user.id) return true;
+    }
+
     const result = await db
       .select()
       .from(coursePurchases)
