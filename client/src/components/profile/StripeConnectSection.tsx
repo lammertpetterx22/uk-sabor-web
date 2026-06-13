@@ -145,18 +145,10 @@ export default function StripeConnectSection() {
 
         {status === "restricted" && (
           <>
-            <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300/90 space-y-2">
-              <p>⚠️ Stripe needs additional information for your account. Please provide it.</p>
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-300/90 space-y-2">
+              <p>✅ Your details have been submitted. Stripe is reviewing your account — this usually takes a few hours to 1 business day.</p>
+              <p className="text-amber-300/60 text-xs">You don't need to do anything. Payouts will be enabled automatically once the review is complete.</p>
             </div>
-            <Button
-              type="button"
-              onClick={handleConnect}
-              disabled={isProcessing || createLinkMutation.isPending}
-              variant="outline"
-              className="w-full h-11"
-            >
-              Update information <ExternalLink className="h-4 w-4 ml-2" />
-            </Button>
           </>
         )}
 
