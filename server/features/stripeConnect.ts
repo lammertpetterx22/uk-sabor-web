@@ -82,6 +82,7 @@ export const stripeConnectRouter = router({
             country: "GB",
             email: me.email || undefined,
             capabilities: {
+              card_payments: { requested: true },
               transfers: { requested: true },
             },
             business_type: "individual",
