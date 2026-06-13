@@ -28,19 +28,28 @@ const CourseCard = memo(function CourseCard({ course, instructorName }: CourseCa
   return (
     <Card className="glass overflow-hidden hover:shadow-2xl hover:shadow-[#00D4FF]/30 transition-all duration-300 transform hover:scale-105 h-full flex flex-col border-white/10 hover:border-[#00D4FF]/50">
       {/* Course Image */}
-      <div className="relative h-48 overflow-hidden bg-gradient-to-br from-[#00D4FF]/20 to-[#9D4EDD]/20 flex items-center justify-center">
+      <div className="relative h-48 overflow-hidden flex items-center justify-center">
         {course.imageUrl ? (
-          <img
-            src={course.imageUrl}
-            alt={course.title}
-            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
-            loading="lazy"
-            decoding="async"
-            width="400"
-            height="192"
-          />
+          <>
+            {/* Blurred backdrop so no borders show */}
+            <img
+              src={course.imageUrl}
+              aria-hidden="true"
+              className="absolute inset-0 w-full h-full object-cover scale-110 blur-lg opacity-60"
+            />
+            {/* Main image — full visible, no crop */}
+            <img
+              src={course.imageUrl}
+              alt={course.title}
+              className="relative w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+              loading="lazy"
+              decoding="async"
+              width="400"
+              height="192"
+            />
+          </>
         ) : (
-          <div className="flex flex-col items-center gap-2 opacity-40">
+          <div className="w-full h-full bg-gradient-to-br from-[#00D4FF]/20 to-[#9D4EDD]/20 flex flex-col items-center justify-center gap-2 opacity-40">
             <BookOpen size={40} className="text-accent" />
             <span className="text-xs text-foreground/60 font-medium">{course.danceStyle || "Course"}</span>
           </div>
