@@ -669,6 +669,31 @@ export const paymentsRouter = router({
         filename: `invoice-${order.id}.pdf`,
       };
     }),
+
+  cancelCourseSubscription: protectedProcedure
+    .input(z.object({ courseId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const [purchase] = await db
+        .select()
+        .from(coursePurchases)
+        .where(and(eq(coursePurchases.userId, ctx.user.id), eq(coursePurchases.courseId, input.courseId)))
+        .limit(1);
+
+      if (!purchase) throw new Error("No subscription found");
+      if (!purchase.stripeSubscriptionId) throw new Error("This is not a monthly subscription");
+      if (purchase.subscriptionStatus === "cancelled") throw new Error("Subscription already cancelled");
+
+      await stripe.subscriptions.cancel(purchase.stripeSubscriptionId);
+
+      await db.update(coursePurchases)
+        .set({ subscriptionStatus: "cancelled" })
+        .where(and(eq(coursePurchases.userId, ctx.user.id), eq(coursePurchases.courseId, input.courseId)));
+
+      return { success: true };
+    }),
 });
 
 /**

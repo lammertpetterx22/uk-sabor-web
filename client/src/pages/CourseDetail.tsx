@@ -81,6 +81,14 @@ export default function CourseDetail() {
     onSuccess: () => refetchProgress(),
   });
 
+  const cancelSubscriptionMutation = trpc.payments.cancelCourseSubscription.useMutation({
+    onSuccess: () => {
+      toast.success("Subscription cancelled. You will keep access until the end of the current period.");
+      hasAccessQuery.refetch();
+    },
+    onError: err => toast.error(err.message),
+  });
+
   // ── Active lesson helpers ─────────────────────────────────────────────────
   const activeLesson = lessons.find(l => l.id === activeLessonId) ?? null;
 
@@ -518,9 +526,20 @@ export default function CourseDetail() {
                     )}
 
                     {(course as any).paymentType === "monthly" && (
-                      <p className="text-xs text-foreground/40 text-center">
-                        Active subscription — renews monthly
-                      </p>
+                      <div className="text-center space-y-2">
+                        <p className="text-xs text-foreground/40">Active subscription — renews monthly</p>
+                        <button
+                          onClick={() => {
+                            if (confirm("Are you sure you want to cancel your subscription? You will keep access until the end of the current billing period.")) {
+                              cancelSubscriptionMutation.mutate({ courseId: course.id });
+                            }
+                          }}
+                          disabled={cancelSubscriptionMutation.isPending}
+                          className="text-xs text-red-400/60 hover:text-red-400 underline transition-colors disabled:opacity-40"
+                        >
+                          {cancelSubscriptionMutation.isPending ? "Cancelling…" : "Cancel subscription"}
+                        </button>
+                      </div>
                     )}
                   </div>
                 ) : (
