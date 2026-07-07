@@ -52,16 +52,16 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
 
 #### 🎥 Bunny.net - Video Streaming
 ```
-BUNNY_API_KEY=617a8784-3cd4-4d83-9bd774cc6826-bd70-4992
-BUNNY_VIDEO_LIBRARY_ID=616736
+BUNNY_API_KEY=tu-bunny-api-key
+BUNNY_VIDEO_LIBRARY_ID=tu-library-id
 BUNNY_ALLOWED_REFERRER=https://tu-app.koyeb.app
 ```
 
 #### 🖼️ Bunny.net - Storage (Imágenes)
 ```
-BUNNY_STORAGE_ZONE=uk-sabor
-BUNNY_STORAGE_API_KEY=3676c5c0-86dc-4ed3-ab67eb67acf6-0245-40c7
-BUNNY_CDN_URL=https://uk-sabor.b-cdn.net
+BUNNY_STORAGE_ZONE=tu-storage-zone
+BUNNY_STORAGE_API_KEY=tu-bunny-storage-api-key
+BUNNY_CDN_URL=https://tu-cdn-url.b-cdn.net
 ```
 
 #### 📧 Email (Resend)
