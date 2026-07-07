@@ -112,7 +112,7 @@ export async function handleStripeWebhook(req: Request, res: Response) {
 /**
  * Handle multi-item cart checkout
  */
-async function handleMultiItemCartCheckout(
+export async function handleMultiItemCartCheckout(
   session: Stripe.Checkout.Session,
   db: any,
   userId: number | null,
@@ -151,6 +151,19 @@ async function handleMultiItemCartCheckout(
     const itemId = item.id;
     const quantity = (item.quantity || 1);
     const itemPrice = item.price;
+
+    // Idempotency: skip if this item was already processed for this payment
+    // (protects against duplicate tickets when Stripe retries the webhook).
+    const [existingOrder] = await db.select({ id: orders.id }).from(orders)
+      .where(and(
+        eq(orders.stripePaymentIntentId, session.payment_intent as string),
+        eq(orders.itemType, itemType),
+        eq(orders.itemId, itemId)
+      )).limit(1);
+    if (existingOrder) {
+      console.log(`[Webhook] ⏭️ Already processed ${itemType} #${itemId} for PI ${session.payment_intent} (order #${existingOrder.id}) — skipping`);
+      continue;
+    }
 
     try {
       // Create order record for each item
@@ -461,6 +474,10 @@ async function handleMultiItemCartCheckout(
       }
     } catch (error) {
       console.error(`[Webhook] ❌ Error processing cart item ${itemType} #${itemId}:`, error);
+      // Re-throw so the webhook responds with 5xx and Stripe retries the event.
+      // Previously this was swallowed, causing Stripe to mark the webhook as
+      // delivered while the ticket/order silently never got created.
+      throw error;
     }
   }
 
